@@ -49,9 +49,19 @@ export function deckScript(o: DeckScriptOptions = {}): string {
 }
 
 /**
- * Render inside <head>. Not a client component: this is a literal <script>
- * tag with an inline body, which is what makes it run before first paint —
- * `useEffect` would be several frames too late for all three.
+ * Render first inside <body>, ahead of everything else — not inside <head>.
+ * `RESTORE_ZOOM_OFF_IOS` calls `document.querySelector('meta[name=viewport]')`
+ * immediately, and in <head> there is no guarantee that tag has been parsed
+ * yet; it lands there via the framework's own `viewport` export, in an order
+ * relative to a hand-rendered `<script>` that isn't ours to control. Placed
+ * first in <body>, the meta tag it needs is already behind it. (The
+ * `addEventListener("load", f)` fallback still catches a miss, but only at
+ * `load` — a window during which non-iOS pinch-zoom stays disabled for
+ * nothing.)
+ *
+ * Not a client component: this is a literal <script> tag with an inline body,
+ * which is what makes it run before hydration — `useEffect` would be several
+ * frames too late for all three.
  */
 export function DeckScript(props: DeckScriptOptions): ReactElement {
   return <script dangerouslySetInnerHTML={{ __html: deckScript(props) }} />
