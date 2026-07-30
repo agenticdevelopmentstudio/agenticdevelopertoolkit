@@ -1,0 +1,222 @@
+/* ---- section headings ----
+ * An eyebrow, a claim, and a lede. The eyebrow is what a drawer link calls
+ * this section, so a reader who jumped here can see they arrived. */
+.lp-head {
+  max-width: 48rem;
+  margin-bottom: 2.6rem;
+}
+/* The section label. It is the only thing on screen that says which of many
+ * screens you are on, so it has to survive a fast scroll — at 0.7rem, dim and
+ * unmarked it did not, and readers went past it to the headline without
+ * registering that the subject had changed.
+ *
+ * Louder on four dials at once, because no single one was enough: bigger,
+ * heavier, the bright accent rather than the dim, and a rule leading into it
+ * so there is a shape at the left margin before there is a word. Still
+ * small — a label that competes with the h2 below it just moves the problem. */
+.lp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: fit-content;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--lp-accent-bright, #d8d8d8);
+  margin-bottom: 1.2rem;
+}
+.lp-eyebrow::before {
+  content: "";
+  flex: none;
+  width: 2.2rem;
+  height: 2px;
+  background: var(--lp-accent, #9a9a9a);
+}
+.lp-head h2 {
+  font-size: clamp(1.5rem, 3.6vw, 2.3rem);
+  font-weight: 200;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+}
+.lp-head h2 b {
+  font-weight: 400;
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+/* Deliberately a standalone class rather than `.lp-head .lp-lede`: the same
+ * voice and measure are wanted for the odd paragraph that follows a card grid
+ * or a chip list, not only for the one under a heading. */
+.lp-lede {
+  margin-top: 1.15rem;
+  /* Wider than the 60ch a proportional face would want: the whole site is set
+   * in one monospace, where a character is narrower than the average
+   * proportional one, so 60ch measures visibly short of a comfortable line. */
+  max-width: 72ch;
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-weight: 300;
+  font-size: 1.02rem;
+  text-wrap: pretty;
+}
+.lp-lede em {
+  color: var(--lp-accent-bright, #d8d8d8);
+  font-style: normal;
+}
+.lp-lede + .lp-lede {
+  margin-top: 0.9rem;
+}
+/* Standing clear of whatever it follows, which is a block rather than a
+ * heading. */
+.lp-wrap > .lp-lede {
+  margin-top: 1.8rem;
+}
+
+/* ---- cards ----
+ * `auto-fit` with a `minmax` floor rather than a fixed column count: the number
+ * of cards per section varies (two in one, three in another) and the same rule
+ * has to lay all of them out without a per-section override. The floor is the
+ * narrowest a card can be before its heading wraps mid-word. Both counts divide
+ * cleanly into what that floor fits, so neither leaves an orphan. */
+.lp-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16.5rem, 1fr));
+}
+/* Four cards, laid out 2×2 rather than as the three-plus-an-orphan the shared
+ * floor produces at this measure.
+ *
+ * An explicit column count, not a wider `minmax` floor: the root font is
+ * 87.5% (see the Dynamic Type block in css/base.css), so a rem inside a rule
+ * is 14px and not 16, and a floor chosen to just exclude a third column is
+ * arithmetic that stops being true the moment either the measure or the root
+ * size moves — silently, and only in this one section.
+ *
+ * A rem in the media query below is a different unit: media-query lengths
+ * resolve against the initial font size, not the root's, so `48rem` there is
+ * 768px while `16.5rem` above is 231px. Every breakpoint on this page is in
+ * the 16px currency; every track floor is in the 14px one. */
+.lp-cards.lp-cards--pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 48rem) {
+  .lp-cards.lp-cards--pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* A card grid under a placeholder stands off it the same distance the
+ * placeholder stands off whatever it follows. */
+.lp-shot + .lp-cards {
+  margin-top: 2rem;
+}
+.lp-card {
+  border: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  border-radius: var(--lp-radius, 14px);
+  background: var(--lp-card, rgba(255, 255, 255, 0.04));
+  padding: 1.35rem 1.4rem 1.5rem;
+  transition: border-color 0.25s, background 0.25s;
+}
+/* Neither hover colour had a site-level token behind it — both were literal
+ * rgba baked into the rule — so each becomes its own role-named token rather
+ * than an unthemeable literal. */
+.lp-card:hover {
+  border-color: var(--lp-card-hover-border, rgba(255, 215, 94, 0.4));
+  background: var(--lp-card-hover-bg, rgba(27, 35, 64, 0.62));
+}
+.lp-card h3 {
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--lp-accent-bright, #d8d8d8);
+  margin-bottom: 0.5rem;
+}
+.lp-card p {
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-weight: 300;
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+.lp-card p em {
+  color: var(--lp-ink, #ededed);
+  font-style: normal;
+}
+
+/* ---- shot: a macOS window frame around a screenshot, or a placeholder ----
+ * Until a real capture exists the body is a hatched placeholder that names
+ * what belongs there — deliberately, obviously unfinished, so one shipped by
+ * accident is caught rather than mistaken for a screenshot of a product that
+ * looks like that. Nothing else in this package fakes a window: illustrations
+ * built from the package's own type (`.lp-rule`, `.lp-stats`) never pretend to
+ * be captures. */
+.lp-shot {
+  width: 100%;
+  margin-top: 2rem;
+  border: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--lp-raise, #1c1c1c);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+/* Neither hover colour had a site-level token behind it either — see the
+ * card hover comment above. */
+.lp-shot:hover {
+  border-color: var(--lp-shot-hover-border, rgba(255, 215, 94, 0.45));
+  box-shadow: 0 0 50px -18px var(--lp-shot-hover-glow, rgba(255, 215, 94, 0.5));
+}
+.lp-shot__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  /* The gradient's second stop is another literal rgba with no backing site
+   * variable — tokenized the same way as the rest on this page. */
+  background: linear-gradient(var(--lp-raise, #1c1c1c), var(--lp-shot-bar-shade, rgba(12, 16, 32, 0.6)));
+}
+.lp-shot__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lp-shot-dot, rgba(252, 246, 232, 0.22));
+}
+.lp-shot__name {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--lp-ink-dim, #a0a0a0);
+}
+/* `object-fit: contain` under a clamped max-height: a tall capture scales down
+ * rather than running the section far past a screen. */
+.lp-shot img,
+.lp-shot video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: clamp(16rem, 52svh, 32rem);
+  object-fit: contain;
+  background: var(--lp-ground, #101010);
+}
+.lp-shot__placeholder {
+  display: grid;
+  place-items: center;
+  min-height: clamp(11rem, 30svh, 17rem);
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-accent, #9a9a9a);
+  /* The hatch tint is a fourth literal rgba with no backing site variable. */
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0 10px,
+    var(--lp-shot-hatch, rgba(255, 215, 94, 0.05)) 10px 20px
+  );
+}
+.lp-shot__placeholder b {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--lp-ink-dim, #a0a0a0);
+}
