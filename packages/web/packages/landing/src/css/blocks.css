@@ -236,10 +236,20 @@
   border-radius: var(--lp-radius, 14px);
   padding: 1.6rem 1.5rem;
 }
-.lp-versus__them h3 {
+/* The child combinator plus the repeated `div` here is load-bearing, not
+ * decoration: it lifts this rule's specificity to (0,2,2) so it beats
+ * `.lp-versus h3` (0,1,1) below regardless of source order. Write it as the
+ * flat `.lp-versus__them h3` (0,1,1) and the two rules tie, and a tie is
+ * decided by file order — so a future reorder of this file would silently
+ * turn "them"'s heading gold instead of dimmed. */
+.lp-versus > div.lp-versus__them h3 {
   color: var(--lp-ink-dim, #a0a0a0);
 }
-.lp-versus__us {
+/* Same reason as above: `.lp-versus__us` alone is (0,1,0), which loses the
+ * `border-color` it sets here to `.lp-versus > div`'s `border` shorthand
+ * (0,1,1) — the "us" panel would render with the same border as "them",
+ * exactly the distinction this section exists to draw. */
+.lp-versus > div.lp-versus__us {
   border-color: var(--lp-versus-us-border, rgba(255, 215, 94, 0.4));
   background: var(--lp-card, rgba(255, 255, 255, 0.04));
   box-shadow: 0 0 70px -30px var(--lp-versus-us-glow, rgba(255, 215, 94, 0.55));
@@ -257,7 +267,14 @@
   font-size: 1.02rem;
   color: var(--lp-ink, #ededed);
 }
-.lp-versus__them p {
+/* Descendant, not child (`.lp-versus > div.lp-versus__them p` would also
+ * work, but the source used `.versus .them p` — a descendant combinator —
+ * and (0,2,1) is (0,2,1) either way, so there's no reason to write a
+ * narrower selector than the source did). Same specificity reasoning as the
+ * `h3` rule above: flattened to `.lp-versus__them p` this ties `.lp-versus p`
+ * (0,1,1) and only renders right today because this rule happens to come
+ * after it in the file. */
+.lp-versus .lp-versus__them p {
   color: var(--lp-ink-dim, #a0a0a0);
 }
 .lp-versus ul {
