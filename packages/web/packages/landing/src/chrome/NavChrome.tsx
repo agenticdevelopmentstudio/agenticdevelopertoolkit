@@ -14,6 +14,8 @@ export function NavChrome({
   footer,
   openLabel = 'Open menu',
   closeLabel = 'Close menu',
+  dismissLabel = 'Dismiss menu',
+  navLabel = 'Site',
 }: NavChromeProps): ReactElement {
   const [open, setOpen] = useState(false)
   const burgerRef = useRef<HTMLButtonElement>(null)
@@ -101,12 +103,12 @@ export function NavChrome({
         // anyone finding them by label — a real, if minor, port fix rather
         // than a behaviour change: this button still closes the drawer either
         // way, it's just distinguishable now.
-        aria-label="Dismiss menu"
+        aria-label={dismissLabel}
         tabIndex={open ? 0 : -1}
         onClick={() => setOpen(false)}
       />
 
-      <nav className={`lp-drawer${open ? ' lp-drawer--open' : ''}`} aria-label="Site" inert={!open}>
+      <nav className={`lp-drawer${open ? ' lp-drawer--open' : ''}`} aria-label={navLabel} inert={!open}>
         <button
           ref={closeRef}
           type="button"

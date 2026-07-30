@@ -64,4 +64,12 @@ describe('NavChrome', () => {
     )
     expect(getByText('Mail')).toBeTruthy()
   })
+
+  it('applies a host-supplied dismissLabel and navLabel', () => {
+    const { getByLabelText, getByRole } = render(
+      <NavChrome brand="M" links={LINKS} dismissLabel="Shut menu" navLabel="Primary" />
+    )
+    expect(getByLabelText('Shut menu')).toBeTruthy()
+    expect(getByRole('navigation', { name: 'Primary' })).toBeTruthy()
+  })
 })

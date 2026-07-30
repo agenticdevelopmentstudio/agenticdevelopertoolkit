@@ -15,4 +15,8 @@ export interface NavChromeProps {
   openLabel?: string
   /** Accessible name for the close button. Default "Close menu". */
   closeLabel?: string
+  /** Accessible name for the scrim that dismisses the drawer. Default "Dismiss menu". */
+  dismissLabel?: string
+  /** Accessible name for the drawer's <nav> landmark. Default "Site". */
+  navLabel?: string
 }
