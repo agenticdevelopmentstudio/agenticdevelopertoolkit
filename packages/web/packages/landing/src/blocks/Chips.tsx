@@ -12,7 +12,7 @@ export interface ChipEntry {
 
 /**
  * A wrapped row of provider chips. `soon` swaps the list to the dashed,
- * dimmed, gold-free treatment used for planned agents — see the `.lp-roadmap`
+ * dimmed, accent-free treatment used for planned agents — see the `.lp-roadmap`
  * comment in `css/blocks.css` for why that separation is structural rather
  * than a caveat in prose.
  */

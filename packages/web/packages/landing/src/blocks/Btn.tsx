@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react'
 
 /**
- * A pill-shaped call-to-action link. `primary` (the default) is gold-filled
- * and the one the page wants clicked first; `ghost` is outlined only.
+ * A pill-shaped call-to-action link. `primary` (the default) is filled with
+ * `--lp-accent` and the one the page wants clicked first; `ghost` is outlined
+ * only.
  */
 export function Btn({
   href,

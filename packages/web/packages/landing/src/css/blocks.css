@@ -123,7 +123,7 @@
  * tied with a same-specificity sibling rule by accident later. */
 .lp-btn.lp-btn--primary {
   background: var(--lp-accent, #9a9a9a);
-  /* This is the ink printed ON the gold button, not the gold itself — close
+  /* This is the ink printed ON the accent fill, not the accent itself — close
    * to but not the same value as `--lp-ground` (see §Tokens), so it gets its
    * own token rather than being folded into an existing one. */
   color: var(--lp-btn-primary-ink, #101010);
@@ -413,7 +413,7 @@
  * `.lp-versus h3` (0,1,1) below regardless of source order. Write it as the
  * flat `.lp-versus__them h3` (0,1,1) and the two rules tie, and a tie is
  * decided by file order — so a future reorder of this file would silently
- * turn "them"'s heading gold instead of dimmed. */
+ * turn "them"'s heading accent-coloured instead of dimmed. */
 .lp-versus > div.lp-versus__them h3 {
   color: var(--lp-ink-dim, #a0a0a0);
 }
@@ -573,7 +573,7 @@
   margin-bottom: 1.4rem;
 }
 
-/* Dashed, dimmed, and no gold. The three signals stack because each one alone
+/* Dashed, dimmed, and no accent. The three signals stack because each one alone
  * is deniable at a glance: dashed alone reads as decoration, dim alone reads as
  * a disabled control. Together they say "not yet" without a legend. */
 .lp-chips.lp-chips--soon li {

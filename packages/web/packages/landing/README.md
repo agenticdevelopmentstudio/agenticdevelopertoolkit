@@ -111,7 +111,7 @@ function component.
 | `Trust` | blocks | The hero's inline trust-signal list (free, platform, etc). |
 | `Cta` | blocks | The hero's button row wrapper. |
 | `Btn` | blocks | A link styled as a button; `variant="primary"` (default) or `"ghost"`. |
-| `StatusPill` | blocks | The hero's status line; `free` switches to the gold-bordered "free" treatment. |
+| `StatusPill` | blocks | The hero's status line; `free` switches to the accented "free" treatment (`--lp-status-free-border`). |
 | `Hero` | blocks | The one centred `Screen` on the page: glow, mark, headline, tagline, children (`Cta`/`Trust`/`StatusPill`, in the host's own order). |
 
 None of these render an `<img>` or a `next/link` — the package depends on
