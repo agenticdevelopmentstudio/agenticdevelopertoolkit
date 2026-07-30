@@ -27,6 +27,7 @@ The web platform is a pnpm workspace; its libraries live under
 - `@agenticdevelopertoolkit/chat`
 - `@agenticdevelopertoolkit/themes`
 - `@agenticdevelopertoolkit/viewport`
+- `@agenticdevelopertoolkit/landing`
 
 ## Where to look first
 

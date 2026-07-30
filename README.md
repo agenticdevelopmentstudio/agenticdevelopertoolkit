@@ -34,6 +34,9 @@ The web platform is a pnpm monorepo with libraries under
   `ColorModeProvider`.
 - `@agenticdevelopertoolkit/viewport` — iOS-correct viewport / keyboard
   primitives.
+- `@agenticdevelopertoolkit/landing` — a scroll-snapping landing deck and the
+  section vocabulary that fills it. The host supplies the colours, through
+  `--lp-*` tokens, and every word.
 
 ## Build
 
