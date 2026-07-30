@@ -220,3 +220,227 @@
   text-transform: none;
   color: var(--lp-ink-dim, #a0a0a0);
 }
+
+/* ---- the wedge ----
+ * Two panels side by side: what every other tool does, and what this one does
+ * instead. The comparison IS the argument, so it gets a shape of its own rather
+ * than being a pair of ordinary cards — the second panel is lit and the first
+ * is not, which is the whole point read at a glance. */
+.lp-versus {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+.lp-versus > div {
+  border: 1px solid var(--lp-versus-border, rgba(252, 246, 232, 0.09));
+  border-radius: var(--lp-radius, 14px);
+  padding: 1.6rem 1.5rem;
+}
+.lp-versus__them h3 {
+  color: var(--lp-ink-dim, #a0a0a0);
+}
+.lp-versus__us {
+  border-color: var(--lp-versus-us-border, rgba(255, 215, 94, 0.4));
+  background: var(--lp-card, rgba(255, 255, 255, 0.04));
+  box-shadow: 0 0 70px -30px var(--lp-versus-us-glow, rgba(255, 215, 94, 0.55));
+}
+.lp-versus h3 {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--lp-accent, #9a9a9a);
+  margin-bottom: 1rem;
+}
+.lp-versus p {
+  font-weight: 300;
+  font-size: 1.02rem;
+  color: var(--lp-ink, #ededed);
+}
+.lp-versus__them p {
+  color: var(--lp-ink-dim, #a0a0a0);
+}
+.lp-versus ul {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-weight: 300;
+}
+.lp-versus ul li::before {
+  content: "· ";
+  color: var(--lp-accent, #9a9a9a);
+}
+
+/* ---- a rule, written out ----
+ * Not a screenshot and not pretending to be one: it is the shape of an
+ * oversight rule set in the site's own typeface, which is the honest way to
+ * show a feature whose UI has not been captured yet. */
+.lp-rule {
+  border: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  border-radius: var(--lp-radius, 14px);
+  background: var(--lp-rule-bg, rgba(12, 16, 32, 0.65));
+  padding: 1.2rem 1.35rem;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  /* Two columns — the labels in the first, the clause in the second — so a
+   * clause that wraps stays inside its own column. Laid out inline instead,
+   * the second line of "a session has been idle since its last Stop event"
+   * returns to the left edge and sits under its own WHEN, which reads as a
+   * sixth clause with no label. */
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 1.1rem;
+  row-gap: 0.5rem;
+  align-items: baseline;
+}
+.lp-rule dt {
+  color: var(--lp-accent, #9a9a9a);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+.lp-rule dd {
+  color: var(--lp-ink, #ededed);
+  font-weight: 300;
+}
+.lp-rule dd b {
+  color: var(--lp-accent-bright, #d8d8d8);
+  font-weight: 400;
+}
+
+/* ---- stat strip ----
+ * Three cells, and an explicit three across rather than an `auto-fit` floor:
+ * the strip lives in the narrow column of a `.lp-split`, where a floor wide
+ * enough to keep "Quota windows, counted down per second" off four lines only
+ * fits two across — which laid the third out alone under an empty cell. The
+ * numbers are meant to be scanned in one horizontal sweep, so the row matters
+ * more than the caption's line count. Same reason as `.lp-cards.lp-cards--pair`:
+ * a `minmax` floor tuned to produce a column count is arithmetic against a
+ * 14px rem that stops being true the moment the measure moves. */
+.lp-stats {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 2rem;
+}
+@media (min-width: 34rem) {
+  .lp-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.lp-stats div {
+  border-left: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  padding-left: 1rem;
+}
+.lp-stats dt {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 200;
+  color: var(--lp-accent-bright, #d8d8d8);
+  line-height: 1.3;
+}
+.lp-stats dd {
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--lp-ink-dim, #a0a0a0);
+}
+
+/* ---- provider chips ---- */
+.lp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.lp-chips li {
+  border: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  border-radius: 99px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--lp-ink, #ededed);
+  background: var(--lp-chip-bg, rgba(27, 35, 64, 0.35));
+}
+.lp-chips li.lp-chip--open {
+  border-color: var(--lp-chip-open-border, rgba(255, 215, 94, 0.5));
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+
+/* ---- the roadmap block ----
+ * Planned agents, kept visibly separate from the shipped provider chips above.
+ * A reader who skims a list of names and comes away thinking Codex is supported
+ * today has been misled by the LAYOUT, whatever the sentence beside it says — so
+ * the separation is structural (its own label, its own rule, its own container)
+ * rather than a caveat in prose that a skimmer never reaches.
+ *
+ * `border-top` and not a card: this is a continuation of the list above, not a
+ * competing panel, and boxing it would make the planned agents look like their
+ * own product surface. */
+.lp-roadmap {
+  margin-top: 2.6rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+}
+.lp-roadmap .lp-lede {
+  margin-bottom: 1.4rem;
+}
+
+/* Dashed, dimmed, and no gold. The three signals stack because each one alone
+ * is deniable at a glance: dashed alone reads as decoration, dim alone reads as
+ * a disabled control. Together they say "not yet" without a legend. */
+.lp-chips.lp-chips--soon li {
+  border-style: dashed;
+  border-color: var(--lp-chip-soon-border, rgba(220, 199, 158, 0.28));
+  color: var(--lp-ink-dim, #a0a0a0);
+  background: transparent;
+}
+
+/* ---- feature checklist ----
+ * The long tail: everything the app does that didn't earn a section of its
+ * own. Columns of ticked lines, grouped under quiet headings. Dense on purpose —
+ * this is the section a reader scans to find the one thing they came for.
+ *
+ * Three across, declared rather than derived: there are six groups, and three
+ * divides them into two full rows. An `auto-fit` floor fitted four at this
+ * measure and left the last row two-thirds empty, which reads as a list that
+ * was cut off rather than one that ended. Adding a seventh group is the moment
+ * to revisit this number — nothing else here will notice. */
+.lp-checklist {
+  display: grid;
+  gap: 2rem 2.5rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 34rem) {
+  .lp-checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 58rem) {
+  .lp-checklist {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.lp-checklist h3 {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lp-accent, #9a9a9a);
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+}
+.lp-checklist ul {
+  display: grid;
+  gap: 0.6rem;
+}
+.lp-checklist li {
+  display: grid;
+  grid-template-columns: 1.2rem 1fr;
+  font-size: 0.88rem;
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--lp-ink-dim, #a0a0a0);
+}
+.lp-checklist li::before {
+  content: "✓";
+  color: var(--lp-accent, #9a9a9a);
+}
