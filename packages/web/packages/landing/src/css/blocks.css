@@ -1,3 +1,168 @@
+/* ---- hero ----
+ * Centred in its screen, and the only centred block on the page — everything
+ * below it is left-aligned, because a landing page is skimmed down its left
+ * edge and centred headings make the eye hunt for each new start. The hero is
+ * the exception because it has no neighbours to line up with.
+ *
+ * It is also the one screen that still centres VERTICALLY, while every
+ * section below parks its content in the top third. Same reason: the
+ * top-third rule exists so that many headings land at one height as you flick
+ * past them, and the hero has nothing to line up with — it is a composition
+ * (mark, headline, buttons, chips) that wants to sit in the middle of its own
+ * screen, with the glow centred under it.
+ *
+ * `100vh` to match the sections: it is the first snap point, and a snap unit
+ * that changes when Safari's toolbar collapses moves every point below it.
+ *
+ * The mechanism behind all of that — `min-height: 100vh`, the flex centring,
+ * the gap, and the asymmetric vertical padding (the foot reserves whatever
+ * fixed chrome the host docks at the bottom, via `--lp-hero-pad-bottom`'s
+ * default of `--lp-dock-clear`) — already lives in `css/base.css`'s
+ * `.lp-screen` and `.lp-screen--center`, because `Hero` is built from
+ * `Screen` with `align="center"`. All that is left for this rule to add is
+ * the horizontal inset the source's `padding` shorthand also carried. */
+.lp-screen.lp-hero {
+  /* The compound selector — not a bare `.lp-hero` — is load-bearing: it lifts
+   * this rule to specificity (0,2,0), which beats `.lp-screen--center`'s
+   * (0,1,0) regardless of which order a host imports base.css and
+   * blocks.css. This declaration doesn't currently share a property with
+   * `.lp-screen--center`, but the next edit to either file shouldn't have to
+   * know that to stay safe — see the identical reasoning on
+   * `.lp-closer.lp-contact` below. */
+  padding-inline: 1.5rem;
+}
+.lp-hero img {
+  width: min(132px, 34vw);
+  height: auto;
+}
+/* The headline is a CLAIM, not the product name — the name is already in the
+ * fixed header, in the mark above it and in the browser tab. A landing page
+ * gets one line to say what the thing does. */
+.lp-hero h1 {
+  font-size: clamp(1.85rem, 5.2vw, 3.3rem);
+  font-weight: 200;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.lp-hero h1 b {
+  font-weight: 400;
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+/* Compound (element + class), not a bare `.lp-tag`: the source scoped this to
+ * `.hero p.tag` rather than a standalone utility class, so the port keeps the
+ * same element requirement and the same (0,2,1) specificity rather than
+ * flattening it to (0,1,0). */
+.lp-hero p.lp-tag {
+  max-width: 46ch;
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-size: 1.05rem;
+  text-wrap: pretty;
+}
+.lp-hero p.lp-tag em {
+  color: var(--lp-ink, #ededed);
+  font-style: normal;
+}
+
+/* A pill. Used for a hero's shipping status via `StatusPill`, and — same
+ * shape, a deliberately shared idea of what a small standalone label looks
+ * like — by `Chips` for the model providers. */
+.lp-status {
+  font: 600 0.62rem/1 var(--lp-font, ui-monospace, "SF Mono", monospace);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.6rem;
+  border-radius: 99px;
+  border: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  color: var(--lp-accent, #9a9a9a);
+  white-space: nowrap;
+}
+/* The border-color literal had no backing site variable — tokenized the same
+ * way as the other bare rgba()s in this file. Compound selector kept (not
+ * `.lp-status--free` alone) for the same reason as `.lp-btn.lp-btn--primary`
+ * below: it preserves the source's (0,2,0) specificity. */
+.lp-status.lp-status--free {
+  border-color: var(--lp-status-free-border, rgba(255, 215, 94, 0.5));
+  background: var(--lp-accent-dim, rgba(216, 216, 216, 0.14));
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+
+/* ---- buttons ---- */
+.lp-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* Comfortably past the 44px touch target at every root size the page can
+   * land on, without pinning a height that would clip a wrapped label. */
+  padding: 0.78rem 1.4rem;
+  border-radius: 99px;
+  border: 1px solid transparent;
+  font-size: 0.86rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+}
+/* `.lp-btn.lp-btn--primary`, not `.lp-btn--primary` alone: the compound keeps
+ * this at (0,2,0), matching the source's `.btn.primary`, so it isn't left
+ * tied with a same-specificity sibling rule by accident later. */
+.lp-btn.lp-btn--primary {
+  background: var(--lp-accent, #9a9a9a);
+  /* This is the ink printed ON the gold button, not the gold itself — close
+   * to but not the same value as `--lp-ground` (see §Tokens), so it gets its
+   * own token rather than being folded into an existing one. */
+  color: var(--lp-btn-primary-ink, #10131f);
+  font-weight: 700;
+}
+.lp-btn.lp-btn--primary:hover {
+  background: var(--lp-accent-bright, #d8d8d8);
+  transform: translateY(-1px);
+}
+.lp-btn.lp-btn--ghost {
+  border-color: var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  color: var(--lp-ink, #ededed);
+}
+.lp-btn.lp-btn--ghost:hover {
+  border-color: var(--lp-accent, #9a9a9a);
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+
+/* ---- trust strip ----
+ * The things a visitor wants settled before they read a feature list, on one
+ * line under the hero's buttons. Deliberately not `Cards`: these are claims,
+ * not features, and boxing them would give them the same weight as the
+ * product's actual capabilities. */
+.lp-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-ink-dim, #a0a0a0);
+}
+.lp-trust li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.lp-trust li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lp-accent, #9a9a9a);
+}
+
 /* ---- section headings ----
  * An eyebrow, a claim, and a lede. The eyebrow is what a drawer link calls
  * this section, so a reader who jumped here can see they arrived. */
@@ -460,4 +625,159 @@
 .lp-checklist li::before {
   content: "✓";
   color: var(--lp-accent, #9a9a9a);
+}
+
+/* ---- FAQ ----
+ * <details>, so it opens and closes with no JavaScript at all and stays
+ * keyboard-operable and readable to assistive tech for free. Do not replace
+ * it with state. */
+.lp-faq {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 52rem;
+}
+.lp-faq details {
+  border-bottom: 1px solid var(--lp-faq-divider, rgba(252, 246, 232, 0.09));
+}
+.lp-faq summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 1rem 2rem 1rem 0;
+  position: relative;
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--lp-ink, #ededed);
+  transition: color 0.2s;
+}
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+.lp-faq summary:hover {
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+/* A plus that becomes a minus. Two rules crossed, the vertical one rotated
+ * away on open — one glyph, no icon font, and it can't fall out of sync with
+ * the element's actual state because it is driven by `[open]`. Both lines of
+ * the grouped selector need the `lp-` prefix, not just the first — a mistake
+ * here silently drops the icon's base position rather than erroring. */
+.lp-faq summary::before,
+.lp-faq summary::after {
+  content: "";
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  width: 12px;
+  height: 1.5px;
+  background: var(--lp-accent, #9a9a9a);
+  transition: transform 0.25s;
+}
+.lp-faq summary::after {
+  transform: rotate(90deg);
+}
+/* `.lp-faq details[open] summary::after` at (0,2,3) beats the rule above,
+ * `.lp-faq summary::after` at (0,1,2), by specificity — not by source order.
+ * Ported exactly as the source wrote it (an attribute selector plus one more
+ * element in the chain, not a modifier class), so the override still holds
+ * however this file gets reordered. */
+.lp-faq details[open] summary::after {
+  transform: rotate(0deg);
+}
+.lp-faq details p {
+  padding: 0 2rem 1.3rem 0;
+  /* The same physical measure as `.lp-lede`, not the same ch count: `ch`
+   * scales with the element's own font-size, and this text is set at
+   * 0.94rem against the lede's 1.02, so 72ch here would come out a
+   * line-length shorter. 78ch is 72 × 1.02 ÷ 0.94 — the number that lands
+   * both on the same width. Left at 62ch, an answer wrapped at barely half
+   * the width of the row it opens under, which reads as a column that ran
+   * out rather than a paragraph that ended. */
+  max-width: 78ch;
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-weight: 300;
+  font-size: 0.94rem;
+}
+.lp-faq details p em {
+  color: var(--lp-ink, #ededed);
+  font-style: normal;
+}
+.lp-faq details p + p {
+  padding-top: 0;
+  margin-top: -0.6rem;
+}
+
+/* ---- closing call to action ----
+ * The one place below the hero that centres, because it is the end of the
+ * argument rather than another point in it. */
+.lp-closer {
+  position: relative;
+  text-align: center;
+  border-top: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  padding-top: var(--lp-gap, clamp(3.75rem, 8vw, 6.5rem));
+}
+.lp-closer h2 {
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  font-weight: 200;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.lp-closer h2 b {
+  font-weight: 400;
+  color: var(--lp-accent-bright, #d8d8d8);
+}
+.lp-closer p {
+  margin: 1.1rem auto 2rem;
+  max-width: 48ch;
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-weight: 300;
+}
+
+/* ---- contact + colophon ----
+ * `Contact` composes `Closer` (see blocks/Contact.tsx) rather than
+ * duplicating its markup, so the rendered element carries both `lp-closer`
+ * and `lp-contact` — the source page has `class="closer contact"` on one
+ * div. Same reasoning as `.lp-screen.lp-hero` above: the compound selector
+ * beats `.lp-closer` by specificity regardless of a host's import order.
+ * `text-align: center` here is redundant with `.lp-closer`'s own value of
+ * the same property — kept anyway, so a future edit to one can't silently
+ * desync the other. */
+.lp-closer.lp-contact {
+  text-align: center;
+}
+.lp-contact a.lp-mail {
+  font-size: clamp(1.15rem, 3.4vw, 1.6rem);
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: var(--lp-accent-bright, #d8d8d8);
+  text-decoration: none;
+  border-bottom: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+  padding-bottom: 0.3rem;
+}
+.lp-contact a.lp-mail:hover {
+  border-color: var(--lp-accent, #9a9a9a);
+}
+.lp-contact p {
+  margin-top: 1.2rem;
+  color: var(--lp-ink-dim, #a0a0a0);
+  font-size: 0.9rem;
+}
+/* Maker byline and copyright — the page's foot. Quietest type here by size
+ * alone: no dimmed colour, because the copyright is the one line that has to
+ * stay legible after everything else has been skimmed past. Specificity
+ * beats `.lp-contact p` above. */
+.lp-contact .lp-colophon {
+  margin-top: 2.8rem;
+  line-height: 1.9;
+  font-size: 0.8rem;
+}
+.lp-contact .lp-colophon a {
+  color: var(--lp-ink, #ededed);
+  text-decoration: none;
+  border-bottom: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
+}
+.lp-contact .lp-colophon a:hover {
+  border-color: var(--lp-accent, #9a9a9a);
+}
+.lp-contact .lp-colophon small {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
 }
