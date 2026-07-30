@@ -125,12 +125,12 @@ contract**, one per token the site already had a name for, and the **minted**
 set, one per literal colour/tint the port turned up that no existing token
 covered. **A host that wants to fully re-theme this package must set every
 row in *both* tables below, not just the base one** — the minted rows'
-fallbacks are Stenographer's actual navy-and-gold literals (so the page
-renders correctly with zero host configuration), while the base rows' fallbacks
-are neutral grey. Leaving the minted tokens unset on a re-themed site means
-most of the chrome takes the host's palette while a scattering of borders and
-one button's ink stay gold and Stenographer-navy — a hint of the previous
-tenant, not a bug in a single component.
+fallbacks are the same neutral greyscale as the base rows' (present so an
+unconfigured host renders a legible page, never a design of its own — see the
+note below the base table). Leaving the minted tokens unset on a re-themed
+site means most of the chrome takes the host's palette while a scattering of
+borders and one button's ink stay the default grey — inert, not a bug in a
+single component.
 
 ### Base contract
 
@@ -183,40 +183,43 @@ set the tokens."
 
 The site's stylesheet also carried literal colours that no `--color-*` token
 ever covered — all `rgba()` with baked-in alpha, because a token can't carry
-two opacities. Each one turned out to be a palette colour at some alpha
-(`rgba(12, 16, 32, 0.6)` is `--color-ground` at 60%), which is exactly why they
-were easy to miss: they read as arbitrary literals and are in fact the palette
-in disguise. Each was minted as its own `--lp-<role>` token — named for the
-role it plays, not the colour it is — with the original literal as its inline
-fallback, and a row added here. Two mints are byte-identical to another mint
-above; they still get separate tokens, because the two roles (a card's hover
-state, a wedge panel's identity) must stay free to diverge even though they
-started life at the same value. `→` names the palette colour each literal
-resolves to:
+two opacities. Each one turned out to be a palette colour at some alpha (the
+burger backdrop's literal, for instance, was `--color-ground` at 60% in the
+original site), which is exactly why they were easy to miss: they read as
+arbitrary literals and were in fact the palette in disguise. Each was minted
+as its own `--lp-<role>` token — named for the role it plays, not the colour
+it is — with a neutral fallback at the same alpha as its inline default,
+matching the base contract's rule above, and a row added here. Two mints are
+byte-identical to another mint above; they still get separate tokens, because
+the two roles (a card's hover state, a wedge panel's identity) must stay free
+to diverge even though they started life at the same value. `→` records which
+site colour and alpha each token was *minted from* in the original port — it
+is provenance, not the fallback below, which per the neutral-greyscale rule is
+grey:
 
 | Token | Fallback | `→` | What it does | Task |
 | --- | --- | --- | --- | --- |
-| `--lp-burger-bg` | `rgba(12, 16, 32, 0.6)` | ground @ 60% | The burger button's own backdrop, so it stays legible over whatever it floats above. | 3 |
-| `--lp-scrim-bg` | `rgba(12, 16, 32, 0.55)` | ground @ 55% | The scrim that dims the page behind an open drawer. | 3 |
+| `--lp-burger-bg` | `rgba(16, 16, 16, 0.6)` | ground @ 60% | The burger button's own backdrop, so it stays legible over whatever it floats above. | 3 |
+| `--lp-scrim-bg` | `rgba(16, 16, 16, 0.55)` | ground @ 55% | The scrim that dims the page behind an open drawer. | 3 |
 | `--lp-drawer-shadow` | `rgba(0, 0, 0, 0.55)` | — (pure black) | The drawer's cast shadow. | 3 |
-| `--lp-nav-divider` | `rgba(252, 246, 232, 0.07)` | ivory @ 7% | The hairline under each drawer link. | 3 |
-| `--lp-card-hover-border` | `rgba(255, 215, 94, 0.4)` | gold-bright @ 40% | A card's border once pointed at. | 4 |
-| `--lp-card-hover-bg` | `rgba(27, 35, 64, 0.62)` | raise @ 62% | A card's fill once pointed at. | 4 |
-| `--lp-shot-hover-border` | `rgba(255, 215, 94, 0.45)` | gold-bright @ 45% | A screenshot frame's border once pointed at. | 4 |
-| `--lp-shot-hover-glow` | `rgba(255, 215, 94, 0.5)` | gold-bright @ 50% | The bloom cast by a hovered screenshot frame. | 4 |
-| `--lp-shot-bar-shade` | `rgba(12, 16, 32, 0.6)` | ground @ 60% | The title bar atop a screenshot frame. | 4 |
-| `--lp-shot-dot` | `rgba(252, 246, 232, 0.22)` | ivory @ 22% | The three window dots in that bar. | 4 |
-| `--lp-shot-hatch` | `rgba(255, 215, 94, 0.05)` | gold-bright @ 5% | The hatch fill behind a placeholder screenshot. | 4 |
-| `--lp-versus-border` | `rgba(252, 246, 232, 0.09)` | ivory @ 9% | The wedge panel's default border, before either side is distinguished. | 5 |
-| `--lp-versus-us-border` | `rgba(255, 215, 94, 0.4)` | gold-bright @ 40% | The border on the wedge's "us" panel. Byte-identical to `--lp-card-hover-border` but minted separately — a card's hover state and a wedge panel's identity must stay free to diverge. | 5 |
-| `--lp-versus-us-glow` | `rgba(255, 215, 94, 0.55)` | gold-bright @ 55% | The bloom cast by the wedge's "us" panel, the one the comparison is built to make readers notice first. | 5 |
-| `--lp-rule-bg` | `rgba(12, 16, 32, 0.65)` | ground @ 65% | The oversight rule's own backdrop. | 5 |
-| `--lp-chip-bg` | `rgba(27, 35, 64, 0.35)` | raise @ 35% | A shipped provider chip's fill. | 5 |
-| `--lp-chip-open-border` | `rgba(255, 215, 94, 0.5)` | gold-bright @ 50% | The border on a chip marked open. Byte-identical to `--lp-shot-hover-glow` but minted separately for the same reason as the wedge's pair above. | 5 |
-| `--lp-chip-soon-border` | `rgba(220, 199, 158, 0.28)` | ivory-dim @ 28% | The dashed border on a planned-agent chip — one of three signals (dashed, dimmed, no gold) that stack to say "not yet" without a legend. | 5 |
-| `--lp-status-free-border` | `rgba(255, 215, 94, 0.5)` | gold-bright @ 50% | The border on the hero's "free" status pill. Byte-identical to `--lp-chip-open-border` but minted separately — a status pill and a provider chip must stay free to diverge. | 6 |
-| `--lp-btn-primary-ink` | `#10131f` | — (not a palette colour) | The primary button's text colour — the ink printed ON the gold fill, not the gold itself. Close to but distinct from `--lp-ground` (`#0C1020`); folding the two together would be a visual change wearing a refactor's clothes. | 6 |
-| `--lp-faq-divider` | `rgba(252, 246, 232, 0.09)` | ivory @ 9% | The hairline under each FAQ row. Byte-identical to `--lp-versus-border` but minted separately — a wedge panel's border and a FAQ divider must stay free to diverge. | 6 |
+| `--lp-nav-divider` | `rgba(237, 237, 237, 0.07)` | ivory @ 7% | The hairline under each drawer link. | 3 |
+| `--lp-card-hover-border` | `rgba(216, 216, 216, 0.4)` | gold-bright @ 40% | A card's border once pointed at. | 4 |
+| `--lp-card-hover-bg` | `rgba(28, 28, 28, 0.62)` | raise @ 62% | A card's fill once pointed at. | 4 |
+| `--lp-shot-hover-border` | `rgba(216, 216, 216, 0.45)` | gold-bright @ 45% | A screenshot frame's border once pointed at. | 4 |
+| `--lp-shot-hover-glow` | `rgba(216, 216, 216, 0.5)` | gold-bright @ 50% | The bloom cast by a hovered screenshot frame. | 4 |
+| `--lp-shot-bar-shade` | `rgba(16, 16, 16, 0.6)` | ground @ 60% | The title bar atop a screenshot frame. | 4 |
+| `--lp-shot-dot` | `rgba(237, 237, 237, 0.22)` | ivory @ 22% | The three window dots in that bar. | 4 |
+| `--lp-shot-hatch` | `rgba(216, 216, 216, 0.05)` | gold-bright @ 5% | The hatch fill behind a placeholder screenshot. | 4 |
+| `--lp-versus-border` | `rgba(237, 237, 237, 0.09)` | ivory @ 9% | The wedge panel's default border, before either side is distinguished. | 5 |
+| `--lp-versus-us-border` | `rgba(216, 216, 216, 0.4)` | gold-bright @ 40% | The border on the wedge's "us" panel. Byte-identical to `--lp-card-hover-border` but minted separately — a card's hover state and a wedge panel's identity must stay free to diverge. | 5 |
+| `--lp-versus-us-glow` | `rgba(216, 216, 216, 0.55)` | gold-bright @ 55% | The bloom cast by the wedge's "us" panel, the one the comparison is built to make readers notice first. | 5 |
+| `--lp-rule-bg` | `rgba(16, 16, 16, 0.65)` | ground @ 65% | The oversight rule's own backdrop. | 5 |
+| `--lp-chip-bg` | `rgba(28, 28, 28, 0.35)` | raise @ 35% | A shipped provider chip's fill. | 5 |
+| `--lp-chip-open-border` | `rgba(216, 216, 216, 0.5)` | gold-bright @ 50% | The border on a chip marked open. Byte-identical to `--lp-shot-hover-glow` but minted separately for the same reason as the wedge's pair above. | 5 |
+| `--lp-chip-soon-border` | `rgba(160, 160, 160, 0.28)` | ivory-dim @ 28% | The dashed border on a planned-agent chip — one of three signals (dashed, dimmed, no gold) that stack to say "not yet" without a legend. | 5 |
+| `--lp-status-free-border` | `rgba(216, 216, 216, 0.5)` | gold-bright @ 50% | The border on the hero's "free" status pill. Byte-identical to `--lp-chip-open-border` but minted separately — a status pill and a provider chip must stay free to diverge. | 6 |
+| `--lp-btn-primary-ink` | `#101010` | — (not a palette colour) | The primary button's text colour — the ink printed ON the gold fill, not the gold itself. Close to but distinct from `--lp-ground` (`#0C1020`); folding the two together would be a visual change wearing a refactor's clothes. | 6 |
+| `--lp-faq-divider` | `rgba(237, 237, 237, 0.09)` | ivory @ 9% | The hairline under each FAQ row. Byte-identical to `--lp-versus-border` but minted separately — a wedge panel's border and a FAQ divider must stay free to diverge. | 6 |
 
 This table grows as ports proceed. When a future port turns up a literal
 colour, shadow or tint with no token, the rule is: mint a `--lp-<role>` token

@@ -90,7 +90,7 @@
  * `.lp-status--free` alone) for the same reason as `.lp-btn.lp-btn--primary`
  * below: it preserves the source's (0,2,0) specificity. */
 .lp-status.lp-status--free {
-  border-color: var(--lp-status-free-border, rgba(255, 215, 94, 0.5));
+  border-color: var(--lp-status-free-border, rgba(216, 216, 216, 0.5));
   background: var(--lp-accent-dim, rgba(216, 216, 216, 0.14));
   color: var(--lp-accent-bright, #d8d8d8);
 }
@@ -126,7 +126,7 @@
   /* This is the ink printed ON the gold button, not the gold itself — close
    * to but not the same value as `--lp-ground` (see §Tokens), so it gets its
    * own token rather than being folded into an existing one. */
-  color: var(--lp-btn-primary-ink, #10131f);
+  color: var(--lp-btn-primary-ink, #101010);
   font-weight: 700;
 }
 .lp-btn.lp-btn--primary:hover {
@@ -291,8 +291,8 @@
  * rgba baked into the rule — so each becomes its own role-named token rather
  * than an unthemeable literal. */
 .lp-card:hover {
-  border-color: var(--lp-card-hover-border, rgba(255, 215, 94, 0.4));
-  background: var(--lp-card-hover-bg, rgba(27, 35, 64, 0.62));
+  border-color: var(--lp-card-hover-border, rgba(216, 216, 216, 0.4));
+  background: var(--lp-card-hover-bg, rgba(28, 28, 28, 0.62));
 }
 .lp-card h3 {
   font-size: 0.95rem;
@@ -331,8 +331,8 @@
 /* Neither hover colour had a site-level token behind it either — see the
  * card hover comment above. */
 .lp-shot:hover {
-  border-color: var(--lp-shot-hover-border, rgba(255, 215, 94, 0.45));
-  box-shadow: 0 0 50px -18px var(--lp-shot-hover-glow, rgba(255, 215, 94, 0.5));
+  border-color: var(--lp-shot-hover-border, rgba(216, 216, 216, 0.45));
+  box-shadow: 0 0 50px -18px var(--lp-shot-hover-glow, rgba(216, 216, 216, 0.5));
 }
 .lp-shot__bar {
   display: flex;
@@ -342,13 +342,13 @@
   border-bottom: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
   /* The gradient's second stop is another literal rgba with no backing site
    * variable — tokenized the same way as the rest on this page. */
-  background: linear-gradient(var(--lp-raise, #1c1c1c), var(--lp-shot-bar-shade, rgba(12, 16, 32, 0.6)));
+  background: linear-gradient(var(--lp-raise, #1c1c1c), var(--lp-shot-bar-shade, rgba(16, 16, 16, 0.6)));
 }
 .lp-shot__dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--lp-shot-dot, rgba(252, 246, 232, 0.22));
+  background: var(--lp-shot-dot, rgba(237, 237, 237, 0.22));
 }
 .lp-shot__name {
   margin-left: 0.4rem;
@@ -381,7 +381,7 @@
   background: repeating-linear-gradient(
     45deg,
     transparent 0 10px,
-    var(--lp-shot-hatch, rgba(255, 215, 94, 0.05)) 10px 20px
+    var(--lp-shot-hatch, rgba(216, 216, 216, 0.05)) 10px 20px
   );
 }
 .lp-shot__placeholder b {
@@ -404,7 +404,7 @@
   grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
 }
 .lp-versus > div {
-  border: 1px solid var(--lp-versus-border, rgba(252, 246, 232, 0.09));
+  border: 1px solid var(--lp-versus-border, rgba(237, 237, 237, 0.09));
   border-radius: var(--lp-radius, 14px);
   padding: 1.6rem 1.5rem;
 }
@@ -422,9 +422,9 @@
  * (0,1,1) — the "us" panel would render with the same border as "them",
  * exactly the distinction this section exists to draw. */
 .lp-versus > div.lp-versus__us {
-  border-color: var(--lp-versus-us-border, rgba(255, 215, 94, 0.4));
+  border-color: var(--lp-versus-us-border, rgba(216, 216, 216, 0.4));
   background: var(--lp-card, rgba(255, 255, 255, 0.04));
-  box-shadow: 0 0 70px -30px var(--lp-versus-us-glow, rgba(255, 215, 94, 0.55));
+  box-shadow: 0 0 70px -30px var(--lp-versus-us-glow, rgba(216, 216, 216, 0.55));
 }
 .lp-versus h3 {
   font-size: 0.72rem;
@@ -469,7 +469,7 @@
 .lp-rule {
   border: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18));
   border-radius: var(--lp-radius, 14px);
-  background: var(--lp-rule-bg, rgba(12, 16, 32, 0.65));
+  background: var(--lp-rule-bg, rgba(16, 16, 16, 0.65));
   padding: 1.2rem 1.35rem;
   font-size: 0.85rem;
   line-height: 1.8;
@@ -547,10 +547,10 @@
   padding: 0.4rem 0.85rem;
   font-size: 0.82rem;
   color: var(--lp-ink, #ededed);
-  background: var(--lp-chip-bg, rgba(27, 35, 64, 0.35));
+  background: var(--lp-chip-bg, rgba(28, 28, 28, 0.35));
 }
 .lp-chips li.lp-chip--open {
-  border-color: var(--lp-chip-open-border, rgba(255, 215, 94, 0.5));
+  border-color: var(--lp-chip-open-border, rgba(216, 216, 216, 0.5));
   color: var(--lp-accent-bright, #d8d8d8);
 }
 
@@ -578,7 +578,7 @@
  * a disabled control. Together they say "not yet" without a legend. */
 .lp-chips.lp-chips--soon li {
   border-style: dashed;
-  border-color: var(--lp-chip-soon-border, rgba(220, 199, 158, 0.28));
+  border-color: var(--lp-chip-soon-border, rgba(160, 160, 160, 0.28));
   color: var(--lp-ink-dim, #a0a0a0);
   background: transparent;
 }
@@ -644,7 +644,7 @@
   max-width: 52rem;
 }
 .lp-faq details {
-  border-bottom: 1px solid var(--lp-faq-divider, rgba(252, 246, 232, 0.09));
+  border-bottom: 1px solid var(--lp-faq-divider, rgba(237, 237, 237, 0.09));
 }
 .lp-faq summary {
   cursor: pointer;
