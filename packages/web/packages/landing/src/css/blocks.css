@@ -457,8 +457,13 @@
   color: var(--lp-ink-dim, #a0a0a0);
   font-weight: 300;
 }
+/* The glyph is the host's to choose, like every other visible value here — a
+ * checklist that wants an arrow, or a versus list that wants no bullet at all,
+ * should not have to override the rule to get one. `content` takes a var() with
+ * a string fallback, so this follows the same inline-default pattern as the
+ * colours rather than needing a :root block. */
 .lp-versus ul li::before {
-  content: "· ";
+  content: var(--lp-versus-bullet, "· ");
   color: var(--lp-accent, #9a9a9a);
 }
 
@@ -629,8 +634,11 @@
   line-height: 1.65;
   color: var(--lp-ink-dim, #a0a0a0);
 }
+/* Tokenized for the same reason as the versus bullet above: the mark is content
+ * the host picks, not a fact about the package. Note the grid column it sits in
+ * is a fixed 1.2rem, so a replacement wants to be about this wide. */
 .lp-checklist li::before {
-  content: "✓";
+  content: var(--lp-checklist-mark, "✓");
   color: var(--lp-accent, #9a9a9a);
 }
 

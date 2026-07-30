@@ -160,7 +160,7 @@ deliberately-monospaced role — the small technical label on `StatusPill`
 body face can still ask for that one label in mono. It is not a Stenographer
 literal, which is why it sits in this table rather than the minted one below.
 
-Five tokens are new to the package — the dials that let a second site differ
+Seven tokens are new to the package — the dials that let a second site differ
 from the first:
 
 | Token | Fallback | What it does |
@@ -170,6 +170,14 @@ from the first:
 | `--lp-hero-pad-top` | `6.5rem` | Hero head padding; the glow's offset is derived from it. |
 | `--lp-hero-pad-bottom` | `var(--lp-dock-clear, 0px)` | Hero foot padding; reserves whatever fixed chrome the site docks at the bottom. |
 | `--lp-root-size` | `87.5%` | The root type dial. |
+| `--lp-checklist-mark` | `"✓"` | The mark before each checklist item. A CSS string, quotes included. It sits in a fixed `1.2rem` grid column, so a replacement wants to be about that wide. |
+| `--lp-versus-bullet` | `"· "` | The bullet before each wedge-panel point. A CSS string; set it to `""` for no bullet. |
+
+The last two are the only characters the package would otherwise put on the
+page itself. They are tokens for the same reason everything visible here is:
+the package owns the UI, the site owns the words. `content` accepts a `var()`
+with a string fallback, so they follow the same inline-default rule as the
+colours and need no `:root` block.
 
 **The fallback column above is deliberately neutral greyscale, and is NOT this
 site's palette.** Stenographer is navy and gold — `--color-ground: #0C1020`,
@@ -216,9 +224,9 @@ grey:
 | `--lp-rule-bg` | `rgba(16, 16, 16, 0.65)` | ground @ 65% | The oversight rule's own backdrop. | 5 |
 | `--lp-chip-bg` | `rgba(28, 28, 28, 0.35)` | raise @ 35% | A shipped provider chip's fill. | 5 |
 | `--lp-chip-open-border` | `rgba(216, 216, 216, 0.5)` | gold-bright @ 50% | The border on a chip marked open. Byte-identical to `--lp-shot-hover-glow` but minted separately for the same reason as the wedge's pair above. | 5 |
-| `--lp-chip-soon-border` | `rgba(160, 160, 160, 0.28)` | ivory-dim @ 28% | The dashed border on a planned-agent chip — one of three signals (dashed, dimmed, no gold) that stack to say "not yet" without a legend. | 5 |
+| `--lp-chip-soon-border` | `rgba(160, 160, 160, 0.28)` | ivory-dim @ 28% | The dashed border on a planned-agent chip — one of three signals (dashed, dimmed, no accent) that stack to say "not yet" without a legend. | 5 |
 | `--lp-status-free-border` | `rgba(216, 216, 216, 0.5)` | gold-bright @ 50% | The border on the hero's "free" status pill. Byte-identical to `--lp-chip-open-border` but minted separately — a status pill and a provider chip must stay free to diverge. | 6 |
-| `--lp-btn-primary-ink` | `#101010` | — (not a palette colour) | The primary button's text colour — the ink printed ON the gold fill, not the gold itself. Close to but distinct from `--lp-ground` (`#0C1020`); folding the two together would be a visual change wearing a refactor's clothes. | 6 |
+| `--lp-btn-primary-ink` | `#101010` | — (not a palette colour) | The primary button's text colour — the ink printed ON the accent fill, not the accent itself. Close to but distinct from `--lp-ground` (`#0C1020`); folding the two together would be a visual change wearing a refactor's clothes. | 6 |
 | `--lp-faq-divider` | `rgba(237, 237, 237, 0.09)` | ivory @ 9% | The hairline under each FAQ row. Byte-identical to `--lp-versus-border` but minted separately — a wedge panel's border and a FAQ divider must stay free to diverge. | 6 |
 
 This table grows as ports proceed. When a future port turns up a literal
