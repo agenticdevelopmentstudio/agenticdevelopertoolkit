@@ -208,7 +208,7 @@ body {
 }
 
 ::selection {
-  background: var(--lp-accent-dim, rgba(216,216,216,0.14));
+  background: var(--lp-accent-dim, rgba(216, 216, 216, 0.14));
   color: var(--lp-accent-bright, #d8d8d8);
 }
 
