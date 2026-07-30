@@ -232,7 +232,13 @@ body {
    * dock — so half their difference corrects for it: with a heavier bottom
    * padding the content rides high, and so must the light. Written from the
    * padding variables rather than as a measured constant so the two cannot
-   * drift apart the next time either is touched. */
+   * drift apart the next time either is touched.
+   *
+   * The alternative was to make them equal at `--lp-dock-clear` and keep the
+   * glow on the box centre. That grows a hero screen past one viewport at
+   * 1180x820 and 1024x768 — two of the commonest laptops — to reserve at the
+   * top a strip nothing needs. Better to let the light follow the
+   * composition. */
   top: calc(50% + (var(--lp-hero-pad-top, 6.5rem) - var(--lp-hero-pad-bottom, var(--lp-dock-clear, 0px))) / 2);
   left: 50%;
   transform: translate(-50%, -50%);

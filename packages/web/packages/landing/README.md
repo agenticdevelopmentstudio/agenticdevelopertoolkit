@@ -145,12 +145,20 @@ tenant, not a bug in a single component.
 | `--color-ivory-dim` | `--lp-ink-dim` | `#a0a0a0` |
 | `--color-hairline` | `--lp-hairline` | `rgba(216,216,216,0.18)` |
 | `--font` | `--lp-font` | `ui-monospace, "SF Mono", monospace` |
+| `--font-mono` | `--lp-font-mono` | `ui-monospace, "SF Mono", monospace` |
 | `--measure` | `--lp-measure` | `70rem` |
 | `--radius` | `--lp-radius` | `14px` |
 | `--card` | `--lp-card` | `rgba(255,255,255,0.04)` |
 | `--glow` | `--lp-glow` | `radial-gradient(circle, rgba(216,216,216,0.10), transparent 65%)` |
 | `--section-gap` | `--lp-gap` | `clamp(3.75rem, 8vw, 6.5rem)` |
 | `--dock-clear` | `--lp-dock-clear` | `0px` |
+
+`--font` and `--font-mono` are separate rows even though they are
+byte-identical on the source site. `--lp-font-mono` is the package's one
+deliberately-monospaced role — the small technical label on `StatusPill`
+(`.lp-status`) — kept apart from `--lp-font` so a host with a proportional
+body face can still ask for that one label in mono. It is not a Stenographer
+literal, which is why it sits in this table rather than the minted one below.
 
 Five tokens are new to the package — the dials that let a second site differ
 from the first:

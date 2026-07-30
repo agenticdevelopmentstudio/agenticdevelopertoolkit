@@ -67,9 +67,16 @@
 
 /* A pill. Used for a hero's shipping status via `StatusPill`, and — same
  * shape, a deliberately shared idea of what a small standalone label looks
- * like — by `Chips` for the model providers. */
+ * like — by `Chips` for the model providers.
+ *
+ * `--lp-font-mono`, not `--lp-font`: the source's `--font` and `--font-mono`
+ * are byte-identical on this site, but this is the one place the page
+ * deliberately asks for monospace rather than inheriting the page's own
+ * face — a small technical label. Folding the two would be fine here and
+ * wrong on a host that sets a proportional `--lp-font` for prose while still
+ * wanting this pill in mono; keeping them separate keeps that host possible. */
 .lp-status {
-  font: 600 0.62rem/1 var(--lp-font, ui-monospace, "SF Mono", monospace);
+  font: 600 0.62rem/1 var(--lp-font-mono, ui-monospace, "SF Mono", monospace);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   padding: 0.32rem 0.6rem;
