@@ -1,111 +1,136 @@
-/* Mike Fullerton — converged site + chat theme.
- * Tight, technical, cinematic. Instrument Serif (display) + DM Mono (UI).
- * Gold + blue accents. Light = warm paper; dark = cinematic black.
+/* mikefullerton — ember on ink, set in Iosevka.
+ *
+ * The shipped look of mikefullerton.com: the same ember the lamp is lit with on
+ * fishlamp.com (--color-ember in that site's globals.css), over near-black, in
+ * the same self-hosted Iosevka. The two sites are one person; they light the
+ * same way.
+ *
+ * This file used to describe a DIFFERENT site — Instrument Serif and DM Mono off
+ * a Google Fonts @import, gold #8a6d20 light / #c4a35a dark. mikefullerton.com
+ * moved to ember and Iosevka and left this behind, then defended itself by
+ * re-declaring every token in its own styles.css on `:root, :root.dark`, where
+ * the extra `.dark` out-specifies the plain `:root` here. That worked for the
+ * tokens and did nothing for `body`, which is the same specificity in both files
+ * and so came down to whichever stylesheet Next happened to order last — this
+ * one. The page has been painting #0e0e14 under a #c4a35a glow ever since,
+ * while every gradient drawn on top of it faded to #0c0c0f.
+ *
+ * So the palette below IS the site's palette now, and the site declares none of
+ * its own. One value per role, here.
+ *
+ * SINGLE MODE, always dark. mikefullerton.com has one appearance and no toggle
+ * (see its layout.tsx), so a light variant would be a second palette nobody has
+ * ever seen and nobody would notice going wrong.
+ *
+ * NO WEBFONT @import, unlike this package's older skins. Iosevka arrives from
+ * the host — mikefullerton.com self-hosts the subset pair as --font-iosevka via
+ * next/font — and degrades to the platform monospace where the host has none. A
+ * theme is the wrong place to put a third-party request on someone else's page.
+ *
+ * TWO VOCABULARIES, ONE SET OF VALUES. The short names (--bg, --text, --accent,
+ * …) are what the site's own CSS is written in. The --color-*, --font-* and
+ * --pc-* names are the contract this package's base.css files read from a theme.
+ * The second set is aliases of the first, so there is still one hex per role.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap');
-
-/* === Tokens (light = default, dark = override) === */
+/* === Tokens === */
 
 :root {
-  /* Site color tokens — light */
-  --color-surface: #fafaf7;
-  --color-surface-raised: rgba(255, 255, 255, 0.7);
-  --color-surface-hover: rgba(245, 245, 240, 0.7);
-  --color-border: rgba(180, 175, 165, 0.4);
-  --color-border-subtle: rgba(200, 195, 185, 0.3);
+  /* --- The palette ----------------------------------------------------- */
 
-  --color-text-primary: #1a1a24;
-  --color-text-secondary: #55556a;
-  --color-text-dim: #8a8a9c;
+  /* Surfaces. --bg is what every gradient on the site fades to, and what
+   * layout.tsx hands the browser as `themeColor` so the mobile chrome blends
+   * into the page — three readers of one value, which is the argument for it
+   * living in exactly one place. */
+  --bg: #0c0c0f;
+  --surface: rgba(20, 20, 26, 0.94);
 
-  --color-accent: #8a6d20;
-  --color-accent-dim: rgba(138, 109, 32, 0.08);
-  --color-success: #2d8b45;
-  --color-error: #b03939;
-  --color-info: #3565a8;
+  --border: #2a2a36;
+  --border-subtle: #1e1e28;
 
-  /* Chat color tokens — light */
-  --pc-surface: rgba(255, 255, 255, 0.55);
-  --pc-persona-bg: rgba(138, 109, 32, 0.06);
-  --pc-persona-border: rgba(138, 109, 32, 0.20);
-  --pc-persona-text: #1a1a24;
-  --pc-persona-name: #8a6d20;
-  --pc-user-bg: rgba(53, 101, 168, 0.06);
-  --pc-user-border: rgba(53, 101, 168, 0.20);
-  --pc-user-text: #1a1a24;
-  --pc-user-name: #3565a8;
-  --pc-input-bg: rgba(255, 255, 255, 0.6);
-  --pc-input-border: #c8c4ba;
-  --pc-input-focus: #8a6d20;
-  --pc-send-bg: transparent;
-  --pc-send-text: #8a6d20;
-  --pc-time-color: #8a8a9c;
+  --text: #e8e6e3;
+  --text-muted: #8a8a9a;
+  --text-dim: #5a5a6a;
 
-  /* Code highlighting (Shiki) — light */
-  --scp-shiki-theme: 'github-light';
+  /* fishlamp.com's ember, the gold of the lamp the studio is named after. */
+  --accent: #e8a33d;
+  --accent-dim: rgba(232, 163, 61, 0.15);
 
-  /* Shared (non-color) tokens */
-  --font-display: 'Instrument Serif', Georgia, serif;
-  --font-mono: 'DM Mono', ui-monospace, monospace;
-  --font-sans: 'DM Mono', ui-monospace, monospace;
-  --pc-font: 'DM Mono', monospace;
-  --pc-radius: 3px;
-}
+  /* --- The typeface ---------------------------------------------------- */
 
-:root.dark {
-  /* Site color overrides — dark */
-  --color-surface: #0e0e14;
-  --color-surface-raised: rgba(20, 20, 28, 0.7);
-  --color-surface-hover: rgba(30, 30, 40, 0.7);
-  --color-border: rgba(42, 42, 54, 0.6);
-  --color-border-subtle: rgba(30, 30, 40, 0.5);
+  /* One face in four roles. The roles still differ even where the family no
+   * longer does, so they keep four names: collapsing them here would mean
+   * hunting down every call site to ever set them apart again. */
+  --font-mono: var(--font-iosevka, 'Iosevka'), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-mono);
+  --font-sans: var(--font-mono);
+  --font-read: var(--font-mono);
 
-  --color-text-primary: #e8e6e3;
-  --color-text-secondary: #8a8a9a;
-  --color-text-dim: #5a5a6a;
+  /* --- The toolkit's token contract, aliased onto the palette ---------- */
 
-  --color-accent: #c4a35a;
-  --color-accent-dim: rgba(196, 163, 90, 0.10);
+  --color-surface: var(--bg);
+  --color-surface-raised: var(--surface);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-text-primary: var(--text);
+  --color-text-secondary: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+
+  /* The status hues have no short name because the site has no use for them —
+   * only the chat below reads them. --color-info is also the one hue here that
+   * is not ember: the reader's side of a conversation, so the two speakers are
+   * told apart by more than which edge they sit on. */
   --color-success: #5cb270;
   --color-error: #d45454;
   --color-info: #5a8fd4;
 
-  /* Chat color overrides — dark */
-  --pc-surface: rgba(14, 14, 20, 0.55);
-  --pc-persona-bg: rgba(196, 163, 90, 0.08);
-  --pc-persona-border: rgba(196, 163, 90, 0.15);
-  --pc-persona-text: #e8e6e3;
-  --pc-persona-name: #c4a35a;
-  --pc-user-bg: rgba(90, 143, 212, 0.08);
-  --pc-user-border: rgba(90, 143, 212, 0.15);
-  --pc-user-text: #e8e6e3;
-  --pc-user-name: #5a8fd4;
-  --pc-input-bg: rgba(12, 12, 15, 0.6);
-  --pc-input-border: #2a2a36;
-  --pc-input-focus: #c4a35a;
-  --pc-send-bg: transparent;
-  --pc-send-text: #c4a35a;
-  --pc-time-color: #5a5a6a;
-
   --scp-shiki-theme: 'github-dark';
+
+  /* --- Chat ------------------------------------------------------------ */
+
+  /* Every tint is mixed from a palette token rather than written out as a
+   * fourth copy of the ember, so a change to --accent carries here too. */
+  --pc-font: var(--font-mono);
+  --pc-radius: 3px;
+  --pc-surface: color-mix(in srgb, var(--bg) 55%, transparent);
+  --pc-persona-bg: color-mix(in srgb, var(--accent) 8%, transparent);
+  --pc-persona-border: color-mix(in srgb, var(--accent) 15%, transparent);
+  --pc-persona-text: var(--text);
+  --pc-persona-name: var(--accent);
+  --pc-user-bg: color-mix(in srgb, var(--color-info) 8%, transparent);
+  --pc-user-border: color-mix(in srgb, var(--color-info) 15%, transparent);
+  --pc-user-text: var(--text);
+  --pc-user-name: var(--color-info);
+  --pc-input-bg: color-mix(in srgb, var(--bg) 60%, transparent);
+  --pc-input-border: var(--border);
+  --pc-input-focus: var(--accent);
+  --pc-send-bg: transparent;
+  --pc-send-text: var(--accent);
+  --pc-time-color: var(--text-dim);
 }
 
 /* === Site surface === */
 
+/* Flat, with no radial glow behind it. The version this replaces washed the top
+ * of the page in --color-accent-dim, which on a site whose first screen is a
+ * full-bleed photograph was never visible anywhere it could be judged. */
 body {
-  background:
-    radial-gradient(ellipse at top, var(--color-accent-dim), transparent 60%),
-    var(--color-surface);
-  color: var(--color-text-primary);
-  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
   font-size: 13.5px;
   line-height: 1.7;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { background: var(--color-accent); color: var(--color-surface); }
+/* A wash the ember shows through, not a block of it. Selecting a line should
+ * mark it, not repaint it. */
+::selection { background: var(--accent-dim); color: var(--accent); }
 
 .prose {
   --tw-prose-body: var(--color-text-primary);
@@ -125,11 +150,14 @@ body {
   --tw-prose-captions: var(--color-text-dim);
 }
 
+/* No `font-style: italic` on the display type. It was there for Instrument
+ * Serif, which ships a drawn italic; the Iosevka subset is Regular and Bold
+ * only, so the browser would answer with a synthetic oblique — the whole face
+ * sheared a few degrees. Tracking opens up instead. */
 .prose :where(h1, h2):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   font-family: var(--font-display);
   font-weight: 400;
-  font-style: italic;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
   color: var(--color-accent);
 }
 .prose :where(h3, h4):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
