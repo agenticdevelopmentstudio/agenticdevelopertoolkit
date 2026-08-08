@@ -1,0 +1,144 @@
+/*
+ * Popover Base Styles — the anchored panel, its arrow, and its bridge.
+ *
+ * Every value a consumer is likely to want is a custom property declared on
+ * `.hover-popover` itself, so a skin is a block of variable overrides rather
+ * than a second copy of these rules. That matters more here than it looks:
+ * the arrow is a rotated square painted in the panel's own surface and
+ * border, so a skin that restated the panel's background without restating
+ * the arrow's would leave a differently-coloured triangle hanging off it.
+ */
+
+/* Nothing but the positioning context the panel is measured against. The
+ * anchor wraps the trigger AND the panel — see PopoverAnchor for why. */
+.hover-popover-anchor {
+  position: relative;
+}
+
+.hover-popover {
+  /* Geometry */
+  --popover-width: 408px;
+  /* Distance from the trigger to the panel. The arrow lives in this space. */
+  --popover-gap: 14px;
+  /* How far in from the panel's leading edge the arrow sits. */
+  --popover-inset: 16px;
+  --popover-arrow: 16px;
+  /* The invisible hit area that spans the gap, so the panel is already under
+   * the pointer the instant it leaves the trigger. Slightly taller than the
+   * gap: a hairline of overlap onto the trigger costs nothing and closes the
+   * subpixel seam the two boxes would otherwise share. */
+  --popover-bridge: calc(var(--popover-gap) + 2px);
+
+  /* Paint */
+  --popover-surface: rgba(20, 20, 26, 0.94);
+  --popover-border: 1px solid #2a2a36;
+  --popover-radius: 8px;
+  --popover-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --popover-backdrop: blur(16px);
+
+  /* Motion */
+  --popover-lift: 4px;
+  --popover-duration: 0.12s;
+  --popover-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: absolute;
+  left: 0;
+  width: var(--popover-width);
+  box-sizing: border-box;
+  background: var(--popover-surface);
+  border: var(--popover-border);
+  border-radius: var(--popover-radius);
+  box-shadow: var(--popover-shadow);
+  backdrop-filter: var(--popover-backdrop);
+  z-index: 10;
+  /* The arrow is a child that pokes outside this box. */
+  overflow: visible;
+
+  /* Hidden, not unmounted — the content stays in the document (and in the
+   * server-rendered HTML) whether or not anyone has hovered anything.
+   * `visibility` rather than `display` so the transition has something to
+   * animate, and it is listed in the transition so the panel stays hittable
+   * for exactly as long as it stays visible. */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--popover-duration),
+    visibility var(--popover-duration),
+    transform var(--popover-duration) var(--popover-ease);
+}
+
+.hover-popover--top {
+  bottom: calc(100% + var(--popover-gap));
+  transform: translateY(var(--popover-lift));
+}
+
+.hover-popover--bottom {
+  top: calc(100% + var(--popover-gap));
+  transform: translateY(calc(var(--popover-lift) * -1));
+}
+
+.hover-popover--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* The arrow: a square rotated 45°, half of it clear of the panel.
+ *
+ * Behind the panel (`z-index: -1`) rather than clipped to a triangle,
+ * because the panel's own background is then what hides the two inner
+ * edges — one fewer place for the surface colour to be written down, and
+ * the join stays seamless at any radius. Only the two outer sides carry a
+ * border, which is what turns the square into a tail with a continuous
+ * outline instead of a diamond with a cross through it. */
+.hover-popover::after {
+  content: '';
+  position: absolute;
+  left: var(--popover-inset);
+  width: var(--popover-arrow);
+  height: var(--popover-arrow);
+  background: var(--popover-surface);
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
+.hover-popover--top::after {
+  bottom: calc(var(--popover-arrow) / -2);
+  border-right: var(--popover-border);
+  border-bottom: var(--popover-border);
+}
+
+.hover-popover--bottom::after {
+  top: calc(var(--popover-arrow) / -2);
+  border-left: var(--popover-border);
+  border-top: var(--popover-border);
+}
+
+/* The bridge. Without it the pointer crosses `--popover-gap` of nothing on
+ * its way from the trigger to the panel, and the only thing keeping the
+ * panel open during that crossing is the group's close delay. */
+.hover-popover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--popover-bridge);
+}
+
+.hover-popover--top::before {
+  bottom: calc(var(--popover-bridge) * -1);
+}
+
+.hover-popover--bottom::before {
+  top: calc(var(--popover-bridge) * -1);
+}
+
+/* A panel that fades and lifts is a panel that moves. Honour the request to
+ * stop moving things; the popover still appears and disappears. */
+@media (prefers-reduced-motion: reduce) {
+  .hover-popover {
+    --popover-lift: 0px;
+  }
+}

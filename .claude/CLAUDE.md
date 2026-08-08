@@ -107,7 +107,11 @@ tsup. `src/theme-data.ts` is gitignored — `install.sh` regenerates it.
 
 | Package | Source dir |
 |---|---|
+| `@agenticdevelopertoolkit/avatar` | `packages/web/packages/avatar/src/` (engine, gaze, pose, reflexes, idleLife, arbitration) |
 | `@agenticdevelopertoolkit/chat` | `packages/web/packages/chat/src/` (modes/, components/, hooks/, backends/, css/) |
+| `@agenticdevelopertoolkit/chrome` | `packages/web/packages/chrome/src/` (MenuButton, css/) |
+| `@agenticdevelopertoolkit/popover` | `packages/web/packages/popover/src/` (Popover, PopoverAnchor, useHoverPopoverGroup, css/) |
+| `@agenticdevelopertoolkit/textlens` | `packages/web/packages/textlens/src/` (createLens, useTextLens, color) |
 | `@agenticdevelopertoolkit/themes` | `packages/web/packages/themes/src/` (manifest, ThemeStyle, colorMode, styles/) |
 | `@agenticdevelopertoolkit/viewport` | `packages/web/packages/viewport/src/` (ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset) |
 

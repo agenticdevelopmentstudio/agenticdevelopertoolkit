@@ -27,6 +27,8 @@ The web platform is a pnpm workspace; its libraries live under
 - `@agenticdevelopertoolkit/avatar`
 - `@agenticdevelopertoolkit/chat`
 - `@agenticdevelopertoolkit/chrome`
+- `@agenticdevelopertoolkit/popover`
+- `@agenticdevelopertoolkit/textlens`
 - `@agenticdevelopertoolkit/themes`
 - `@agenticdevelopertoolkit/viewport`
 
