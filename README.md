@@ -34,6 +34,10 @@ The web platform is a pnpm monorepo with libraries under
   `ThreePaneChat`, `MobileChat`, `PersonaChat`) with pluggable backends.
 - `@agenticdevelopertoolkit/chrome` — site chrome: the menu button and the
   close glyph derived from it.
+- `@agenticdevelopertoolkit/popover` — hover popovers: the anchored panel, its
+  pointing arrow, and the hover-intent state for a row of them.
+- `@agenticdevelopertoolkit/textlens` — a travelling lens that magnifies,
+  softens and tints each character of a line as it passes.
 - `@agenticdevelopertoolkit/themes` — Theme manifest, `ThemeStyle`, and
   `ColorModeProvider`.
 - `@agenticdevelopertoolkit/viewport` — iOS-correct viewport / keyboard
