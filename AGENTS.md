@@ -29,6 +29,7 @@ The web platform is a pnpm workspace; its libraries live under
 - `@agenticdevelopertoolkit/chrome`
 - `@agenticdevelopertoolkit/themes`
 - `@agenticdevelopertoolkit/viewport`
+- `@agenticdevelopertoolkit/landing`
 
 ## Where to look first
 
