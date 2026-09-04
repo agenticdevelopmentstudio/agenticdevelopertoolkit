@@ -65,6 +65,11 @@ public final class MarkdownEditorController: PlatformViewController {
     public var mode: MarkdownEditorMode {
         get { modeStorage }
         set {
+            // The *requested* mode is recorded, not the clamped one that
+            // `applyMode` may substitute. A caller asking for a mode the
+            // current layout can't offer has still stated a preference, and
+            // it is honoured the moment the layout can offer it — the same
+            // rule that restores Split when a narrowed window widens again.
             preferredMode = newValue
             applyMode(newValue)
         }

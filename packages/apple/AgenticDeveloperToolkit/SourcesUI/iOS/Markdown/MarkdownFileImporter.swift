@@ -34,7 +34,12 @@ public enum MarkdownFileImporter {
         }
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            completion(nil)
+            // Delivered asynchronously so both outcomes reach the caller the
+            // same way: a completion that runs synchronously inside a delegate
+            // callback re-enters the caller while the picker is still
+            // dismissing, and the pick path above cannot do that.
+            let completion = self.completion
+            DispatchQueue.main.async { completion(nil) }
         }
     }
 
@@ -54,7 +59,8 @@ public enum MarkdownFileImporter {
         // Retain the delegate for exactly as long as the picker: when the
         // picker is dismissed — however that happens — and released, this
         // associated object goes with it.
-        objc_setAssociatedObject(picker, &delegateAssociationKey, delegate, .OBJC_ASSOCIATION_RETAIN)
+        objc_setAssociatedObject(
+            picker, &delegateAssociationKey, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         presenter.present(picker, animated: true)
     }
 }
