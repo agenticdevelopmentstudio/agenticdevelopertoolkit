@@ -94,4 +94,79 @@ struct MarkdownRendererTests {
     func paragraphsAreSeparated() {
         #expect(render("one\n\ntwo").string == "one\n\ntwo")
     }
+
+    @Test("a heading loses its hashes and takes a heading font")
+    func headingIsStyled() {
+        let rendered = render("# Title\n\nbody")
+        #expect(rendered.string == "Title\n\nbody")
+        let font = rendered.attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        #expect(font == palette.font(.title).applying(bold: true, italic: false))
+    }
+
+    @Test("heading levels step down through the type scale")
+    func headingLevelsDiffer() {
+        let one = render("# A").attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        let two = render("## A").attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        let four = render("#### A").attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        #expect(one != two)
+        #expect(two != four)
+    }
+
+    @Test("an unordered list gets bullets, one line per item")
+    func unorderedListHasBullets() {
+        #expect(render("- a\n- b").string == "•\ta\n•\tb")
+    }
+
+    @Test("an ordered list keeps its numbering")
+    func orderedListIsNumbered() {
+        #expect(render("1. a\n2. b").string == "1.\ta\n2.\tb")
+    }
+
+    @Test("a nested list is indented further than its parent")
+    func nestedListIndentsFurther() {
+        let rendered = render("- a\n    - b")
+        let outer = rendered.attributes(at: 0, effectiveRange: nil)[.paragraphStyle] as? NSParagraphStyle
+        let innerLocation = (rendered.string as NSString).range(of: "b").location
+        let inner = rendered.attributes(at: innerLocation, effectiveRange: nil)[.paragraphStyle] as? NSParagraphStyle
+        #expect((inner?.headIndent ?? 0) > (outer?.headIndent ?? 0))
+    }
+
+    @Test("a blockquote is indented and set in the secondary text color")
+    func blockQuoteIsIndentedAndDimmed() {
+        let rendered = render("> quoted")
+        #expect(rendered.string == "quoted")
+        let attributes = rendered.attributes(at: 0, effectiveRange: nil)
+        #expect(attributes[.foregroundColor] as? NSColor == palette.nsColor(.secondaryText))
+        #expect(((attributes[.paragraphStyle] as? NSParagraphStyle)?.headIndent ?? 0) > 0)
+    }
+
+    @Test("a thematic break renders as a rule rather than vanishing")
+    func thematicBreakIsVisible() {
+        #expect(render("a\n\n---\n\nb").string.contains(MarkdownBlockMetrics.thematicBreakRule))
+    }
+
+    @Test("a table keeps its rows and columns")
+    func tableKeepsShape() {
+        let rendered = render("| a | b |\n| --- | --- |\n| 1 | 2 |")
+        #expect(rendered.string == "a\tb\n1\t2")
+    }
+
+    @Test("a table's header row is bold and its body rows are not")
+    func tableHeaderIsBold() {
+        let rendered = render("| a | b |\n| --- | --- |\n| 1 | 2 |")
+        let header = rendered.attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        let bodyLocation = (rendered.string as NSString).range(of: "1").location
+        let body = rendered.attributes(at: bodyLocation, effectiveRange: nil)[.font] as? NSFont
+        #expect(header?.fontDescriptor.symbolicTraits.contains(.bold) == true)
+        #expect(body?.fontDescriptor.symbolicTraits.contains(.bold) == false)
+    }
+
+    @Test("list items still render their inline emphasis")
+    func listItemsKeepInlineSpans() {
+        let rendered = render("- a **loud** item")
+        #expect(rendered.string == "•\ta loud item")
+        let location = (rendered.string as NSString).range(of: "loud").location
+        let font = rendered.attributes(at: location, effectiveRange: nil)[.font] as? NSFont
+        #expect(font?.fontDescriptor.symbolicTraits.contains(.bold) == true)
+    }
 }
