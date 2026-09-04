@@ -74,4 +74,18 @@ struct MarkdownTextTests {
         #expect(MarkdownText.byteLength("é") == 2)
         #expect(MarkdownText.byteLength("abc") == 3)
     }
+
+    @Test("CRLF content does not leak a carriage return into the title or excerpt")
+    func crlfLineEndings() {
+        let content = "# Shopping list\r\n\r\nMilk\r\nBread\r\n"
+        #expect(MarkdownText.deriveTitle(content) == "Shopping list")
+        #expect(!MarkdownText.deriveExcerpt(content).contains("\r"))
+    }
+
+    @Test("a document that is only frontmatter has no title or excerpt of its own")
+    func frontmatterOnly() {
+        let content = "---\ntitle: Ignored\n---\n"
+        #expect(MarkdownText.deriveTitle(content) == MarkdownText.untitled)
+        #expect(MarkdownText.deriveExcerpt(content).isEmpty)
+    }
 }

@@ -99,4 +99,11 @@ struct FrontmatterTests {
         #expect(Frontmatter.jsonText(for: "---\nb: 2\na: 1\n---\nbody") == #"{"a":"1","b":"2"}"#)
         #expect(Frontmatter.jsonText(for: "body") == nil)
     }
+
+    @Test("a value needing quotes survives a write/read round trip")
+    func quotedValueRoundTrips() {
+        let written = Frontmatter.setting("title", to: "Notes: part two", in: "Body\n")
+        #expect(Frontmatter.value("title", in: written) == "Notes: part two")
+        #expect(Frontmatter.split(written).body == "Body\n")
+    }
 }

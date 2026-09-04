@@ -16,12 +16,17 @@ public enum MarkdownText {
 
     /// The document with its frontmatter and its fenced code blocks removed —
     /// the text a title or excerpt may be drawn from.
+    ///
+    /// Lines are split on `Character.isNewline` rather than on the `"\n"`
+    /// scalar: Swift's `String` groups a `"\r\n"` pair into a single
+    /// extended grapheme cluster, so splitting on the `"\n"` `Character`
+    /// alone silently fails to split a CRLF-authored document at all.
     public static func titleSearchBody(_ content: String) -> String {
         let body = Frontmatter.split(content).body
         var kept: [Substring] = []
         var insideFence = false
-        for line in body.split(separator: "\n", omittingEmptySubsequences: false) {
-            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+        for line in body.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
+            if line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("```") {
                 insideFence.toggle()
                 continue
             }
@@ -33,7 +38,7 @@ public enum MarkdownText {
     /// One line with its block and inline markers removed: heading hashes,
     /// quote and list markers, emphasis, code spans, and link syntax.
     public static func stripLineSyntax(_ line: String) -> String {
-        var text = line.trimmingCharacters(in: .whitespaces)
+        var text = line.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Block markers, outermost first, repeatedly: "> - # Title".
         var changed = true
@@ -41,11 +46,11 @@ public enum MarkdownText {
             changed = false
             for marker in ["#", ">"] where text.hasPrefix(marker) {
                 text = String(text.drop { String($0) == marker })
-                    .trimmingCharacters(in: .whitespaces)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
                 changed = true
             }
             for marker in ["- ", "* ", "+ "] where text.hasPrefix(marker) {
-                text = String(text.dropFirst(marker.count)).trimmingCharacters(in: .whitespaces)
+                text = String(text.dropFirst(marker.count)).trimmingCharacters(in: .whitespacesAndNewlines)
                 changed = true
             }
             if let match = text.range(of: "^[0-9]+[.)]\\s+", options: .regularExpression) {
@@ -53,7 +58,7 @@ public enum MarkdownText {
                 changed = true
             }
             if text.hasPrefix("[ ] ") || text.hasPrefix("[x] ") || text.hasPrefix("[X] ") {
-                text = String(text.dropFirst(4)).trimmingCharacters(in: .whitespaces)
+                text = String(text.dropFirst(4)).trimmingCharacters(in: .whitespacesAndNewlines)
                 changed = true
             }
         }
@@ -66,11 +71,11 @@ public enum MarkdownText {
         )
         // Inline emphasis and code markers.
         text = text.replacingOccurrences(of: "[*_`~]", with: "", options: .regularExpression)
-        return text.trimmingCharacters(in: .whitespaces)
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     public static func deriveTitle(_ content: String) -> String {
-        for line in titleSearchBody(content).split(separator: "\n", omittingEmptySubsequences: false) {
+        for line in titleSearchBody(content).split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
             let stripped = stripLineSyntax(String(line))
             guard !stripped.isEmpty else { continue }
             return String(stripped.prefix(titleCharacterLimit))
@@ -81,7 +86,7 @@ public enum MarkdownText {
     public static func deriveExcerpt(_ content: String) -> String {
         var lines: [String] = []
         var sawTitle = false
-        for line in titleSearchBody(content).split(separator: "\n", omittingEmptySubsequences: false) {
+        for line in titleSearchBody(content).split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
             let stripped = stripLineSyntax(String(line))
             guard !stripped.isEmpty else { continue }
             guard sawTitle else { sawTitle = true; continue }
