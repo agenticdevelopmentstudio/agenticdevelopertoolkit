@@ -41,6 +41,13 @@ public final class MarkdownTextPane: UIView {
         set { textView.isEditable = newValue }
     }
 
+    /// The pane's plain-text contents.
+    ///
+    /// Setting this does **not** fire `onTextChange` — `UITextViewDelegate.textViewDidChange`
+    /// only fires from user editing, never from a programmatic assignment to
+    /// `UITextView.text`. This is load-bearing: a caller (such as an editor
+    /// controller) that re-renders from `onTextChange` and writes the result
+    /// back via this setter must not re-enter its own callback, or it loops.
     public var text: String {
         get { textView.text ?? "" }
         set { textView.text = newValue }

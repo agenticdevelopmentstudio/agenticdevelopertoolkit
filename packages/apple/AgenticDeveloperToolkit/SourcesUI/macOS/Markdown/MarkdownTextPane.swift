@@ -20,6 +20,8 @@ public final class MarkdownTextPane: NSView {
         textView.allowsUndo = true
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
@@ -48,6 +50,13 @@ public final class MarkdownTextPane: NSView {
         set { textView.isEditable = newValue }
     }
 
+    /// The pane's plain-text contents.
+    ///
+    /// Setting this does **not** fire `onTextChange` — `NSTextViewDelegate.textDidChange`
+    /// only fires from user editing, never from a programmatic assignment to
+    /// `NSTextView.string`. This is load-bearing: a caller (such as an editor
+    /// controller) that re-renders from `onTextChange` and writes the result
+    /// back via this setter must not re-enter its own callback, or it loops.
     public var text: String {
         get { textView.string }
         set { textView.string = newValue }

@@ -68,9 +68,13 @@ struct MarkdownTextPaneTests {
         var received: String?
         pane.onTextChange = { received = $0 }
 
-        let probe = UITextView()
-        probe.text = "typed"
-        pane.textViewDidChange(probe)
+        // Drive the pane's own UITextView the way the macOS test drives its
+        // own NSTextView, so this exercises the pane's `delegate = self`
+        // wiring rather than only the delegate method's body in isolation.
+        // `insertText(_:)` is `UIKeyInput`'s real entry point — the same one
+        // UIKit calls in response to an actual keystroke.
+        let textView = pane.subviews.compactMap { $0 as? UITextView }.first
+        textView?.insertText("typed")
 
         #expect(received == "typed")
     }
