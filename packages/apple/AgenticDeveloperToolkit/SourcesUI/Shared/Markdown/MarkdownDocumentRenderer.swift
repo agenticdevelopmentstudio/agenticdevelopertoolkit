@@ -51,10 +51,11 @@ public struct MarkdownDocumentRenderer: Sendable {
     ) -> NSAttributedString {
         let body = Frontmatter.split(content).body
         let prepared = Self.rewriteTaskListMarkers(in: Self.hardenQuoteLineBreaks(in: body))
+        let fencedContents = Self.fencedBlockContents(in: prepared)
         let rendered = NSMutableAttributedString(
             attributedString: renderer.render(prepared, palette: palette, textColor: textColor))
         Self.collapseTaskListMarkers(in: rendered)
-        Self.colorAlertLabels(in: rendered, palette: palette)
+        Self.colorAlertLabels(in: rendered, palette: palette, excludingFencedContents: fencedContents)
         return rendered
     }
 
@@ -65,10 +66,20 @@ public struct MarkdownDocumentRenderer: Sendable {
     /// `> mind the gap` quote would otherwise render as one run-on line. A
     /// trailing hard-break (two spaces before the newline) is CommonMark for
     /// "keep this line break", which the parser honours as a literal `\n` —
-    /// so every quote line that is followed by another quote line gets one.
-    /// Only quote lines outside a fence are touched.
+    /// so every quote line that is followed by another quote line gets one,
+    /// unless it already ends in a hard break of its own (backslash or two-
+    /// plus trailing spaces already), in which case appending another would
+    /// push a CommonMark backslash escape off the end of the line and leave
+    /// it as a visible `\` instead of consuming it. Only quote lines outside
+    /// a fence are touched.
+    ///
+    /// Lines are split on `Character.isNewline` rather than the `"\n"`
+    /// scalar — see `Frontmatter.parse`'s comment for why a `"\r\n"`-authored
+    /// document needs this — and rejoined with a plain `"\n"`, which
+    /// normalises CRLF to LF in the text handed to `MarkdownRenderer`. That
+    /// is fine on this render-only path; it is not what stores the document.
     static func hardenQuoteLineBreaks(in source: String) -> String {
-        let lines = source.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        let lines = source.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }).map(String.init)
         var result: [String] = []
         var insideFence = false
         for (index, text) in lines.enumerated() {
@@ -81,7 +92,8 @@ public struct MarkdownDocumentRenderer: Sendable {
             let isQuoteLine = text.trimmingCharacters(in: .whitespaces).hasPrefix(">")
             let nextIsQuoteLine = index + 1 < lines.count
                 && lines[index + 1].trimmingCharacters(in: .whitespaces).hasPrefix(">")
-            result.append(isQuoteLine && nextIsQuoteLine ? text + "  " : text)
+            let alreadyHardBroken = text.hasSuffix("\\") || text.hasSuffix("  ")
+            result.append(isQuoteLine && nextIsQuoteLine && !alreadyHardBroken ? text + "  " : text)
         }
         return result.joined(separator: "\n")
     }
@@ -91,10 +103,16 @@ public struct MarkdownDocumentRenderer: Sendable {
     /// `AttributedString(markdown:)` leaves GFM's `[ ]` / `[x]` as literal text
     /// inside the list item, so the substitution happens on the source. Only
     /// list-item lines outside a fence are touched.
+    ///
+    /// Lines are split on `Character.isNewline` rather than the `"\n"`
+    /// scalar — see `Frontmatter.parse`'s comment for why a `"\r\n"`-authored
+    /// document needs this — and rejoined with a plain `"\n"`, which
+    /// normalises CRLF to LF in the text handed to `MarkdownRenderer`. That
+    /// is fine on this render-only path; it is not what stores the document.
     static func rewriteTaskListMarkers(in source: String) -> String {
         var lines: [String] = []
         var insideFence = false
-        for line in source.split(separator: "\n", omittingEmptySubsequences: false) {
+        for line in source.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
             let text = String(line)
             if text.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
                 insideFence.toggle()
@@ -114,6 +132,33 @@ public struct MarkdownDocumentRenderer: Sendable {
                 ))
         }
         return lines.joined(separator: "\n")
+    }
+
+    /// The literal text of every fenced code block in `source`, in document
+    /// order. `MarkdownRenderer.renderCodeBlock` copies a fenced block's
+    /// contents straight through into the rendered string — no markdown
+    /// reflow, and (with the default, un-injected highlighter) attributes an
+    /// ordinary reader could rely on to tell it apart from a real blockquote.
+    /// But a host can inject its own `CodeHighlighter`, whose returned
+    /// attributes are outside this type's control, so `colorAlertLabels`
+    /// cannot lean on rendered attributes to find code; it excludes these
+    /// exact strings from its search instead.
+    static func fencedBlockContents(in source: String) -> [String] {
+        var blocks: [String] = []
+        var current: [String] = []
+        var insideFence = false
+        for line in source.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
+            let text = String(line)
+            if text.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                if insideFence { blocks.append(current.joined(separator: "\n")) }
+                insideFence.toggle()
+                current = []
+                continue
+            }
+            guard insideFence else { continue }
+            current.append(text)
+        }
+        return blocks
     }
 
     /// The renderer has no notion of a task list, so a rewritten item still
@@ -145,7 +190,18 @@ public struct MarkdownDocumentRenderer: Sendable {
 
     /// A rendered blockquote whose first line is exactly an alert tag: recolour
     /// the whole quote and replace the tag with its label.
-    static func colorAlertLabels(in rendered: NSMutableAttributedString, palette: SemanticPalette) {
+    ///
+    /// `excludingFencedContents` is `fencedBlockContents(in:)`'s output for
+    /// the same document: a fenced block that *documents* alert syntax (a
+    /// literal `[!NOTE]` line inside three backticks) reproduces the tag
+    /// text verbatim in the rendered string, and must not be rewritten or
+    /// recoloured as if it were a real alert.
+    static func colorAlertLabels(
+        in rendered: NSMutableAttributedString,
+        palette: SemanticPalette,
+        excludingFencedContents fencedContents: [String] = []
+    ) {
+        let excludedRanges = Self.fencedRanges(in: rendered, fencedContents: fencedContents)
         for alert in MarkdownAlert.allCases {
             let tag = "[!\(alert.label)]"
             var searchStart = 0
@@ -159,7 +215,10 @@ public struct MarkdownDocumentRenderer: Sendable {
                 let opensLine = found.location == 0
                     || (rendered.string as NSString).substring(
                         with: NSRange(location: found.location - 1, length: 1)) == "\n"
-                guard opensLine else {
+                let insideFencedBlock = excludedRanges.contains {
+                    NSIntersectionRange($0, found).length > 0
+                }
+                guard opensLine, !insideFencedBlock else {
                     searchStart = found.location + found.length
                     continue
                 }
@@ -178,6 +237,33 @@ public struct MarkdownDocumentRenderer: Sendable {
                 searchStart = quoteRange.location + quoteRange.length
             }
         }
+    }
+
+    /// Every occurrence, in `rendered.string`, of each string in
+    /// `fencedContents` — the exact ranges `colorAlertLabels` must not touch.
+    ///
+    /// `renderCodeBlock` copies a fenced block through untouched (`String`
+    /// literal, not reflowed markdown), so the source text found by
+    /// `fencedBlockContents(in:)` reappears verbatim in the rendered output;
+    /// finding it there by substring search needs no attribute of the run at
+    /// all, which is what makes this robust to an arbitrary injected
+    /// `CodeHighlighter`.
+    private static func fencedRanges(in rendered: NSAttributedString, fencedContents: [String]) -> [NSRange] {
+        guard !fencedContents.isEmpty else { return [] }
+        let text = rendered.string as NSString
+        var ranges: [NSRange] = []
+        for block in fencedContents {
+            guard !block.isEmpty else { continue }
+            var searchStart = 0
+            while searchStart < text.length {
+                let searchRange = NSRange(location: searchStart, length: text.length - searchStart)
+                let found = text.range(of: block, range: searchRange)
+                guard found.location != NSNotFound else { break }
+                ranges.append(found)
+                searchStart = found.location + max(found.length, 1)
+            }
+        }
+        return ranges
     }
 
     /// From `location` to the end of the block — the run of text before the

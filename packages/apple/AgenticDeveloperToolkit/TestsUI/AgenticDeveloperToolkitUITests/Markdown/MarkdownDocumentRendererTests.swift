@@ -61,4 +61,46 @@ struct MarkdownDocumentRendererTests {
     func fencedContentIsNotRewritten() {
         #expect(render("```\n- [ ] literal\n```").string.contains("- [ ] literal"))
     }
+
+    @Test("an alert tag documented inside a fenced block is not recoloured, but a real alert elsewhere still is")
+    func alertSyntaxInsideFenceIsNotRecolored() {
+        let document = """
+        Here is how to write an alert:
+
+        ```
+        > [!NOTE]
+        > Example only.
+        ```
+
+        > [!NOTE]
+        > Real alert.
+        """
+        let rendered = render(document)
+        #expect(rendered.string.contains("> [!NOTE]\n> Example only."))
+        #expect(rendered.string.contains("NOTE\nReal alert."))
+
+        let realAlertRange = (rendered.string as NSString).range(of: "NOTE\nReal alert.")
+        #expect(realAlertRange.location != NSNotFound)
+        #expect(rendered.attributes(at: realAlertRange.location, effectiveRange: nil)[.foregroundColor] as? NSColor
+                == palette.nsColor(.info))
+    }
+
+    @Test("a CRLF-authored document renders identically to its LF twin")
+    func crlfDocumentMatchesLFTwin() {
+        let lf = "> [!WARNING]\n> mind the gap\n\n- [ ] todo\n- [x] done"
+        let crlf = "> [!WARNING]\r\n> mind the gap\r\n\r\n- [ ] todo\r\n- [x] done"
+        #expect(render(crlf).string == render(lf).string)
+    }
+
+    @Test("a quote line already ending in a backslash hard break is not corrupted")
+    func backslashHardBreakIsPreserved() {
+        let rendered = render("> line one\\\n> line two")
+        #expect(rendered.string == "line one\nline two")
+        #expect(!rendered.string.contains("\\"))
+    }
+
+    @Test("a nested task list item also renders a checkbox")
+    func nestedTaskListUsesCheckboxes() {
+        #expect(render("- [ ] todo\n  - [ ] nested").string.contains("☐\tnested"))
+    }
 }
