@@ -215,8 +215,9 @@ public struct MarkdownRenderer: Sendable {
         return attributes
     }
 
-    /// Level 1 and 2 get the palette's display roles; 3 and below are body text
-    /// wearing weight, because the palette has no smaller heading role and an
+    /// Level 1 and 2 get the palette's display roles, and 3 gets the same
+    /// heading role at its own weight; 4 and below are body text wearing
+    /// weight, because the palette has no smaller heading role and an
     /// invented one would drift from the rest of the toolkit's type scale.
     private static func headerFont(level: Int, palette: SemanticPalette) -> PlatformFont {
         switch level {
