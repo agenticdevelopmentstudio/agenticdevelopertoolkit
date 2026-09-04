@@ -41,6 +41,7 @@ public final class MarkdownEditorController: PlatformViewController {
     public var content: String = "" {
         didSet {
             guard !isApplyingProgrammaticContent else { return }
+            guard content != oldValue else { return }
             isApplyingProgrammaticContent = true
             defer { isApplyingProgrammaticContent = false }
             if editorPane.text != content { editorPane.text = content }
@@ -54,12 +55,37 @@ public final class MarkdownEditorController: PlatformViewController {
 
     public private(set) var availableModes: [MarkdownEditorMode] = MarkdownEditorMode.allCases
 
-    public var mode: MarkdownEditorMode = .split {
-        didSet {
-            guard mode != oldValue else { return }
-            toolbar.mode = mode
-            applyPanes()
+    /// The last mode chosen deliberately — via this setter or the toolbar's
+    /// mode control — as distinct from a layout-driven fallback. A resize
+    /// that narrows the window and then widens it again restores this,
+    /// rather than whatever mode the narrow layout happened to fall back to.
+    private var preferredMode: MarkdownEditorMode = .split
+    private var modeStorage: MarkdownEditorMode = .split
+
+    public var mode: MarkdownEditorMode {
+        get { modeStorage }
+        set {
+            preferredMode = newValue
+            applyMode(newValue)
         }
+    }
+
+    /// Applies a mode, clamping it to `availableModes` if it isn't currently
+    /// offered. Unlike the public setter, this does not touch
+    /// `preferredMode` — it's also used by the layout pass to restore a
+    /// previously-preferred mode without that restoration itself counting
+    /// as a new deliberate choice.
+    private func applyMode(_ requested: MarkdownEditorMode) {
+        let resolved = availableModes.contains(requested) ? requested : layoutDefaultMode
+        guard resolved != modeStorage else { return }
+        modeStorage = resolved
+        toolbar.mode = resolved
+        applyPanes()
+    }
+
+    private var layoutDefaultMode: MarkdownEditorMode {
+        let canSplit = isViewLoaded && isPreviewAvailable && view.bounds.width >= Self.splitWidthThreshold
+        return canSplit ? .split : .edit
     }
 
     public init(palette: SemanticPalette, highlighter: (any CodeHighlighter)? = nil) {
@@ -85,8 +111,8 @@ public final class MarkdownEditorController: PlatformViewController {
         }
         toolbar.onImport = { [weak self] in
             guard let self else { return }
-            MarkdownFileImporter.present(from: self) { imported in
-                guard let imported else { return }
+            MarkdownFileImporter.present(from: self) { [weak self] imported in
+                guard let self, let imported else { return }
                 self.content = imported
                 self.onContentChange?(imported)
             }
@@ -115,6 +141,12 @@ public final class MarkdownEditorController: PlatformViewController {
         ])
 
         editorPane.text = content
+        // Sync the toolbar's mode explicitly rather than relying on the
+        // first layout pass to push it — that pass runs at the view's
+        // as-yet-unset (zero) width and may itself change `mode`, but the
+        // toolbar should never be out of sync with the controller even for
+        // the instant before that happens.
+        toolbar.mode = mode
         applyTheme()
         applyLayoutForCurrentSize()
         renderPreview()
@@ -165,16 +197,18 @@ public final class MarkdownEditorController: PlatformViewController {
         // This block only runs when the available-modes set itself just
         // changed (the guard above filters out same-class layout passes), so
         // it represents a genuine narrow<->wide crossing, not every resize.
-        // Snapping to the class's canonical mode — rather than merely
-        // checking whether the *current* mode still happens to be a member
-        // of the new set — is what lets a widened editor regain `.split`
-        // even though `.edit` (its narrow fallback) remains valid.
-        let defaultMode: MarkdownEditorMode = canSplit ? .split : .edit
-        if mode != defaultMode {
-            mode = defaultMode
-        } else {
-            applyPanes()
+        // Restore the user's last deliberately-chosen mode if the new set
+        // still offers it (e.g. an explicit Preview survives narrowing,
+        // since `.preview` stays valid down to the two-mode set); otherwise
+        // fall back to this size class's canonical mode. Unlike the general
+        // `applyMode(_:)` path, this never updates `preferredMode` itself —
+        // a layout-driven fallback is not a deliberate choice.
+        let resolved = modes.contains(preferredMode) ? preferredMode : (canSplit ? .split : .edit)
+        if resolved != modeStorage {
+            modeStorage = resolved
+            toolbar.mode = resolved
         }
+        applyPanes()
     }
 
     private func applyPanes() {
@@ -239,8 +273,17 @@ public final class MarkdownEditorController: PlatformViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.renderDebounce, execute: work)
     }
 
+    /// Counts every render that actually runs. Exposed at internal (not
+    /// private) access so tests — which link against this module via
+    /// `@testable import` — can distinguish "the debounce fired once" from
+    /// "the debounce fired twice but happened to render the same string
+    /// both times," which black-box text comparisons alone cannot tell
+    /// apart.
+    private(set) var renderCount = 0
+
     private func renderPreview() {
         guard isViewLoaded else { return }
+        renderCount += 1
         viewer.content = content
     }
 

@@ -67,12 +67,24 @@ public final class MarkdownEditorToolbar: NSView {
     }
 
     public func presentSyntaxHelp(from presenter: PlatformViewController, palette: SemanticPalette) {
+        // `presenter` exists only so this method's signature matches the iOS
+        // implementation, which must present a view controller and so needs
+        // one; AppKit shows the popover relative to the help button itself
+        // and has no use for it.
+        _ = presenter
+
+        // `NSPopover.show(relativeTo:of:)` throws if `of:` has no window —
+        // e.g. the toolbar was asked to present before it's ever been added
+        // to a window.
+        guard helpButton.window != nil else { return }
+
         let viewer = MarkdownViewerController(palette: palette)
         viewer.content = MarkdownSyntaxReference.markdown
         viewer.view.frame = NSRect(x: 0, y: 0, width: 420, height: 460)
 
         let popover = NSPopover()
         popover.behavior = .transient
+        popover.delegate = self
         popover.contentViewController = viewer
         popover.contentSize = viewer.view.frame.size
         popover.show(relativeTo: helpButton.bounds, of: helpButton, preferredEdge: .maxY)
@@ -89,7 +101,10 @@ public final class MarkdownEditorToolbar: NSView {
     }
 
     private func syncSelection() {
-        guard let index = availableModes.firstIndex(of: mode) else { return }
+        guard let index = availableModes.firstIndex(of: mode) else {
+            modeControl.selectedSegment = -1
+            return
+        }
         modeControl.selectedSegment = index
     }
 
@@ -105,4 +120,10 @@ public final class MarkdownEditorToolbar: NSView {
 
     /// Set by the controller, which owns the presenter the popover needs.
     var onSyntaxHelpRequested: (() -> Void)?
+}
+
+extension MarkdownEditorToolbar: NSPopoverDelegate {
+    public func popoverDidClose(_ notification: Notification) {
+        popover = nil
+    }
 }

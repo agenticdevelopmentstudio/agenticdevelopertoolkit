@@ -20,7 +20,10 @@ public enum MarkdownFileImporter {
         // while it loads.
         let handler: (NSApplication.ModalResponse) -> Void = { response in
             guard response == .OK, let url = panel.url else {
-                completion(nil)
+                // Completing asynchronously here too, rather than inline,
+                // keeps the timing contract the same regardless of whether
+                // the user picked a file or cancelled.
+                DispatchQueue.main.async { completion(nil) }
                 return
             }
             DispatchQueue.global(qos: .userInitiated).async {

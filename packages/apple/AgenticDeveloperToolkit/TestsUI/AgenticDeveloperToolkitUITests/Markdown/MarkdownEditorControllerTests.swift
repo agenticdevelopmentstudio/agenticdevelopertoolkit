@@ -91,6 +91,41 @@ struct MarkdownEditorControllerTests {
         #expect(editor.availableModes == [.edit])
     }
 
+    @Test("setting a mode the current layout doesn't offer does not stick")
+    func modeSetterClampsToAvailableModes() {
+        let editor = MarkdownEditorController(palette: palette)
+        editor.isPreviewAvailable = false
+        editor.view.frame = NSRect(x: 0, y: 0, width: 1200, height: 600)
+        editor.view.layoutSubtreeIfNeeded()
+        #expect(editor.availableModes == [.edit])
+
+        editor.mode = .split
+        #expect(editor.mode == .edit)
+        #expect(editor.viewer.view.superview == nil)
+    }
+
+    @Test("cancelling a pending render means it never fires, not just that flushing is idempotent")
+    func previewDebounceIsActuallyCancelled() async throws {
+        let editor = loadedEditor("# One")
+        editor.flushPendingRender()
+        let countAfterFirstFlush = editor.renderCount
+
+        // Schedules a debounced render ~0.3s out, then flushes it early —
+        // this should both render now and cancel that pending work item.
+        editor.editorPane.onTextChange?("# Two")
+        editor.flushPendingRender()
+        let countAfterSecondFlush = editor.renderCount
+        #expect(countAfterSecondFlush == countAfterFirstFlush + 1)
+
+        // If the original debounced work item had merely been left to fire
+        // later rather than actually cancelled, it would still land around
+        // now and bump the count again — even though it would render the
+        // same (already-current) text, which is why a text comparison alone
+        // can't tell the two cases apart.
+        try await Task.sleep(nanoseconds: UInt64((MarkdownEditorController.renderDebounce + 0.2) * 1_000_000_000))
+        #expect(editor.renderCount == countAfterSecondFlush)
+    }
+
     @Test("the syntax reference covers the syntax the editor claims to support")
     func syntaxReferenceIsComplete() {
         let syntaxes = Set(MarkdownSyntaxReference.rows.map(\.syntax))

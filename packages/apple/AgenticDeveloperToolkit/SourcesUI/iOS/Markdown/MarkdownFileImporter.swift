@@ -1,23 +1,25 @@
 import UIKit
 import UniformTypeIdentifiers
+import ObjectiveC
 
-/// The document picker's delegate outlives the call that creates it, so the
-/// importer holds one alive until it reports back and then lets it go.
+/// The document picker's delegate outlives the call that creates it. Rather
+/// than have it retain itself and release on a callback — which never fires
+/// if the picker is dismissed programmatically or its presenter is torn down
+/// first, leaking the delegate — its lifetime is tied directly to the
+/// picker's own via an associated object: it lives exactly as long as the
+/// picker does, callback or not.
 @MainActor
 public enum MarkdownFileImporter {
 
     private final class PickerDelegate: NSObject, UIDocumentPickerDelegate {
-        private var retained: PickerDelegate?
         private let completion: (String?) -> Void
 
         init(completion: @escaping (String?) -> Void) {
             self.completion = completion
             super.init()
-            self.retained = self
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            defer { retained = nil }
             let completion = self.completion
             guard let url = urls.first else { completion(nil); return }
             let scoped = url.startAccessingSecurityScopedResource()
@@ -32,10 +34,11 @@ public enum MarkdownFileImporter {
         }
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            defer { retained = nil }
             completion(nil)
         }
     }
+
+    private static var delegateAssociationKey: UInt8 = 0
 
     public static func present(
         from presenter: PlatformViewController,
@@ -46,7 +49,12 @@ public enum MarkdownFileImporter {
 
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
         picker.allowsMultipleSelection = false
-        picker.delegate = PickerDelegate(completion: completion)
+        let delegate = PickerDelegate(completion: completion)
+        picker.delegate = delegate
+        // Retain the delegate for exactly as long as the picker: when the
+        // picker is dismissed — however that happens — and released, this
+        // associated object goes with it.
+        objc_setAssociatedObject(picker, &delegateAssociationKey, delegate, .OBJC_ASSOCIATION_RETAIN)
         presenter.present(picker, animated: true)
     }
 }

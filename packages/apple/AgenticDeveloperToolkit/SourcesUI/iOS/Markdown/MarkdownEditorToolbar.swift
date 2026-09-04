@@ -18,7 +18,7 @@ public final class MarkdownEditorToolbar: UIView {
         didSet { rebuildModeControl() }
     }
 
-    public var mode: MarkdownEditorMode = .edit {
+    public var mode: MarkdownEditorMode = .split {
         didSet { syncSelection() }
     }
 
@@ -77,7 +77,10 @@ public final class MarkdownEditorToolbar: UIView {
     }
 
     private func syncSelection() {
-        guard let index = availableModes.firstIndex(of: mode) else { return }
+        guard let index = availableModes.firstIndex(of: mode) else {
+            modeControl.selectedSegmentIndex = UISegmentedControl.noSegment
+            return
+        }
         modeControl.selectedSegmentIndex = index
     }
 
