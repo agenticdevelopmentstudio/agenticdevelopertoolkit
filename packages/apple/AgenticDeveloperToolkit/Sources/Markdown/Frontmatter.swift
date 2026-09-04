@@ -54,9 +54,15 @@ public enum Frontmatter {
         )
     }
 
+    /// Lines are split on `Character.isNewline` rather than on the `"\n"`
+    /// scalar: Swift's `String` groups a `"\r\n"` pair into a single
+    /// extended grapheme cluster, so splitting on the `"\n"` `Character`
+    /// alone silently fails to split a CRLF-authored block at all — every
+    /// key but the first would be lost. (`split(_:)` above is unaffected;
+    /// its fence match runs over UTF-16 code units, not `Character`s.)
     public static func parse(_ block: String) -> [String: String] {
         var values: [String: String] = [:]
-        for line in block.split(separator: "\n", omittingEmptySubsequences: false) {
+        for line in block.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
             guard let pair = scalarPair(in: String(line)) else { continue }
             values[pair.key] = pair.value
         }
@@ -80,7 +86,9 @@ public enum Frontmatter {
             return "---\n\(key): \(serialize(value))\n---\n" + content
         }
 
-        var lines = block.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        // Same CRLF-grapheme-cluster hazard as `parse` above — split on
+        // newline characters, not the `"\n"` scalar.
+        var lines = block.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }).map(String.init)
         let index = lines.firstIndex { scalarPair(in: $0)?.key == key }
 
         switch (index, value) {

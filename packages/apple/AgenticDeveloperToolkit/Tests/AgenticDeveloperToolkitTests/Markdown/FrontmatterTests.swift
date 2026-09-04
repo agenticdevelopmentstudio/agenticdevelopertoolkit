@@ -106,4 +106,17 @@ struct FrontmatterTests {
         #expect(Frontmatter.value("title", in: written) == "Notes: part two")
         #expect(Frontmatter.split(written).body == "Body\n")
     }
+
+    @Test("a CRLF frontmatter block parses into its separate keys")
+    func parsesCRLFBlock() {
+        let parsed = Frontmatter.parse("title: Hi\r\npinned: true")
+        #expect(parsed == ["title": "Hi", "pinned": "true"])
+    }
+
+    @Test("setting a key on a CRLF document rewrites its line and leaves every other line untouched")
+    func settingRewritesOneLineWithCRLF() {
+        let content = "---\r\ntitle: Hi\r\nweird: 'keep me'\r\n---\r\nbody\r\n"
+        let updated = Frontmatter.setting("title", to: "Bye", in: content)
+        #expect(updated == "---\ntitle: Bye\nweird: 'keep me'\n---\nbody\r\n")
+    }
 }
