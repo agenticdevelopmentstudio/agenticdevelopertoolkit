@@ -69,7 +69,7 @@ Five patterns, for five different failures:
                       else's product. A package prefixes with its OWN name.
   private repo paths  a filesystem path into a tree the reader does not have:
                       `backend/src/adh/src/lib/rdid.ts`,
-                      `frontend/tools/verify_autofill_copies.py`,
+                      `<adh-tools>/sites/scripts/verify_autofill_copies.py`,
                       `adh-site-config/content/help.en.json`.
 
 The bracketed-prefix pattern is deliberately the bracketed form only. Bare `adh`
@@ -133,9 +133,16 @@ PATTERNS = {
     # A shipped log/error prefix naming the private product rather than the package
     # emitting it. Bracketed form only — bare `adh` is legitimate prose here.
     "private product log prefix": re.compile(r"\[adh\]", re.IGNORECASE),
+    # The alternatives are eras, not synonyms: the guards moved out of adh's
+    # `frontend/tools/` into adh-tools' `sites/scripts/` in 2026-09, so a leak
+    # written today spells the new one and a leak written last month spells the
+    # old. Both trees are equally absent from a public consumer's disk, so both
+    # keep firing -- deleting the retired spelling would quietly stop catching
+    # every comment already in the tree.
     "private repo path": re.compile(
         r"backend/src/(adh|builder|status)"
         r"|frontend/(src|tools)/"
+        r"|\badh-tools[>/]"
         r"|\badh/(src|frontend)/"
         r"|adh-site-config",
         re.IGNORECASE,

@@ -79,7 +79,7 @@ def test_private_repo_path_is_caught() -> None:
     """A comment giving coordinates into a repo the reader does not have."""
     cases = [
         "// A MIRROR of backend/src/adh/src/lib/rdid.ts, pinned by a parity guard.\n",
-        "// `frontend/tools/verify_autofill_copies.py` is what holds the copies together.\n",
+        "// `<adh-tools>/sites/scripts/verify_autofill_copies.py` is what holds the copies together.\n",
         "/* Route-keyed, over adh-site-config/content/help.en.json. */\n",
         "// NOT adh/src/help/store.ts, which is easy to mistake this for.\n",
     ]
