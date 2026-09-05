@@ -67,9 +67,13 @@ struct MarkdownDocumentTests {
         #expect(doc.isPinned == false)
         doc.setPinned(true)
         #expect(doc.isPinned)
-        // Quoted: a bare `true` is a boolean to YAML, and only a string
-        // survives adh's frontmatter reader unchanged.
-        #expect(doc.content == "---\npinned: \"true\"\n---\n# Hi\n")
+        // A YAML boolean, bare. Every other reader of the document — the web
+        // editor above all — expects `pinned: true`, not the string "true".
+        #expect(doc.content == "---\npinned: true\n---\n# Hi\n")
+        // What adh's own reader would make of it: `stringValue` returns a
+        // value only for a scalar YAML types as a string, so a `nil` here is
+        // the assertion that the boolean went out as a boolean.
+        #expect(Frontmatter.stringValue("pinned", in: doc.content) == nil)
         doc.setPinned(false)
         #expect(doc.isPinned == false)
         #expect(doc.content == "# Hi\n")

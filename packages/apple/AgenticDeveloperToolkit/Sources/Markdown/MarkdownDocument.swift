@@ -118,9 +118,15 @@ public struct MarkdownDocument: Identifiable, Equatable, Sendable {
     /// Pinning is a local affordance carried in frontmatter rather than a
     /// column, so it survives a round trip through a server that has never
     /// heard of it.
+    /// `Frontmatter.value` unquotes, so this reads both the boolean this
+    /// writer emits and the quoted `pinned: "true"` a previous version wrote.
     public var isPinned: Bool { Frontmatter.value("pinned", in: content) == "true" }
 
+    /// Writes a YAML *boolean*, not the four characters `true`. The web editor
+    /// and every other reader of the document expect `pinned: true`; a quoted
+    /// `pinned: "true"` is a string, and this is exactly the distinction
+    /// `FrontmatterValue` exists to carry.
     public mutating func setPinned(_ pinned: Bool) {
-        content = Frontmatter.setting("pinned", to: pinned ? "true" : nil, in: content)
+        content = Frontmatter.setting("pinned", to: pinned ? .bool(true) : nil, in: content)
     }
 }

@@ -67,16 +67,46 @@ struct FrontmatterTests {
 
     @Test("setting an absent key appends it to the existing block")
     func settingAppendsToBlock() {
-        // `true` is quoted because YAML would type a bare `true` as a boolean,
-        // and adh only takes a frontmatter value that is a *string*. One
-        // predicate (`YAMLScalar`) decides that here and in `stringValue`.
-        let updated = Frontmatter.setting("pinned", to: "true", in: "---\ntitle: Hi\n---\nbody\n")
-        #expect(updated == "---\ntitle: Hi\npinned: \"true\"\n---\nbody\n")
+        // `.bool` means the YAML boolean, so it is emitted bare. The string
+        // `"true"` would be quoted instead — `nonStringLookingValuesAreQuoted`
+        // pins that half, and `settingKeepsTheCallersType` pins the pair.
+        let updated = Frontmatter.setting("pinned", to: .bool(true), in: "---\ntitle: Hi\n---\nbody\n")
+        #expect(updated == "---\ntitle: Hi\npinned: true\n---\nbody\n")
     }
 
     @Test("setting a key on a document with no block creates one")
     func settingCreatesBlock() {
-        #expect(Frontmatter.setting("pinned", to: "true", in: "body\n") == "---\npinned: \"true\"\n---\nbody\n")
+        #expect(Frontmatter.setting("pinned", to: .bool(true), in: "body\n") == "---\npinned: true\n---\nbody\n")
+    }
+
+    @Test("the caller's type decides the bytes: a boolean is bare, its spelling is quoted")
+    func settingKeepsTheCallersType() {
+        // The one fact fix wave 3 could not express. Same characters, two
+        // meanings, and adh's reader tells them apart: `stringValue` returns a
+        // value only when a YAML parser would type it as a string.
+        let asBool = Frontmatter.setting("k", to: .bool(true), in: "body\n")
+        #expect(asBool == "---\nk: true\n---\nbody\n")
+        #expect(Frontmatter.stringValue("k", in: asBool) == nil)
+
+        let asString = Frontmatter.setting("k", to: "true", in: "body\n")
+        #expect(asString == "---\nk: \"true\"\n---\nbody\n")
+        #expect(Frontmatter.stringValue("k", in: asString) == "true")
+
+        // Both still read back as the same text through `value`, which
+        // stringifies — that is what keeps `isPinned` reading a legacy
+        // `pinned: "true"` written before this distinction existed.
+        #expect(Frontmatter.value("k", in: asBool) == "true")
+        #expect(Frontmatter.value("k", in: asString) == "true")
+    }
+
+    @Test("a yaml scalar that cannot be written bare falls back to quoting")
+    func yamlScalarWithNewlineFallsBackToQuoting() {
+        // A caller error, and the document must survive it: a bare newline
+        // would close the fence and promote the rest of the value into the
+        // body. One wrong key beats a mangled document.
+        let content = Frontmatter.setting("k", to: .yaml("true\nevil: yes"), in: "body\n")
+        #expect(Frontmatter.split(content).body == "body\n")
+        #expect(Frontmatter.value("evil", in: content) == nil)
     }
 
     @Test("setting a key to nil removes its line")
@@ -132,7 +162,7 @@ struct FrontmatterTests {
             "多字节: ok"
         ]
         for value in values {
-            let written = Frontmatter.setting("title", to: value, in: "Body\n")
+            let written = Frontmatter.setting("title", to: .string(value), in: "Body\n")
             #expect(Frontmatter.value("title", in: written) == value,
                     "round trip failed for \(value.debugDescription): wrote \(written.debugDescription)")
             #expect(Frontmatter.split(written).body == "Body\n")
@@ -142,7 +172,8 @@ struct FrontmatterTests {
     @Test("a round trip is idempotent — a second save changes nothing")
     func roundTripIsStable() {
         let once = Frontmatter.setting("title", to: #"Re: the "big" rewrite"#, in: "Body\n")
-        let twice = Frontmatter.setting("title", to: Frontmatter.value("title", in: once) ?? "", in: once)
+        let twice = Frontmatter.setting(
+            "title", to: .string(Frontmatter.value("title", in: once) ?? ""), in: once)
         #expect(twice == once)
     }
 
@@ -212,7 +243,7 @@ struct FrontmatterTests {
         // Without quotes these round-trip as a bool, a number and a null — so
         // `stringValue` would refuse to read back what `setting` just wrote.
         for value in ["true", "false", "yes", "no", "null", "~", "42", "0x1f", "1e3", "-.inf"] {
-            let content = Frontmatter.setting("k", to: value, in: "body\n")
+            let content = Frontmatter.setting("k", to: .string(value), in: "body\n")
             #expect(content.contains("k: \"\(value)\""), "\(value) was written unquoted")
             #expect(Frontmatter.stringValue("k", in: content) == value)
         }

@@ -21,6 +21,35 @@ public struct FrontmatterSplit: Equatable, Sendable {
     }
 }
 
+/// What a caller means by the text it is writing into a frontmatter value.
+///
+/// A `String` alone cannot say it. `title` must round-trip as a *string* —
+/// adh's reader drops a `title` that fails `typeof v === 'string'`, so
+/// `title: 42` falls through to the body heading and the column then flips on
+/// every sync round trip; that is why the writer quotes anything YAML would
+/// type as something else. `pinned` is the opposite: it is a boolean the
+/// caller happens to be holding as text, and quoting it puts a string on the
+/// wire where every other reader of the document — the web editor above all —
+/// expects `true`. The quoting rule is right; a parameter that cannot tell the
+/// two apart is what was wrong.
+public enum FrontmatterValue: Equatable, Sendable, ExpressibleByStringLiteral {
+
+    /// Text that must read back as this exact string. Emitted bare when a
+    /// bare emission would parse as the same string, and quoted otherwise.
+    /// A bare string literal means this case, because it is the common one.
+    case string(String)
+
+    /// A scalar already written in YAML's own notation — `true`, `42`, `null`
+    /// — emitted verbatim rather than quoted. Only for a caller that means the
+    /// *type*, not the characters.
+    case yaml(String)
+
+    /// The YAML booleans, spelled once.
+    public static func bool(_ flag: Bool) -> FrontmatterValue { .yaml(flag ? "true" : "false") }
+
+    public init(stringLiteral value: String) { self = .string(value) }
+}
+
 /// The `---`-fenced YAML-ish header that adh writes at the top of a markdown
 /// document.
 ///
@@ -115,7 +144,12 @@ public enum Frontmatter {
     /// writes LF. Normalising only the block keeps the change to the bytes this
     /// call already had to rewrite instead of touching the whole document.
     /// (`settingRewritesOneLineWithCRLF` pins it.)
-    public static func setting(_ key: String, to value: String?, in content: String) -> String {
+    ///
+    /// A bare string literal is a `.string`, so `setting("title", to: "42", …)`
+    /// still writes a quoted `"42"`. A caller that means a YAML *type* rather
+    /// than these characters — `setPinned` writing a boolean — says so with
+    /// `.yaml`/`.bool`.
+    public static func setting(_ key: String, to value: FrontmatterValue?, in content: String) -> String {
         let parts = split(content)
 
         guard let block = parts.block else {
@@ -222,7 +256,24 @@ public enum Frontmatter {
         return result
     }
 
-    private static func serialize(_ value: String) -> String {
+    /// Emits `value` as the YAML scalar its case names.
+    ///
+    /// `.yaml` goes out verbatim — that is the whole point of the case — with
+    /// one fail-soft guard: a scalar that is empty or carries a newline cannot
+    /// be written bare without ending the line or breaking the fence, so it
+    /// falls back to the quoted form. That is a caller error, and a quoted
+    /// value is a wrong value in one key rather than a mangled document.
+    private static func serialize(_ value: FrontmatterValue) -> String {
+        switch value {
+        case .string(let text):
+            return serializeString(text)
+        case .yaml(let text):
+            guard text.isEmpty || text.contains(where: \.isNewline) else { return text }
+            return serializeString(text)
+        }
+    }
+
+    private static func serializeString(_ value: String) -> String {
         guard YAMLScalar.needsQuoting(value) else { return value }
         // Backslash first: escaping the quotes first would then escape the
         // backslashes this step just wrote. CRLF before LF and CR, because
