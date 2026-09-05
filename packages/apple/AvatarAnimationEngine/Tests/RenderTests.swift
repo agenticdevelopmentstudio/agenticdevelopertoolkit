@@ -116,6 +116,29 @@ final class RenderTests: XCTestCase {
         XCTAssertEqual(CGPoint(x: 50, y: 50).applying(t), CGPoint(x: 150, y: 100))
     }
 
+    func testOverscanShrinksTheCanvasBoxWithoutMovingItsCentre() {
+        // 100x100 into 300x200 at half scale: the canvas occupies 100x100
+        // instead of 200x200, leaving 50 points above and below for motion
+        // that leaves the box — the layer-tree stand-in for the original's
+        // `overflow: visible`.
+        let t = AvatarLayerView.fit(canvas: Canvas(w: 100, h: 100),
+                                    into: CGSize(width: 300, height: 200),
+                                    flipY: false, overscan: 0.5)
+        XCTAssertEqual(CGPoint(x: 0, y: 0).applying(t), CGPoint(x: 100, y: 50))
+        XCTAssertEqual(CGPoint(x: 100, y: 100).applying(t), CGPoint(x: 200, y: 150))
+        // Unmoved centre is what makes this a shrink rather than a nudge.
+        XCTAssertEqual(CGPoint(x: 50, y: 50).applying(t), CGPoint(x: 150, y: 100))
+    }
+
+    func testOverscanDefaultsToFillingTheBoxSoExistingHostsAreUnmoved() {
+        let canvas = Canvas(w: 350, h: 195)
+        let size = CGSize(width: 774, height: 394)
+        let plain = AvatarLayerView.fit(canvas: canvas, into: size, flipY: false)
+        let explicit = AvatarLayerView.fit(canvas: canvas, into: size,
+                                           flipY: false, overscan: 1)
+        XCTAssertEqual(plain, explicit)
+    }
+
     // MARK: - the layer tree
 
     func testTheFirstRenderBuildsOneLayerPerItemAndLaterRendersReuseThem() throws {

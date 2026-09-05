@@ -36,6 +36,25 @@ public final class AvatarLayerView: AvatarHostView {
     /// host that wants a decorative, non-reacting olylo turns it off.
     public var tracksPointer = true
 
+    /// How much of the view the canvas box is allowed to fill, 0...1.
+    ///
+    /// The original never clips: its SVG carries `overflow: visible` precisely
+    /// because emotional `scale` and `rotation` push the glyph outside the
+    /// design box ($GSAP/src/Bitbag.tsx:210-213). A layer tree has no such
+    /// escape — whatever leaves the view's bounds is sheared off — so the
+    /// equivalent is to fit the canvas into less than the whole view and let
+    /// the overflow use the margin. bitbag's `silly` is the case that needs
+    /// it: a 180° turn about a pivot below centre puts his stems a third of a
+    /// canvas below the bottom edge.
+    ///
+    /// 1 is the historical behaviour (canvas fills the binding dimension
+    /// exactly) and stays the default: a host that has sized its view to the
+    /// canvas is asking for the canvas, and silently shrinking it would move
+    /// every existing avatar.
+    /// No invalidation on write: `fit` is recomputed from this on every frame
+    /// the display link draws, so the next frame already carries the change.
+    public var overscan: CGFloat = 1
+
     /// The last point `pointerLocation` reported, so a still cursor is not
     /// re-reported every frame. Re-reporting would call `notice()` 60 times a
     /// second and pin the idle ladder to rung 0 forever.
@@ -249,7 +268,8 @@ public final class AvatarLayerView: AvatarHostView {
 
         let character = engine.config.character
         let fit = Self.fit(canvas: character.canvas, into: size,
-                           flipY: Platform.viewSpaceIsBottomLeft)
+                           flipY: Platform.viewSpaceIsBottomLeft,
+                           overscan: overscan)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -318,9 +338,16 @@ public final class AvatarLayerView: AvatarHostView {
     // MARK: - geometry
 
     public static func fit(canvas: Canvas, into size: CGSize,
-                           flipY: Bool) -> CGAffineTransform {
+                           flipY: Bool, overscan: CGFloat = 1) -> CGAffineTransform {
         // Uniform, so the character never stretches; the leftover is letterbox.
+        // `overscan` below 1 turns part of that leftover into room for motion
+        // that leaves the canvas box — see the property of the same name. The
+        // canvas stays centred either way, so the margin is split evenly and a
+        // pose overflowing in one direction gets half of it.
+        // Zero or negative would collapse or mirror the avatar rather than
+        // scale it, which is never what a host meant to ask for.
         let s = min(size.width / CGFloat(canvas.w), size.height / CGFloat(canvas.h))
+            * max(overscan, 0.01)
         let centred = CGAffineTransform(scaleX: s, y: s)
             .concatenating(CGAffineTransform(
                 translationX: (size.width - CGFloat(canvas.w) * s) / 2,
