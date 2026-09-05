@@ -28,9 +28,11 @@
 		5C7945A9AA0E8F0EF1D35433 /* AvatarAnimationEngine-macOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C4B3FE2D38949DC19E03C81A /* AvatarAnimationEngine-macOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5D503C616C76C410AFD57954 /* Channels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8DF984557CA6F751D21E97 /* Channels.swift */; };
 		61FE371C6CACC09FAAE9A845 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBF207EB983722B3DB7B7991 /* Environment.swift */; };
+		62291BC3355E96270816EB77 /* AvatarPlateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B019709D8236FF3391C995 /* AvatarPlateView.swift */; };
 		65F672F49D3BAC4C4178B727 /* AvatarAnimationEngine-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4B3FE2D38949DC19E03C81A /* AvatarAnimationEngine-macOS.framework */; };
 		681576241DF709E841D2A3D2 /* Build.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814537AD8B6CCA5DFFB48451 /* Build.swift */; };
 		695E1FACA737E491AE87A729 /* Engine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EBEBF357BECD714B5E9B0 /* Engine.swift */; };
+		6C745B74A044E25DA8E06441 /* AvatarPlateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B019709D8236FF3391C995 /* AvatarPlateView.swift */; };
 		6F9CBD963C7185CCEA9793C0 /* Mat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2134AE5318FB7827B4E0AA6 /* Mat.swift */; };
 		710B1EE06C64D59D42F83B89 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBF207EB983722B3DB7B7991 /* Environment.swift */; };
 		715D51D08304368B9198C88D /* AnimTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3577FAFCE319A5F94FA8E5A7 /* AnimTests.swift */; };
@@ -105,6 +107,7 @@
 		0A33B29B00C20949F5FCAB61 /* rig.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = rig.json; sourceTree = "<group>"; };
 		130F581501C25450DEFB4801 /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		1A23396394C9D97D1A9515B9 /* PlatformShims.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformShims.swift; sourceTree = "<group>"; };
+		33B019709D8236FF3391C995 /* AvatarPlateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPlateView.swift; sourceTree = "<group>"; };
 		3577FAFCE319A5F94FA8E5A7 /* AnimTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimTests.swift; sourceTree = "<group>"; };
 		3897409E395539C018E497AD /* Morph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Morph.swift; sourceTree = "<group>"; };
 		469A27890528508F8961C885 /* Arbiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Arbiter.swift; sourceTree = "<group>"; };
@@ -210,6 +213,7 @@
 			isa = PBXGroup;
 			children = (
 				B2EE7DB0C02CE95B18299871 /* AvatarLayerView.swift */,
+				33B019709D8236FF3391C995 /* AvatarPlateView.swift */,
 				1A23396394C9D97D1A9515B9 /* PlatformShims.swift */,
 			);
 			path = Render;
@@ -422,6 +426,7 @@
 			files = (
 				E4B4CA0B0038ADB6D4C2BB39 /* Arbiter.swift in Sources */,
 				97ED447C6D9766C5E1BB2B80 /* AvatarLayerView.swift in Sources */,
+				62291BC3355E96270816EB77 /* AvatarPlateView.swift in Sources */,
 				681576241DF709E841D2A3D2 /* Build.swift in Sources */,
 				5D503C616C76C410AFD57954 /* Channels.swift in Sources */,
 				A73EC9C54ED61A9F899A7A53 /* Color.swift in Sources */,
@@ -473,6 +478,7 @@
 			files = (
 				152E5E00EA536B7C677840E0 /* Arbiter.swift in Sources */,
 				0369D47198C41C4F064DF226 /* AvatarLayerView.swift in Sources */,
+				6C745B74A044E25DA8E06441 /* AvatarPlateView.swift in Sources */,
 				08AC14BA111732E32E7F2133 /* Build.swift in Sources */,
 				B828A0E6A26A4C4FCCACB658 /* Channels.swift in Sources */,
 				D3D7EED3B9E8155D0B6E3D89 /* Color.swift in Sources */,
