@@ -82,14 +82,26 @@ public struct ThemeTerminalOptions: Codable, Equatable, Sendable {
 public struct ThemeProjectOptions: Codable, Equatable, Sendable {
     /// Overrides `UserSettings.highlightActivePane`.
     public var highlightActivePane: Bool?
-    /// The active pane's border color. `nil` uses the theme's raised-surface
-    /// tone, which is what the app draws when no theme has an opinion.
+    /// The active pane's border color. `nil` uses the theme's outline tone,
+    /// which is what the app draws when no theme has an opinion.
     public var paneOutline: RGBAColor?
+    /// The plane the panes sit on — what shows through the frame spacing and
+    /// the gutters between panes. `nil` uses the theme's raised-surface tone,
+    /// one step off the pane backdrop, so the panes read as separate objects
+    /// rather than as one field with seams in it.
+    public var paneBackdrop: RGBAColor?
 
-    public init(highlightActivePane: Bool? = nil, paneOutline: RGBAColor? = nil) {
+    public init(
+        highlightActivePane: Bool? = nil,
+        paneOutline: RGBAColor? = nil,
+        paneBackdrop: RGBAColor? = nil
+    ) {
         self.highlightActivePane = highlightActivePane
         self.paneOutline = paneOutline
+        self.paneBackdrop = paneBackdrop
     }
 
-    public var isEmpty: Bool { highlightActivePane == nil && paneOutline == nil }
+    public var isEmpty: Bool {
+        highlightActivePane == nil && paneOutline == nil && paneBackdrop == nil
+    }
 }

@@ -92,4 +92,20 @@ public struct ThemeTypography: Codable, Equatable, Sendable {
 
     /// The default system typography (all roles at their system defaults).
     public static let system = ThemeTypography()
+
+    /// The bounds a `sizeScale` is allowed to take. Below `0.5` `size(_:)`
+    /// collapses every role toward zero, taking any constraint built on an
+    /// intrinsic size with it; above `4` it blows past what any layout that
+    /// assumes a roughly system-sized label was built to hold. Shared by every
+    /// path that sets a scale from outside the type it was authored in —
+    /// `SemanticPalette.scaled(by:)` (the reader's runtime "Text Size" control)
+    /// and `ThemeStore.importJSON` (a theme file's own declared scale) — so the
+    /// two can never drift onto different limits.
+    public static let sizeScaleRange: ClosedRange<Double> = 0.5...4
+
+    /// Clamps `value` into `sizeScaleRange`. The one place both callers above
+    /// enforce the limit.
+    public static func clampedSizeScale(_ value: Double) -> Double {
+        Swift.min(Swift.max(value, sizeScaleRange.lowerBound), sizeScaleRange.upperBound)
+    }
 }

@@ -65,9 +65,16 @@ public final class ThemeStore {
         storage.customThemes = themes
     }
 
-    /// Deletes the custom theme with `id` (no-op for built-ins).
+    /// Deletes the custom theme with `id` (no-op for built-ins). Also clears
+    /// `activeThemeID` if `id` was the active theme, so storage never keeps
+    /// pointing at a theme that no longer exists: left alone, that id is a
+    /// lookup `reload()` can never satisfy again, and it snaps back to
+    /// "active" without the user choosing it if a later import ever reuses it.
     public func delete(id: String) {
         storage.customThemes = customThemes.filter { $0.id != id }
+        if storage.activeThemeID == id {
+            storage.activeThemeID = nil
+        }
     }
 
     /// Creates a fresh, editable custom theme seeded from `template` (the active
@@ -149,6 +156,12 @@ public final class ThemeStore {
     /// built-in or become un-deletable. The palette is validated the same way the
     /// `.itermcolors` path validates, so a structurally broken file is rejected
     /// with a clear error instead of entering the catalog as an unusable theme.
+    /// `typography.sizeScale` is clamped to `ThemeTypography.sizeScaleRange` —
+    /// the same bound `SemanticPalette.scaled(by:)` enforces on the reader's own
+    /// scale — so a file declaring `"sizeScale": 0` can't lay every label out at
+    /// zero point size instead of being rejected outright: unlike an invalid
+    /// palette or fg==bg, a bad scale doesn't make the theme unusable, only
+    /// mis-sized, so it's repaired rather than refused.
     @discardableResult
     public func importJSON(data: Data) throws -> ColorTheme {
         var theme = try JSONDecoder().decode(ColorTheme.self, from: data)
@@ -160,6 +173,7 @@ public final class ThemeStore {
         guard theme.foreground != theme.background else {
             throw ThemeImportError.foregroundMatchesBackground
         }
+        theme.typography.sizeScale = ThemeTypography.clampedSizeScale(theme.typography.sizeScale)
         theme.id = UUID().uuidString
         theme.isBuiltIn = false
         theme.isImported = true

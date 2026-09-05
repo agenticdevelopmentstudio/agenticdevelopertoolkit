@@ -72,10 +72,22 @@ public final class ObservableChatViewModel: ChatViewModel {
         // Captures `backend` (the parameter), not `self.backend` — and is the
         // last statement in `init`, after every other stored property is set
         // — so this is safe to form even though it captures `self` weakly.
+        //
+        // `Task.init`'s operation closure inherits the actor isolation of
+        // where it's written (`@_inheritActorContext`), and this `init` runs
+        // on `@MainActor` (the class is `@MainActor`), so the whole closure
+        // body — including after each `for await` resumes — already runs on
+        // the main actor. `handle(_:)` is a `@MainActor` method too, so
+        // calling it here never hops actors: `await self.handle(event)` is
+        // provably a same-actor call, which is exactly what the compiler
+        // warns about ("no 'async' operations occur within 'await'
+        // expression"). Dropping the `await` removes the warning without
+        // changing behavior; only the `for await` on the async sequence
+        // itself is genuinely asynchronous.
         self.eventTask = Task { [weak self] in
             guard let self else { return }
             for await event in backend.inboundEvents {
-                await self.handle(event)
+                self.handle(event)
             }
         }
     }

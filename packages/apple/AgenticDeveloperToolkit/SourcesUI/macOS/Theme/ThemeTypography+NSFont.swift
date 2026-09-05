@@ -50,7 +50,7 @@ extension SemanticPalette {
     /// The resolved `NSFont` for a `TextRole` (family / size×scale / weight /
     /// monospaced), per the theme's typography.
     public func font(_ role: TextRole) -> NSFont {
-        theme.typography.style(role).nsFont(scaledSize: CGFloat(theme.typography.size(role)))
+        theme.typography.style(role).nsFont(scaledSize: CGFloat(size(role)))
     }
 
     /// `font(_:)` re-weighted. For text that needs its own emphasis *within* a
@@ -60,6 +60,6 @@ extension SemanticPalette {
     public func font(_ role: TextRole, weight: FontWeight) -> NSFont {
         var style = theme.typography.style(role)
         style.weight = weight
-        return style.nsFont(scaledSize: CGFloat(theme.typography.size(role)))
+        return style.nsFont(scaledSize: CGFloat(size(role)))
     }
 }

@@ -80,7 +80,7 @@ struct ThemeManagerTests {
     // MARK: textScale
 
     private func bodySize(_ manager: ThemeManager) -> Double {
-        manager.currentPalette.theme.typography.size(.body)
+        manager.currentPalette.size(.body)
     }
 
     @Test("the reader's scale rebuilds the palette's type")
@@ -129,7 +129,7 @@ struct ThemeManagerTests {
         manager.textScale = 1.5
         manager.selectTheme(id: BuiltInThemes.dracula.id)
 
-        let unscaled = SemanticPalette(theme: manager.currentTheme).theme.typography.size(.body)
+        let unscaled = SemanticPalette(theme: manager.currentTheme).size(.body)
         #expect(abs(bodySize(manager) - unscaled * 1.5) < 0.0001)
     }
 }

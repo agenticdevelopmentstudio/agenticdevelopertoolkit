@@ -411,8 +411,17 @@ public actor PersonaChatCoordinator: Backend {
 
     private nonisolated func describe(_ error: any Error, fallback: String) -> String {
         if error is CancellationError { return fallback }
-        if let described = error as? CustomStringConvertible, !described.description.isEmpty {
-            return described.description
+        // `any Error` bridges to `NSError` on Apple platforms, and `NSError`
+        // itself conforms to `CustomStringConvertible` — so `error as?
+        // CustomStringConvertible` always succeeds, for every error, not just
+        // ours. That silently skipped the `NSError.localizedDescription`
+        // fallback below for every non-`PersonaChatError`, surfacing whatever
+        // raw Swift dump `String(describing:)` produces (a verbose
+        // `DecodingError` case, say) instead of the friendlier message this
+        // function exists to prefer. Naming the concrete type we actually
+        // authored a description for fixes both the warning and the bug.
+        if let personaError = error as? PersonaChatError {
+            return personaError.description
         }
         let text = (error as NSError).localizedDescription
         return text.isEmpty ? fallback : text

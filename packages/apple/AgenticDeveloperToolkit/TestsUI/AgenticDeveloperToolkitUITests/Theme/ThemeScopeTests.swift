@@ -72,7 +72,11 @@ struct ThemeScopeTests {
         scope.textScale = 1.5
         let scaled = scope.palette
 
-        #expect(scaled.theme.typography.sizeScale > plain.theme.typography.sizeScale)
+        // Scaling no longer writes into `theme.typography.sizeScale` (that's
+        // the theme's own designer-authored scale, untouched by a reader's
+        // "Text Size" control) — `size(_:)` is where the applied scale
+        // actually shows up. See `SemanticPalette.scaled(by:)`.
+        #expect(scaled.size(.body) > plain.size(.body))
         withExtendedLifetime(manager) {}
     }
 
@@ -91,7 +95,7 @@ struct ThemeScopeTests {
 
         var sizes: [Double] = []
         let observer = ThemePaletteObserver(host: inner) { palette in
-            sizes.append(palette.theme.typography.sizeScale)
+            sizes.append(palette.size(.body))
         }
         let initial = sizes.count
 
@@ -121,7 +125,7 @@ struct ThemeScopeTests {
         let late = NSView()
         var sizes: [Double] = []
         let observer = ThemePaletteObserver(host: late) { palette in
-            sizes.append(palette.theme.typography.sizeScale)
+            sizes.append(palette.size(.body))
         }
         chat.addSubview(late)
         let unscaled = sizes.last!
@@ -144,7 +148,7 @@ struct ThemeScopeTests {
 
         var sizes: [Double] = []
         let observer = ThemePaletteObserver(host: inner) { palette in
-            sizes.append(palette.theme.typography.sizeScale)
+            sizes.append(palette.size(.body))
         }
         let initial = sizes.count
 

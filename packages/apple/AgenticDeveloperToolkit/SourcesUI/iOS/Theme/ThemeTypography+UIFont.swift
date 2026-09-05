@@ -51,6 +51,6 @@ extension SemanticPalette {
     /// The resolved `UIFont` for a `TextRole`, mirroring the macOS `font(_:)`
     /// accessor exactly.
     public func font(_ role: TextRole) -> UIFont {
-        theme.typography.style(role).uiFont(scaledSize: CGFloat(theme.typography.size(role)))
+        theme.typography.style(role).uiFont(scaledSize: CGFloat(size(role)))
     }
 }

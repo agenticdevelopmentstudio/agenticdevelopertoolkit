@@ -131,8 +131,15 @@ public struct SemanticPalette: Equatable, Sendable {
     /// `theme`, so it never breaks `Equatable`.
     private let resolved: [ThemeRole: RGBAColor]
 
+    /// The runtime multiplier layered on top of `theme.typography.sizeScale`
+    /// by `scaled(by:)`. Kept off `theme` itself — see `size(_:)` and
+    /// `scaled(by:)` — so a reader's "Text Size" control never gets baked into
+    /// the theme value this palette carries.
+    private let readerScale: Double
+
     public init(theme: ColorTheme) {
         self.theme = theme
+        self.readerScale = 1
         var map: [ThemeRole: RGBAColor] = [:]
         map.reserveCapacity(ThemeRole.allCases.count)
         for role in ThemeRole.allCases {
@@ -141,9 +148,27 @@ public struct SemanticPalette: Equatable, Sendable {
         self.resolved = map
     }
 
+    /// Backing initializer for `scaled(by:)`: reuses the already-resolved
+    /// colors (scaling never touches color) and layers a new `readerScale` on
+    /// top without disturbing `theme`.
+    private init(theme: ColorTheme, resolved: [ThemeRole: RGBAColor], readerScale: Double) {
+        self.theme = theme
+        self.resolved = resolved
+        self.readerScale = readerScale
+    }
+
     /// The resolved color for `role` (override if present, else derived).
     public func color(_ role: ThemeRole) -> RGBAColor {
         resolved[role] ?? Self.resolve(role, theme: theme)
+    }
+
+    /// The effective point size for `role`: `theme.typography.size(role)` (the
+    /// designer's own size × `sizeScale`) further multiplied by whatever
+    /// `scaled(by:)` has layered on since. Font resolution reads this rather
+    /// than `theme.typography.size(role)` directly — see `scaled(by:)` for why
+    /// the two must not collapse into the same number.
+    public func size(_ role: TextRole) -> Double {
+        theme.typography.size(role) * readerScale
     }
 
     /// Whether the theme states this role outright, rather than leaving it to
@@ -381,12 +406,36 @@ extension SemanticPalette {
     ///
     /// Clamped, because it arrives from a slider a host wires up: a scale of
     /// zero would lay the whole UI out at no height, taking every constraint
-    /// built on an intrinsic size with it.
+    /// built on an intrinsic size with it. Uses the same bound `ThemeStore`
+    /// enforces on an imported theme's own declared scale — see
+    /// `ThemeTypography.sizeScaleRange`.
     public func scaled(by factor: Double) -> SemanticPalette {
-        let clamped = Swift.max(0.5, Swift.min(4, factor))
+        let clamped = ThemeTypography.clampedSizeScale(factor)
         guard clamped != 1 else { return self }
-        var scaledTheme = theme
-        scaledTheme.typography.sizeScale *= clamped
-        return SemanticPalette(theme: scaledTheme)
+        return SemanticPalette(theme: theme, resolved: resolved, readerScale: readerScale * clamped)
+    }
+}
+
+/// The project window's two resolved colors.
+///
+/// Both are a theme override falling back to a role, and both are read from
+/// more than one place — the pane view and the split view's gutter both paint
+/// the backdrop, the pane view and the theme editor both need the outline — so
+/// the fallback lives here rather than being spelled out at each site (`dry`).
+extension SemanticPalette {
+
+    /// The plane a project window's panes sit on: what shows through the frame
+    /// spacing around them and the gutters between them. One step off
+    /// `windowBackground`, which is what a pane itself paints, so the panes
+    /// read as objects on a surface instead of one field cut by seams.
+    public var projectPaneBackdrop: RGBAColor {
+        theme.project?.paneBackdrop ?? elevatedSurface
+    }
+
+    /// The border around the pane the user is working in. The outline role, not
+    /// a surface tone: this is a two-point line, and a line drawn in the tone of
+    /// an adjacent plane is a line nobody can see.
+    public var projectPaneOutline: RGBAColor {
+        theme.project?.paneOutline ?? outline
     }
 }

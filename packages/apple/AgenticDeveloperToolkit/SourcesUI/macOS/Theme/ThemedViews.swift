@@ -6,6 +6,14 @@ import AgenticDeveloperToolkit
 @MainActor
 public final class ThemedBackgroundView: NSView, Themeable {
     public let role: ThemeRole
+
+    /// A specific color to paint instead of the role. This is how a themeable
+    /// *setting* — a color a theme names outright, rather than a semantic role
+    /// it inherits — reaches a view that otherwise just follows the palette.
+    /// `nil` puts it back on the role.
+    public var colorOverride: NSColor? {
+        didSet { applyTheme(resolvedThemeScope.palette) }
+    }
     private var observer: ThemePaletteObserver?
 
     public init(role: ThemeRole = .windowBackground) {
@@ -19,7 +27,7 @@ public final class ThemedBackgroundView: NSView, Themeable {
     public required init?(coder: NSCoder) { fatalError() }
 
     public func applyTheme(_ palette: SemanticPalette) {
-        layer?.backgroundColor = palette.nsColor(role).cgColor
+        layer?.backgroundColor = (colorOverride ?? palette.nsColor(role)).cgColor
     }
 }
 

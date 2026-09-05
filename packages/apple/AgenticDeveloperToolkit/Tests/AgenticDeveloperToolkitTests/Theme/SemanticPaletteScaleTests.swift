@@ -23,7 +23,7 @@ struct SemanticPaletteScaleTests {
     }
 
     private func size(_ palette: SemanticPalette, _ role: TextRole) -> Double {
-        palette.theme.typography.size(role)
+        palette.size(role)
     }
 
     @Test("a factor of one is the palette itself")

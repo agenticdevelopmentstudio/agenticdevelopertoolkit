@@ -23,6 +23,20 @@ import AgenticDeveloperToolkit
 @MainActor
 public final class ThemeManager {
 
+    /// The raw string moved with the type — it read
+    /// `AgenticToolkit.ThemeManager.didChange` while this class lived in
+    /// AgenticToolkitMacOS — and no compatibility post was left behind, on
+    /// purpose. A notification name is only a shared secret across a boundary
+    /// where two builds meet, and there is no such boundary here: everything
+    /// that observes this asks for `ThemeManager.didChangeNotification` rather
+    /// than spelling the string (checked across every consumer), a plugin
+    /// bundle links the host's own image of this framework instead of carrying
+    /// its own, and the name is never persisted. Renaming it is therefore a
+    /// rename and nothing more.
+    ///
+    /// Should any of that stop being true — a consumer that writes the string
+    /// out, or an XPC service with its own copy of this framework — the fix is
+    /// to post both names for a release, not to reach for the old string here.
     public static let didChangeNotification = Notification.Name("AgenticDeveloperToolkitUI.ThemeManager.didChange")
 
     /// The live instance. **Weak** — something upstream (the app delegate, a
@@ -38,6 +52,13 @@ public final class ThemeManager {
     /// Applies the active theme to app-wide chrome. `nil` means the manager
     /// tracks the theme but paints no chrome of its own.
     public var appearanceDriver: (any ThemeAppearanceDriver)?
+
+    /// The driver most recently removed by `drivesApplicationAppearance = false`
+    /// (macOS-only; see `AppKitAppearanceDriver.swift`), kept only so a later
+    /// `= true` can reinstall that exact instance — and whatever it captured,
+    /// like an injected `autoAppearance` closure — instead of a fresh default
+    /// one. Not `public`: `drivesApplicationAppearance` is the only reader/writer.
+    var suspendedAppearanceDriver: (any ThemeAppearanceDriver)?
 
     /// The reader's own multiplier over every theme's typography — what a
     /// host's "Text Size" control writes to. `1` leaves each theme's type

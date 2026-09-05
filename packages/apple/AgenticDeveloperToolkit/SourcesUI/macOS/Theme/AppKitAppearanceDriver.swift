@@ -66,14 +66,26 @@ extension ThemeManager {
     /// Setting `true` when the AppKit driver is already installed is a no-op
     /// rather than a fresh allocation. Like before, flipping it does not itself
     /// repaint; the next theme change does.
+    ///
+    /// A `false` → `true` cycle reinstalls the exact `AppKitAppearanceDriver`
+    /// instance `false` removed, not a fresh `AppKitAppearanceDriver()` — the
+    /// latter's `autoAppearance` defaults to `{ nil }`, which would silently
+    /// discard whatever closure the host injected at construction (see
+    /// `ThemeManager+UserSettings.swift`). That makes the toggle lossless: a
+    /// host can turn AppKit driving off and back on without losing the
+    /// closure that answers "what does `.auto` resolve to".
     public var drivesApplicationAppearance: Bool {
         get { appearanceDriver is AppKitAppearanceDriver }
         set {
             if newValue {
                 // Only the empty slot is ours to fill: a non-nil driver is
                 // either already the AppKit one (no-op) or the host's (theirs).
-                if appearanceDriver == nil { appearanceDriver = AppKitAppearanceDriver() }
-            } else if appearanceDriver is AppKitAppearanceDriver {
+                if appearanceDriver == nil {
+                    appearanceDriver = suspendedAppearanceDriver ?? AppKitAppearanceDriver()
+                    suspendedAppearanceDriver = nil
+                }
+            } else if let driver = appearanceDriver as? AppKitAppearanceDriver {
+                suspendedAppearanceDriver = driver
                 appearanceDriver = nil
             }
         }
