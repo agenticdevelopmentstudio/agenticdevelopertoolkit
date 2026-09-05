@@ -81,11 +81,15 @@ private struct MarkdownEditorScreen: View {
     let id: UUID
     @ObservedObject var documents: InMemoryMarkdownDocuments
 
+    private var document: InMemoryMarkdownDocuments.Item? {
+        documents.items.first { $0.id == id }
+    }
+
     var body: some View {
         MarkdownEditorRepresentable(
-            content: documents.items.first { $0.id == id }?.content ?? "",
+            content: document?.content ?? "",
             onChange: { documents.update(id, content: $0) })
-        .navigationTitle(documents.items.first { $0.id == id }?.title ?? "")
+        .navigationTitle(document?.title ?? "")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
