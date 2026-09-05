@@ -165,6 +165,19 @@ public final class MarkdownEditorController: PlatformViewController {
         renderPreview()
     }
 
+    /// Drives the same path a keystroke does, so a host can be tested without
+    /// synthesising events. Named for what it is rather than hidden behind
+    /// `#if DEBUG`, because a hook the tests need is part of the type's
+    /// contract (`explicit-over-implicit`).
+    ///
+    /// Setting `editorPane.text` assigns the text view's string, which does not
+    /// post a text-did-change notification — so invoking `onTextChange`
+    /// afterwards fires the real handler exactly once, not twice.
+    public func simulateUserEdit(_ text: String) {
+        editorPane.text = text
+        editorPane.onTextChange?(text)
+    }
+
     // MARK: - Layout
 
     // The only platform branch in this file: AppKit and UIKit name the same
