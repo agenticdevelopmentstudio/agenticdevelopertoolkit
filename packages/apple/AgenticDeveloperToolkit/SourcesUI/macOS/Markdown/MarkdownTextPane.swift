@@ -77,6 +77,10 @@ public final class MarkdownTextPane: NSView {
         textView.textColor = palette.nsColor(.primaryText)
         textView.insertionPointColor = palette.nsColor(.cursor)
         textView.font = palette.font(.code)
+        textView.selectedTextAttributes = [
+            .backgroundColor: palette.nsColor(.selection),
+            .foregroundColor: palette.nsColor(.selectionText)
+        ]
     }
 }
 
