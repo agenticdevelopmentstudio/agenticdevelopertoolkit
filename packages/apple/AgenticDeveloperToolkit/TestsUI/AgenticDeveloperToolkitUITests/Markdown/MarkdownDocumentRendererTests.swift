@@ -62,6 +62,22 @@ struct MarkdownDocumentRendererTests {
         #expect(render("```\n- [ ] literal\n```").string.contains("- [ ] literal"))
     }
 
+    @Test("a tilde fence protects its contents exactly as a backtick fence does")
+    func tildeFencedContentIsNotRewritten() {
+        #expect(render("~~~\n- [ ] literal\n~~~").string.contains("- [ ] literal"))
+        #expect(MarkdownDocumentRenderer.fencedBlockContents(in: "~~~\n- [ ] literal\n~~~")
+                == ["- [ ] literal"])
+    }
+
+    @Test("a fence marker inside a block of the other marker is content, not a close")
+    func mixedFenceMarkersDoNotCloseEachOther() {
+        let document = "```\n~~~\n- [ ] literal\n```\n\n- [ ] real"
+        #expect(MarkdownDocumentRenderer.fencedBlockContents(in: document) == ["~~~\n- [ ] literal"])
+        let rendered = render(document).string
+        #expect(rendered.contains("- [ ] literal"))   // inside the block: untouched
+        #expect(rendered.contains("☐"))               // outside it: a real checkbox
+    }
+
     @Test("an alert tag documented inside a fenced block is not recoloured, but a real alert elsewhere still is")
     func alertSyntaxInsideFenceIsNotRecolored() {
         let document = """

@@ -27,7 +27,12 @@ public enum MarkdownSyntaxReference {
         MarkdownSyntaxRow(syntax: "`code`", meaning: "Inline code"),
         MarkdownSyntaxRow(syntax: "```lang", meaning: "Fenced code block"),
         MarkdownSyntaxRow(syntax: "[text](url)", meaning: "Link"),
-        MarkdownSyntaxRow(syntax: "| a | b |", meaning: "Table row; follow the header with | --- |"),
+        // The pipes are escaped because `markdown` below emits every row *as a
+        // table row*: under GFM a `|` splits a cell even inside a code span, so
+        // an unescaped `| a | b |` explodes into seven cells in a two-column
+        // table — and this sheet is rendered by the code it documents, so that
+        // is the row the reader sees broken.
+        MarkdownSyntaxRow(syntax: #"\| a \| b \|"#, meaning: #"Table row; follow the header with \| --- \|"#),
         MarkdownSyntaxRow(syntax: "---", meaning: "Horizontal rule; at the very top, frontmatter")
     ]
 
@@ -36,8 +41,28 @@ public enum MarkdownSyntaxReference {
     public static var markdown: String {
         var lines = ["## Markdown syntax", "", "| Syntax | Means |", "| --- | --- |"]
         for row in rows {
-            lines.append("| `\(row.syntax)` | \(row.meaning) |")
+            lines.append("| \(codeSpan(row.syntax)) | \(row.meaning) |")
         }
         return lines.joined(separator: "\n")
+    }
+
+    /// `text` as a code span that survives being *rendered*.
+    ///
+    /// A single backtick cannot delimit content that contains backticks —
+    /// `` `code` `` and ```` ```lang ```` are two of the rows this sheet
+    /// documents — so the delimiter is one longer than the longest run inside,
+    /// which is CommonMark's rule. Content that begins or ends with a backtick
+    /// is padded with a space the parser strips again, so the delimiters stay
+    /// distinguishable from the content.
+    static func codeSpan(_ text: String) -> String {
+        var longestRun = 0
+        var currentRun = 0
+        for character in text {
+            currentRun = character == "`" ? currentRun + 1 : 0
+            longestRun = max(longestRun, currentRun)
+        }
+        let delimiter = String(repeating: "`", count: longestRun + 1)
+        let padding = text.hasPrefix("`") || text.hasSuffix("`") ? " " : ""
+        return delimiter + padding + text + padding + delimiter
     }
 }

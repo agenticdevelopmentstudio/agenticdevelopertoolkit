@@ -161,6 +161,42 @@ struct MarkdownRendererTests {
         #expect(body?.fontDescriptor.symbolicTraits.contains(.bold) == false)
     }
 
+    @Test("two adjacent tables stay two tables, not one run-on row")
+    func adjacentTablesAreSeparated() {
+        // Row indices restart with each table, so comparing row index alone
+        // read the second table's header as a continuation of the first
+        // table's last row and joined them with a tab.
+        let rendered = render("""
+        | a | b |
+        | --- | --- |
+        | 1 | 2 |
+
+        | c | d |
+        | --- | --- |
+        | 3 | 4 |
+        """)
+        #expect(rendered.string == "a\tb\n1\t2\n\nc\td\n3\t4")
+    }
+
+    @Test("a heading deeper than six hashes is not a heading at all")
+    func headingBeyondLevelSixIsBodyText() {
+        // CommonMark stops at six, so the parser hands `#######` back as a
+        // paragraph — hashes and all. Pinning the shipped behaviour rather
+        // than inventing a seventh heading level the palette has no font for.
+        let rendered = render("####### Deep")
+        #expect(rendered.string == "####### Deep")
+        let font = rendered.attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        #expect(font == palette.font(.body))
+    }
+
+    @Test("a table with a header and no body rows renders just its header")
+    func emptyTableRendersItsHeader() {
+        let rendered = render("| a | b |\n| --- | --- |")
+        #expect(rendered.string == "a\tb")
+        let font = rendered.attributes(at: 0, effectiveRange: nil)[.font] as? NSFont
+        #expect(font?.fontDescriptor.symbolicTraits.contains(.bold) == true)
+    }
+
     @Test("list items still render their inline emphasis")
     func listItemsKeepInlineSpans() {
         let rendered = render("- a **loud** item")

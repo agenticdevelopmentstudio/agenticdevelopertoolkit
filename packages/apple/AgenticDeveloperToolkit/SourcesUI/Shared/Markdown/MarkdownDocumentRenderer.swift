@@ -79,19 +79,15 @@ public struct MarkdownDocumentRenderer: Sendable {
     /// normalises CRLF to LF in the text handed to `MarkdownRenderer`. That
     /// is fine on this render-only path; it is not what stores the document.
     static func hardenQuoteLineBreaks(in source: String) -> String {
-        let lines = source.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }).map(String.init)
+        let lines = FenceScanner.classify(source)
         var result: [String] = []
-        var insideFence = false
-        for (index, text) in lines.enumerated() {
-            if text.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
-                insideFence.toggle()
-                result.append(text)
-                continue
-            }
-            guard !insideFence else { result.append(text); continue }
+        for (index, line) in lines.enumerated() {
+            guard !line.isFenced else { result.append(line.text); continue }
+            let text = line.text
             let isQuoteLine = text.trimmingCharacters(in: .whitespaces).hasPrefix(">")
-            let nextIsQuoteLine = index + 1 < lines.count
-                && lines[index + 1].trimmingCharacters(in: .whitespaces).hasPrefix(">")
+            let next = index + 1 < lines.count ? lines[index + 1] : nil
+            let nextIsQuoteLine = next.map { !$0.isFenced && $0.text.trimmingCharacters(in: .whitespaces).hasPrefix(">") }
+                ?? false
             let alreadyHardBroken = text.hasSuffix("\\") || text.hasSuffix("  ")
             result.append(isQuoteLine && nextIsQuoteLine && !alreadyHardBroken ? text + "  " : text)
         }
@@ -111,15 +107,9 @@ public struct MarkdownDocumentRenderer: Sendable {
     /// is fine on this render-only path; it is not what stores the document.
     static func rewriteTaskListMarkers(in source: String) -> String {
         var lines: [String] = []
-        var insideFence = false
-        for line in source.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
-            let text = String(line)
-            if text.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
-                insideFence.toggle()
-                lines.append(text)
-                continue
-            }
-            guard !insideFence else { lines.append(text); continue }
+        for line in FenceScanner.classify(source) {
+            let text = line.text
+            guard !line.isFenced else { lines.append(text); continue }
             lines.append(
                 text.replacingOccurrences(
                     of: "^(\\s*[-*+]\\s+)\\[ \\]\\s+",
@@ -144,21 +134,7 @@ public struct MarkdownDocumentRenderer: Sendable {
     /// cannot lean on rendered attributes to find code; it excludes these
     /// exact strings from its search instead.
     static func fencedBlockContents(in source: String) -> [String] {
-        var blocks: [String] = []
-        var current: [String] = []
-        var insideFence = false
-        for line in source.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
-            let text = String(line)
-            if text.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
-                if insideFence { blocks.append(current.joined(separator: "\n")) }
-                insideFence.toggle()
-                current = []
-                continue
-            }
-            guard insideFence else { continue }
-            current.append(text)
-        }
-        return blocks
+        FenceScanner.fencedBlockContents(in: source)
     }
 
     /// The renderer has no notion of a task list, so a rewritten item still

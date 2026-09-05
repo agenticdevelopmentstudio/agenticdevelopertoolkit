@@ -123,6 +123,10 @@ public struct MarkdownRenderer: Sendable {
         /// -1 for a header row, the parser's row index for a body row, `nil`
         /// when the block is not in a table at all.
         var tableRow: Int?
+        /// The identity of the `.table` intent this row belongs to. Row indices
+        /// restart at each table, so two adjacent tables would otherwise look
+        /// like one table's repeated row and be run together on a single line.
+        var tableIdentity: Int?
         var isTableHeader = false
 
         var indent: CGFloat {
@@ -161,6 +165,8 @@ public struct MarkdownRenderer: Sendable {
                 shape.isTableHeader = true
             case .tableRow(let rowIndex):
                 if shape.tableRow == nil { shape.tableRow = rowIndex }
+            case .table:
+                if shape.tableIdentity == nil { shape.tableIdentity = component.identity }
             default:
                 break
             }
@@ -168,11 +174,17 @@ public struct MarkdownRenderer: Sendable {
         return shape
     }
 
-    /// Blank line between blocks, single newline between siblings in one list,
-    /// tab between cells of one table row.
+    /// Blank line between blocks, single newline between siblings in one list
+    /// or between rows of one table, tab between cells of one table row.
+    ///
+    /// Two adjacent tables are two blocks, not one: their row indices both
+    /// restart, so the identity of the enclosing table — not the row index
+    /// alone — is what says whether the next cell belongs to the row that came
+    /// before it.
     private static func separator(from previous: BlockShape?, to current: BlockShape) -> String {
         guard let previous else { return "" }
-        if let previousRow = previous.tableRow, let currentRow = current.tableRow {
+        if let previousRow = previous.tableRow, let currentRow = current.tableRow,
+           previous.tableIdentity == current.tableIdentity {
             return previousRow == currentRow ? "\t" : "\n"
         }
         if previous.listDepth > 0 && current.listDepth > 0 { return "\n" }
