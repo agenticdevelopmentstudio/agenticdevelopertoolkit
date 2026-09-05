@@ -17,22 +17,15 @@ public enum MarkdownText {
     /// The document with its frontmatter and its fenced code blocks removed —
     /// the text a title or excerpt may be drawn from.
     ///
-    /// Lines are split on `Character.isNewline` rather than on the `"\n"`
-    /// scalar: Swift's `String` groups a `"\r\n"` pair into a single
-    /// extended grapheme cluster, so splitting on the `"\n"` `Character`
-    /// alone silently fails to split a CRLF-authored document at all.
+    /// Both fence markers are stripped, and an unterminated fence swallows
+    /// everything from its opener to the end of the document: `FenceScanner`
+    /// owns that rule on behalf of every call site that needs it, including
+    /// the CRLF-safe line split it does internally.
     public static func titleSearchBody(_ content: String) -> String {
-        let body = Frontmatter.split(content).body
-        var kept: [Substring] = []
-        var insideFence = false
-        for line in body.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
-            if line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("```") {
-                insideFence.toggle()
-                continue
-            }
-            if !insideFence { kept.append(line) }
-        }
-        return kept.joined(separator: "\n")
+        FenceScanner.classify(Frontmatter.split(content).body)
+            .filter { $0.role == .text }
+            .map(\.text)
+            .joined(separator: "\n")
     }
 
     /// One line with its block and inline markers removed: heading hashes,
@@ -74,22 +67,53 @@ public enum MarkdownText {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    public static func deriveTitle(_ content: String) -> String {
+    /// The title, and whether the body supplied it.
+    ///
+    /// `deriveTitle` and `deriveExcerpt` share this one decision rather than
+    /// each answering "which line was the title?" for itself — that is what
+    /// keeps the two from disagreeing, and it is what tells the excerpt
+    /// whether there is a body line to skip.
+    static func resolvedTitle(_ content: String) -> (title: String, cameFromBody: Bool) {
+        if let named = frontmatterTitle(content) { return (named, false) }
         for line in titleSearchBody(content).split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
             let stripped = stripLineSyntax(String(line))
             guard !stripped.isEmpty else { continue }
-            return String(stripped.prefix(titleCharacterLimit))
+            return (stripped, true)
         }
-        return untitled
+        return (untitled, false)
     }
 
+    /// Frontmatter `title`, else frontmatter `name` — each taken only when it
+    /// is non-empty after trimming, which is how adh's reader takes them.
+    private static func frontmatterTitle(_ content: String) -> String? {
+        for key in ["title", "name"] {
+            guard let raw = Frontmatter.value(key, in: content) else { continue }
+            let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { return trimmed }
+        }
+        return nil
+    }
+
+    /// Frontmatter `title`, else frontmatter `name`, else the first non-empty
+    /// stripped body line, else `untitled` — capped at `titleCharacterLimit`
+    /// whichever branch supplied it, because that is the column's width.
+    public static func deriveTitle(_ content: String) -> String {
+        String(resolvedTitle(content).title.prefix(titleCharacterLimit))
+    }
+
+    /// The next `excerptLines` stripped non-empty body lines, each capped at
+    /// `excerptLineCharacters`.
+    ///
+    /// Exactly one line is skipped when the title came from the body, and none
+    /// when frontmatter named it — otherwise a document whose frontmatter
+    /// carries its title would lose its first body line from the preview.
     public static func deriveExcerpt(_ content: String) -> String {
         var lines: [String] = []
-        var sawTitle = false
+        var linesToSkip = resolvedTitle(content).cameFromBody ? 1 : 0
         for line in titleSearchBody(content).split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }) {
             let stripped = stripLineSyntax(String(line))
             guard !stripped.isEmpty else { continue }
-            guard sawTitle else { sawTitle = true; continue }
+            guard linesToSkip == 0 else { linesToSkip -= 1; continue }
             lines.append(String(stripped.prefix(excerptLineCharacters)))
             if lines.count == excerptLines { break }
         }
