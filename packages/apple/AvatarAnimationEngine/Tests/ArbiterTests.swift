@@ -12,8 +12,8 @@ private struct Harness {
     let ctx: AnimContext
     let arbiter: Arbiter
 
-    init() throws {
-        let d = try Fixture.all()
+    init(files: [String: Data]? = nil) throws {
+        let d = try files ?? Fixture.all()
         let config = try CharacterConfig.load(RawFiles(
             character: d["character"]!, rig: d["rig"]!, poses: d["poses"]!,
             timelines: d["timelines"]!, behavior: d["behavior"]!, sayings: d["sayings"]!))
@@ -330,6 +330,38 @@ final class ArbiterTests: XCTestCase {
         let spin = h.ctx.config.poses.poses[h.ladder.moods["active"]!]!.spin!
         h.run(from: 0, to: spin.duration + 0.5)
         XCTAssertEqual(h.ctx.channels.get(spin.channel), .number(-160))
+    }
+
+    func testAMoodChangeMidSpinDropsTheNormalisationTheOldPoseLeftPending() throws {
+        // The report: bitbag was sent `silly`, the mood was cleared before the
+        // whirl finished, and he stayed upside-down for good. The spinning pose
+        // arms a one-shot to wind its channel back to the landing angle; left
+        // armed across a mood change it fires under the REPLACEMENT pose, tramples
+        // the value that pose was tweening to, and sticks — nothing tweens the
+        // channel afterwards, so there is no second chance.
+        //
+        // `calm` is given the spun channel so the assertion is about the new
+        // pose's own target rather than about the absence of a value: the
+        // pre-fix run lands on `eager`'s -160 here, not on 0.
+        var files = try Fixture.all()
+        var poses = try XCTUnwrap(JSONSerialization.jsonObject(with: files["poses"]!)
+                                  as? [String: Any])
+        var table = try XCTUnwrap(poses["poses"] as? [String: Any])
+        var calm = try XCTUnwrap(table["calm"] as? [String: Any])
+        var channels = try XCTUnwrap(calm["channels"] as? [String: Any])
+        channels["spark.rotation"] = 0
+        calm["channels"] = channels
+        table["calm"] = calm
+        poses["poses"] = table
+        files["poses"] = try JSONSerialization.data(withJSONObject: poses)
+
+        let h = try Harness(files: files)
+        let spin = h.ctx.config.poses.poses[h.ladder.moods["active"]!]!.spin!
+        let clear = spin.duration / 2
+        h.run(from: 0, to: clear)
+        try h.arbiter.setMood("calm", now: clear)
+        h.run(from: clear, to: spin.duration + 2)
+        XCTAssertEqual(h.ctx.channels.get(spin.channel), .number(0))
     }
 
     func testEvaluatesTheLadderOnSchedulerInstantsIdenticalAtEveryRate() throws {

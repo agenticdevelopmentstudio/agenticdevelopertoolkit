@@ -50,6 +50,7 @@ public final class Arbiter {
     private var applied = false
     private var pollId: Int?
     private var choreo: TimelineHandle?
+    private var spinReset: Int?
 
     public init(_ ctx: AnimContext) {
         self.ctx = ctx
@@ -229,6 +230,15 @@ public final class Arbiter {
             // it already started are cancelled the ordinary way, by the next
             // tween on the same channel.
             if let running = choreo { running.cancel(); choreo = nil }
+            // The pending spin normalisation belongs to the pose that scheduled
+            // it, and leaving that pose gives the channel away. Left armed, it
+            // fires under the NEW pose and slams the channel to the old pose's
+            // wound-back angle — a mood cleared part-way through a spin leaves
+            // the avatar stuck at it for good, because nothing tweens after.
+            // The original has no equivalent to cancel: GSAP's `overwrite`
+            // kills the spin tween outright, taking its landing with it, so
+            // cancelling here is what makes the two engines agree.
+            if let pending = spinReset { ctx.scheduler.cancel(pending); spinReset = nil }
             if let timeline = ctx.config.behavior.choreography?[current] {
                 // A choreographed mood skips its pose entirely. The timeline is
                 // the whole performance — it opens the mouth, holds it, and
@@ -255,9 +265,12 @@ public final class Arbiter {
                     // writes the normalised value verbatim (rule 4) — two
                     // rules the engine already has, and no new one.
                     //
-                    // Capturing `tweens` rather than `self` keeps the
-                    // scheduler from retaining this object.
-                    ctx.scheduler.once(at: reset.at) { [tweens = ctx.tweens] fired in
+                    // Capturing `tweens` strongly and `self` weakly keeps the
+                    // scheduler from retaining this object, while still letting
+                    // the fired one-shot drop the handle it was reached by.
+                    spinReset = ctx.scheduler.once(at: reset.at) {
+                        [weak self, tweens = ctx.tweens] fired in
+                        self?.spinReset = nil
                         tweens.add(TweenSpec(channel: reset.channel,
                                              to: .number(reset.value),
                                              duration: 0),
