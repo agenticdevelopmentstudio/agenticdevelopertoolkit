@@ -23,3 +23,16 @@ public struct Credentials: Sendable, Equatable, Codable {
         self.kind = kind
     }
 }
+
+/// Redacted by default. The default reflection-based description prints
+/// `token` verbatim, so a consuming app's `logger.error("\(credentials)")` —
+/// or a failed `#expect(a == b)` — would spill a live bearer into a log the
+/// user (and any log collector) can read. Nothing but the kind is printable.
+extension Credentials: CustomStringConvertible, CustomDebugStringConvertible {
+
+    public var description: String {
+        "Credentials(kind: \(kind.rawValue), token: <redacted>)"
+    }
+
+    public var debugDescription: String { description }
+}

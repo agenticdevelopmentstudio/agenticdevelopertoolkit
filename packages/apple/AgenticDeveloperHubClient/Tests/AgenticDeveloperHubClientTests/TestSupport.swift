@@ -28,6 +28,11 @@ final class MockClientTransport: ClientTransport, @unchecked Sendable {
         var request: HTTPRequest
         var baseURL: URL
         var operationID: String
+        /// The request body, collected before the responder runs. Nothing
+        /// downstream of this transport reads the body, so consuming the
+        /// stream here is safe — and it lets a test assert on what was
+        /// actually sent, not just the path.
+        var body: Data?
     }
 
     private let lock = NSLock()
@@ -43,6 +48,8 @@ final class MockClientTransport: ClientTransport, @unchecked Sendable {
     var recorded: [Recorded] { lock.withLock { _recorded } }
     var lastRequest: HTTPRequest? { lock.withLock { _recorded.last?.request } }
     var lastBaseURL: URL? { lock.withLock { _recorded.last?.baseURL } }
+    var lastBody: Data? { lock.withLock { _recorded.last?.body } }
+    var recordedPaths: [String] { lock.withLock { _recorded.map { $0.request.path ?? "" } } }
 
     func send(
         _ request: HTTPRequest,
@@ -50,8 +57,12 @@ final class MockClientTransport: ClientTransport, @unchecked Sendable {
         baseURL: URL,
         operationID: String
     ) async throws -> (HTTPResponse, HTTPBody?) {
+        var collected: Data?
+        if let body {
+            collected = try await Data(collecting: body, upTo: 1 << 20)
+        }
         lock.withLock {
-            _recorded.append(.init(request: request, baseURL: baseURL, operationID: operationID))
+            _recorded.append(.init(request: request, baseURL: baseURL, operationID: operationID, body: collected))
         }
         return responder(request)
     }

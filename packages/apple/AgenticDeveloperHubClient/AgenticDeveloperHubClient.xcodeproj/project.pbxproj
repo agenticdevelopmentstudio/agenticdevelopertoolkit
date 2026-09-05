@@ -11,19 +11,26 @@
 		053600078FF2E16C078EB8E6 /* AuthWrappersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0318E085AB7521A2E6EF33B /* AuthWrappersTests.swift */; };
 		0D2E62CD80FC6869E29C8ABB /* MockDaemonServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B92ECC0CD4043B00429DFB /* MockDaemonServer.swift */; };
 		16F1AF38B1352E8E65BB2C51 /* TransportResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5A4C3D0EF7416A58FCCF96 /* TransportResolverTests.swift */; };
+		1B676FBD3E099942C247BF76 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BD5F22D9B3C0007DEBB20A /* SessionStore.swift */; };
 		267E901F7C82C3B817964135 /* push-response.json in Resources */ = {isa = PBXBuildFile; fileRef = 74F68CB079A5FF4CDD58344E /* push-response.json */; };
 		2A191C70E813386110F321C4 /* pull-response.json in Resources */ = {isa = PBXBuildFile; fileRef = 64ABF066F038C0DA77BF676B /* pull-response.json */; };
 		2B5F5CB1D63274DE97548642 /* push-request.json in Resources */ = {isa = PBXBuildFile; fileRef = 5DA8E2CE77483E50E39F6883 /* push-request.json */; };
 		30542471184054C63573984B /* TransportResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CCC04F149E32D7B2F1F059 /* TransportResolver.swift */; };
 		38D33C5F67FD3208DDEF4A87 /* LiveSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECCE8C7E1C9F1C493EEE34F /* LiveSmokeTests.swift */; };
 		3BCBE8103AFB8BC02F788EAF /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2D06625443BC7FCF3F3DF95 /* CredentialStore.swift */; };
+		3CB3F995E2DA8C34D79417FA /* SessionRefreshMiddlewareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DC8ED107F6030B64840FB3 /* SessionRefreshMiddlewareTests.swift */; };
+		3E257F951B974F1EEBCF3660 /* ADHClient+Raw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63022B727ABD32C98A0809CE /* ADHClient+Raw.swift */; };
 		44CC828A5766639A64D358B5 /* ADHSyncAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FEAD9C30CF888C272B3527 /* ADHSyncAPI.swift */; };
+		4A9568365A21A0A68C16F619 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B2CE92EE88908526AD29426 /* Session.swift */; };
 		4C1360E7F33095999165BF49 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7B3358DC8E394C3B55DA9911 /* OpenAPIURLSession */; };
+		4C24CD4DA56A6A3044BE9B84 /* SessionWrappersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA54998D2FFFA0A1DBCBA24 /* SessionWrappersTests.swift */; };
+		4F8BDBC50748C0EC62FF9F8B /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA590B31AD71A3A2753B732 /* SessionStoreTests.swift */; };
 		57D7C1A0528B3748CA6D8035 /* ADHClientWiringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A7E929CBBDE69CFFD42B49 /* ADHClientWiringTests.swift */; };
 		6909918C407C180EEACFEF2B /* DaemonContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3BA2A17F4A60B7C8FFFCE5 /* DaemonContract.swift */; };
 		69990850A86ED83E37C6A826 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3A66E7F3B7A73E902F8618 /* Types.swift */; };
 		722E654B1D0FCE33F2BEB1F5 /* AuthenticationMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = B195038FA11EEAE3CE2A943D /* AuthenticationMiddleware.swift */; };
 		78DD670E1FA4CF39EA99A1FB /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A250C8D68ACB736BD73725 /* TestSupport.swift */; };
+		7DFDF7AA7F1F7CA43DA2CF7A /* ADHClient+Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B8B288CC2C2FFC58260453 /* ADHClient+Session.swift */; };
 		8B0A23AB83E02F8454D5B9EB /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = BEFD4345DA24D78AC488F6D2 /* OpenAPIRuntime */; };
 		8B2E94378C5B41EEDC002485 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A4DB57D3EB7A87F9C66A64 /* KeychainHelper.swift */; };
 		8F067E76427A17E47CA952A1 /* DirectTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E9CC24CABD917AFB625B4F /* DirectTransportTests.swift */; };
@@ -32,6 +39,8 @@
 		AC808F93EB6C561A71350DE7 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55F00E40E373DA5C00F4F6E6 /* Client.swift */; };
 		ACF71FB62723173CF36A154A /* AgenticDeveloperHubClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68FE29807BB376745D790A28 /* AgenticDeveloperHubClient.framework */; };
 		BDC248C30447A4AA1A76F39C /* ADHClient+Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642DC7ACA98FFACA1D895C8C /* ADHClient+Auth.swift */; };
+		CA8BFFD0C06FB8F65778DD0D /* SessionRefreshMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC92F2C8D9804253B0FF6A6 /* SessionRefreshMiddleware.swift */; };
+		D60836E9B79313CED5AB35BA /* RawJSONTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF768DB94D2B1AED4B062A7 /* RawJSONTests.swift */; };
 		E224A403F5281A056F122DB5 /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1287A16F9C54B735D869D014 /* Credentials.swift */; };
 		F6F4496B405D5775CB4225C6 /* ADHClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8422A8FD599B5DEB81290D69 /* ADHClient.swift */; };
 		FD1BE71850B827B6CD917781 /* APITransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 261C64DF9D0E4180068E9B2C /* APITransport.swift */; };
@@ -65,18 +74,27 @@
 		1287A16F9C54B735D869D014 /* Credentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credentials.swift; sourceTree = "<group>"; };
 		14FEAD9C30CF888C272B3527 /* ADHSyncAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADHSyncAPI.swift; sourceTree = "<group>"; };
 		1A3A66E7F3B7A73E902F8618 /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
+		1B2CE92EE88908526AD29426 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		25CA159FFF3A86B2812F7375 /* ADHSyncAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADHSyncAPITests.swift; sourceTree = "<group>"; };
 		261C64DF9D0E4180068E9B2C /* APITransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APITransport.swift; sourceTree = "<group>"; };
+		32B8B288CC2C2FFC58260453 /* ADHClient+Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ADHClient+Session.swift"; sourceTree = "<group>"; };
 		3A3BA2A17F4A60B7C8FFFCE5 /* DaemonContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonContract.swift; sourceTree = "<group>"; };
+		4CA54998D2FFFA0A1DBCBA24 /* SessionWrappersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionWrappersTests.swift; sourceTree = "<group>"; };
 		55F00E40E373DA5C00F4F6E6 /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		5BA590B31AD71A3A2753B732 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
+		5CF768DB94D2B1AED4B062A7 /* RawJSONTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawJSONTests.swift; sourceTree = "<group>"; };
 		5DA8E2CE77483E50E39F6883 /* push-request.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "push-request.json"; sourceTree = "<group>"; };
+		63022B727ABD32C98A0809CE /* ADHClient+Raw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ADHClient+Raw.swift"; sourceTree = "<group>"; };
 		642DC7ACA98FFACA1D895C8C /* ADHClient+Auth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ADHClient+Auth.swift"; sourceTree = "<group>"; };
 		64ABF066F038C0DA77BF676B /* pull-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "pull-response.json"; sourceTree = "<group>"; };
 		68FE29807BB376745D790A28 /* AgenticDeveloperHubClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AgenticDeveloperHubClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B49F9EAE13469AA4A5DAFC4 /* DaemonTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonTransportTests.swift; sourceTree = "<group>"; };
+		72BD5F22D9B3C0007DEBB20A /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		74F68CB079A5FF4CDD58344E /* push-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "push-response.json"; sourceTree = "<group>"; };
 		7D5A4C3D0EF7416A58FCCF96 /* TransportResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportResolverTests.swift; sourceTree = "<group>"; };
 		8422A8FD599B5DEB81290D69 /* ADHClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADHClient.swift; sourceTree = "<group>"; };
+		92DC8ED107F6030B64840FB3 /* SessionRefreshMiddlewareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRefreshMiddlewareTests.swift; sourceTree = "<group>"; };
+		9CC92F2C8D9804253B0FF6A6 /* SessionRefreshMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRefreshMiddleware.swift; sourceTree = "<group>"; };
 		A7B92ECC0CD4043B00429DFB /* MockDaemonServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDaemonServer.swift; sourceTree = "<group>"; };
 		B195038FA11EEAE3CE2A943D /* AuthenticationMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationMiddleware.swift; sourceTree = "<group>"; };
 		B1A4DB57D3EB7A87F9C66A64 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -135,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				8422A8FD599B5DEB81290D69 /* ADHClient.swift */,
+				63022B727ABD32C98A0809CE /* ADHClient+Raw.swift */,
 				E85163CEF78C17E2CC1678B8 /* Auth */,
 				5026657CD24D3470388D189A /* Generated */,
 				FA8E250276AE12BC46A75D41 /* Sync */,
@@ -171,6 +190,10 @@
 				D0E9CC24CABD917AFB625B4F /* DirectTransportTests.swift */,
 				EECCE8C7E1C9F1C493EEE34F /* LiveSmokeTests.swift */,
 				A7B92ECC0CD4043B00429DFB /* MockDaemonServer.swift */,
+				5CF768DB94D2B1AED4B062A7 /* RawJSONTests.swift */,
+				92DC8ED107F6030B64840FB3 /* SessionRefreshMiddlewareTests.swift */,
+				5BA590B31AD71A3A2753B732 /* SessionStoreTests.swift */,
+				4CA54998D2FFFA0A1DBCBA24 /* SessionWrappersTests.swift */,
 				B6A250C8D68ACB736BD73725 /* TestSupport.swift */,
 				7D5A4C3D0EF7416A58FCCF96 /* TransportResolverTests.swift */,
 				20463DC387FC06066FD59E8E /* Fixtures */,
@@ -199,10 +222,14 @@
 			isa = PBXGroup;
 			children = (
 				642DC7ACA98FFACA1D895C8C /* ADHClient+Auth.swift */,
+				32B8B288CC2C2FFC58260453 /* ADHClient+Session.swift */,
 				B195038FA11EEAE3CE2A943D /* AuthenticationMiddleware.swift */,
 				1287A16F9C54B735D869D014 /* Credentials.swift */,
 				D2D06625443BC7FCF3F3DF95 /* CredentialStore.swift */,
 				B1A4DB57D3EB7A87F9C66A64 /* KeychainHelper.swift */,
+				1B2CE92EE88908526AD29426 /* Session.swift */,
+				9CC92F2C8D9804253B0FF6A6 /* SessionRefreshMiddleware.swift */,
+				72BD5F22D9B3C0007DEBB20A /* SessionStore.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -313,6 +340,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BDC248C30447A4AA1A76F39C /* ADHClient+Auth.swift in Sources */,
+				3E257F951B974F1EEBCF3660 /* ADHClient+Raw.swift in Sources */,
+				7DFDF7AA7F1F7CA43DA2CF7A /* ADHClient+Session.swift in Sources */,
 				F6F4496B405D5775CB4225C6 /* ADHClient.swift in Sources */,
 				44CC828A5766639A64D358B5 /* ADHSyncAPI.swift in Sources */,
 				FD1BE71850B827B6CD917781 /* APITransport.swift in Sources */,
@@ -322,6 +351,9 @@
 				E224A403F5281A056F122DB5 /* Credentials.swift in Sources */,
 				6909918C407C180EEACFEF2B /* DaemonContract.swift in Sources */,
 				8B2E94378C5B41EEDC002485 /* KeychainHelper.swift in Sources */,
+				4A9568365A21A0A68C16F619 /* Session.swift in Sources */,
+				CA8BFFD0C06FB8F65778DD0D /* SessionRefreshMiddleware.swift in Sources */,
+				1B676FBD3E099942C247BF76 /* SessionStore.swift in Sources */,
 				30542471184054C63573984B /* TransportResolver.swift in Sources */,
 				69990850A86ED83E37C6A826 /* Types.swift in Sources */,
 			);
@@ -338,6 +370,10 @@
 				8F067E76427A17E47CA952A1 /* DirectTransportTests.swift in Sources */,
 				38D33C5F67FD3208DDEF4A87 /* LiveSmokeTests.swift in Sources */,
 				0D2E62CD80FC6869E29C8ABB /* MockDaemonServer.swift in Sources */,
+				D60836E9B79313CED5AB35BA /* RawJSONTests.swift in Sources */,
+				3CB3F995E2DA8C34D79417FA /* SessionRefreshMiddlewareTests.swift in Sources */,
+				4F8BDBC50748C0EC62FF9F8B /* SessionStoreTests.swift in Sources */,
+				4C24CD4DA56A6A3044BE9B84 /* SessionWrappersTests.swift in Sources */,
 				78DD670E1FA4CF39EA99A1FB /* TestSupport.swift in Sources */,
 				16F1AF38B1352E8E65BB2C51 /* TransportResolverTests.swift in Sources */,
 			);

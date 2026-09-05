@@ -16,7 +16,7 @@ import Foundation
 @Suite("Auth convenience wrappers")
 struct AuthWrappersTests {
 
-    private static let loginJSON = #"{"refreshToken":"r","token":"jwt-xyz","user":{"avatarUrl":"","capabilities":[],"email":"a@b.c","id":"u1","name":"A","publicProfileEnabled":false}}"#
+    private static let loginJSON = #"{"refreshToken":"r","token":"jwt-xyz","user":{"avatarUrl":"","capabilities":[],"email":"a@b.c","id":"u1","name":"A","profileVisibility":"private","publicProfileEnabled":false,"slug":null}}"#
     private static let tokenJSON = #"{"createdAt":"2026-01-01","id":"t1","name":"ci","prefix":"adh_","token":"tok-secret"}"#
 
     private func makeClient(store: any CredentialStore) -> ADHClient {

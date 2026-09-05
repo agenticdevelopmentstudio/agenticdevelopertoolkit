@@ -66,6 +66,29 @@ generated ops (`client.api.postApiAuthLogin`, …):
   it — minting a token must not silently swap your session credential. Call
   `adopt(_:)` to switch the client to a credential, `logout()` to clear it.
 
+## Sessions (native apps)
+
+`ADHClient(transport:session:onSessionExpired:)` installs `SessionRefreshMiddleware`
+instead of the bearer-only `AuthenticationMiddleware`:
+
+- `Session` = `Credentials` + optional refresh token; `SessionStore` refines
+  `CredentialStore` (`KeychainSessionStore`, `InMemorySessionStore`).
+- On a 401 for a JWT session the middleware `POST /auth/refresh {refreshToken}`,
+  saves the rotated pair, and retries the request once. Only an explicit 401/403
+  from refresh clears the session (and calls `onSessionExpired`); 5xx/transport
+  failures keep it. Login-family operations and refresh itself are exempt.
+- Sign-in flows: `signIn(email:password:) -> SignInOutcome`, `completeMfa`,
+  `sendMfaSms`, `passkeyOptions`/`completePasskey`, `mfaPasskeyOptions`/`completeMfaPasskey`, `exchangeOAuthCode`,
+  `signOut()` (revokes, then clears), `currentUser()`.
+- `rawJSON(method:path:query:body:)` sends a route through the same middleware
+  chain without a generated operation; use it only for routes missing from
+  `openapi.json`, or whose committed schema is stale enough that the generated
+  operation cannot express the real request. Today there is exactly one such
+  case: `POST /auth/revoke`, which the backend accepts with a
+  `{"refreshToken": …}` body while the committed document still describes it
+  as bodiless — so `signOut()` sends it raw (and the refresh middleware exempts
+  it from refresh-and-retry).
+
 ## Regenerating the client
 
 The OpenAPI spec snapshot (`openapi.json`) and the generated sources
