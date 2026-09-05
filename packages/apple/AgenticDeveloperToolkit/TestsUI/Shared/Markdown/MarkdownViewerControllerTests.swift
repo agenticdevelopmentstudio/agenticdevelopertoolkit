@@ -1,6 +1,10 @@
 import Testing
-import AppKit
 import Foundation
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 import AgenticDeveloperToolkit
 @testable import AgenticDeveloperToolkitUI
 
@@ -45,10 +49,14 @@ struct MarkdownViewerControllerTests {
         let viewer = loadedViewer("# Title")
         viewer.palette = SemanticPalette(theme: BuiltInThemes.dracula)
         let color = viewer.pane.attributedText.attributes(at: 0, effectiveRange: nil)[.foregroundColor]
-        #expect(color as? NSColor == SemanticPalette(theme: BuiltInThemes.dracula).nsColor(.primaryText))
+        #expect(color as? PlatformColor == SemanticPalette(theme: BuiltInThemes.dracula).platformColor(.primaryText))
     }
 }
 
+/// The half of the pane's behaviour that is the same on both platforms.
+/// Driving the platform text view to prove the `delegate = self` wiring is
+/// genuinely platform-specific and stays in each bundle's own
+/// `MarkdownTextPaneInputTests`.
 @MainActor
 @Suite("MarkdownTextPane")
 struct MarkdownTextPaneTests {
@@ -60,19 +68,5 @@ struct MarkdownTextPaneTests {
         pane.onTextChange = { _ in fired = true }
         pane.text = "x"
         #expect(fired == false)
-    }
-
-    @Test("a simulated user edit fires onTextChange with the new text")
-    func userEditFiresOnTextChange() {
-        let pane = MarkdownTextPane(editable: true)
-        var received: String?
-        pane.onTextChange = { received = $0 }
-
-        let textView = pane.subviews
-            .compactMap { $0 as? NSScrollView }
-            .first?.documentView as? NSTextView
-        textView?.insertText("typed", replacementRange: NSRange(location: 0, length: 0))
-
-        #expect(received == "typed")
     }
 }
