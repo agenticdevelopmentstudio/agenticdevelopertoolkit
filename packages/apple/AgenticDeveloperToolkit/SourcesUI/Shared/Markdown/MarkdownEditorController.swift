@@ -81,11 +81,22 @@ public final class MarkdownEditorController: PlatformViewController {
     /// previously-preferred mode without that restoration itself counting
     /// as a new deliberate choice.
     private func applyMode(_ requested: MarkdownEditorMode) {
-        let resolved = availableModes.contains(requested) ? requested : layoutDefaultMode
+        let resolved = resolvedMode(for: requested, in: availableModes)
         guard resolved != modeStorage else { return }
         modeStorage = resolved
         toolbar.mode = resolved
         applyPanes()
+    }
+
+    /// The clamp rule, in one place: a requested mode the given set still
+    /// offers is honoured, and anything else falls back to the mode this
+    /// layout would have chosen for itself. Both the mode setter and the
+    /// layout pass go through here, so they cannot drift apart.
+    private func resolvedMode(
+        for requested: MarkdownEditorMode,
+        in modes: [MarkdownEditorMode]
+    ) -> MarkdownEditorMode {
+        modes.contains(requested) ? requested : layoutDefaultMode
     }
 
     private var layoutDefaultMode: MarkdownEditorMode {
@@ -100,8 +111,14 @@ public final class MarkdownEditorController: PlatformViewController {
         self.toolbar = MarkdownEditorToolbar()
         super.init(nibName: nil, bundle: nil)
 
+        // The same guard the `content` setter applies, applied here too: an
+        // edit that leaves the string identical is not a change, and must not
+        // start the render debounce or tell the host to save. Without this the
+        // setter's `oldValue` check reads as if it covered the typing path,
+        // which is the path that matters.
         editorPane.onTextChange = { [weak self] text in
             guard let self, !self.isApplyingProgrammaticContent else { return }
+            guard text != self.content else { return }
             self.isApplyingProgrammaticContent = true
             self.content = text
             self.isApplyingProgrammaticContent = false
@@ -221,7 +238,7 @@ public final class MarkdownEditorController: PlatformViewController {
         // fall back to this size class's canonical mode. Unlike the general
         // `applyMode(_:)` path, this never updates `preferredMode` itself —
         // a layout-driven fallback is not a deliberate choice.
-        let resolved = modes.contains(preferredMode) ? preferredMode : (canSplit ? .split : .edit)
+        let resolved = resolvedMode(for: preferredMode, in: modes)
         if resolved != modeStorage {
             modeStorage = resolved
             toolbar.mode = resolved

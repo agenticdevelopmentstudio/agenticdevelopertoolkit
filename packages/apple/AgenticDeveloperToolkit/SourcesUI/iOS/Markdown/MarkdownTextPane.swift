@@ -20,6 +20,10 @@ public final class MarkdownTextPane: UIView {
         textView.autocorrectionType = .no
         textView.smartQuotesType = .no
         textView.smartDashesType = .no
+        // 8 on every edge, matching the macOS pane and deliberately wider than
+        // Quick Note's 6 — this is a document surface, not a scratch field.
+        // (UIKit has no scroller chrome to configure here; `UITextView` scrolls
+        // itself with an indicator that already hides on its own.)
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         textView.delegate = self
 

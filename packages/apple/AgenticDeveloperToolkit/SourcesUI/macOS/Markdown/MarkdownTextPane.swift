@@ -26,11 +26,19 @@ public final class MarkdownTextPane: NSView {
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
         textView.textContainer?.widthTracksTextView = true
+        // 8×8 rather than Quick Note's 6×6, deliberately: this is a document
+        // surface a reader stays in, and it wants the wider gutter. Do not
+        // "fix" the difference by matching the smaller one.
         textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.delegate = self
 
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
+        // Match the chrome the toolkit's other scrolling lists use: an
+        // overlay scroller that hides itself, and no frame of its own — the
+        // pane is edge to edge inside whatever splits or tabs contain it.
+        scrollView.autohidesScrollers = true
+        scrollView.borderType = .noBorder
         scrollView.drawsBackground = true
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(scrollView)
