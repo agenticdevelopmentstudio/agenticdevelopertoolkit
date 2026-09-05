@@ -107,6 +107,42 @@ struct FrontmatterTests {
         #expect(Frontmatter.split(written).body == "Body\n")
     }
 
+    @Test("every value survives a write/read round trip unchanged")
+    func valuesRoundTripThroughQuoting() {
+        // `unquote` must be the exact inverse of `serialize`, or a save/load
+        // cycle changes the document's bytes — and every such change syncs.
+        let values = [
+            "plain",
+            "true",
+            "Notes: part two",
+            #"Re: the "big" rewrite"#,
+            #"a "quoted" word"#,
+            #""Hamlet""#,
+            "'single'",
+            "a # hash",
+            "  leading spaces",
+            "trailing spaces  ",
+            "",
+            #"back\slash"#,
+            #"back\slash with "quotes" and: a colon"#,
+            "\\",
+            "多字节: ok"
+        ]
+        for value in values {
+            let written = Frontmatter.setting("title", to: value, in: "Body\n")
+            #expect(Frontmatter.value("title", in: written) == value,
+                    "round trip failed for \(value.debugDescription): wrote \(written.debugDescription)")
+            #expect(Frontmatter.split(written).body == "Body\n")
+        }
+    }
+
+    @Test("a round trip is idempotent — a second save changes nothing")
+    func roundTripIsStable() {
+        let once = Frontmatter.setting("title", to: #"Re: the "big" rewrite"#, in: "Body\n")
+        let twice = Frontmatter.setting("title", to: Frontmatter.value("title", in: once) ?? "", in: once)
+        #expect(twice == once)
+    }
+
     @Test("a CRLF frontmatter block parses into its separate keys")
     func parsesCRLFBlock() {
         let parsed = Frontmatter.parse("title: Hi\r\npinned: true")
