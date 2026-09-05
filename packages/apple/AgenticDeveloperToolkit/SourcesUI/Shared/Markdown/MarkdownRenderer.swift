@@ -37,7 +37,35 @@ public struct MarkdownRenderer: Sendable {
         self.highlighter = highlighter
     }
 
+    /// One block-level run of the rendered output, with the structure the
+    /// renderer knew when it emitted it.
+    ///
+    /// Block boundaries are not recoverable from the rendered string: the
+    /// separators are `"\t"`, `"\n"` and `"\n\n"` depending on what the two
+    /// neighbouring blocks are, so a caller that split on `"\n\n"` would run a
+    /// table's rows together and a list's items together. `MarkdownDocumentRenderer`
+    /// needs the real boundaries to colour a whole alert blockquote, so the
+    /// renderer hands them out rather than making the caller guess.
+    struct RenderedBlock {
+        /// The block's own characters, not including the separator that
+        /// precedes it.
+        let range: NSRange
+        /// Identity of the *outermost* `.blockQuote` intent this block sits
+        /// in, or `nil` when it is not in a quote. Two adjacent blockquotes
+        /// carry different identities, so a colour run cannot leak out of one
+        /// quote and into the next.
+        let quoteIdentity: Int?
+    }
+
     public func render(_ markdown: String, palette: SemanticPalette, textColor: PlatformColor) -> NSAttributedString {
+        renderReportingBlocks(markdown, palette: palette, textColor: textColor).text
+    }
+
+    func renderReportingBlocks(
+        _ markdown: String,
+        palette: SemanticPalette,
+        textColor: PlatformColor
+    ) -> (text: NSAttributedString, blocks: [RenderedBlock]) {
         let bodyAttributes: [NSAttributedString.Key: Any] = [
             .font: palette.platformFont(.body),
             .foregroundColor: textColor
@@ -53,10 +81,11 @@ public struct MarkdownRenderer: Sendable {
                 interpretedSyntax: .full,
                 failurePolicy: .returnPartiallyParsedIfPossible)
         ) else {
-            return NSAttributedString(string: markdown, attributes: bodyAttributes)
+            return (NSAttributedString(string: markdown, attributes: bodyAttributes), [])
         }
 
         let output = NSMutableAttributedString()
+        var blocks: [RenderedBlock] = []
         var previous: BlockShape?
         for (intent, range) in parsed.runs[\.presentationIntent] {
             let shape = Self.shape(intent)
@@ -65,6 +94,12 @@ public struct MarkdownRenderer: Sendable {
                 output.append(NSAttributedString(string: separator, attributes: bodyAttributes))
             }
             previous = shape
+            let blockStart = output.length
+            defer {
+                blocks.append(RenderedBlock(
+                    range: NSRange(location: blockStart, length: output.length - blockStart),
+                    quoteIdentity: shape.quoteIdentity))
+            }
 
             let block = parsed[range]
 
@@ -101,7 +136,7 @@ public struct MarkdownRenderer: Sendable {
                         for: run, base: blockAttributes, palette: palette, textColor: textColor)))
             }
         }
-        return output
+        return (output, blocks)
     }
 
     // MARK: Block shape
@@ -117,6 +152,11 @@ public struct MarkdownRenderer: Sendable {
         var isOrderedList = false
         var ordinal: Int?
         var quoteDepth = 0
+        /// The identity of the OUTERMOST `.blockQuote` intent this block sits
+        /// in. Components arrive innermost-first, so the last one seen is the
+        /// outermost — which is the one that says "these blocks are all one
+        /// quote", including a nested quote inside it.
+        var quoteIdentity: Int?
         var isThematicBreak = false
         var isCodeBlock = false
         var codeLanguage: String?
@@ -155,6 +195,7 @@ public struct MarkdownRenderer: Sendable {
                 if shape.ordinal == nil { shape.ordinal = ordinal }
             case .blockQuote:
                 shape.quoteDepth += 1
+                shape.quoteIdentity = component.identity
             case .thematicBreak:
                 shape.isThematicBreak = true
             case .codeBlock(let languageHint):

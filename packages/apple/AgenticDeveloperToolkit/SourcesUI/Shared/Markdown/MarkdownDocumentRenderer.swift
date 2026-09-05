@@ -28,6 +28,15 @@ public enum MarkdownAlert: String, Sendable, CaseIterable {
     }
 
     public var label: String { rawValue.uppercased() }
+
+    /// The literal tag an author writes: `[!NOTE]`. Uppercase only, which is
+    /// what GitHub renders and what this renderer has always matched.
+    public var tag: String { "[!\(label)]" }
+
+    /// The alert this tag names, or `nil` — `[!SHOUT]` is an ordinary quote.
+    static func alert(forTag tag: String) -> MarkdownAlert? {
+        allCases.first { $0.tag == tag }
+    }
 }
 
 /// Renders a whole markdown *document*, as opposed to the message fragment
@@ -50,12 +59,20 @@ public struct MarkdownDocumentRenderer: Sendable {
         textColor: PlatformColor
     ) -> NSAttributedString {
         let body = Frontmatter.split(content).body
-        let prepared = Self.rewriteTaskListMarkers(in: Self.hardenQuoteLineBreaks(in: body))
-        let fencedContents = Self.fencedBlockContents(in: prepared)
-        let rendered = NSMutableAttributedString(
-            attributedString: renderer.render(prepared, palette: palette, textColor: textColor))
+        // Alerts are found on the SOURCE, where `FenceScanner` already knows
+        // which lines are fenced and which are quote lines, and marked with a
+        // sentinel that survives rendering. See `markAlerts` for why they are
+        // not found on the rendered string.
+        let marked = Self.markAlerts(in: body)
+        let prepared = Self.rewriteTaskListMarkers(in: Self.hardenQuoteLineBreaks(in: marked.source))
+        let output = renderer.renderReportingBlocks(prepared, palette: palette, textColor: textColor)
+        let rendered = NSMutableAttributedString(attributedString: output.text)
+        // Colour first (attributes only, so `output.blocks` still describes the
+        // string), then swap the sentinels for their labels, and only then
+        // collapse task markers — both of those change the string's length.
+        Self.colorAlerts(marked.alerts, in: rendered, blocks: output.blocks, palette: palette)
+        Self.replaceAlertSentinels(marked.alerts, in: rendered)
         Self.collapseTaskListMarkers(in: rendered)
-        Self.colorAlertLabels(in: rendered, palette: palette, excludingFencedContents: fencedContents)
         return rendered
     }
 
@@ -124,19 +141,6 @@ public struct MarkdownDocumentRenderer: Sendable {
         return lines.joined(separator: "\n")
     }
 
-    /// The literal text of every fenced code block in `source`, in document
-    /// order. `MarkdownRenderer.renderCodeBlock` copies a fenced block's
-    /// contents straight through into the rendered string — no markdown
-    /// reflow, and (with the default, un-injected highlighter) attributes an
-    /// ordinary reader could rely on to tell it apart from a real blockquote.
-    /// But a host can inject its own `CodeHighlighter`, whose returned
-    /// attributes are outside this type's control, so `colorAlertLabels`
-    /// cannot lean on rendered attributes to find code; it excludes these
-    /// exact strings from its search instead.
-    static func fencedBlockContents(in source: String) -> [String] {
-        FenceScanner.fencedBlockContents(in: source)
-    }
-
     /// The renderer has no notion of a task list, so a rewritten item still
     /// renders through the ordinary bullet path: `"•\t☐\u{00A0}todo"`. A task
     /// item shows only its checkbox where an ordinary item shows a bullet, so
@@ -164,91 +168,134 @@ public struct MarkdownDocumentRenderer: Sendable {
 
     // MARK: - Alerts
 
-    /// A rendered blockquote whose first line is exactly an alert tag: recolour
-    /// the whole quote and replace the tag with its label.
+    /// One alert found in the source, and the sentinel standing in for its tag
+    /// in the text handed to the renderer.
+    struct SourceAlert: Equatable {
+        let alert: MarkdownAlert
+        let sentinel: String
+    }
+
+    /// Every blockquote that OPENS with an alert tag, with the tag replaced by
+    /// a sentinel.
     ///
-    /// `excludingFencedContents` is `fencedBlockContents(in:)`'s output for
-    /// the same document: a fenced block that *documents* alert syntax (a
-    /// literal `[!NOTE]` line inside three backticks) reproduces the tag
-    /// text verbatim in the rendered string, and must not be rewritten or
-    /// recoloured as if it were a real alert.
-    static func colorAlertLabels(
+    /// **Detection happens here, on the source, not on the rendered string.**
+    /// The rendered string has lost the two facts that decide the question:
+    /// which lines were fenced, and where one block ends. The previous pass
+    /// tried to recover both by substring search and got three things wrong — a
+    /// fence that merely *documented* `[!NOTE]` suppressed every real alert in
+    /// the document (the exclusion list keyed on the tag text, not on where it
+    /// was); that list was computed once, before a loop that shortened the
+    /// string by three units per rewritten alert, so it drifted off its own
+    /// ranges; and the coloured run was delimited by the first literal `"\n\n"`,
+    /// which is not a block boundary — it painted the rest of a table.
+    /// `FenceScanner.classify` knows the fencing for free, so a fenced line is
+    /// simply never a candidate and no exclusion list exists at all.
+    ///
+    /// The sentinel is a private-use pair around the alert's index. It is inert
+    /// to the markdown parser, it cannot collide with anything an author wrote,
+    /// and it survives into the rendered string — which is what lets the colour
+    /// pass locate each alert exactly rather than by searching for its label. It
+    /// is swapped for the label afterwards.
+    ///
+    /// The tag must be alone on the FIRST line of its quote, which is GitHub's
+    /// own rule for an alert.
+    static func markAlerts(in source: String) -> (source: String, alerts: [SourceAlert]) {
+        var lines: [String] = []
+        var alerts: [SourceAlert] = []
+        var previousWasQuoteLine = false
+        for line in FenceScanner.classify(source) {
+            let text = line.text
+            guard !line.isFenced, let content = Self.blockquoteContent(of: text) else {
+                lines.append(text)
+                previousWasQuoteLine = false
+                continue
+            }
+            guard !previousWasQuoteLine, let alert = MarkdownAlert.alert(forTag: content) else {
+                lines.append(text)
+                previousWasQuoteLine = true
+                continue
+            }
+            let sentinel = Self.alertSentinel(alerts.count)
+            alerts.append(SourceAlert(alert: alert, sentinel: sentinel))
+            lines.append(text.replacingOccurrences(of: alert.tag, with: sentinel))
+            previousWasQuoteLine = true
+        }
+        return (lines.joined(separator: "\n"), alerts)
+    }
+
+    /// A blockquote line's text with its `>` markers and surrounding whitespace
+    /// removed, or `nil` when the line is not a blockquote line at all. A
+    /// `[!NOTE]` in a table cell is not one, which is why the table no longer
+    /// gets recoloured.
+    private static func blockquoteContent(of line: String) -> String? {
+        var rest = Substring(line).drop { $0 == " " || $0 == "\t" }
+        guard rest.first == ">" else { return nil }
+        while rest.first == ">" {
+            rest = rest.dropFirst().drop { $0 == " " || $0 == "\t" }
+        }
+        return String(rest).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// U+E000/U+E001 are private-use code points: no markdown meaning, no
+    /// chance of appearing in a document, and passed through the parser as
+    /// ordinary text.
+    static func alertSentinel(_ index: Int) -> String { "\u{E000}\(index)\u{E001}" }
+
+    /// Paint each alert's whole blockquote — every rendered block the quote
+    /// owns, not the run up to the first blank line.
+    ///
+    /// Attributes only: this must not change the string's length, because
+    /// `blocks` describes the string exactly as the renderer emitted it.
+    static func colorAlerts(
+        _ alerts: [SourceAlert],
         in rendered: NSMutableAttributedString,
-        palette: SemanticPalette,
-        excludingFencedContents fencedContents: [String] = []
+        blocks: [MarkdownRenderer.RenderedBlock],
+        palette: SemanticPalette
     ) {
-        let excludedRanges = Self.fencedRanges(in: rendered, fencedContents: fencedContents)
-        for alert in MarkdownAlert.allCases {
-            let tag = "[!\(alert.label)]"
-            var searchStart = 0
-            while searchStart < rendered.length {
-                let searchRange = NSRange(location: searchStart, length: rendered.length - searchStart)
-                let found = (rendered.string as NSString).range(of: tag, range: searchRange)
-                guard found.location != NSNotFound else { break }
-
-                // Only a tag that opens its own line is an alert; one in the
-                // middle of a sentence is just text.
-                let opensLine = found.location == 0
-                    || (rendered.string as NSString).substring(
-                        with: NSRange(location: found.location - 1, length: 1)) == "\n"
-                let insideFencedBlock = excludedRanges.contains {
-                    NSIntersectionRange($0, found).length > 0
-                }
-                guard opensLine, !insideFencedBlock else {
-                    searchStart = found.location + found.length
-                    continue
-                }
-
-                rendered.replaceCharacters(
-                    in: found,
-                    with: NSAttributedString(
-                        string: alert.label,
-                        attributes: rendered.attributes(at: found.location, effectiveRange: nil)))
-
-                let quoteRange = Self.paragraphRange(in: rendered, from: found.location)
-                rendered.addAttribute(
-                    .foregroundColor,
-                    value: palette.platformColor(alert.role),
-                    range: quoteRange)
-                searchStart = quoteRange.location + quoteRange.length
-            }
+        let text = rendered.string as NSString
+        for detected in alerts {
+            let found = text.range(of: detected.sentinel)
+            guard found.location != NSNotFound else { continue }
+            rendered.addAttribute(
+                .foregroundColor,
+                value: palette.platformColor(detected.alert.role),
+                range: Self.quoteSpan(containing: found.location, blocks: blocks))
         }
     }
 
-    /// Every occurrence, in `rendered.string`, of each string in
-    /// `fencedContents` — the exact ranges `colorAlertLabels` must not touch.
-    ///
-    /// `renderCodeBlock` copies a fenced block through untouched (`String`
-    /// literal, not reflowed markdown), so the source text found by
-    /// `fencedBlockContents(in:)` reappears verbatim in the rendered output;
-    /// finding it there by substring search needs no attribute of the run at
-    /// all, which is what makes this robust to an arbitrary injected
-    /// `CodeHighlighter`.
-    private static func fencedRanges(in rendered: NSAttributedString, fencedContents: [String]) -> [NSRange] {
-        guard !fencedContents.isEmpty else { return [] }
-        let text = rendered.string as NSString
-        var ranges: [NSRange] = []
-        for block in fencedContents {
-            guard !block.isEmpty else { continue }
-            var searchStart = 0
-            while searchStart < text.length {
-                let searchRange = NSRange(location: searchStart, length: text.length - searchStart)
-                let found = text.range(of: block, range: searchRange)
-                guard found.location != NSNotFound else { break }
-                ranges.append(found)
-                searchStart = found.location + max(found.length, 1)
-            }
+    /// The rendered range of the whole blockquote the block at `location`
+    /// belongs to: that block plus every following block carrying the same
+    /// outermost `.blockQuote` identity, the separators between them included.
+    /// Two adjacent blockquotes have different identities, so the colour stops
+    /// at the first one's end.
+    private static func quoteSpan(
+        containing location: Int,
+        blocks: [MarkdownRenderer.RenderedBlock]
+    ) -> NSRange {
+        guard let index = blocks.firstIndex(where: { NSLocationInRange(location, $0.range) }) else {
+            return NSRange(location: location, length: 0)
         }
-        return ranges
+        let first = blocks[index]
+        guard let identity = first.quoteIdentity else { return first.range }
+        var last = index
+        while last + 1 < blocks.count, blocks[last + 1].quoteIdentity == identity {
+            last += 1
+        }
+        let end = blocks[last].range.location + blocks[last].range.length
+        return NSRange(location: first.range.location, length: end - first.range.location)
     }
 
-    /// From `location` to the end of the block — the run of text before the
-    /// next blank line, which is what the renderer puts between blocks.
-    private static func paragraphRange(in rendered: NSAttributedString, from location: Int) -> NSRange {
-        let text = rendered.string as NSString
-        let tail = NSRange(location: location, length: text.length - location)
-        let blankLine = text.range(of: "\n\n", range: tail)
-        let end = blankLine.location == NSNotFound ? text.length : blankLine.location
-        return NSRange(location: location, length: end - location)
+    /// Sentinels out, labels in — after the colouring, so each label inherits
+    /// its alert's colour from the run it replaces.
+    static func replaceAlertSentinels(_ alerts: [SourceAlert], in rendered: NSMutableAttributedString) {
+        for detected in alerts {
+            let found = (rendered.string as NSString).range(of: detected.sentinel)
+            guard found.location != NSNotFound else { continue }
+            rendered.replaceCharacters(
+                in: found,
+                with: NSAttributedString(
+                    string: detected.alert.label,
+                    attributes: rendered.attributes(at: found.location, effectiveRange: nil)))
+        }
     }
 }

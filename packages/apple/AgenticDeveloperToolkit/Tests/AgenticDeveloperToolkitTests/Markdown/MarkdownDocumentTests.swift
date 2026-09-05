@@ -67,7 +67,9 @@ struct MarkdownDocumentTests {
         #expect(doc.isPinned == false)
         doc.setPinned(true)
         #expect(doc.isPinned)
-        #expect(doc.content == "---\npinned: true\n---\n# Hi\n")
+        // Quoted: a bare `true` is a boolean to YAML, and only a string
+        // survives adh's frontmatter reader unchanged.
+        #expect(doc.content == "---\npinned: \"true\"\n---\n# Hi\n")
         doc.setPinned(false)
         #expect(doc.isPinned == false)
         #expect(doc.content == "# Hi\n")

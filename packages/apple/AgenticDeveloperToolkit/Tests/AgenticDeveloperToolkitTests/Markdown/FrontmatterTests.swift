@@ -67,13 +67,16 @@ struct FrontmatterTests {
 
     @Test("setting an absent key appends it to the existing block")
     func settingAppendsToBlock() {
+        // `true` is quoted because YAML would type a bare `true` as a boolean,
+        // and adh only takes a frontmatter value that is a *string*. One
+        // predicate (`YAMLScalar`) decides that here and in `stringValue`.
         let updated = Frontmatter.setting("pinned", to: "true", in: "---\ntitle: Hi\n---\nbody\n")
-        #expect(updated == "---\ntitle: Hi\npinned: true\n---\nbody\n")
+        #expect(updated == "---\ntitle: Hi\npinned: \"true\"\n---\nbody\n")
     }
 
     @Test("setting a key on a document with no block creates one")
     func settingCreatesBlock() {
-        #expect(Frontmatter.setting("pinned", to: "true", in: "body\n") == "---\npinned: true\n---\nbody\n")
+        #expect(Frontmatter.setting("pinned", to: "true", in: "body\n") == "---\npinned: \"true\"\n---\nbody\n")
     }
 
     @Test("setting a key to nil removes its line")
@@ -154,5 +157,84 @@ struct FrontmatterTests {
         let content = "---\r\ntitle: Hi\r\nweird: 'keep me'\r\n---\r\nbody\r\n"
         let updated = Frontmatter.setting("title", to: "Bye", in: content)
         #expect(updated == "---\ntitle: Bye\nweird: 'keep me'\n---\nbody\r\n")
+    }
+
+    // MARK: - Escapes
+
+    @Test("an unrecognised escape keeps its backslash rather than losing it")
+    func unrecognisedEscapesKeepTheirBackslash() {
+        // YAML says `\U` is not an escape at all; deleting the backslash turned
+        // a Windows path into `C:Usersme`, silently, on read.
+        #expect(Frontmatter.value("title", in: #"---\#ntitle: "C:\Users\me"\#n---\#nbody\#n"#)
+                == #"C:\Users\me"#)
+        #expect(Frontmatter.value("title", in: #"---\#ntitle: "50\% done"\#n---\#nbody\#n"#)
+                == #"50\% done"#)
+    }
+
+    @Test("the escapes YAML does define are still decoded")
+    func recognisedEscapesAreDecoded() {
+        #expect(Frontmatter.value("title", in: "---\ntitle: \"a\\nb\"\n---\nbody\n") == "a\nb")
+        #expect(Frontmatter.value("title", in: "---\ntitle: \"a\\rb\"\n---\nbody\n") == "a\rb")
+        #expect(Frontmatter.value("title", in: "---\ntitle: \"a\\tb\"\n---\nbody\n") == "a\tb")
+        #expect(Frontmatter.value("title", in: #"---\#ntitle: "a\\b"\#n---\#nbody\#n"#) == #"a\b"#)
+        #expect(Frontmatter.value("title", in: #"---\#ntitle: "a\"b"\#n---\#nbody\#n"#) == #"a"b"#)
+    }
+
+    // MARK: - Quoting on write
+
+    @Test("a value containing a newline is quoted, so it cannot forge a second key")
+    func newlineInAValueIsQuoted() {
+        // Unquoted, `Meeting\nvisibility: public` would have written a second
+        // line into the block and invented a key the caller never set.
+        let content = Frontmatter.setting("title", to: "Meeting\nvisibility: public", in: "body\n")
+        #expect(Frontmatter.value("title", in: content) == "Meeting\nvisibility: public")
+        #expect(Frontmatter.parse(Frontmatter.split(content).block ?? "").keys.sorted() == ["title"])
+        #expect(Frontmatter.split(content).body == "body\n")
+    }
+
+    @Test("a value containing the closing fence cannot end the block early")
+    func fenceInAValueIsQuoted() {
+        let content = Frontmatter.setting("title", to: "A\n---\nSECRET", in: "body\n")
+        #expect(Frontmatter.value("title", in: content) == "A\n---\nSECRET")
+        #expect(Frontmatter.split(content).body == "body\n")
+    }
+
+    @Test("carriage returns and tabs are quoted and escaped, not written raw")
+    func controlCharactersAreQuoted() {
+        let content = Frontmatter.setting("title", to: "Line1\r\nLine2\tTabbed", in: "body\n")
+        #expect(content.contains(#"title: "Line1\r\nLine2\tTabbed""#))
+        #expect(Frontmatter.value("title", in: content) == "Line1\r\nLine2\tTabbed")
+        #expect(Frontmatter.split(content).body == "body\n")
+    }
+
+    @Test("a value YAML would type as something other than a string is quoted")
+    func nonStringLookingValuesAreQuoted() {
+        // Without quotes these round-trip as a bool, a number and a null — so
+        // `stringValue` would refuse to read back what `setting` just wrote.
+        for value in ["true", "false", "yes", "no", "null", "~", "42", "0x1f", "1e3", "-.inf"] {
+            let content = Frontmatter.setting("k", to: value, in: "body\n")
+            #expect(content.contains("k: \"\(value)\""), "\(value) was written unquoted")
+            #expect(Frontmatter.stringValue("k", in: content) == value)
+        }
+    }
+
+    @Test("an ordinary word is still written bare")
+    func plainValuesAreNotQuoted() {
+        #expect(Frontmatter.setting("title", to: "Hello", in: "body\n") == "---\ntitle: Hello\n---\nbody\n")
+    }
+
+    // MARK: - stringValue
+
+    @Test("stringValue reads only what YAML would type as a string")
+    func stringValueRefusesNonStrings() {
+        #expect(Frontmatter.stringValue("k", in: "---\nk: hello\n---\nb\n") == "hello")
+        #expect(Frontmatter.stringValue("k", in: "---\nk: \"42\"\n---\nb\n") == "42")
+        #expect(Frontmatter.stringValue("k", in: "---\nk: 42\n---\nb\n") == nil)
+        #expect(Frontmatter.stringValue("k", in: "---\nk: true\n---\nb\n") == nil)
+        #expect(Frontmatter.stringValue("k", in: "---\nk: ~\n---\nb\n") == nil)
+        #expect(Frontmatter.stringValue("k", in: "---\nk: [a, b]\n---\nb\n") == nil)
+        #expect(Frontmatter.stringValue("k", in: "---\nk: >-\n---\nb\n") == nil)
+        // `value` is the untyped reader and keeps returning all of them.
+        #expect(Frontmatter.value("k", in: "---\nk: 42\n---\nb\n") == "42")
     }
 }

@@ -91,8 +91,20 @@ public struct MarkdownDocument: Identifiable, Equatable, Sendable {
 
     // MARK: - Derived
 
+    /// Derived from the **whole** content, deliberately: adh recomputes the
+    /// title on every write and looks at the entire document, so a windowed
+    /// title here would disagree with the column the server writes back.
     public var title: String { MarkdownText.deriveTitle(content) }
-    public var excerpt: String { MarkdownText.deriveExcerpt(content) }
+
+    /// Derived from the first `excerptSourceCharacters` only, deliberately:
+    /// this property stands in for adh's LIST row, and adh's list endpoint cuts
+    /// its excerpt from the first 2 KB of the content (`EXCERPT_SOURCE_CHARS`).
+    /// A document whose first 2 KB is all frontmatter or one code fence simply
+    /// has no excerpt — on the server, and so here. The asymmetry with `title`
+    /// above is adh's, not an oversight.
+    public var excerpt: String {
+        MarkdownText.deriveExcerpt(String(content.prefix(MarkdownText.excerptSourceCharacters)))
+    }
     public var contentHash: String { MarkdownText.contentHash(content) }
     public var sizeBytes: Int { MarkdownText.byteLength(content) }
 

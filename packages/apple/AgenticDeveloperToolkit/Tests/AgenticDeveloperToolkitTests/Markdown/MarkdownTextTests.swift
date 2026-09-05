@@ -59,10 +59,14 @@ struct MarkdownTextTests {
         #expect(MarkdownText.deriveTitle("```\nlet x = 1\n```\n\nReal title\n") == "Real title")
     }
 
-    @Test("inline syntax is stripped out of the title")
-    func titleStripsInlineSyntax() {
+    @Test("inline syntax is kept in the title, because adh keeps it")
+    func titleKeepsInlineSyntax() {
+        // adh's `stripLineSyntax` removes only what a line OPENS with — quote
+        // arrows, heading hashes, list markers. Emphasis, code spans and links
+        // survive into its title, so they survive into ours: a local rule that
+        // stripped them would fight the column adh rewrites on every write.
         #expect(MarkdownText.deriveTitle("## **Bold** and `code` and [a link](http://x)\n")
-                == "Bold and code and a link")
+                == "**Bold** and `code` and [a link](http://x)")
     }
 
     @Test("an empty document has no title to derive")
@@ -141,13 +145,20 @@ struct MarkdownTextTests {
         #expect(MarkdownText.deriveTitle("~~~\n# Not the title\n~~~\n\nReal title\n") == "Real title")
     }
 
-    @Test("a fence only closes on its own marker, at its own length or longer")
+    @Test("a fence only closes on its own marker — but adh has no minimum-length rule")
     func fenceMarkersDoNotCrossOver() {
         // The `~~~` inside the backtick block is content, not a closing fence,
-        // so the heading after the real close is still the title.
+        // so the heading after the real close is still the title. That much
+        // adh and CommonMark agree on: the backtick pattern runs first and
+        // pairs the two ``` lines, taking the ~~~ with it.
         #expect(MarkdownText.deriveTitle("```\n~~~\n# Inside\n```\n\nReal title\n") == "Real title")
-        // A three-backtick run cannot close a four-backtick opener.
-        #expect(MarkdownText.deriveTitle("````\n```\n# Inside\n````\n\nReal title\n") == "Real title")
+        // CommonMark says a three-backtick run cannot close a four-backtick
+        // opener; adh's lazy /```[\s\S]*?```/ has no such rule, so it pairs the
+        // first three backticks of the opener with the three on the next line,
+        // and the unterminated-fence pattern then eats from the ```` on the
+        // fourth line to EOF. `Inside` is left as the only body line — which
+        // is the title the server stores, so it is the title we store.
+        #expect(MarkdownText.deriveTitle("````\n```\n# Inside\n````\n\nReal title\n") == "Inside")
     }
 
     @Test("an unterminated fence swallows the rest of the document")
