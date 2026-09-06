@@ -22,6 +22,11 @@ extension FontWeight {
 }
 
 extension FontStyle {
+    /// Bold on `NSFontManager`'s own 0–15 weight scale, where 5 is book weight
+    /// and 9 is bold. It is not `NSFont.Weight`, which is a `-1...1` float, and
+    /// the two are not interchangeable at the family-lookup call.
+    private static let appKitBoldWeight = 9
+
     /// Resolve to an `NSFont` at `scaledSize` (the size *after* the theme's global
     /// scale has been applied). A custom `family` is used when installed (falling
     /// back to the system font otherwise), monospaced roles use the system
@@ -34,8 +39,24 @@ extension FontStyle {
             // Best-effort weight for arbitrary families: apply a bold trait for
             // semibold-and-heavier (AppKit can't dial arbitrary weights on a
             // named family the way it can for the system font).
+            //
+            // Asked through `font(withFamily:traits:weight:size:)` rather than
+            // `convert(_:toHaveTrait:)`, because the two answer "this family has
+            // no bold face" differently. `convert` is declared returning a
+            // non-optional `NSFont` and returns nil anyway — a nil that no Swift
+            // check can see, since binding it to an `NSFont?` wraps it as
+            // `.some(nil)` and every `??` after that takes the left-hand side.
+            // It then travels as a real font until it reaches a text-attributes
+            // dictionary, where CoreText raises `attempt to insert nil object`
+            // and takes the process with it. This spelling returns a true
+            // `NSFont?`, so the miss is visible here and the base face stands in.
             if weight.nsWeight.rawValue >= NSFont.Weight.semibold.rawValue {
-                return NSFontManager.shared.convert(base, toHaveTrait: .boldFontMask)
+                return NSFontManager.shared.font(
+                    withFamily: base.familyName ?? family,
+                    traits: .boldFontMask,
+                    weight: Self.appKitBoldWeight,
+                    size: scaledSize
+                ) ?? base
             }
             return base
         }
