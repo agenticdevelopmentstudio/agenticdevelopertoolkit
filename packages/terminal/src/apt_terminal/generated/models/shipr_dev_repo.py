@@ -16,6 +16,9 @@ class ShiprDevRepo:
     Attributes:
         id (Union[Unset, str]):
         slug (Union[Unset, str]):
+        display_name (Union[None, Unset, str]): What the operator calls it, which is not always what the forge calls it.
+            Null means no opinion and every reader falls back to `slug`. A LABEL AND NOTHING MORE: no branch, no path and no
+            forge call is derived from it.
         main_branch (Union[Unset, str]):
         prepared_branch (Union[Unset, str]):
         declaration_sha (Union[None, Unset, str]):
@@ -24,6 +27,7 @@ class ShiprDevRepo:
 
     id: Unset | str = UNSET
     slug: Unset | str = UNSET
+    display_name: None | Unset | str = UNSET
     main_branch: Unset | str = UNSET
     prepared_branch: Unset | str = UNSET
     declaration_sha: None | Unset | str = UNSET
@@ -34,6 +38,12 @@ class ShiprDevRepo:
         id = self.id
 
         slug = self.slug
+
+        display_name: None | Unset | str
+        if isinstance(self.display_name, Unset):
+            display_name = UNSET
+        else:
+            display_name = self.display_name
 
         main_branch = self.main_branch
 
@@ -58,6 +68,8 @@ class ShiprDevRepo:
             field_dict["id"] = id
         if slug is not UNSET:
             field_dict["slug"] = slug
+        if display_name is not UNSET:
+            field_dict["displayName"] = display_name
         if main_branch is not UNSET:
             field_dict["mainBranch"] = main_branch
         if prepared_branch is not UNSET:
@@ -75,6 +87,15 @@ class ShiprDevRepo:
         id = d.pop("id", UNSET)
 
         slug = d.pop("slug", UNSET)
+
+        def _parse_display_name(data: object) -> None | Unset | str:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | Unset | str, data)
+
+        display_name = _parse_display_name(d.pop("displayName", UNSET))
 
         main_branch = d.pop("mainBranch", UNSET)
 
@@ -101,6 +122,7 @@ class ShiprDevRepo:
         shipr_dev_repo = cls(
             id=id,
             slug=slug,
+            display_name=display_name,
             main_branch=main_branch,
             prepared_branch=prepared_branch,
             declaration_sha=declaration_sha,

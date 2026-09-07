@@ -9589,6 +9589,173 @@ public struct Client: APIProtocol {
             }
         )
     }
+    /// Connect every installation the saved GitHub App can already see
+    ///
+    /// This is what lets ADDING the integration BE the connect. A GitHub App is installed on github.com, by a person choosing an account there — so by the time an app id and private key are saved, that choice has already been made and the app can read it back. An OAuth redirect at this point would ask a question whose answer is already known.
+    ///
+    /// Only valid for github_app providers (400 otherwise); 404 for an unknown provider or an unknown config. `providerConfigId` is REQUIRED and read by id, never resolved: the resolver falls back to the platform-global app when an ecosystem has none of its own, and enumerating a shared app's installations would list every other tenant's.
+    ///
+    /// ONE INSTALLATION'S FAILURE IS NOT THE BATCH'S. An app on four orgs, one of them suspended, connects three and reports the fourth under `skipped` with GitHub's message. Only a failure to enumerate at all — which is the credentials themselves being wrong — is a 400. Calling it again is safe: an installation already connected comes back under `connected` with its existing `connectionId`.
+    ///
+    /// - Remark: HTTP `POST /integrations/providers/{providerId}/adopt-installations`.
+    /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post`.
+    public func postIntegrationsProvidersProviderIdAdoptInstallations(_ input: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input) async throws -> Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/integrations/providers/{}/adopt-installations",
+                    parameters: [
+                        input.path.providerId
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.BadRequest.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/problem+json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/problem+json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ProblemDetails.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .applicationProblemJson(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .badRequest(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/problem+json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/problem+json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ProblemDetails.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .applicationProblemJson(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/problem+json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/problem+json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ProblemDetails.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .applicationProblemJson(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/problem+json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/problem+json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ProblemDetails.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .applicationProblemJson(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// Connect an integration (polymorphic by auth method)
     ///
     /// Finishes any auth method's connect flow and persists the connection under the target ecosystem `ecosystemId` the client names; the caller must manage it (404/403 otherwise). Returns the redacted connection (tokens never echoed).
@@ -72356,9 +72523,9 @@ public struct Client: APIProtocol {
             }
         )
     }
-    /// Move it, reorder it, or change which branches it ships to
+    /// Move it, reorder it, rename it, or change which branches it ships to
     ///
-    /// `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a different repository while leaving its mirror, ladder and history behind.
+    /// TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would strand its mirror, ladder and history on a repository nothing now names.
     ///
     /// - Remark: HTTP `PATCH /shipr/repos/{id}`.
     /// - Remark: Generated from `#/paths//shipr/repos/{id}/patch`.
@@ -74588,6 +74755,8 @@ public struct Client: APIProtocol {
     ///
     /// What the installation was granted, which is exactly the set `register` can act on — offering anything wider means an operator picks a repository whose first push fails minutes later. The account-and-repository picker that produced this set is GitHub’s own installation page, so there is no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403 would confirm it exists.
     ///
+    /// This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s account. The one exception is a connection nothing has been stored for yet: answering `[]` there would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks — which is why 502 is still among the responses. Use the refresh below to ask deliberately.
+    ///
     /// - Remark: HTTP `GET /shipr/connections/{id}/repositories`.
     /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/get`.
     public func getShiprConnectionsIdRepositories(_ input: Operations.GetShiprConnectionsIdRepositories.Input) async throws -> Operations.GetShiprConnectionsIdRepositories.Output {
@@ -74705,6 +74874,160 @@ public struct Client: APIProtocol {
                 case 502:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
                     let body: Operations.GetShiprConnectionsIdRepositories.Output.BadGateway.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .badGateway(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Ask GitHub again what this connection was granted
+    ///
+    /// The Test button, and the read-then-refresh the picker does on open. Always goes to GitHub — a stored list never short-circuits it, because the whole reason to call this rather than the GET is to find out whether the credentials still work and what has changed since.
+    ///
+    /// The answer replaces the stored row wholesale rather than merging into it: a grant is a set, and a merge would keep a repository the installation has since lost, which is exactly the kind of entry an operator would pick and only discover was gone at the first push. A call that cannot reach GitHub is a 502 and leaves the stored row untouched — a list read an hour ago can still be picked from, and an empty one cannot.
+    ///
+    /// - Remark: HTTP `POST /shipr/connections/{id}/repositories/refresh`.
+    /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post`.
+    public func postShiprConnectionsIdRepositoriesRefresh(_ input: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input) async throws -> Operations.PostShiprConnectionsIdRepositoriesRefresh.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostShiprConnectionsIdRepositoriesRefresh.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/shipr/connections/{}/repositories/refresh",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
+                case 502:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.BadGateway.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -74970,6 +75293,28 @@ public struct Client: APIProtocol {
             },
             deserializer: { response, responseBody in
                 switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostShiprRegister.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostShiprRegister.Output.Created.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
                 case 202:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
                     let body: Operations.PostShiprRegister.Output.Accepted.Body
@@ -75102,6 +75447,311 @@ public struct Client: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .conflict(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// The per-org defaults, all of them
+    ///
+    /// A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the caller’s installations reach, so one request fills every gear icon and an org nobody has configured is simply absent rather than a 404 the client has to read as “unset”.
+    ///
+    /// - Remark: HTTP `GET /shipr/org-defaults`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/get`.
+    public func getShiprOrgDefaults(_ input: Operations.GetShiprOrgDefaults.Input) async throws -> Operations.GetShiprOrgDefaults.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GetShiprOrgDefaults.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/shipr/org-defaults",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "workspace",
+                    value: input.query.workspace
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetShiprOrgDefaults.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.GetShiprOrgDefaults.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetShiprOrgDefaults.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetShiprOrgDefaults.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetShiprOrgDefaults.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Set one org’s defaults
+    ///
+    /// UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so writing one re-aims the next repository and leaves every registered one where the operator put it. An ABSENT field is left alone rather than reset, so a request about environments cannot quietly restore the suffix.
+    ///
+    /// - Remark: HTTP `PUT /shipr/org-defaults/{org}`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put`.
+    public func putShiprOrgDefaultsOrg(_ input: Operations.PutShiprOrgDefaultsOrg.Input) async throws -> Operations.PutShiprOrgDefaultsOrg.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PutShiprOrgDefaultsOrg.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/shipr/org-defaults/{}",
+                    parameters: [
+                        input.path.org
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .put
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "workspace",
+                    value: input.query.workspace
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case .none:
+                    body = nil
+                case let .json(value):
+                    body = try converter.setOptionalRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PutShiprOrgDefaultsOrg.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.ShiprOrgDefaults.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PutShiprOrgDefaultsOrg.Output.BadRequest.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .badRequest(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PutShiprOrgDefaultsOrg.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PutShiprOrgDefaultsOrg.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PutShiprOrgDefaultsOrg.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

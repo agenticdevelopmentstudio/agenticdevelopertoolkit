@@ -12626,6 +12626,11 @@
           "slug": {
             "type": "string"
           },
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "What the operator calls it, which is not always what the forge calls it. Null means no opinion and every reader falls back to `slug`. A LABEL AND NOTHING MORE: no branch, no path and no forge call is derived from it."
+          },
           "mainBranch": {
             "type": "string"
           },
@@ -12639,6 +12644,41 @@
           "connectionId": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "ShiprOrgDefaults": {
+        "type": "object",
+        "description": "What a mirror in one forge org is BORN with — never a description of one that already exists. Read when a mirror is first written; changing it re-aims the next repository and moves nothing already registered.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "org": {
+            "type": "string",
+            "description": "The forge account login."
+          },
+          "deploymentOwner": {
+            "type": "string",
+            "nullable": true,
+            "description": "Which org the deployment repositories go in. Null is “the same org”, stored as null rather than as a copy so that an operator who never chose stays distinguishable from one who chose the org they were already in."
+          },
+          "nameSuffix": {
+            "type": "string",
+            "description": "`-deployment`, spelled per-org. Appended to the source repository’s name when its `.shipr` declares no shards."
+          },
+          "envBranches": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The ladder a new mirror starts with. Empty means the built-in default (every environment, named after itself), not a repository that deploys nowhere."
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
           }
         }
       },
@@ -21208,6 +21248,187 @@
                     },
                     "clientId": {
                       "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Problem Details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Problem Details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Problem Details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Problem Details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/providers/{providerId}/adopt-installations": {
+      "parameters": [
+        {
+          "name": "providerId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Connect every installation the saved GitHub App can already see",
+        "description": "This is what lets ADDING the integration BE the connect. A GitHub App is installed on github.com, by a person choosing an account there — so by the time an app id and private key are saved, that choice has already been made and the app can read it back. An OAuth redirect at this point would ask a question whose answer is already known.\n\nOnly valid for github_app providers (400 otherwise); 404 for an unknown provider or an unknown config. `providerConfigId` is REQUIRED and read by id, never resolved: the resolver falls back to the platform-global app when an ecosystem has none of its own, and enumerating a shared app's installations would list every other tenant's.\n\nONE INSTALLATION'S FAILURE IS NOT THE BATCH'S. An app on four orgs, one of them suspended, connects three and reports the fourth under `skipped` with GitHub's message. Only a failure to enumerate at all — which is the credentials themselves being wrong — is a 400. Calling it again is safe: an installation already connected comes back under `connected` with its existing `connectionId`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ecosystemId",
+                  "providerConfigId"
+                ],
+                "properties": {
+                  "ecosystemId": {
+                    "type": "string",
+                    "description": "Target ecosystem id (the caller must manage it)"
+                  },
+                  "providerConfigId": {
+                    "type": "string",
+                    "description": "The saved config holding the app id and private key. See above for why it cannot be omitted."
+                  },
+                  "serviceType": {
+                    "type": "string",
+                    "description": "Defaults to the provider's primary service type."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What became of each installation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "connected",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "connected": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "installationId",
+                          "accountLogin",
+                          "targetType"
+                        ],
+                        "properties": {
+                          "installationId": {
+                            "type": "string"
+                          },
+                          "accountLogin": {
+                            "type": "string",
+                            "description": "The account the app is installed on — the org whose repositories it reaches."
+                          },
+                          "targetType": {
+                            "type": "string",
+                            "description": "`Organization` or `User`."
+                          },
+                          "connectionId": {
+                            "type": "string",
+                            "description": "The connection holding it — set when this call made one, AND when a previous call already had. Adoption is idempotent, so a second call over the same installations reports them connected rather than connecting them again."
+                          },
+                          "skipped": {
+                            "type": "string",
+                            "description": "Why it was not connected. Absent on success."
+                          },
+                          "warning": {
+                            "type": "string",
+                            "description": "The connection stands, and the prefetch that rides along behind it — caching what this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the repository picker opening instantly does not. It is reported because this call is what the Test button runs, and a picker that will open empty should say so now rather than at the moment somebody needs it."
+                          }
+                        }
+                      }
+                    },
+                    "skipped": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "installationId",
+                          "accountLogin",
+                          "targetType"
+                        ],
+                        "properties": {
+                          "installationId": {
+                            "type": "string"
+                          },
+                          "accountLogin": {
+                            "type": "string",
+                            "description": "The account the app is installed on — the org whose repositories it reaches."
+                          },
+                          "targetType": {
+                            "type": "string",
+                            "description": "`Organization` or `User`."
+                          },
+                          "connectionId": {
+                            "type": "string",
+                            "description": "The connection holding it — set when this call made one, AND when a previous call already had. Adoption is idempotent, so a second call over the same installations reports them connected rather than connecting them again."
+                          },
+                          "skipped": {
+                            "type": "string",
+                            "description": "Why it was not connected. Absent on success."
+                          },
+                          "warning": {
+                            "type": "string",
+                            "description": "The connection stands, and the prefetch that rides along behind it — caching what this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the repository picker opening instantly does not. It is reported because this call is what the Test button runs, and a picker that will open empty should say so now rather than at the moment somebody needs it."
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -58402,8 +58623,8 @@
         "tags": [
           "shipr"
         ],
-        "summary": "Move it, reorder it, or change which branches it ships to",
-        "description": "`slug` and `shard` are not editable: changing either would re-point a registered pipeline at a different repository while leaving its mirror, ladder and history behind.",
+        "summary": "Move it, reorder it, rename it, or change which branches it ships to",
+        "description": "TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would strand its mirror, ladder and history on a repository nothing now names.",
         "security": [
           {
             "bearerAuth": []
@@ -58421,6 +58642,15 @@
                   },
                   "position": {
                     "type": "integer"
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "owner/name of the DEPLOYMENT repository. 409 once it is provisioned."
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "The source repository’s label, shown in the console instead of its slug. Null clears it."
                   },
                   "shipBranch": {
                     "type": "string"
@@ -58937,10 +59167,6 @@
                         "type": "string",
                         "description": "prepare: the tip to pin. Absent means the dev repo’s main as it stands."
                       },
-                      "acknowledgedUnverified": {
-                        "type": "boolean",
-                        "description": "prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red."
-                      },
                       "shard": {
                         "type": "string",
                         "description": "register: which [deployments] key this mirror is."
@@ -59066,10 +59292,6 @@
                       "sha": {
                         "type": "string",
                         "description": "prepare: the tip to pin. Absent means the dev repo’s main as it stands."
-                      },
-                      "acknowledgedUnverified": {
-                        "type": "boolean",
-                        "description": "prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red."
                       },
                       "shard": {
                         "type": "string",
@@ -59197,10 +59419,6 @@
                         "type": "string",
                         "description": "prepare: the tip to pin. Absent means the dev repo’s main as it stands."
                       },
-                      "acknowledgedUnverified": {
-                        "type": "boolean",
-                        "description": "prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red."
-                      },
                       "shard": {
                         "type": "string",
                         "description": "register: which [deployments] key this mirror is."
@@ -59326,10 +59544,6 @@
                       "sha": {
                         "type": "string",
                         "description": "prepare: the tip to pin. Absent means the dev repo’s main as it stands."
-                      },
-                      "acknowledgedUnverified": {
-                        "type": "boolean",
-                        "description": "prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red."
                       },
                       "shard": {
                         "type": "string",
@@ -59567,10 +59781,6 @@
                       "sha": {
                         "type": "string",
                         "description": "prepare: the tip to pin. Absent means the dev repo’s main as it stands."
-                      },
-                      "acknowledgedUnverified": {
-                        "type": "boolean",
-                        "description": "prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red."
                       },
                       "shard": {
                         "type": "string",
@@ -60007,7 +60217,7 @@
           "shipr"
         ],
         "summary": "Every repository one connection can reach",
-        "description": "What the installation was granted, which is exactly the set `register` can act on — offering anything wider means an operator picks a repository whose first push fails minutes later. The account-and-repository picker that produced this set is GitHub’s own installation page, so there is no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403 would confirm it exists.",
+        "description": "What the installation was granted, which is exactly the set `register` can act on — offering anything wider means an operator picks a repository whose first push fails minutes later. The account-and-repository picker that produced this set is GitHub’s own installation page, so there is no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403 would confirm it exists.\n\nThis reads what was last stored, so it is a database read and normally cannot fail on GitHub’s account. The one exception is a connection nothing has been stored for yet: answering `[]` there would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks — which is why 502 is still among the responses. Use the refresh below to ask deliberately.",
         "security": [
           {
             "bearerAuth": []
@@ -60021,7 +60231,8 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "repositories"
+                    "repositories",
+                    "readAt"
                   ],
                   "properties": {
                     "repositories": {
@@ -60046,6 +60257,121 @@
                           }
                         }
                       }
+                    },
+                    "readAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When GitHub last said this. The picker shows a stored list immediately and refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller can say so instead of implying it is current."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipr/connections/{id}/repositories/refresh": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "shipr"
+        ],
+        "summary": "Ask GitHub again what this connection was granted",
+        "description": "The Test button, and the read-then-refresh the picker does on open. Always goes to GitHub — a stored list never short-circuits it, because the whole reason to call this rather than the GET is to find out whether the credentials still work and what has changed since.\n\nThe answer replaces the stored row wholesale rather than merging into it: a grant is a set, and a merge would keep a repository the installation has since lost, which is exactly the kind of entry an operator would pick and only discover was gone at the first push. A call that cannot reach GitHub is a 502 and leaves the stored row untouched — a list read an hour ago can still be picked from, and an empty one cannot.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The repositories, as GitHub just described them",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "repositories",
+                    "readAt"
+                  ],
+                  "properties": {
+                    "repositories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "slug",
+                          "defaultBranch",
+                          "private"
+                        ],
+                        "properties": {
+                          "slug": {
+                            "type": "string",
+                            "description": "owner/name"
+                          },
+                          "defaultBranch": {
+                            "type": "string"
+                          },
+                          "private": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "readAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When GitHub last said this. The picker shows a stored list immediately and refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller can say so instead of implying it is current."
                     }
                   }
                 }
@@ -60293,6 +60619,10 @@
                   "deploymentName": {
                     "type": "string",
                     "description": "The mirror’s name on the same fallback. Defaults to `<name>-deployment`; overridable independently of the owner, because changing the org almost always keeps the name."
+                  },
+                  "provision": {
+                    "type": "boolean",
+                    "description": "Whether to GO AND MAKE IT, or only write down where it goes. `false` writes the rows synchronously, leaves `registeredAt` null and queues no run, so nothing is created on the forge under a name nobody has looked at yet; the operator then sets the org, the name and the environments and presses Provision, which is `POST /shipr/runs` with the same `register` operation. Defaults to true."
                   }
                 }
               }
@@ -60300,6 +60630,38 @@
           }
         },
         "responses": {
+          "201": {
+            "description": "Configured — rows written, nothing provisioned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "devRepo",
+                    "mirrors"
+                  ],
+                  "properties": {
+                    "devRepo": {
+                      "$ref": "#/components/schemas/ShiprDevRepo"
+                    },
+                    "mirrors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ShiprRepo"
+                      }
+                    },
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "What the run would have journalled: a repository carrying no `.shipr`, a malformed one, a slug another repository already spoke for. Present only when there is something to say."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "202": {
             "description": "Queued",
             "content": {
@@ -60362,6 +60724,196 @@
             }
           },
           "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipr/org-defaults": {
+      "get": {
+        "tags": [
+          "shipr"
+        ],
+        "summary": "The per-org defaults, all of them",
+        "description": "A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the caller’s installations reach, so one request fills every gear icon and an org nobody has configured is simply absent rather than a 404 the client has to read as “unset”.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The workspace slug to act in. Omitted, the caller's own personal workspace."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The configured orgs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "orgDefaults"
+                  ],
+                  "properties": {
+                    "orgDefaults": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ShiprOrgDefaults"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipr/org-defaults/{org}": {
+      "parameters": [
+        {
+          "name": "org",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "A forge account login."
+        }
+      ],
+      "put": {
+        "tags": [
+          "shipr"
+        ],
+        "summary": "Set one org’s defaults",
+        "description": "UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so writing one re-aims the next repository and leaves every registered one where the operator put it. An ABSENT field is left alone rather than reset, so a request about environments cannot quietly restore the suffix.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The workspace slug to act in. Omitted, the caller's own personal workspace."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deploymentOwner": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "nameSuffix": {
+                    "type": "string"
+                  },
+                  "envBranches": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The defaults as stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiprOrgDefaults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Error",
             "content": {
               "application/json": {

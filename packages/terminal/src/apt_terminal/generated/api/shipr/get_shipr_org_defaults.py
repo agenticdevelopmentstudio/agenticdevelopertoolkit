@@ -6,19 +6,14 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
-from ...models.post_shipr_register_body import PostShiprRegisterBody
-from ...models.post_shipr_register_response_201 import PostShiprRegisterResponse201
-from ...models.post_shipr_register_response_202 import PostShiprRegisterResponse202
+from ...models.get_shipr_org_defaults_response_200 import GetShiprOrgDefaultsResponse200
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostShiprRegisterBody,
     workspace: Unset | str = UNSET,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
-
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
@@ -26,36 +21,21 @@ def _get_kwargs(
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/shipr/register",
+        "method": "get",
+        "url": "/shipr/org-defaults",
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
-    if response.status_code == 201:
-        response_201 = PostShiprRegisterResponse201.from_dict(response.json())
+) -> Error | GetShiprOrgDefaultsResponse200 | None:
+    if response.status_code == 200:
+        response_200 = GetShiprOrgDefaultsResponse200.from_dict(response.json())
 
-        return response_201
-
-    if response.status_code == 202:
-        response_202 = PostShiprRegisterResponse202.from_dict(response.json())
-
-        return response_202
-
-    if response.status_code == 400:
-        response_400 = Error.from_dict(response.json())
-
-        return response_400
+        return response_200
 
     if response.status_code == 401:
         response_401 = Error.from_dict(response.json())
@@ -72,11 +52,6 @@ def _parse_response(
 
         return response_404
 
-    if response.status_code == 409:
-        response_409 = Error.from_dict(response.json())
-
-        return response_409
-
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -85,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
+) -> Response[Error | GetShiprOrgDefaultsResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -97,29 +72,26 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
     workspace: Unset | str = UNSET,
-) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
-    """Register a source repository and queue its provisioning
+) -> Response[Error | GetShiprOrgDefaultsResponse200]:
+    """The per-org defaults, all of them
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the
+    caller’s installations reach, so one request fills every gear icon and an org nobody has configured
+    is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]]
+        Response[Union[Error, GetShiprOrgDefaultsResponse200]]
     """
 
     kwargs = _get_kwargs(
-        body=body,
         workspace=workspace,
     )
 
@@ -133,30 +105,27 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
     workspace: Unset | str = UNSET,
-) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
-    """Register a source repository and queue its provisioning
+) -> Error | GetShiprOrgDefaultsResponse200 | None:
+    """The per-org defaults, all of them
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the
+    caller’s installations reach, so one request fills every gear icon and an org nobody has configured
+    is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]
+        Union[Error, GetShiprOrgDefaultsResponse200]
     """
 
     return sync_detailed(
         client=client,
-        body=body,
         workspace=workspace,
     ).parsed
 
@@ -164,29 +133,26 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
     workspace: Unset | str = UNSET,
-) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
-    """Register a source repository and queue its provisioning
+) -> Response[Error | GetShiprOrgDefaultsResponse200]:
+    """The per-org defaults, all of them
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the
+    caller’s installations reach, so one request fills every gear icon and an org nobody has configured
+    is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]]
+        Response[Union[Error, GetShiprOrgDefaultsResponse200]]
     """
 
     kwargs = _get_kwargs(
-        body=body,
         workspace=workspace,
     )
 
@@ -198,31 +164,28 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
     workspace: Unset | str = UNSET,
-) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
-    """Register a source repository and queue its provisioning
+) -> Error | GetShiprOrgDefaultsResponse200 | None:
+    """The per-org defaults, all of them
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the
+    caller’s installations reach, so one request fills every gear icon and an org nobody has configured
+    is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]
+        Union[Error, GetShiprOrgDefaultsResponse200]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            body=body,
             workspace=workspace,
         )
     ).parsed

@@ -814,6 +814,7 @@ from .get_shipr_connections_response_200_connections_item import (
 )
 from .get_shipr_groups_id_response_200 import GetShiprGroupsIdResponse200
 from .get_shipr_groups_response_200_item import GetShiprGroupsResponse200Item
+from .get_shipr_org_defaults_response_200 import GetShiprOrgDefaultsResponse200
 from .get_shipr_repos_id_platforms_response_200 import GetShiprReposIdPlatformsResponse200
 from .get_shipr_repos_id_platforms_response_200_platforms_item import (
     GetShiprReposIdPlatformsResponse200PlatformsItem,
@@ -1494,6 +1495,18 @@ from .post_integrations_ecosystems_ecosystem_id_provider_configs_body_endpoints 
 from .post_integrations_ecosystems_ecosystem_id_provider_configs_body_fields import (
     PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyFields,
 )
+from .post_integrations_providers_provider_id_adopt_installations_body import (
+    PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
+)
+from .post_integrations_providers_provider_id_adopt_installations_response_200 import (
+    PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200,
+)
+from .post_integrations_providers_provider_id_adopt_installations_response_200_connected_item import (
+    PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200ConnectedItem,
+)
+from .post_integrations_providers_provider_id_adopt_installations_response_200_skipped_item import (
+    PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200SkippedItem,
+)
 from .post_integrations_providers_provider_id_link_token_body import (
     PostIntegrationsProvidersProviderIdLinkTokenBody,
 )
@@ -1824,9 +1837,16 @@ from .post_registry_registries_registry_id_entries_entry_id_services_body_pricin
 )
 from .post_settings_notifications_body import PostSettingsNotificationsBody
 from .post_settings_notifications_response_201 import PostSettingsNotificationsResponse201
+from .post_shipr_connections_id_repositories_refresh_response_200 import (
+    PostShiprConnectionsIdRepositoriesRefreshResponse200,
+)
+from .post_shipr_connections_id_repositories_refresh_response_200_repositories_item import (
+    PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem,
+)
 from .post_shipr_groups_body import PostShiprGroupsBody
 from .post_shipr_groups_response_201 import PostShiprGroupsResponse201
 from .post_shipr_register_body import PostShiprRegisterBody
+from .post_shipr_register_response_201 import PostShiprRegisterResponse201
 from .post_shipr_register_response_202 import PostShiprRegisterResponse202
 from .post_shipr_repos_id_deploy_body import PostShiprReposIdDeployBody
 from .post_shipr_repos_id_deploy_body_environments_item import (
@@ -2375,6 +2395,8 @@ from .put_settings_notifications_id_body import PutSettingsNotificationsIdBody
 from .put_settings_notifications_id_response_200 import PutSettingsNotificationsIdResponse200
 from .put_shipr_groups_id_body import PutShiprGroupsIdBody
 from .put_shipr_groups_id_response_200 import PutShiprGroupsIdResponse200
+from .put_shipr_org_defaults_org_body import PutShiprOrgDefaultsOrgBody
+from .put_shipr_org_defaults_org_body_env_branches import PutShiprOrgDefaultsOrgBodyEnvBranches
 from .put_shipr_repos_id_personas_body import PutShiprReposIdPersonasBody
 from .put_shipr_repos_id_personas_response_200 import PutShiprReposIdPersonasResponse200
 from .put_shipr_repos_id_platforms_kind_body import PutShiprReposIdPlatformsKindBody
@@ -2482,6 +2504,8 @@ from .shipr_group import ShiprGroup
 from .shipr_ladder import ShiprLadder
 from .shipr_ladder_rows_item import ShiprLadderRowsItem
 from .shipr_ladder_tips import ShiprLadderTips
+from .shipr_org_defaults import ShiprOrgDefaults
+from .shipr_org_defaults_env_branches import ShiprOrgDefaultsEnvBranches
 from .shipr_persona import ShiprPersona
 from .shipr_repo import ShiprRepo
 from .shipr_repo_env_branches import ShiprRepoEnvBranches
@@ -3163,6 +3187,7 @@ __all__ = (
     "GetShiprConnectionsResponse200ConnectionsItem",
     "GetShiprGroupsIdResponse200",
     "GetShiprGroupsResponse200Item",
+    "GetShiprOrgDefaultsResponse200",
     "GetShiprReposIdPlatformsResponse200",
     "GetShiprReposIdPlatformsResponse200PlatformsItem",
     "GetShiprReposIdPlatformsResponse200PlatformsItemKind",
@@ -3641,6 +3666,10 @@ __all__ = (
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyCredentialStyle",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyEndpoints",
     "PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyFields",
+    "PostIntegrationsProvidersProviderIdAdoptInstallationsBody",
+    "PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200",
+    "PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200ConnectedItem",
+    "PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200SkippedItem",
     "PostIntegrationsProvidersProviderIdLinkTokenBody",
     "PostIntegrationsProvidersProviderIdLinkTokenResponse200",
     "PostIntegrationsProvidersProviderIdRegisterInstanceBody",
@@ -3839,9 +3868,12 @@ __all__ = (
     "PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel",
     "PostSettingsNotificationsBody",
     "PostSettingsNotificationsResponse201",
+    "PostShiprConnectionsIdRepositoriesRefreshResponse200",
+    "PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem",
     "PostShiprGroupsBody",
     "PostShiprGroupsResponse201",
     "PostShiprRegisterBody",
+    "PostShiprRegisterResponse201",
     "PostShiprRegisterResponse202",
     "PostShiprReposIdDeployBody",
     "PostShiprReposIdDeployBodyEnvironmentsItem",
@@ -4236,6 +4268,8 @@ __all__ = (
     "PutSettingsNotificationsIdResponse200",
     "PutShiprGroupsIdBody",
     "PutShiprGroupsIdResponse200",
+    "PutShiprOrgDefaultsOrgBody",
+    "PutShiprOrgDefaultsOrgBodyEnvBranches",
     "PutShiprReposIdPersonasBody",
     "PutShiprReposIdPersonasResponse200",
     "PutShiprReposIdPlatformsKindBody",
@@ -4331,6 +4365,8 @@ __all__ = (
     "ShiprLadder",
     "ShiprLadderRowsItem",
     "ShiprLadderTips",
+    "ShiprOrgDefaults",
+    "ShiprOrgDefaultsEnvBranches",
     "ShiprPersona",
     "ShiprRepo",
     "ShiprRepoEnvBranches",

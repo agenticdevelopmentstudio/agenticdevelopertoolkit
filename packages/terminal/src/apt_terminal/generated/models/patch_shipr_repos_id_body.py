@@ -19,6 +19,9 @@ class PatchShiprReposIdBody:
     Attributes:
         group_id (Union[None, Unset, str]):
         position (Union[Unset, int]):
+        slug (Union[Unset, str]): owner/name of the DEPLOYMENT repository. 409 once it is provisioned.
+        display_name (Union[None, Unset, str]): The source repository’s label, shown in the console instead of its slug.
+            Null clears it.
         ship_branch (Union[Unset, str]):
         ci_context (Union[Unset, str]):
         env_branches (Union[Unset, PatchShiprReposIdBodyEnvBranches]):
@@ -26,6 +29,8 @@ class PatchShiprReposIdBody:
 
     group_id: None | Unset | str = UNSET
     position: Unset | int = UNSET
+    slug: Unset | str = UNSET
+    display_name: None | Unset | str = UNSET
     ship_branch: Unset | str = UNSET
     ci_context: Unset | str = UNSET
     env_branches: Union[Unset, "PatchShiprReposIdBodyEnvBranches"] = UNSET
@@ -39,6 +44,14 @@ class PatchShiprReposIdBody:
             group_id = self.group_id
 
         position = self.position
+
+        slug = self.slug
+
+        display_name: None | Unset | str
+        if isinstance(self.display_name, Unset):
+            display_name = UNSET
+        else:
+            display_name = self.display_name
 
         ship_branch = self.ship_branch
 
@@ -55,6 +68,10 @@ class PatchShiprReposIdBody:
             field_dict["groupId"] = group_id
         if position is not UNSET:
             field_dict["position"] = position
+        if slug is not UNSET:
+            field_dict["slug"] = slug
+        if display_name is not UNSET:
+            field_dict["displayName"] = display_name
         if ship_branch is not UNSET:
             field_dict["shipBranch"] = ship_branch
         if ci_context is not UNSET:
@@ -81,6 +98,17 @@ class PatchShiprReposIdBody:
 
         position = d.pop("position", UNSET)
 
+        slug = d.pop("slug", UNSET)
+
+        def _parse_display_name(data: object) -> None | Unset | str:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | Unset | str, data)
+
+        display_name = _parse_display_name(d.pop("displayName", UNSET))
+
         ship_branch = d.pop("shipBranch", UNSET)
 
         ci_context = d.pop("ciContext", UNSET)
@@ -95,6 +123,8 @@ class PatchShiprReposIdBody:
         patch_shipr_repos_id_body = cls(
             group_id=group_id,
             position=position,
+            slug=slug,
+            display_name=display_name,
             ship_branch=ship_branch,
             ci_context=ci_context,
             env_branches=env_branches,

@@ -7,25 +7,25 @@ from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
 if TYPE_CHECKING:
-    from ..models.get_shipr_connections_id_repositories_response_200_repositories_item import (
-        GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem,
+    from ..models.post_shipr_connections_id_repositories_refresh_response_200_repositories_item import (
+        PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem,
     )
 
 
-T = TypeVar("T", bound="GetShiprConnectionsIdRepositoriesResponse200")
+T = TypeVar("T", bound="PostShiprConnectionsIdRepositoriesRefreshResponse200")
 
 
 @_attrs_define
-class GetShiprConnectionsIdRepositoriesResponse200:
+class PostShiprConnectionsIdRepositoriesRefreshResponse200:
     """
     Attributes:
-        repositories (list['GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem']):
+        repositories (list['PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem']):
         read_at (datetime.datetime): When GitHub last said this. The picker shows a stored list immediately and
             refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller
             can say so instead of implying it is current.
     """
 
-    repositories: list["GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem"]
+    repositories: list["PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem"]
     read_at: datetime.datetime
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -50,8 +50,8 @@ class GetShiprConnectionsIdRepositoriesResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.get_shipr_connections_id_repositories_response_200_repositories_item import (
-            GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem,
+        from ..models.post_shipr_connections_id_repositories_refresh_response_200_repositories_item import (
+            PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem,
         )
 
         d = dict(src_dict)
@@ -59,7 +59,7 @@ class GetShiprConnectionsIdRepositoriesResponse200:
         _repositories = d.pop("repositories")
         for repositories_item_data in _repositories:
             repositories_item = (
-                GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem.from_dict(
+                PostShiprConnectionsIdRepositoriesRefreshResponse200RepositoriesItem.from_dict(
                     repositories_item_data
                 )
             )
@@ -68,13 +68,13 @@ class GetShiprConnectionsIdRepositoriesResponse200:
 
         read_at = isoparse(d.pop("readAt"))
 
-        get_shipr_connections_id_repositories_response_200 = cls(
+        post_shipr_connections_id_repositories_refresh_response_200 = cls(
             repositories=repositories,
             read_at=read_at,
         )
 
-        get_shipr_connections_id_repositories_response_200.additional_properties = d
-        return get_shipr_connections_id_repositories_response_200
+        post_shipr_connections_id_repositories_refresh_response_200.additional_properties = d
+        return post_shipr_connections_id_repositories_refresh_response_200
 
     @property
     def additional_keys(self) -> list[str]:

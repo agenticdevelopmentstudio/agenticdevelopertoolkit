@@ -6,15 +6,15 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
-from ...models.post_shipr_register_body import PostShiprRegisterBody
-from ...models.post_shipr_register_response_201 import PostShiprRegisterResponse201
-from ...models.post_shipr_register_response_202 import PostShiprRegisterResponse202
+from ...models.put_shipr_org_defaults_org_body import PutShiprOrgDefaultsOrgBody
+from ...models.shipr_org_defaults import ShiprOrgDefaults
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
+    org: str,
     *,
-    body: PostShiprRegisterBody,
+    body: PutShiprOrgDefaultsOrgBody,
     workspace: Unset | str = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -26,8 +26,8 @@ def _get_kwargs(
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/shipr/register",
+        "method": "put",
+        "url": f"/shipr/org-defaults/{org}",
         "params": params,
     }
 
@@ -41,16 +41,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
-    if response.status_code == 201:
-        response_201 = PostShiprRegisterResponse201.from_dict(response.json())
+) -> Error | ShiprOrgDefaults | None:
+    if response.status_code == 200:
+        response_200 = ShiprOrgDefaults.from_dict(response.json())
 
-        return response_201
-
-    if response.status_code == 202:
-        response_202 = PostShiprRegisterResponse202.from_dict(response.json())
-
-        return response_202
+        return response_200
 
     if response.status_code == 400:
         response_400 = Error.from_dict(response.json())
@@ -72,11 +67,6 @@ def _parse_response(
 
         return response_404
 
-    if response.status_code == 409:
-        response_409 = Error.from_dict(response.json())
-
-        return response_409
-
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -85,7 +75,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
+) -> Response[Error | ShiprOrgDefaults]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -95,30 +85,35 @@ def _build_response(
 
 
 def sync_detailed(
+    org: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
+    body: PutShiprOrgDefaultsOrgBody,
     workspace: Unset | str = UNSET,
-) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
-    """Register a source repository and queue its provisioning
+) -> Response[Error | ShiprOrgDefaults]:
+    """Set one org’s defaults
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT
+    PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so
+    writing one re-aims the next repository and leaves every registered one where the operator put it.
+    An ABSENT field is left alone rather than reset, so a request about environments cannot quietly
+    restore the suffix.
 
     Args:
+        org (str):
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        body (PutShiprOrgDefaultsOrgBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]]
+        Response[Union[Error, ShiprOrgDefaults]]
     """
 
     kwargs = _get_kwargs(
+        org=org,
         body=body,
         workspace=workspace,
     )
@@ -131,30 +126,35 @@ def sync_detailed(
 
 
 def sync(
+    org: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
+    body: PutShiprOrgDefaultsOrgBody,
     workspace: Unset | str = UNSET,
-) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
-    """Register a source repository and queue its provisioning
+) -> Error | ShiprOrgDefaults | None:
+    """Set one org’s defaults
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT
+    PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so
+    writing one re-aims the next repository and leaves every registered one where the operator put it.
+    An ABSENT field is left alone rather than reset, so a request about environments cannot quietly
+    restore the suffix.
 
     Args:
+        org (str):
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        body (PutShiprOrgDefaultsOrgBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]
+        Union[Error, ShiprOrgDefaults]
     """
 
     return sync_detailed(
+        org=org,
         client=client,
         body=body,
         workspace=workspace,
@@ -162,30 +162,35 @@ def sync(
 
 
 async def asyncio_detailed(
+    org: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
+    body: PutShiprOrgDefaultsOrgBody,
     workspace: Unset | str = UNSET,
-) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
-    """Register a source repository and queue its provisioning
+) -> Response[Error | ShiprOrgDefaults]:
+    """Set one org’s defaults
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT
+    PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so
+    writing one re-aims the next repository and leaves every registered one where the operator put it.
+    An ABSENT field is left alone rather than reset, so a request about environments cannot quietly
+    restore the suffix.
 
     Args:
+        org (str):
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        body (PutShiprOrgDefaultsOrgBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]]
+        Response[Union[Error, ShiprOrgDefaults]]
     """
 
     kwargs = _get_kwargs(
+        org=org,
         body=body,
         workspace=workspace,
     )
@@ -196,31 +201,36 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    org: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
+    body: PutShiprOrgDefaultsOrgBody,
     workspace: Unset | str = UNSET,
-) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
-    """Register a source repository and queue its provisioning
+) -> Error | ShiprOrgDefaults | None:
+    """Set one org’s defaults
 
-     Find-or-create on the dev repo, then a register run. Re-registering is the ordinary path — it is how
-    branch protection someone turned off gets repaired. What the repository deploys (how many mirrors,
-    under what names) is read from its own `.shipr` by the run, not supplied here.
+     UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT
+    PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so
+    writing one re-aims the next repository and leaves every registered one where the operator put it.
+    An ABSENT field is left alone rather than reset, so a request about environments cannot quietly
+    restore the suffix.
 
     Args:
+        org (str):
         workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        body (PutShiprOrgDefaultsOrgBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]
+        Union[Error, ShiprOrgDefaults]
     """
 
     return (
         await asyncio_detailed(
+            org=org,
             client=client,
             body=body,
             workspace=workspace,

@@ -82,10 +82,13 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PatchShiprReposIdBody,
 ) -> Response[Error | ShiprRepo]:
-    """Move it, reorder it, or change which branches it ships to
+    """Move it, reorder it, rename it, or change which branches it ships to
 
-     `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a
-    different repository while leaving its mirror, ladder and history behind.
+     TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way
+    `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never
+    editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan
+    may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would
+    strand its mirror, ladder and history on a repository nothing now names.
 
     Args:
         id (str):
@@ -117,10 +120,13 @@ def sync(
     client: AuthenticatedClient,
     body: PatchShiprReposIdBody,
 ) -> Error | ShiprRepo | None:
-    """Move it, reorder it, or change which branches it ships to
+    """Move it, reorder it, rename it, or change which branches it ships to
 
-     `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a
-    different repository while leaving its mirror, ladder and history behind.
+     TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way
+    `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never
+    editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan
+    may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would
+    strand its mirror, ladder and history on a repository nothing now names.
 
     Args:
         id (str):
@@ -147,10 +153,13 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PatchShiprReposIdBody,
 ) -> Response[Error | ShiprRepo]:
-    """Move it, reorder it, or change which branches it ships to
+    """Move it, reorder it, rename it, or change which branches it ships to
 
-     `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a
-    different repository while leaving its mirror, ladder and history behind.
+     TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way
+    `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never
+    editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan
+    may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would
+    strand its mirror, ladder and history on a repository nothing now names.
 
     Args:
         id (str):
@@ -180,10 +189,13 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PatchShiprReposIdBody,
 ) -> Error | ShiprRepo | None:
-    """Move it, reorder it, or change which branches it ships to
+    """Move it, reorder it, rename it, or change which branches it ships to
 
-     `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a
-    different repository while leaving its mirror, ladder and history behind.
+     TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way
+    `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never
+    editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan
+    may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would
+    strand its mirror, ladder and history on a repository nothing now names.
 
     Args:
         id (str):

@@ -24,6 +24,10 @@ class PostShiprRegisterBody:
             say two different things.
         deployment_name (Union[Unset, str]): The mirror’s name on the same fallback. Defaults to `<name>-deployment`;
             overridable independently of the owner, because changing the org almost always keeps the name.
+        provision (Union[Unset, bool]): Whether to GO AND MAKE IT, or only write down where it goes. `false` writes the
+            rows synchronously, leaves `registeredAt` null and queues no run, so nothing is created on the forge under a
+            name nobody has looked at yet; the operator then sets the org, the name and the environments and presses
+            Provision, which is `POST /shipr/runs` with the same `register` operation. Defaults to true.
     """
 
     slug: str
@@ -33,6 +37,7 @@ class PostShiprRegisterBody:
     prepared_branch: Unset | str = UNSET
     deployment_owner: Unset | str = UNSET
     deployment_name: Unset | str = UNSET
+    provision: Unset | bool = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,6 +54,8 @@ class PostShiprRegisterBody:
         deployment_owner = self.deployment_owner
 
         deployment_name = self.deployment_name
+
+        provision = self.provision
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -69,6 +76,8 @@ class PostShiprRegisterBody:
             field_dict["deploymentOwner"] = deployment_owner
         if deployment_name is not UNSET:
             field_dict["deploymentName"] = deployment_name
+        if provision is not UNSET:
+            field_dict["provision"] = provision
 
         return field_dict
 
@@ -89,6 +98,8 @@ class PostShiprRegisterBody:
 
         deployment_name = d.pop("deploymentName", UNSET)
 
+        provision = d.pop("provision", UNSET)
+
         post_shipr_register_body = cls(
             slug=slug,
             connection_id=connection_id,
@@ -97,6 +108,7 @@ class PostShiprRegisterBody:
             prepared_branch=prepared_branch,
             deployment_owner=deployment_owner,
             deployment_name=deployment_name,
+            provision=provision,
         )
 
         post_shipr_register_body.additional_properties = d

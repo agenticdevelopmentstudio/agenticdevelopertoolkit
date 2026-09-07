@@ -461,6 +461,17 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /integrations/providers/{providerId}/register-instance`.
     /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/register-instance/post`.
     func postIntegrationsProvidersProviderIdRegisterInstance(_ input: Operations.PostIntegrationsProvidersProviderIdRegisterInstance.Input) async throws -> Operations.PostIntegrationsProvidersProviderIdRegisterInstance.Output
+    /// Connect every installation the saved GitHub App can already see
+    ///
+    /// This is what lets ADDING the integration BE the connect. A GitHub App is installed on github.com, by a person choosing an account there — so by the time an app id and private key are saved, that choice has already been made and the app can read it back. An OAuth redirect at this point would ask a question whose answer is already known.
+    ///
+    /// Only valid for github_app providers (400 otherwise); 404 for an unknown provider or an unknown config. `providerConfigId` is REQUIRED and read by id, never resolved: the resolver falls back to the platform-global app when an ecosystem has none of its own, and enumerating a shared app's installations would list every other tenant's.
+    ///
+    /// ONE INSTALLATION'S FAILURE IS NOT THE BATCH'S. An app on four orgs, one of them suspended, connects three and reports the fourth under `skipped` with GitHub's message. Only a failure to enumerate at all — which is the credentials themselves being wrong — is a 400. Calling it again is safe: an installation already connected comes back under `connected` with its existing `connectionId`.
+    ///
+    /// - Remark: HTTP `POST /integrations/providers/{providerId}/adopt-installations`.
+    /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post`.
+    func postIntegrationsProvidersProviderIdAdoptInstallations(_ input: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input) async throws -> Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output
     /// Connect an integration (polymorphic by auth method)
     ///
     /// Finishes any auth method's connect flow and persists the connection under the target ecosystem `ecosystemId` the client names; the caller must manage it (404/403 otherwise). Returns the redacted connection (tokens never echoed).
@@ -3171,9 +3182,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /shipr/repos/{id}`.
     /// - Remark: Generated from `#/paths//shipr/repos/{id}/get`.
     func getShiprReposId(_ input: Operations.GetShiprReposId.Input) async throws -> Operations.GetShiprReposId.Output
-    /// Move it, reorder it, or change which branches it ships to
+    /// Move it, reorder it, rename it, or change which branches it ships to
     ///
-    /// `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a different repository while leaving its mirror, ladder and history behind.
+    /// TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would strand its mirror, ladder and history on a repository nothing now names.
     ///
     /// - Remark: HTTP `PATCH /shipr/repos/{id}`.
     /// - Remark: Generated from `#/paths//shipr/repos/{id}/patch`.
@@ -3276,9 +3287,20 @@ public protocol APIProtocol: Sendable {
     ///
     /// What the installation was granted, which is exactly the set `register` can act on — offering anything wider means an operator picks a repository whose first push fails minutes later. The account-and-repository picker that produced this set is GitHub’s own installation page, so there is no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403 would confirm it exists.
     ///
+    /// This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s account. The one exception is a connection nothing has been stored for yet: answering `[]` there would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks — which is why 502 is still among the responses. Use the refresh below to ask deliberately.
+    ///
     /// - Remark: HTTP `GET /shipr/connections/{id}/repositories`.
     /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/get`.
     func getShiprConnectionsIdRepositories(_ input: Operations.GetShiprConnectionsIdRepositories.Input) async throws -> Operations.GetShiprConnectionsIdRepositories.Output
+    /// Ask GitHub again what this connection was granted
+    ///
+    /// The Test button, and the read-then-refresh the picker does on open. Always goes to GitHub — a stored list never short-circuits it, because the whole reason to call this rather than the GET is to find out whether the credentials still work and what has changed since.
+    ///
+    /// The answer replaces the stored row wholesale rather than merging into it: a grant is a set, and a merge would keep a repository the installation has since lost, which is exactly the kind of entry an operator would pick and only discover was gone at the first push. A call that cannot reach GitHub is a 502 and leaves the stored row untouched — a list read an hour ago can still be picked from, and an empty one cannot.
+    ///
+    /// - Remark: HTTP `POST /shipr/connections/{id}/repositories/refresh`.
+    /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post`.
+    func postShiprConnectionsIdRepositoriesRefresh(_ input: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input) async throws -> Operations.PostShiprConnectionsIdRepositoriesRefresh.Output
     /// What a repository’s committed `.shipr` declares it deploys to
     ///
     /// The register form’s second question, and usually the answer that there is no second question: a declared `[deployments]` shard already names its slug, so the form must not offer an org and a name beside it. `deployments: null` is the fallback branch — no file, an unparseable one, or one declaring no shards — and is the only case in which `deploymentOwner`/`deploymentName` on `POST /shipr/register` are read. `note` carries the parser’s complaint when there was one. A forge that cannot be reached is a 502, never a null: a repository that could not be read is not a repository that declares nothing.
@@ -3293,6 +3315,20 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /shipr/register`.
     /// - Remark: Generated from `#/paths//shipr/register/post`.
     func postShiprRegister(_ input: Operations.PostShiprRegister.Input) async throws -> Operations.PostShiprRegister.Output
+    /// The per-org defaults, all of them
+    ///
+    /// A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the caller’s installations reach, so one request fills every gear icon and an org nobody has configured is simply absent rather than a 404 the client has to read as “unset”.
+    ///
+    /// - Remark: HTTP `GET /shipr/org-defaults`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/get`.
+    func getShiprOrgDefaults(_ input: Operations.GetShiprOrgDefaults.Input) async throws -> Operations.GetShiprOrgDefaults.Output
+    /// Set one org’s defaults
+    ///
+    /// UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so writing one re-aims the next repository and leaves every registered one where the operator put it. An ABSENT field is left alone rather than reset, so a request about environments cannot quietly restore the suffix.
+    ///
+    /// - Remark: HTTP `PUT /shipr/org-defaults/{org}`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put`.
+    func putShiprOrgDefaultsOrg(_ input: Operations.PutShiprOrgDefaultsOrg.Input) async throws -> Operations.PutShiprOrgDefaultsOrg.Output
     /// A run’s log as server-sent events
     ///
     /// Events: `line` (one log line, `id:` is its seq), `state` (the run changed state), `end` (settled — the stream closes). Resume with `Last-Event-ID` or `?after=<seq>`. Because EventSource cannot set headers, the bearer token may be passed as `?access_token=`.
@@ -6734,6 +6770,27 @@ extension APIProtocol {
         body: Operations.PostIntegrationsProvidersProviderIdRegisterInstance.Input.Body? = nil
     ) async throws -> Operations.PostIntegrationsProvidersProviderIdRegisterInstance.Output {
         try await postIntegrationsProvidersProviderIdRegisterInstance(Operations.PostIntegrationsProvidersProviderIdRegisterInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// Connect every installation the saved GitHub App can already see
+    ///
+    /// This is what lets ADDING the integration BE the connect. A GitHub App is installed on github.com, by a person choosing an account there — so by the time an app id and private key are saved, that choice has already been made and the app can read it back. An OAuth redirect at this point would ask a question whose answer is already known.
+    ///
+    /// Only valid for github_app providers (400 otherwise); 404 for an unknown provider or an unknown config. `providerConfigId` is REQUIRED and read by id, never resolved: the resolver falls back to the platform-global app when an ecosystem has none of its own, and enumerating a shared app's installations would list every other tenant's.
+    ///
+    /// ONE INSTALLATION'S FAILURE IS NOT THE BATCH'S. An app on four orgs, one of them suspended, connects three and reports the fourth under `skipped` with GitHub's message. Only a failure to enumerate at all — which is the credentials themselves being wrong — is a 400. Calling it again is safe: an installation already connected comes back under `connected` with its existing `connectionId`.
+    ///
+    /// - Remark: HTTP `POST /integrations/providers/{providerId}/adopt-installations`.
+    /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post`.
+    public func postIntegrationsProvidersProviderIdAdoptInstallations(
+        path: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Path,
+        headers: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Headers = .init(),
+        body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Body? = nil
+    ) async throws -> Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output {
+        try await postIntegrationsProvidersProviderIdAdoptInstallations(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input(
             path: path,
             headers: headers,
             body: body
@@ -13435,9 +13492,9 @@ extension APIProtocol {
             headers: headers
         ))
     }
-    /// Move it, reorder it, or change which branches it ships to
+    /// Move it, reorder it, rename it, or change which branches it ships to
     ///
-    /// `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a different repository while leaving its mirror, ladder and history behind.
+    /// TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would strand its mirror, ladder and history on a repository nothing now names.
     ///
     /// - Remark: HTTP `PATCH /shipr/repos/{id}`.
     /// - Remark: Generated from `#/paths//shipr/repos/{id}/patch`.
@@ -13672,6 +13729,8 @@ extension APIProtocol {
     ///
     /// What the installation was granted, which is exactly the set `register` can act on — offering anything wider means an operator picks a repository whose first push fails minutes later. The account-and-repository picker that produced this set is GitHub’s own installation page, so there is no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403 would confirm it exists.
     ///
+    /// This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s account. The one exception is a connection nothing has been stored for yet: answering `[]` there would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks — which is why 502 is still among the responses. Use the refresh below to ask deliberately.
+    ///
     /// - Remark: HTTP `GET /shipr/connections/{id}/repositories`.
     /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/get`.
     public func getShiprConnectionsIdRepositories(
@@ -13679,6 +13738,23 @@ extension APIProtocol {
         headers: Operations.GetShiprConnectionsIdRepositories.Input.Headers = .init()
     ) async throws -> Operations.GetShiprConnectionsIdRepositories.Output {
         try await getShiprConnectionsIdRepositories(Operations.GetShiprConnectionsIdRepositories.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// Ask GitHub again what this connection was granted
+    ///
+    /// The Test button, and the read-then-refresh the picker does on open. Always goes to GitHub — a stored list never short-circuits it, because the whole reason to call this rather than the GET is to find out whether the credentials still work and what has changed since.
+    ///
+    /// The answer replaces the stored row wholesale rather than merging into it: a grant is a set, and a merge would keep a repository the installation has since lost, which is exactly the kind of entry an operator would pick and only discover was gone at the first push. A call that cannot reach GitHub is a 502 and leaves the stored row untouched — a list read an hour ago can still be picked from, and an empty one cannot.
+    ///
+    /// - Remark: HTTP `POST /shipr/connections/{id}/repositories/refresh`.
+    /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post`.
+    public func postShiprConnectionsIdRepositoriesRefresh(
+        path: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input.Path,
+        headers: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input.Headers = .init()
+    ) async throws -> Operations.PostShiprConnectionsIdRepositoriesRefresh.Output {
+        try await postShiprConnectionsIdRepositoriesRefresh(Operations.PostShiprConnectionsIdRepositoriesRefresh.Input(
             path: path,
             headers: headers
         ))
@@ -13712,6 +13788,40 @@ extension APIProtocol {
         body: Operations.PostShiprRegister.Input.Body? = nil
     ) async throws -> Operations.PostShiprRegister.Output {
         try await postShiprRegister(Operations.PostShiprRegister.Input(
+            query: query,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// The per-org defaults, all of them
+    ///
+    /// A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the caller’s installations reach, so one request fills every gear icon and an org nobody has configured is simply absent rather than a 404 the client has to read as “unset”.
+    ///
+    /// - Remark: HTTP `GET /shipr/org-defaults`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/get`.
+    public func getShiprOrgDefaults(
+        query: Operations.GetShiprOrgDefaults.Input.Query = .init(),
+        headers: Operations.GetShiprOrgDefaults.Input.Headers = .init()
+    ) async throws -> Operations.GetShiprOrgDefaults.Output {
+        try await getShiprOrgDefaults(Operations.GetShiprOrgDefaults.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// Set one org’s defaults
+    ///
+    /// UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so writing one re-aims the next repository and leaves every registered one where the operator put it. An ABSENT field is left alone rather than reset, so a request about environments cannot quietly restore the suffix.
+    ///
+    /// - Remark: HTTP `PUT /shipr/org-defaults/{org}`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put`.
+    public func putShiprOrgDefaultsOrg(
+        path: Operations.PutShiprOrgDefaultsOrg.Input.Path,
+        query: Operations.PutShiprOrgDefaultsOrg.Input.Query = .init(),
+        headers: Operations.PutShiprOrgDefaultsOrg.Input.Headers = .init(),
+        body: Operations.PutShiprOrgDefaultsOrg.Input.Body? = nil
+    ) async throws -> Operations.PutShiprOrgDefaultsOrg.Output {
+        try await putShiprOrgDefaultsOrg(Operations.PutShiprOrgDefaultsOrg.Input(
+            path: path,
             query: query,
             headers: headers,
             body: body
@@ -39439,6 +39549,10 @@ public enum Components {
             public var id: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ShiprDevRepo/slug`.
             public var slug: Swift.String?
+            /// What the operator calls it, which is not always what the forge calls it. Null means no opinion and every reader falls back to `slug`. A LABEL AND NOTHING MORE: no branch, no path and no forge call is derived from it.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ShiprDevRepo/displayName`.
+            public var displayName: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ShiprDevRepo/mainBranch`.
             public var mainBranch: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ShiprDevRepo/preparedBranch`.
@@ -39452,6 +39566,7 @@ public enum Components {
             /// - Parameters:
             ///   - id:
             ///   - slug:
+            ///   - displayName: What the operator calls it, which is not always what the forge calls it. Null means no opinion and every reader falls back to `slug`. A LABEL AND NOTHING MORE: no branch, no path and no forge call is derived from it.
             ///   - mainBranch:
             ///   - preparedBranch:
             ///   - declarationSha:
@@ -39459,6 +39574,7 @@ public enum Components {
             public init(
                 id: Swift.String? = nil,
                 slug: Swift.String? = nil,
+                displayName: Swift.String? = nil,
                 mainBranch: Swift.String? = nil,
                 preparedBranch: Swift.String? = nil,
                 declarationSha: Swift.String? = nil,
@@ -39466,6 +39582,7 @@ public enum Components {
             ) {
                 self.id = id
                 self.slug = slug
+                self.displayName = displayName
                 self.mainBranch = mainBranch
                 self.preparedBranch = preparedBranch
                 self.declarationSha = declarationSha
@@ -39474,10 +39591,94 @@ public enum Components {
             public enum CodingKeys: String, CodingKey {
                 case id
                 case slug
+                case displayName
                 case mainBranch
                 case preparedBranch
                 case declarationSha
                 case connectionId
+            }
+        }
+        /// What a mirror in one forge org is BORN with — never a description of one that already exists. Read when a mirror is first written; changing it re-aims the next repository and moves nothing already registered.
+        ///
+        /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults`.
+        public struct ShiprOrgDefaults: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/id`.
+            public var id: Swift.String?
+            /// The forge account login.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/org`.
+            public var org: Swift.String?
+            /// Which org the deployment repositories go in. Null is “the same org”, stored as null rather than as a copy so that an operator who never chose stays distinguishable from one who chose the org they were already in.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/deploymentOwner`.
+            public var deploymentOwner: Swift.String?
+            /// `-deployment`, spelled per-org. Appended to the source repository’s name when its `.shipr` declares no shards.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/nameSuffix`.
+            public var nameSuffix: Swift.String?
+            /// The ladder a new mirror starts with. Empty means the built-in default (every environment, named after itself), not a repository that deploys nowhere.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/envBranches`.
+            public struct EnvBranchesPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: [String: Swift.String]
+                /// Creates a new `EnvBranchesPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: [String: Swift.String] = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// The ladder a new mirror starts with. Empty means the built-in default (every environment, named after itself), not a repository that deploys nowhere.
+            ///
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/envBranches`.
+            public var envBranches: Components.Schemas.ShiprOrgDefaults.EnvBranchesPayload?
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/createdAt`.
+            public var createdAt: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/ShiprOrgDefaults/updatedAt`.
+            public var updatedAt: Swift.String?
+            /// Creates a new `ShiprOrgDefaults`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - org: The forge account login.
+            ///   - deploymentOwner: Which org the deployment repositories go in. Null is “the same org”, stored as null rather than as a copy so that an operator who never chose stays distinguishable from one who chose the org they were already in.
+            ///   - nameSuffix: `-deployment`, spelled per-org. Appended to the source repository’s name when its `.shipr` declares no shards.
+            ///   - envBranches: The ladder a new mirror starts with. Empty means the built-in default (every environment, named after itself), not a repository that deploys nowhere.
+            ///   - createdAt:
+            ///   - updatedAt:
+            public init(
+                id: Swift.String? = nil,
+                org: Swift.String? = nil,
+                deploymentOwner: Swift.String? = nil,
+                nameSuffix: Swift.String? = nil,
+                envBranches: Components.Schemas.ShiprOrgDefaults.EnvBranchesPayload? = nil,
+                createdAt: Swift.String? = nil,
+                updatedAt: Swift.String? = nil
+            ) {
+                self.id = id
+                self.org = org
+                self.deploymentOwner = deploymentOwner
+                self.nameSuffix = nameSuffix
+                self.envBranches = envBranches
+                self.createdAt = createdAt
+                self.updatedAt = updatedAt
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case org
+                case deploymentOwner
+                case nameSuffix
+                case envBranches
+                case createdAt
+                case updatedAt
             }
         }
         /// The column-aligned commit view: one row per commit, oldest first, with a mark in each branch column whose tip is at or above it.
@@ -66157,6 +66358,535 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.notFound`.
             /// - SeeAlso: `.notFound`.
             public var notFound: Operations.PostIntegrationsProvidersProviderIdRegisterInstance.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case applicationProblemJson
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                case "application/problem+json":
+                    self = .applicationProblemJson
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                case .applicationProblemJson:
+                    return "application/problem+json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json,
+                    .applicationProblemJson
+                ]
+            }
+        }
+    }
+    /// Connect every installation the saved GitHub App can already see
+    ///
+    /// This is what lets ADDING the integration BE the connect. A GitHub App is installed on github.com, by a person choosing an account there — so by the time an app id and private key are saved, that choice has already been made and the app can read it back. An OAuth redirect at this point would ask a question whose answer is already known.
+    ///
+    /// Only valid for github_app providers (400 otherwise); 404 for an unknown provider or an unknown config. `providerConfigId` is REQUIRED and read by id, never resolved: the resolver falls back to the platform-global app when an ecosystem has none of its own, and enumerating a shared app's installations would list every other tenant's.
+    ///
+    /// ONE INSTALLATION'S FAILURE IS NOT THE BATCH'S. An app on four orgs, one of them suspended, connects three and reports the fourth under `skipped` with GitHub's message. Only a failure to enumerate at all — which is the credentials themselves being wrong — is a 400. Calling it again is safe: an installation already connected comes back under `connected` with its existing `connectionId`.
+    ///
+    /// - Remark: HTTP `POST /integrations/providers/{providerId}/adopt-installations`.
+    /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post`.
+    public enum PostIntegrationsProvidersProviderIdAdoptInstallations {
+        public static let id: Swift.String = "post/integrations/providers/{providerId}/adopt-installations"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/path/providerId`.
+                public var providerId: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - providerId:
+                public init(providerId: Swift.String) {
+                    self.providerId = providerId
+                }
+            }
+            public var path: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Path
+            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Headers
+            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// Target ecosystem id (the caller must manage it)
+                    ///
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/requestBody/json/ecosystemId`.
+                    public var ecosystemId: Swift.String
+                    /// The saved config holding the app id and private key. See above for why it cannot be omitted.
+                    ///
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/requestBody/json/providerConfigId`.
+                    public var providerConfigId: Swift.String
+                    /// Defaults to the provider's primary service type.
+                    ///
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/requestBody/json/serviceType`.
+                    public var serviceType: Swift.String?
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - ecosystemId: Target ecosystem id (the caller must manage it)
+                    ///   - providerConfigId: The saved config holding the app id and private key. See above for why it cannot be omitted.
+                    ///   - serviceType: Defaults to the provider's primary service type.
+                    public init(
+                        ecosystemId: Swift.String,
+                        providerConfigId: Swift.String,
+                        serviceType: Swift.String? = nil
+                    ) {
+                        self.ecosystemId = ecosystemId
+                        self.providerConfigId = providerConfigId
+                        self.serviceType = serviceType
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case ecosystemId
+                        case providerConfigId
+                        case serviceType
+                    }
+                }
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/requestBody/content/application\/json`.
+                case json(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Path,
+                headers: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Headers = .init(),
+                body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Input.Body? = nil
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload`.
+                        public struct ConnectedPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload/installationId`.
+                            public var installationId: Swift.String
+                            /// The account the app is installed on — the org whose repositories it reaches.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload/accountLogin`.
+                            public var accountLogin: Swift.String
+                            /// `Organization` or `User`.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload/targetType`.
+                            public var targetType: Swift.String
+                            /// The connection holding it — set when this call made one, AND when a previous call already had. Adoption is idempotent, so a second call over the same installations reports them connected rather than connecting them again.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload/connectionId`.
+                            public var connectionId: Swift.String?
+                            /// Why it was not connected. Absent on success.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload/skipped`.
+                            public var skipped: Swift.String?
+                            /// The connection stands, and the prefetch that rides along behind it — caching what this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the repository picker opening instantly does not. It is reported because this call is what the Test button runs, and a picker that will open empty should say so now rather than at the moment somebody needs it.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/ConnectedPayload/warning`.
+                            public var warning: Swift.String?
+                            /// Creates a new `ConnectedPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - installationId:
+                            ///   - accountLogin: The account the app is installed on — the org whose repositories it reaches.
+                            ///   - targetType: `Organization` or `User`.
+                            ///   - connectionId: The connection holding it — set when this call made one, AND when a previous call already had. Adoption is idempotent, so a second call over the same installations reports them connected rather than connecting them again.
+                            ///   - skipped: Why it was not connected. Absent on success.
+                            ///   - warning: The connection stands, and the prefetch that rides along behind it — caching what this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the repository picker opening instantly does not. It is reported because this call is what the Test button runs, and a picker that will open empty should say so now rather than at the moment somebody needs it.
+                            public init(
+                                installationId: Swift.String,
+                                accountLogin: Swift.String,
+                                targetType: Swift.String,
+                                connectionId: Swift.String? = nil,
+                                skipped: Swift.String? = nil,
+                                warning: Swift.String? = nil
+                            ) {
+                                self.installationId = installationId
+                                self.accountLogin = accountLogin
+                                self.targetType = targetType
+                                self.connectionId = connectionId
+                                self.skipped = skipped
+                                self.warning = warning
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case installationId
+                                case accountLogin
+                                case targetType
+                                case connectionId
+                                case skipped
+                                case warning
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/connected`.
+                        public typealias ConnectedPayload = [Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.ConnectedPayloadPayload]
+                        /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/connected`.
+                        public var connected: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.ConnectedPayload
+                        /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload`.
+                        public struct SkippedPayloadPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload/installationId`.
+                            public var installationId: Swift.String
+                            /// The account the app is installed on — the org whose repositories it reaches.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload/accountLogin`.
+                            public var accountLogin: Swift.String
+                            /// `Organization` or `User`.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload/targetType`.
+                            public var targetType: Swift.String
+                            /// The connection holding it — set when this call made one, AND when a previous call already had. Adoption is idempotent, so a second call over the same installations reports them connected rather than connecting them again.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload/connectionId`.
+                            public var connectionId: Swift.String?
+                            /// Why it was not connected. Absent on success.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload/skipped`.
+                            public var skipped: Swift.String?
+                            /// The connection stands, and the prefetch that rides along behind it — caching what this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the repository picker opening instantly does not. It is reported because this call is what the Test button runs, and a picker that will open empty should say so now rather than at the moment somebody needs it.
+                            ///
+                            /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/SkippedPayload/warning`.
+                            public var warning: Swift.String?
+                            /// Creates a new `SkippedPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - installationId:
+                            ///   - accountLogin: The account the app is installed on — the org whose repositories it reaches.
+                            ///   - targetType: `Organization` or `User`.
+                            ///   - connectionId: The connection holding it — set when this call made one, AND when a previous call already had. Adoption is idempotent, so a second call over the same installations reports them connected rather than connecting them again.
+                            ///   - skipped: Why it was not connected. Absent on success.
+                            ///   - warning: The connection stands, and the prefetch that rides along behind it — caching what this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the repository picker opening instantly does not. It is reported because this call is what the Test button runs, and a picker that will open empty should say so now rather than at the moment somebody needs it.
+                            public init(
+                                installationId: Swift.String,
+                                accountLogin: Swift.String,
+                                targetType: Swift.String,
+                                connectionId: Swift.String? = nil,
+                                skipped: Swift.String? = nil,
+                                warning: Swift.String? = nil
+                            ) {
+                                self.installationId = installationId
+                                self.accountLogin = accountLogin
+                                self.targetType = targetType
+                                self.connectionId = connectionId
+                                self.skipped = skipped
+                                self.warning = warning
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case installationId
+                                case accountLogin
+                                case targetType
+                                case connectionId
+                                case skipped
+                                case warning
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/skipped`.
+                        public typealias SkippedPayload = [Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.SkippedPayloadPayload]
+                        /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/json/skipped`.
+                        public var skipped: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.SkippedPayload
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - connected:
+                        ///   - skipped:
+                        public init(
+                            connected: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.ConnectedPayload,
+                            skipped: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload.SkippedPayload
+                        ) {
+                            self.connected = connected
+                            self.skipped = skipped
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case connected
+                            case skipped
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// What became of each installation
+            ///
+            /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/400/content/application\/problem+json`.
+                    case applicationProblemJson(Components.Schemas.ProblemDetails)
+                    /// The associated value of the enum case if `self` is `.applicationProblemJson`.
+                    ///
+                    /// - Throws: An error if `self` is not `.applicationProblemJson`.
+                    /// - SeeAlso: `.applicationProblemJson`.
+                    public var applicationProblemJson: Components.Schemas.ProblemDetails {
+                        get throws {
+                            switch self {
+                            case let .applicationProblemJson(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Problem Details (RFC 9457)
+            ///
+            /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/401/content/application\/problem+json`.
+                    case applicationProblemJson(Components.Schemas.ProblemDetails)
+                    /// The associated value of the enum case if `self` is `.applicationProblemJson`.
+                    ///
+                    /// - Throws: An error if `self` is not `.applicationProblemJson`.
+                    /// - SeeAlso: `.applicationProblemJson`.
+                    public var applicationProblemJson: Components.Schemas.ProblemDetails {
+                        get throws {
+                            switch self {
+                            case let .applicationProblemJson(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Problem Details (RFC 9457)
+            ///
+            /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/403/content/application\/problem+json`.
+                    case applicationProblemJson(Components.Schemas.ProblemDetails)
+                    /// The associated value of the enum case if `self` is `.applicationProblemJson`.
+                    ///
+                    /// - Throws: An error if `self` is not `.applicationProblemJson`.
+                    /// - SeeAlso: `.applicationProblemJson`.
+                    public var applicationProblemJson: Components.Schemas.ProblemDetails {
+                        get throws {
+                            switch self {
+                            case let .applicationProblemJson(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Problem Details (RFC 9457)
+            ///
+            /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/integrations/providers/{providerId}/adopt-installations/POST/responses/404/content/application\/problem+json`.
+                    case applicationProblemJson(Components.Schemas.ProblemDetails)
+                    /// The associated value of the enum case if `self` is `.applicationProblemJson`.
+                    ///
+                    /// - Throws: An error if `self` is not `.applicationProblemJson`.
+                    /// - SeeAlso: `.applicationProblemJson`.
+                    public var applicationProblemJson: Components.Schemas.ProblemDetails {
+                        get throws {
+                            switch self {
+                            case let .applicationProblemJson(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Problem Details (RFC 9457)
+            ///
+            /// - Remark: Generated from `#/paths//integrations/providers/{providerId}/adopt-installations/post/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostIntegrationsProvidersProviderIdAdoptInstallations.Output.NotFound {
                 get throws {
                     switch self {
                     case let .notFound(response):
@@ -209904,9 +210634,9 @@ public enum Operations {
             }
         }
     }
-    /// Move it, reorder it, or change which branches it ships to
+    /// Move it, reorder it, rename it, or change which branches it ships to
     ///
-    /// `slug` and `shard` are not editable: changing either would re-point a registered pipeline at a different repository while leaving its mirror, ladder and history behind.
+    /// TWO TABLES, ONE ROUTE: `displayName` is the DEV repo’s label, addressed through a mirror the way `/platforms` is, because a mirror is the only thing this console has an id for. `shard` is never editable. `slug` is editable ONLY while `registeredAt` is null — a repository that is still a plan may be pointed anywhere, and one that has been provisioned answers 409, because re-pointing it would strand its mirror, ladder and history on a repository nothing now names.
     ///
     /// - Remark: HTTP `PATCH /shipr/repos/{id}`.
     /// - Remark: Generated from `#/paths//shipr/repos/{id}/patch`.
@@ -209948,6 +210678,14 @@ public enum Operations {
                     public var groupId: Swift.String?
                     /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/position`.
                     public var position: Swift.Int?
+                    /// owner/name of the DEPLOYMENT repository. 409 once it is provisioned.
+                    ///
+                    /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/slug`.
+                    public var slug: Swift.String?
+                    /// The source repository’s label, shown in the console instead of its slug. Null clears it.
+                    ///
+                    /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/displayName`.
+                    public var displayName: Swift.String?
                     /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/shipBranch`.
                     public var shipBranch: Swift.String?
                     /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/ciContext`.
@@ -209977,18 +210715,24 @@ public enum Operations {
                     /// - Parameters:
                     ///   - groupId:
                     ///   - position:
+                    ///   - slug: owner/name of the DEPLOYMENT repository. 409 once it is provisioned.
+                    ///   - displayName: The source repository’s label, shown in the console instead of its slug. Null clears it.
                     ///   - shipBranch:
                     ///   - ciContext:
                     ///   - envBranches:
                     public init(
                         groupId: Swift.String? = nil,
                         position: Swift.Int? = nil,
+                        slug: Swift.String? = nil,
+                        displayName: Swift.String? = nil,
                         shipBranch: Swift.String? = nil,
                         ciContext: Swift.String? = nil,
                         envBranches: Operations.PatchShiprReposId.Input.Body.JsonPayload.EnvBranchesPayload? = nil
                     ) {
                         self.groupId = groupId
                         self.position = position
+                        self.slug = slug
+                        self.displayName = displayName
                         self.shipBranch = shipBranch
                         self.ciContext = ciContext
                         self.envBranches = envBranches
@@ -209996,6 +210740,8 @@ public enum Operations {
                     public enum CodingKeys: String, CodingKey {
                         case groupId
                         case position
+                        case slug
+                        case displayName
                         case shipBranch
                         case ciContext
                         case envBranches
@@ -211832,10 +212578,6 @@ public enum Operations {
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/status/POST/requestBody/json/options/sha`.
                         public var sha: Swift.String?
-                        /// prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
-                        ///
-                        /// - Remark: Generated from `#/paths/shipr/repos/{id}/status/POST/requestBody/json/options/acknowledgedUnverified`.
-                        public var acknowledgedUnverified: Swift.Bool?
                         /// register: which [deployments] key this mirror is.
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/status/POST/requestBody/json/options/shard`.
@@ -211848,23 +212590,19 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - sha: prepare: the tip to pin. Absent means the dev repo’s main as it stands.
-                        ///   - acknowledgedUnverified: prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
                         ///   - shard: register: which [deployments] key this mirror is.
                         ///   - groupId: register: the folder a FIRST registration files its new mirrors under.
                         public init(
                             sha: Swift.String? = nil,
-                            acknowledgedUnverified: Swift.Bool? = nil,
                             shard: Swift.String? = nil,
                             groupId: Swift.String? = nil
                         ) {
                             self.sha = sha
-                            self.acknowledgedUnverified = acknowledgedUnverified
                             self.shard = shard
                             self.groupId = groupId
                         }
                         public enum CodingKeys: String, CodingKey {
                             case sha
-                            case acknowledgedUnverified
                             case shard
                             case groupId
                         }
@@ -212274,10 +213012,6 @@ public enum Operations {
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/prepare/POST/requestBody/json/options/sha`.
                         public var sha: Swift.String?
-                        /// prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
-                        ///
-                        /// - Remark: Generated from `#/paths/shipr/repos/{id}/prepare/POST/requestBody/json/options/acknowledgedUnverified`.
-                        public var acknowledgedUnverified: Swift.Bool?
                         /// register: which [deployments] key this mirror is.
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/prepare/POST/requestBody/json/options/shard`.
@@ -212290,23 +213024,19 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - sha: prepare: the tip to pin. Absent means the dev repo’s main as it stands.
-                        ///   - acknowledgedUnverified: prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
                         ///   - shard: register: which [deployments] key this mirror is.
                         ///   - groupId: register: the folder a FIRST registration files its new mirrors under.
                         public init(
                             sha: Swift.String? = nil,
-                            acknowledgedUnverified: Swift.Bool? = nil,
                             shard: Swift.String? = nil,
                             groupId: Swift.String? = nil
                         ) {
                             self.sha = sha
-                            self.acknowledgedUnverified = acknowledgedUnverified
                             self.shard = shard
                             self.groupId = groupId
                         }
                         public enum CodingKeys: String, CodingKey {
                             case sha
-                            case acknowledgedUnverified
                             case shard
                             case groupId
                         }
@@ -212716,10 +213446,6 @@ public enum Operations {
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/deploy/POST/requestBody/json/options/sha`.
                         public var sha: Swift.String?
-                        /// prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
-                        ///
-                        /// - Remark: Generated from `#/paths/shipr/repos/{id}/deploy/POST/requestBody/json/options/acknowledgedUnverified`.
-                        public var acknowledgedUnverified: Swift.Bool?
                         /// register: which [deployments] key this mirror is.
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/deploy/POST/requestBody/json/options/shard`.
@@ -212732,23 +213458,19 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - sha: prepare: the tip to pin. Absent means the dev repo’s main as it stands.
-                        ///   - acknowledgedUnverified: prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
                         ///   - shard: register: which [deployments] key this mirror is.
                         ///   - groupId: register: the folder a FIRST registration files its new mirrors under.
                         public init(
                             sha: Swift.String? = nil,
-                            acknowledgedUnverified: Swift.Bool? = nil,
                             shard: Swift.String? = nil,
                             groupId: Swift.String? = nil
                         ) {
                             self.sha = sha
-                            self.acknowledgedUnverified = acknowledgedUnverified
                             self.shard = shard
                             self.groupId = groupId
                         }
                         public enum CodingKeys: String, CodingKey {
                             case sha
-                            case acknowledgedUnverified
                             case shard
                             case groupId
                         }
@@ -213158,10 +213880,6 @@ public enum Operations {
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/unregister/POST/requestBody/json/options/sha`.
                         public var sha: Swift.String?
-                        /// prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
-                        ///
-                        /// - Remark: Generated from `#/paths/shipr/repos/{id}/unregister/POST/requestBody/json/options/acknowledgedUnverified`.
-                        public var acknowledgedUnverified: Swift.Bool?
                         /// register: which [deployments] key this mirror is.
                         ///
                         /// - Remark: Generated from `#/paths/shipr/repos/{id}/unregister/POST/requestBody/json/options/shard`.
@@ -213174,23 +213892,19 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - sha: prepare: the tip to pin. Absent means the dev repo’s main as it stands.
-                        ///   - acknowledgedUnverified: prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
                         ///   - shard: register: which [deployments] key this mirror is.
                         ///   - groupId: register: the folder a FIRST registration files its new mirrors under.
                         public init(
                             sha: Swift.String? = nil,
-                            acknowledgedUnverified: Swift.Bool? = nil,
                             shard: Swift.String? = nil,
                             groupId: Swift.String? = nil
                         ) {
                             self.sha = sha
-                            self.acknowledgedUnverified = acknowledgedUnverified
                             self.shard = shard
                             self.groupId = groupId
                         }
                         public enum CodingKeys: String, CodingKey {
                             case sha
-                            case acknowledgedUnverified
                             case shard
                             case groupId
                         }
@@ -213928,10 +214642,6 @@ public enum Operations {
                         ///
                         /// - Remark: Generated from `#/paths/shipr/runs/POST/requestBody/json/options/sha`.
                         public var sha: Swift.String?
-                        /// prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
-                        ///
-                        /// - Remark: Generated from `#/paths/shipr/runs/POST/requestBody/json/options/acknowledgedUnverified`.
-                        public var acknowledgedUnverified: Swift.Bool?
                         /// register: which [deployments] key this mirror is.
                         ///
                         /// - Remark: Generated from `#/paths/shipr/runs/POST/requestBody/json/options/shard`.
@@ -213944,23 +214654,19 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - sha: prepare: the tip to pin. Absent means the dev repo’s main as it stands.
-                        ///   - acknowledgedUnverified: prepare: proceed although the gate has posted no verdict for the sha. Never overrides a verdict that exists and is red.
                         ///   - shard: register: which [deployments] key this mirror is.
                         ///   - groupId: register: the folder a FIRST registration files its new mirrors under.
                         public init(
                             sha: Swift.String? = nil,
-                            acknowledgedUnverified: Swift.Bool? = nil,
                             shard: Swift.String? = nil,
                             groupId: Swift.String? = nil
                         ) {
                             self.sha = sha
-                            self.acknowledgedUnverified = acknowledgedUnverified
                             self.shard = shard
                             self.groupId = groupId
                         }
                         public enum CodingKeys: String, CodingKey {
                             case sha
-                            case acknowledgedUnverified
                             case shard
                             case groupId
                         }
@@ -215538,6 +216244,8 @@ public enum Operations {
     ///
     /// What the installation was granted, which is exactly the set `register` can act on — offering anything wider means an operator picks a repository whose first push fails minutes later. The account-and-repository picker that produced this set is GitHub’s own installation page, so there is no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403 would confirm it exists.
     ///
+    /// This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s account. The one exception is a connection nothing has been stored for yet: answering `[]` there would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks — which is why 502 is still among the responses. Use the refresh below to ask deliberately.
+    ///
     /// - Remark: HTTP `GET /shipr/connections/{id}/repositories`.
     /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/get`.
     public enum GetShiprConnectionsIdRepositories {
@@ -215622,15 +216330,25 @@ public enum Operations {
                         public typealias RepositoriesPayload = [Operations.GetShiprConnectionsIdRepositories.Output.Ok.Body.JsonPayload.RepositoriesPayloadPayload]
                         /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/GET/responses/200/content/json/repositories`.
                         public var repositories: Operations.GetShiprConnectionsIdRepositories.Output.Ok.Body.JsonPayload.RepositoriesPayload
+                        /// When GitHub last said this. The picker shows a stored list immediately and refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller can say so instead of implying it is current.
+                        ///
+                        /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/GET/responses/200/content/json/readAt`.
+                        public var readAt: Foundation.Date
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
                         ///   - repositories:
-                        public init(repositories: Operations.GetShiprConnectionsIdRepositories.Output.Ok.Body.JsonPayload.RepositoriesPayload) {
+                        ///   - readAt: When GitHub last said this. The picker shows a stored list immediately and refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller can say so instead of implying it is current.
+                        public init(
+                            repositories: Operations.GetShiprConnectionsIdRepositories.Output.Ok.Body.JsonPayload.RepositoriesPayload,
+                            readAt: Foundation.Date
+                        ) {
                             self.repositories = repositories
+                            self.readAt = readAt
                         }
                         public enum CodingKeys: String, CodingKey {
                             case repositories
+                            case readAt
                         }
                     }
                     /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/GET/responses/200/content/application\/json`.
@@ -215873,6 +216591,400 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.badGateway`.
             /// - SeeAlso: `.badGateway`.
             public var badGateway: Operations.GetShiprConnectionsIdRepositories.Output.BadGateway {
+                get throws {
+                    switch self {
+                    case let .badGateway(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badGateway",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Ask GitHub again what this connection was granted
+    ///
+    /// The Test button, and the read-then-refresh the picker does on open. Always goes to GitHub — a stored list never short-circuits it, because the whole reason to call this rather than the GET is to find out whether the credentials still work and what has changed since.
+    ///
+    /// The answer replaces the stored row wholesale rather than merging into it: a grant is a set, and a merge would keep a repository the installation has since lost, which is exactly the kind of entry an operator would pick and only discover was gone at the first push. A call that cannot reach GitHub is a 502 and leaves the stored row untouched — a list read an hour ago can still be picked from, and an empty one cannot.
+    ///
+    /// - Remark: HTTP `POST /shipr/connections/{id}/repositories/refresh`.
+    /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post`.
+    public enum PostShiprConnectionsIdRepositoriesRefresh {
+        public static let id: Swift.String = "post/shipr/connections/{id}/repositories/refresh"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input.Path
+            /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostShiprConnectionsIdRepositoriesRefresh.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostShiprConnectionsIdRepositoriesRefresh.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input.Path,
+                headers: Operations.PostShiprConnectionsIdRepositoriesRefresh.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/RepositoriesPayload`.
+                        public struct RepositoriesPayloadPayload: Codable, Hashable, Sendable {
+                            /// owner/name
+                            ///
+                            /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/RepositoriesPayload/slug`.
+                            public var slug: Swift.String
+                            /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/RepositoriesPayload/defaultBranch`.
+                            public var defaultBranch: Swift.String
+                            /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/RepositoriesPayload/private`.
+                            public var _private: Swift.Bool
+                            /// Creates a new `RepositoriesPayloadPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - slug: owner/name
+                            ///   - defaultBranch:
+                            ///   - _private:
+                            public init(
+                                slug: Swift.String,
+                                defaultBranch: Swift.String,
+                                _private: Swift.Bool
+                            ) {
+                                self.slug = slug
+                                self.defaultBranch = defaultBranch
+                                self._private = _private
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case slug
+                                case defaultBranch
+                                case _private = "private"
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/repositories`.
+                        public typealias RepositoriesPayload = [Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body.JsonPayload.RepositoriesPayloadPayload]
+                        /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/repositories`.
+                        public var repositories: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body.JsonPayload.RepositoriesPayload
+                        /// When GitHub last said this. The picker shows a stored list immediately and refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller can say so instead of implying it is current.
+                        ///
+                        /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/json/readAt`.
+                        public var readAt: Foundation.Date
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - repositories:
+                        ///   - readAt: When GitHub last said this. The picker shows a stored list immediately and refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller can say so instead of implying it is current.
+                        public init(
+                            repositories: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body.JsonPayload.RepositoriesPayload,
+                            readAt: Foundation.Date
+                        ) {
+                            self.repositories = repositories
+                            self.readAt = readAt
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case repositories
+                            case readAt
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The repositories, as GitHub just described them
+            ///
+            /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadGateway: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/502/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/connections/{id}/repositories/refresh/POST/responses/502/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.BadGateway.Body
+                /// Creates a new `BadGateway`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.BadGateway.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/connections/{id}/repositories/refresh/post/responses/502`.
+            ///
+            /// HTTP response code: `502 badGateway`.
+            case badGateway(Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.BadGateway)
+            /// The associated value of the enum case if `self` is `.badGateway`.
+            ///
+            /// - Throws: An error if `self` is not `.badGateway`.
+            /// - SeeAlso: `.badGateway`.
+            public var badGateway: Operations.PostShiprConnectionsIdRepositoriesRefresh.Output.BadGateway {
                 get throws {
                     switch self {
                     case let .badGateway(response):
@@ -216454,6 +217566,10 @@ public enum Operations {
                     ///
                     /// - Remark: Generated from `#/paths/shipr/register/POST/requestBody/json/deploymentName`.
                     public var deploymentName: Swift.String?
+                    /// Whether to GO AND MAKE IT, or only write down where it goes. `false` writes the rows synchronously, leaves `registeredAt` null and queues no run, so nothing is created on the forge under a name nobody has looked at yet; the operator then sets the org, the name and the environments and presses Provision, which is `POST /shipr/runs` with the same `register` operation. Defaults to true.
+                    ///
+                    /// - Remark: Generated from `#/paths/shipr/register/POST/requestBody/json/provision`.
+                    public var provision: Swift.Bool?
                     /// Creates a new `JsonPayload`.
                     ///
                     /// - Parameters:
@@ -216464,6 +217580,7 @@ public enum Operations {
                     ///   - preparedBranch:
                     ///   - deploymentOwner: Where the ONE mirror goes when `.shipr` declares no shards. Read only on that fallback — a declared shard’s slug is never overridden, because the file and the form must not be able to say two different things.
                     ///   - deploymentName: The mirror’s name on the same fallback. Defaults to `<name>-deployment`; overridable independently of the owner, because changing the org almost always keeps the name.
+                    ///   - provision: Whether to GO AND MAKE IT, or only write down where it goes. `false` writes the rows synchronously, leaves `registeredAt` null and queues no run, so nothing is created on the forge under a name nobody has looked at yet; the operator then sets the org, the name and the environments and presses Provision, which is `POST /shipr/runs` with the same `register` operation. Defaults to true.
                     public init(
                         slug: Swift.String,
                         connectionId: Swift.String? = nil,
@@ -216471,7 +217588,8 @@ public enum Operations {
                         mainBranch: Swift.String? = nil,
                         preparedBranch: Swift.String? = nil,
                         deploymentOwner: Swift.String? = nil,
-                        deploymentName: Swift.String? = nil
+                        deploymentName: Swift.String? = nil,
+                        provision: Swift.Bool? = nil
                     ) {
                         self.slug = slug
                         self.connectionId = connectionId
@@ -216480,6 +217598,7 @@ public enum Operations {
                         self.preparedBranch = preparedBranch
                         self.deploymentOwner = deploymentOwner
                         self.deploymentName = deploymentName
+                        self.provision = provision
                     }
                     public enum CodingKeys: String, CodingKey {
                         case slug
@@ -216489,6 +217608,7 @@ public enum Operations {
                         case preparedBranch
                         case deploymentOwner
                         case deploymentName
+                        case provision
                     }
                 }
                 /// - Remark: Generated from `#/paths/shipr/register/POST/requestBody/content/application\/json`.
@@ -216512,6 +217632,88 @@ public enum Operations {
             }
         }
         @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/register/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/register/POST/responses/201/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/shipr/register/POST/responses/201/content/json/devRepo`.
+                        public var devRepo: Components.Schemas.ShiprDevRepo
+                        /// - Remark: Generated from `#/paths/shipr/register/POST/responses/201/content/json/mirrors`.
+                        public var mirrors: [Components.Schemas.ShiprRepo]
+                        /// What the run would have journalled: a repository carrying no `.shipr`, a malformed one, a slug another repository already spoke for. Present only when there is something to say.
+                        ///
+                        /// - Remark: Generated from `#/paths/shipr/register/POST/responses/201/content/json/notes`.
+                        public var notes: [Swift.String]?
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - devRepo:
+                        ///   - mirrors:
+                        ///   - notes: What the run would have journalled: a repository carrying no `.shipr`, a malformed one, a slug another repository already spoke for. Present only when there is something to say.
+                        public init(
+                            devRepo: Components.Schemas.ShiprDevRepo,
+                            mirrors: [Components.Schemas.ShiprRepo],
+                            notes: [Swift.String]? = nil
+                        ) {
+                            self.devRepo = devRepo
+                            self.mirrors = mirrors
+                            self.notes = notes
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case devRepo
+                            case mirrors
+                            case notes
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/shipr/register/POST/responses/201/content/application\/json`.
+                    case json(Operations.PostShiprRegister.Output.Created.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostShiprRegister.Output.Created.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostShiprRegister.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostShiprRegister.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Configured — rows written, nothing provisioned
+            ///
+            /// - Remark: Generated from `#/paths//shipr/register/post/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.PostShiprRegister.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.PostShiprRegister.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
             public struct Accepted: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/shipr/register/POST/responses/202/content`.
                 @frozen public enum Body: Sendable, Hashable {
@@ -216836,6 +218038,716 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "conflict",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// The per-org defaults, all of them
+    ///
+    /// A LIST AND NOT A LOOKUP: the menu that opens the Settings dialog already shows every org the caller’s installations reach, so one request fills every gear icon and an org nobody has configured is simply absent rather than a 404 the client has to read as “unset”.
+    ///
+    /// - Remark: HTTP `GET /shipr/org-defaults`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/get`.
+    public enum GetShiprOrgDefaults {
+        public static let id: Swift.String = "get/shipr/org-defaults"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// The workspace slug to act in. Omitted, the caller's own personal workspace.
+                ///
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/query/workspace`.
+                public var workspace: Swift.String?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - workspace: The workspace slug to act in. Omitted, the caller's own personal workspace.
+                public init(workspace: Swift.String? = nil) {
+                    self.workspace = workspace
+                }
+            }
+            public var query: Operations.GetShiprOrgDefaults.Input.Query
+            /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetShiprOrgDefaults.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetShiprOrgDefaults.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GetShiprOrgDefaults.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.GetShiprOrgDefaults.Input.Query = .init(),
+                headers: Operations.GetShiprOrgDefaults.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/200/content/json/orgDefaults`.
+                        public var orgDefaults: [Components.Schemas.ShiprOrgDefaults]
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - orgDefaults:
+                        public init(orgDefaults: [Components.Schemas.ShiprOrgDefaults]) {
+                            self.orgDefaults = orgDefaults
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case orgDefaults
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/200/content/application\/json`.
+                    case json(Operations.GetShiprOrgDefaults.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.GetShiprOrgDefaults.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetShiprOrgDefaults.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetShiprOrgDefaults.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The configured orgs
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/get/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GetShiprOrgDefaults.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GetShiprOrgDefaults.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/401/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetShiprOrgDefaults.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetShiprOrgDefaults.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/get/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.GetShiprOrgDefaults.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.GetShiprOrgDefaults.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetShiprOrgDefaults.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetShiprOrgDefaults.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/get/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetShiprOrgDefaults.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetShiprOrgDefaults.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetShiprOrgDefaults.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetShiprOrgDefaults.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/get/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetShiprOrgDefaults.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetShiprOrgDefaults.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Set one org’s defaults
+    ///
+    /// UPSERT, because “the defaults for this org” is one row whether or not anybody has written it yet. IT PROVISIONS NOTHING AND CHANGES NO EXISTING MIRROR — a default is read when a mirror is born, so writing one re-aims the next repository and leaves every registered one where the operator put it. An ABSENT field is left alone rather than reset, so a request about environments cannot quietly restore the suffix.
+    ///
+    /// - Remark: HTTP `PUT /shipr/org-defaults/{org}`.
+    /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put`.
+    public enum PutShiprOrgDefaultsOrg {
+        public static let id: Swift.String = "put/shipr/org-defaults/{org}"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/path`.
+            public struct Path: Sendable, Hashable {
+                /// A forge account login.
+                ///
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/path/org`.
+                public var org: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - org: A forge account login.
+                public init(org: Swift.String) {
+                    self.org = org
+                }
+            }
+            public var path: Operations.PutShiprOrgDefaultsOrg.Input.Path
+            /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/query`.
+            public struct Query: Sendable, Hashable {
+                /// The workspace slug to act in. Omitted, the caller's own personal workspace.
+                ///
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/query/workspace`.
+                public var workspace: Swift.String?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - workspace: The workspace slug to act in. Omitted, the caller's own personal workspace.
+                public init(workspace: Swift.String? = nil) {
+                    self.workspace = workspace
+                }
+            }
+            public var query: Operations.PutShiprOrgDefaultsOrg.Input.Query
+            /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PutShiprOrgDefaultsOrg.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PutShiprOrgDefaultsOrg.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PutShiprOrgDefaultsOrg.Input.Headers
+            /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody/json`.
+                public struct JsonPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody/json/deploymentOwner`.
+                    public var deploymentOwner: Swift.String?
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody/json/nameSuffix`.
+                    public var nameSuffix: Swift.String?
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody/json/envBranches`.
+                    public struct EnvBranchesPayload: Codable, Hashable, Sendable {
+                        /// A container of undocumented properties.
+                        public var additionalProperties: [String: Swift.String]
+                        /// Creates a new `EnvBranchesPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - additionalProperties: A container of undocumented properties.
+                        public init(additionalProperties: [String: Swift.String] = .init()) {
+                            self.additionalProperties = additionalProperties
+                        }
+                        public init(from decoder: any Swift.Decoder) throws {
+                            additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                        }
+                        public func encode(to encoder: any Swift.Encoder) throws {
+                            try encoder.encodeAdditionalProperties(additionalProperties)
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody/json/envBranches`.
+                    public var envBranches: Operations.PutShiprOrgDefaultsOrg.Input.Body.JsonPayload.EnvBranchesPayload?
+                    /// Creates a new `JsonPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - deploymentOwner:
+                    ///   - nameSuffix:
+                    ///   - envBranches:
+                    public init(
+                        deploymentOwner: Swift.String? = nil,
+                        nameSuffix: Swift.String? = nil,
+                        envBranches: Operations.PutShiprOrgDefaultsOrg.Input.Body.JsonPayload.EnvBranchesPayload? = nil
+                    ) {
+                        self.deploymentOwner = deploymentOwner
+                        self.nameSuffix = nameSuffix
+                        self.envBranches = envBranches
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case deploymentOwner
+                        case nameSuffix
+                        case envBranches
+                    }
+                }
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/requestBody/content/application\/json`.
+                case json(Operations.PutShiprOrgDefaultsOrg.Input.Body.JsonPayload)
+            }
+            public var body: Operations.PutShiprOrgDefaultsOrg.Input.Body?
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.PutShiprOrgDefaultsOrg.Input.Path,
+                query: Operations.PutShiprOrgDefaultsOrg.Input.Query = .init(),
+                headers: Operations.PutShiprOrgDefaultsOrg.Input.Headers = .init(),
+                body: Operations.PutShiprOrgDefaultsOrg.Input.Body? = nil
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/200/content/application\/json`.
+                    case json(Components.Schemas.ShiprOrgDefaults)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.ShiprOrgDefaults {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PutShiprOrgDefaultsOrg.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PutShiprOrgDefaultsOrg.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// The defaults as stored
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PutShiprOrgDefaultsOrg.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PutShiprOrgDefaultsOrg.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/400/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PutShiprOrgDefaultsOrg.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PutShiprOrgDefaultsOrg.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PutShiprOrgDefaultsOrg.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PutShiprOrgDefaultsOrg.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/401/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PutShiprOrgDefaultsOrg.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PutShiprOrgDefaultsOrg.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PutShiprOrgDefaultsOrg.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PutShiprOrgDefaultsOrg.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/403/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PutShiprOrgDefaultsOrg.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PutShiprOrgDefaultsOrg.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PutShiprOrgDefaultsOrg.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PutShiprOrgDefaultsOrg.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/shipr/org-defaults/{org}/PUT/responses/404/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PutShiprOrgDefaultsOrg.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PutShiprOrgDefaultsOrg.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//shipr/org-defaults/{org}/put/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PutShiprOrgDefaultsOrg.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PutShiprOrgDefaultsOrg.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

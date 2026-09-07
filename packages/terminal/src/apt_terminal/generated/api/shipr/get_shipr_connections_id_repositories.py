@@ -81,6 +81,11 @@ def sync_detailed(
     no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403
     would confirm it exists.
 
+    This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s
+    account. The one exception is a connection nothing has been stored for yet: answering `[]` there
+    would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks —
+    which is why 502 is still among the responses. Use the refresh below to ask deliberately.
+
     Args:
         id (str):
 
@@ -116,6 +121,11 @@ def sync(
     no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403
     would confirm it exists.
 
+    This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s
+    account. The one exception is a connection nothing has been stored for yet: answering `[]` there
+    would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks —
+    which is why 502 is still among the responses. Use the refresh below to ask deliberately.
+
     Args:
         id (str):
 
@@ -145,6 +155,11 @@ async def asyncio_detailed(
     account-and-repository picker that produced this set is GitHub’s own installation page, so there is
     no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403
     would confirm it exists.
+
+    This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s
+    account. The one exception is a connection nothing has been stored for yet: answering `[]` there
+    would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks —
+    which is why 502 is still among the responses. Use the refresh below to ask deliberately.
 
     Args:
         id (str):
@@ -178,6 +193,11 @@ async def asyncio(
     account-and-repository picker that produced this set is GitHub’s own installation page, so there is
     no org listing beside it. A connection that is not the caller’s own is a 404, never a 403: a 403
     would confirm it exists.
+
+    This reads what was last stored, so it is a database read and normally cannot fail on GitHub’s
+    account. The one exception is a connection nothing has been stored for yet: answering `[]` there
+    would report an empty grant on the single occasion it is certainly untrue, so a miss goes and asks —
+    which is why 502 is still among the responses. Use the refresh below to ask deliberately.
 
     Args:
         id (str):
