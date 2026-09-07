@@ -85,7 +85,13 @@ public enum WindowToolbarBuilder {
         hideTooltip: String
     ) {
         let symbol = disclosed ? filledSymbol : outlineSymbol
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: button.toolTip)
+        // The image's accessibility description is the control's stable *name*
+        // ("Help"), set once by `iconButtonItem` from the item's label. Carry it
+        // across the swap: reading `button.toolTip` here would rename the control
+        // after the previous state's *action* ("Hide Help") on every call but the
+        // first.
+        let description = button.image?.accessibilityDescription
+        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
         button.image = image?.withSymbolConfiguration(
             NSImage.SymbolConfiguration(pointSize: 15, weight: .regular))
         let palette = button.resolvedThemeScope.palette

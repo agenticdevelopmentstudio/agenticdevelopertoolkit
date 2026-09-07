@@ -83,6 +83,36 @@ struct WindowToolbarBuilderTests {
         #expect(button.image !== closedImage)
     }
 
+    /// The image's accessibility description is the control's stable *name*
+    /// ("Help", set once by `iconButtonItem` from the item's label) — not the
+    /// action of the moment. Regression for a refactor that briefly read
+    /// `button.toolTip` here, which would rename the control after the
+    /// previous state's tooltip ("Hide Help") on every call but the first.
+    @Test("disclosure appearance keeps the button's original accessibility name")
+    func disclosureAppearanceKeepsAccessibilityName() {
+        let target = Target()
+        let (_, button) = WindowToolbarBuilder.iconButtonItem(
+            identifier: NSToolbarItem.Identifier("project.toolbar.help"),
+            symbol: "questionmark.circle",
+            label: "Help",
+            target: target,
+            action: #selector(Target.tapped))
+
+        WindowToolbarBuilder.applyDisclosureAppearance(
+            to: button, disclosed: false,
+            outlineSymbol: "questionmark.circle", filledSymbol: "questionmark.circle.fill",
+            showTooltip: "Show Help", hideTooltip: "Hide Help")
+        #expect(button.image?.accessibilityDescription == "Help")
+        #expect(button.toolTip == "Show Help")
+
+        WindowToolbarBuilder.applyDisclosureAppearance(
+            to: button, disclosed: true,
+            outlineSymbol: "questionmark.circle", filledSymbol: "questionmark.circle.fill",
+            showTooltip: "Show Help", hideTooltip: "Hide Help")
+        #expect(button.image?.accessibilityDescription == "Help")
+        #expect(button.toolTip == "Hide Help")
+    }
+
     @Test("the tint comes from the button's own resolved scope")
     func tintTracksTheScope() {
         let button = NSButton(title: "", target: nil, action: nil)
