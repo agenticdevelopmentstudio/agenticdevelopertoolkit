@@ -365,7 +365,11 @@ public final class ThemedSeparatorView: NSView, Themeable {
     public let role: ThemeRole
     private var observer: ThemePaletteObserver?
 
-    public init(role: ThemeRole = .border) {
+    /// - Parameter axis: the direction the hairline *runs*. A horizontal rule
+    ///   is one pixel tall and unconstrained in width; a vertical one is the
+    ///   transpose. The default is what every caller before the pane chrome
+    ///   wanted, so none of them changed.
+    public init(role: ThemeRole = .border, axis: NSUserInterfaceLayoutOrientation = .horizontal) {
         self.role = role
         super.init(frame: .zero)
         self.wantsLayer = true
@@ -375,7 +379,12 @@ public final class ThemedSeparatorView: NSView, Themeable {
         // constraints, silently dragging every view positioned off its edges
         // to zero along with it (`InlineChatView`'s composer, once).
         self.translatesAutoresizingMaskIntoConstraints = false
-        self.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        switch axis {
+        case .vertical:
+            self.widthAnchor.constraint(equalToConstant: 1).isActive = true
+        default:
+            self.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        }
         self.observer = ThemePaletteObserver(host: self) { [weak self] palette in self?.applyTheme(palette) }
     }
 

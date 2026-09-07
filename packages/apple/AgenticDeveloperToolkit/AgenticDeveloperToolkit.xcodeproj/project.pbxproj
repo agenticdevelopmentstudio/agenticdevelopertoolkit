@@ -224,11 +224,13 @@
 		7722ECA1262761D8F64D0DB0 /* ActiveDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9838F461E43F3B3FA6A6E6F4 /* ActiveDraft.swift */; };
 		792B2E0BB38F144539B7DDFA /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE0D8CE3D35EBDE9E29573F /* Conversation.swift */; };
 		7981B387E9E4EA331A34E560 /* HookContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0F8ABE0C49F213B319AC5F /* HookContext.swift */; };
+		7A5B485EE8382D5C1C8D51FA /* WindowFooterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFED20397E94493A65AE8759 /* WindowFooterBar.swift */; };
 		7C2080D6106AFA016D58B604 /* ChatWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40F1E09767593D0889FBDF /* ChatWindowTests.swift */; };
 		7C292FA89660F92A845C8511 /* MobileMessageBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A6FEEDB433738E2D5449DE9 /* MobileMessageBubbleView.swift */; };
 		7C7A7172D44C4A3B0C1F2141 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5935D5EE66E4D967621A9C19 /* Command.swift */; };
 		7EE0CB51DDE3A482380FB7A4 /* AgenticDeveloperToolkitUI-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7A1A8E873030EA0447E2DCC /* AgenticDeveloperToolkitUI-iOS.framework */; };
 		7F0F2E452BB4C00403FC3CAD /* SemanticPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84EFB03882CB9FC0AE9D166 /* SemanticPalette.swift */; };
+		7F42F2D2D7FAB2A4559C7291 /* WindowFooterBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C74216F2237E168BDF2EFE53 /* WindowFooterBarTests.swift */; };
 		801D6B8071BFDE57F85D10BD /* ChatWindowAppearanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC4E02CEA3C85ADB8597EA2 /* ChatWindowAppearanceController.swift */; };
 		80C67A0337B1FDCAC90F984F /* SemanticPaletteScaleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C53602ECD0A345AD0BF4720C /* SemanticPaletteScaleTests.swift */; };
 		80C6951832EC11B72831E296 /* Backend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260B121AE6CCFC94484CE27B /* Backend.swift */; };
@@ -677,11 +679,13 @@
 		C46BD5876B726F9BFA3E3FEB /* ChatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatConfig.swift; sourceTree = "<group>"; };
 		C53602ECD0A345AD0BF4720C /* SemanticPaletteScaleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticPaletteScaleTests.swift; sourceTree = "<group>"; };
 		C6E14BDBB8F2C13A9DFDC3BF /* MarkdownDocumentRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocumentRendererTests.swift; sourceTree = "<group>"; };
+		C74216F2237E168BDF2EFE53 /* WindowFooterBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowFooterBarTests.swift; sourceTree = "<group>"; };
 		C7D7F57D9FA42FD4FE7B5D7D /* ContentRefittingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRefittingWindowController.swift; sourceTree = "<group>"; };
 		C8CEC8F5E3AC45C8CB54D69B /* ThemeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStoreTests.swift; sourceTree = "<group>"; };
 		CAED4116CDAE8D3E06C83AC3 /* MessageBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleView.swift; sourceTree = "<group>"; };
 		CDB1DA50DE44966C0DCA3F03 /* ThemeBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeBindingTests.swift; sourceTree = "<group>"; };
 		CEB3CD41150B1652B065BBAE /* Tool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tool.swift; sourceTree = "<group>"; };
+		CFED20397E94493A65AE8759 /* WindowFooterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowFooterBar.swift; sourceTree = "<group>"; };
 		D148F270D1282B88497D11CB /* MarkdownFileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownFileImporter.swift; sourceTree = "<group>"; };
 		D2B4C18604A247368CC9843B /* RGBAColor+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RGBAColor+Theme.swift"; sourceTree = "<group>"; };
 		D5CDEABC6FEC95D2B96EE248 /* Frontmatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Frontmatter.swift; sourceTree = "<group>"; };
@@ -1047,6 +1051,7 @@
 				46447ABAC442247EE6EAB78B /* PaneEdge.swift */,
 				53D1D95F96A68A995880949B /* WindowAppearanceDefaults.swift */,
 				6A98B7930EDC7CB7553CD312 /* WindowConfigPopover.swift */,
+				CFED20397E94493A65AE8759 /* WindowFooterBar.swift */,
 			);
 			path = Chrome;
 			sourceTree = "<group>";
@@ -1058,6 +1063,7 @@
 				4925FC98F4AA2522F0D215EC /* PaneEdgeTests.swift */,
 				E367DC736FFF966A65A24836 /* WindowAppearanceDefaultsTests.swift */,
 				6DBE65E7247F836B1D4667EE /* WindowConfigPopoverTests.swift */,
+				C74216F2237E168BDF2EFE53 /* WindowFooterBarTests.swift */,
 			);
 			path = Chrome;
 			sourceTree = "<group>";
@@ -1648,6 +1654,7 @@
 				F8C792EDDAFDA578F97A2836 /* ToolkitFontsTests.swift in Sources */,
 				F4196A127E1804D461FC9E85 /* WindowAppearanceDefaultsTests.swift in Sources */,
 				CBFB3312C3CDAFC58B891559 /* WindowConfigPopoverTests.swift in Sources */,
+				7F42F2D2D7FAB2A4559C7291 /* WindowFooterBarTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1765,6 +1772,7 @@
 				9D70EFAB0A188E369C58F5FA /* ToolkitFonts.swift in Sources */,
 				C024C6204DD271FB6762E698 /* WindowAppearanceDefaults.swift in Sources */,
 				5ACCA2303431D56D7BBA1734 /* WindowConfigPopover.swift in Sources */,
+				7A5B485EE8382D5C1C8D51FA /* WindowFooterBar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
