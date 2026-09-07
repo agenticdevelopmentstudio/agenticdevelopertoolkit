@@ -11,7 +11,7 @@ struct WindowFooterBarTests {
 
     @Test("the status it is given is the status it shows")
     func statusRoundTrips() {
-        let footer = WindowFooterBar()
+        let footer = WindowFooterBar(accessibilityPrefix: "project.footer")
         footer.status = "api-server › Backend › Files › src/main.swift"
         #expect(footer.statusLabel.stringValue == "api-server › Backend › Files › src/main.swift")
     }
@@ -20,7 +20,7 @@ struct WindowFooterBarTests {
     /// has to be reachable some other way.
     @Test("a long status is also the tooltip, so it survives truncation")
     func longStatusIsAlsoATooltip() {
-        let footer = WindowFooterBar()
+        let footer = WindowFooterBar(accessibilityPrefix: "project.footer")
         let path = String(repeating: "segment › ", count: 40)
         footer.status = path
         #expect(footer.statusLabel.toolTip == path)
@@ -28,12 +28,13 @@ struct WindowFooterBarTests {
 
     @Test("the status label is addressable")
     func statusLabelIsIdentified() {
-        #expect(WindowFooterBar().statusLabel.accessibilityIdentifier() == "project.footer.status")
+        let footer = WindowFooterBar(accessibilityPrefix: "project.footer")
+        #expect(footer.statusLabel.accessibilityIdentifier() == "project.footer.status")
     }
 
     @Test("the trailing slot starts empty and accepts views")
     func trailingSlot() {
-        let footer = WindowFooterBar()
+        let footer = WindowFooterBar(accessibilityPrefix: "project.footer")
         #expect(footer.trailingAccessories.isEmpty)
 
         let badge = NSButton(title: "3", target: nil, action: nil)

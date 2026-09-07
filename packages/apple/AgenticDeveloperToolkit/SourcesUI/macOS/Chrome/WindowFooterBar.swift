@@ -49,13 +49,18 @@ public final class WindowFooterBar: NSView {
     private let hairline = ThemedSeparatorView(role: .border)
     private let trailingStack = NSStackView()
 
-    public init() {
+    /// - Parameter accessibilityPrefix: The namespace this bar's controls are
+    ///   named under, e.g. `"project.footer"`. Required rather than defaulted,
+    ///   because the bar is meant to sit under more than one kind of window and
+    ///   two of them sharing one identifier would make a UI test addressing
+    ///   "the footer" find whichever came first (`explicit-over-implicit`).
+    public init(accessibilityPrefix: String) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
 
         statusLabel.lineBreakMode = .byTruncatingMiddle
         statusLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        statusLabel.accessibilityID("project.footer.status")
+        statusLabel.accessibilityID("\(accessibilityPrefix).status")
 
         trailingStack.orientation = .horizontal
         trailingStack.spacing = 6
