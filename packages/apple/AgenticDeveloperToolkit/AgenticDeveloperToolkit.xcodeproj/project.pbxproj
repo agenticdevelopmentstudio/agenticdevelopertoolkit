@@ -21,6 +21,7 @@
 		0A0BCACCBC13313887F3651E /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343591450687116B055E9EE1 /* MarkdownDocument.swift */; };
 		0B1A98B954E6599D3F3B4F64 /* BuiltInThemes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1097FDD8529BD40F91F5F702 /* BuiltInThemes.swift */; };
 		0B5B80D939F36458D3DDC8BF /* CommandInvoker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9C4D4DB1590330C7135760 /* CommandInvoker.swift */; };
+		0BB97D9646EA89E7AE63CB0B /* WindowToolbarBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B1269C2BBC3568BCC15856 /* WindowToolbarBuilder.swift */; };
 		0BFE01B8603B1BBE1D15500B /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C996F1B9BE5F789B3447382 /* ThemeManager.swift */; };
 		0C75B634E29B7AFFF2D2A207 /* DisplayConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3F818BC3B7717A2BF9E9B /* DisplayConfig.swift */; };
 		0CD982E160ECB7B18935C680 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C996F1B9BE5F789B3447382 /* ThemeManager.swift */; };
@@ -210,6 +211,7 @@
 		715F72AB483A3FE4FE8B3397 /* MessageBubbleViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA1BC26612594725F7B2EA0 /* MessageBubbleViewTests.swift */; };
 		719E05277BFC3BEE90989A2E /* PaneEdgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4925FC98F4AA2522F0D215EC /* PaneEdgeTests.swift */; };
 		71FA27CF5D9C91FB46DC3B2F /* InlineDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5299466926678C96917AB0F /* InlineDocument.swift */; };
+		7284F60E3C32EEA13E15526D /* WindowToolbarBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D44968B0E8D26FDA238EBEB /* WindowToolbarBuilderTests.swift */; };
 		729AC7419C4A3E59A67180FB /* ThemeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CD337CEB28A97DEA271E23 /* ThemeStorage.swift */; };
 		72E30CDFB4F2EFB7A16BF330 /* Participant.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04F31FF3D59A7F93709900A /* Participant.swift */; };
 		7353294B6354EFACEB3BDA1C /* RGBAColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F91EDA42B3CA77E7D0EA90 /* RGBAColor.swift */; };
@@ -574,6 +576,7 @@
 		357DF1D759596F335886DAEA /* SemanticPaletteFontTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticPaletteFontTests.swift; sourceTree = "<group>"; };
 		367CAE25918FBBE97B0941ED /* AgenticDeveloperToolkitUI-macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AgenticDeveloperToolkitUI-macOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B56832D40F2607B7336550C /* AgenticDeveloperToolkitUITests-macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AgenticDeveloperToolkitUITests-macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D44968B0E8D26FDA238EBEB /* WindowToolbarBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowToolbarBuilderTests.swift; sourceTree = "<group>"; };
 		3EEBC9E5F922891B28815089 /* NSView+AccessibilityID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSView+AccessibilityID.swift"; sourceTree = "<group>"; };
 		3F1792467769497897CB1A62 /* AgenticDeveloperToolkit-visionOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AgenticDeveloperToolkit-visionOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		40AD9E623FC05DBE27370920 /* SemanticPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticPaletteTests.swift; sourceTree = "<group>"; };
@@ -654,6 +657,7 @@
 		9E4EE3E1AE1158EA28F79FF0 /* ObservableChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableChatViewModel.swift; sourceTree = "<group>"; };
 		9E8C7370C59143F10EB2C57A /* ThemeBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeBinding.swift; sourceTree = "<group>"; };
 		A08B33275114ED79610D2C45 /* FenceScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FenceScannerTests.swift; sourceTree = "<group>"; };
+		A1B1269C2BBC3568BCC15856 /* WindowToolbarBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowToolbarBuilder.swift; sourceTree = "<group>"; };
 		A26EB4C5087A9CAB6D0E5B63 /* MarkdownTextPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextPane.swift; sourceTree = "<group>"; };
 		A27EF4C1B3010508961C8718 /* CommandActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandActivity.swift; sourceTree = "<group>"; };
 		A5C4190A4334FDFDE14610AE /* MediaType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaType.swift; sourceTree = "<group>"; };
@@ -1052,6 +1056,7 @@
 				53D1D95F96A68A995880949B /* WindowAppearanceDefaults.swift */,
 				6A98B7930EDC7CB7553CD312 /* WindowConfigPopover.swift */,
 				CFED20397E94493A65AE8759 /* WindowFooterBar.swift */,
+				A1B1269C2BBC3568BCC15856 /* WindowToolbarBuilder.swift */,
 			);
 			path = Chrome;
 			sourceTree = "<group>";
@@ -1064,6 +1069,7 @@
 				E367DC736FFF966A65A24836 /* WindowAppearanceDefaultsTests.swift */,
 				6DBE65E7247F836B1D4667EE /* WindowConfigPopoverTests.swift */,
 				C74216F2237E168BDF2EFE53 /* WindowFooterBarTests.swift */,
+				3D44968B0E8D26FDA238EBEB /* WindowToolbarBuilderTests.swift */,
 			);
 			path = Chrome;
 			sourceTree = "<group>";
@@ -1655,6 +1661,7 @@
 				F4196A127E1804D461FC9E85 /* WindowAppearanceDefaultsTests.swift in Sources */,
 				CBFB3312C3CDAFC58B891559 /* WindowConfigPopoverTests.swift in Sources */,
 				7F42F2D2D7FAB2A4559C7291 /* WindowFooterBarTests.swift in Sources */,
+				7284F60E3C32EEA13E15526D /* WindowToolbarBuilderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1773,6 +1780,7 @@
 				C024C6204DD271FB6762E698 /* WindowAppearanceDefaults.swift in Sources */,
 				5ACCA2303431D56D7BBA1734 /* WindowConfigPopover.swift in Sources */,
 				7A5B485EE8382D5C1C8D51FA /* WindowFooterBar.swift in Sources */,
+				0BB97D9646EA89E7AE63CB0B /* WindowToolbarBuilder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
