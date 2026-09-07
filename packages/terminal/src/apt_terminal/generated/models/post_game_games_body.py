@@ -29,7 +29,6 @@ class PostGameGamesBody:
         event_log (Union[Unset, str]):
         event_retention_days (Union[Unset, int]):
         sync_txid (Union[Unset, int]):
-        id (Union[Unset, str]):
     """
 
     slug: str
@@ -45,7 +44,6 @@ class PostGameGamesBody:
     event_log: Unset | str = UNSET
     event_retention_days: Unset | int = UNSET
     sync_txid: Unset | int = UNSET
-    id: Unset | str = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_game_games_body_engine_config_type_1 import (
@@ -87,8 +85,6 @@ class PostGameGamesBody:
 
         sync_txid = self.sync_txid
 
-        id = self.id
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -114,8 +110,6 @@ class PostGameGamesBody:
             field_dict["eventRetentionDays"] = event_retention_days
         if sync_txid is not UNSET:
             field_dict["syncTxid"] = sync_txid
-        if id is not UNSET:
-            field_dict["id"] = id
 
         return field_dict
 
@@ -185,8 +179,6 @@ class PostGameGamesBody:
 
         sync_txid = d.pop("syncTxid", UNSET)
 
-        id = d.pop("id", UNSET)
-
         post_game_games_body = cls(
             slug=slug,
             name=name,
@@ -199,7 +191,6 @@ class PostGameGamesBody:
             event_log=event_log,
             event_retention_days=event_retention_days,
             sync_txid=sync_txid,
-            id=id,
         )
 
         return post_game_games_body

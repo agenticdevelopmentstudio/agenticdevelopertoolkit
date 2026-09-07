@@ -107,6 +107,9 @@ from .delete_audience_campaigns_campaign_id_response_200 import (
 from .delete_audience_lists_list_id_members_contact_id_response_200 import (
     DeleteAudienceListsListIdMembersContactIdResponse200,
 )
+from .delete_customer_memberships_customer_id_response_200 import (
+    DeleteCustomerMembershipsCustomerIdResponse200,
+)
 from .delete_ecosystem_feature_flags_id_key_response_200 import (
     DeleteEcosystemFeatureFlagsIdKeyResponse200,
 )
@@ -255,6 +258,7 @@ from .gamification_realm_badge_tier_type_1 import GamificationRealmBadgeTierType
 from .gamification_realm_badge_tier_type_2_type_1 import GamificationRealmBadgeTierType2Type1
 from .gamification_realm_badge_tier_type_3_type_1 import GamificationRealmBadgeTierType3Type1
 from .gamification_realm_config import GamificationRealmConfig
+from .gamification_realm_config_mode import GamificationRealmConfigMode
 from .gamification_realm_config_skin import GamificationRealmConfigSkin
 from .gamification_realm_config_surfaces import GamificationRealmConfigSurfaces
 from .gamification_realm_config_update import GamificationRealmConfigUpdate
@@ -438,6 +442,7 @@ from .get_content_urls_id_response_200 import GetContentUrlsIdResponse200
 from .get_content_urls_response_200_item import GetContentUrlsResponse200Item
 from .get_customer_customers_id_response_200 import GetCustomerCustomersIdResponse200
 from .get_customer_customers_response_200_item import GetCustomerCustomersResponse200Item
+from .get_customer_memberships_response_200_item import GetCustomerMembershipsResponse200Item
 from .get_customer_transfer_preview_response_200 import GetCustomerTransferPreviewResponse200
 from .get_customer_transfer_preview_response_200_conflicts_item import (
     GetCustomerTransferPreviewResponse200ConflictsItem,
@@ -607,6 +612,9 @@ from .get_integrations_ecosystems_ecosystem_id_provider_configs_response_200 imp
 )
 from .get_integrations_providers_provider_id_auth_url_response_200 import (
     GetIntegrationsProvidersProviderIdAuthUrlResponse200,
+)
+from .get_integrations_providers_provider_id_install_url_response_200 import (
+    GetIntegrationsProvidersProviderIdInstallUrlResponse200,
 )
 from .get_integrations_providers_response_200 import GetIntegrationsProvidersResponse200
 from .get_integrations_response_200 import GetIntegrationsResponse200
@@ -788,6 +796,42 @@ from .get_search_documents_response_200 import GetSearchDocumentsResponse200
 from .get_search_notes_response_200 import GetSearchNotesResponse200
 from .get_settings_notifications_id_response_200 import GetSettingsNotificationsIdResponse200
 from .get_settings_notifications_response_200_item import GetSettingsNotificationsResponse200Item
+from .get_shipr_connections_id_declaration_response_200 import (
+    GetShiprConnectionsIdDeclarationResponse200,
+)
+from .get_shipr_connections_id_declaration_response_200_deployments_type_0_item import (
+    GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item,
+)
+from .get_shipr_connections_id_repositories_response_200 import (
+    GetShiprConnectionsIdRepositoriesResponse200,
+)
+from .get_shipr_connections_id_repositories_response_200_repositories_item import (
+    GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem,
+)
+from .get_shipr_connections_response_200 import GetShiprConnectionsResponse200
+from .get_shipr_connections_response_200_connections_item import (
+    GetShiprConnectionsResponse200ConnectionsItem,
+)
+from .get_shipr_groups_id_response_200 import GetShiprGroupsIdResponse200
+from .get_shipr_groups_response_200_item import GetShiprGroupsResponse200Item
+from .get_shipr_repos_id_platforms_response_200 import GetShiprReposIdPlatformsResponse200
+from .get_shipr_repos_id_platforms_response_200_platforms_item import (
+    GetShiprReposIdPlatformsResponse200PlatformsItem,
+)
+from .get_shipr_repos_id_platforms_response_200_platforms_item_kind import (
+    GetShiprReposIdPlatformsResponse200PlatformsItemKind,
+)
+from .get_shipr_repos_id_response_200 import GetShiprReposIdResponse200
+from .get_shipr_repos_response_200 import GetShiprReposResponse200
+from .get_shipr_repos_response_200_items_item import GetShiprReposResponse200ItemsItem
+from .get_shipr_repos_response_200_items_item_state_type_0 import (
+    GetShiprReposResponse200ItemsItemStateType0,
+)
+from .get_shipr_repos_response_200_verbs_item import GetShiprReposResponse200VerbsItem
+from .get_shipr_repos_response_200_workspace import GetShiprReposResponse200Workspace
+from .get_shipr_runs_id_events_response_200 import GetShiprRunsIdEventsResponse200
+from .get_shipr_runs_id_response_200 import GetShiprRunsIdResponse200
+from .get_shipr_runs_response_200 import GetShiprRunsResponse200
 from .get_system_audit_events_id_response_200 import GetSystemAuditEventsIdResponse200
 from .get_system_audit_events_response_200_item import GetSystemAuditEventsResponse200Item
 from .get_system_debug_env_response_200 import GetSystemDebugEnvResponse200
@@ -830,6 +874,8 @@ from .integration_connect_api_key_type import IntegrationConnectApiKeyType
 from .integration_connect_app_password import IntegrationConnectAppPassword
 from .integration_connect_app_password_type import IntegrationConnectAppPasswordType
 from .integration_connect_fields import IntegrationConnectFields
+from .integration_connect_github_app import IntegrationConnectGithubApp
+from .integration_connect_github_app_type import IntegrationConnectGithubAppType
 from .integration_connect_o_auth import IntegrationConnectOAuth
 from .integration_connect_o_auth_instance import IntegrationConnectOAuthInstance
 from .integration_connect_o_auth_instance_type import IntegrationConnectOAuthInstanceType
@@ -909,6 +955,7 @@ from .notification_wake_event import NotificationWakeEvent
 from .org_sheet import OrgSheet
 from .org_sheet_stats import OrgSheetStats
 from .org_sheet_subject_type import OrgSheetSubjectType
+from .organization_list_row import OrganizationListRow
 from .patch_access_personas_id_tools_tool_name_body import PatchAccessPersonasIdToolsToolNameBody
 from .patch_access_personas_id_tools_tool_name_response_200 import (
     PatchAccessPersonasIdToolsToolNameResponse200,
@@ -1051,6 +1098,8 @@ from .patch_registry_registries_registry_id_entries_entry_id_services_service_id
 from .patch_registry_registries_registry_id_entries_entry_id_services_service_id_body_pricing_model import (
     PatchRegistryRegistriesRegistryIdEntriesEntryIdServicesServiceIdBodyPricingModel,
 )
+from .patch_shipr_repos_id_body import PatchShiprReposIdBody
+from .patch_shipr_repos_id_body_env_branches import PatchShiprReposIdBodyEnvBranches
 from .pending_user import PendingUser
 from .pending_user_status import PendingUserStatus
 from .persona_bootstrap import PersonaBootstrap
@@ -1287,6 +1336,8 @@ from .post_customer_login_mfa_body import PostCustomerLoginMfaBody
 from .post_customer_login_mfa_body_method import PostCustomerLoginMfaBodyMethod
 from .post_customer_login_mfa_sms_send_body import PostCustomerLoginMfaSmsSendBody
 from .post_customer_login_mfa_sms_send_response_202 import PostCustomerLoginMfaSmsSendResponse202
+from .post_customer_memberships_body import PostCustomerMembershipsBody
+from .post_customer_memberships_response_200 import PostCustomerMembershipsResponse200
 from .post_customer_refresh_body import PostCustomerRefreshBody
 from .post_customer_register_body import PostCustomerRegisterBody
 from .post_customer_resolve_body import PostCustomerResolveBody
@@ -1773,6 +1824,41 @@ from .post_registry_registries_registry_id_entries_entry_id_services_body_pricin
 )
 from .post_settings_notifications_body import PostSettingsNotificationsBody
 from .post_settings_notifications_response_201 import PostSettingsNotificationsResponse201
+from .post_shipr_groups_body import PostShiprGroupsBody
+from .post_shipr_groups_response_201 import PostShiprGroupsResponse201
+from .post_shipr_register_body import PostShiprRegisterBody
+from .post_shipr_register_response_202 import PostShiprRegisterResponse202
+from .post_shipr_repos_id_deploy_body import PostShiprReposIdDeployBody
+from .post_shipr_repos_id_deploy_body_environments_item import (
+    PostShiprReposIdDeployBodyEnvironmentsItem,
+)
+from .post_shipr_repos_id_deploy_body_options import PostShiprReposIdDeployBodyOptions
+from .post_shipr_repos_id_deploy_response_202 import PostShiprReposIdDeployResponse202
+from .post_shipr_repos_id_prepare_body import PostShiprReposIdPrepareBody
+from .post_shipr_repos_id_prepare_body_environments_item import (
+    PostShiprReposIdPrepareBodyEnvironmentsItem,
+)
+from .post_shipr_repos_id_prepare_body_options import PostShiprReposIdPrepareBodyOptions
+from .post_shipr_repos_id_prepare_response_202 import PostShiprReposIdPrepareResponse202
+from .post_shipr_repos_id_status_body import PostShiprReposIdStatusBody
+from .post_shipr_repos_id_status_body_environments_item import (
+    PostShiprReposIdStatusBodyEnvironmentsItem,
+)
+from .post_shipr_repos_id_status_body_options import PostShiprReposIdStatusBodyOptions
+from .post_shipr_repos_id_status_response_202 import PostShiprReposIdStatusResponse202
+from .post_shipr_repos_id_unregister_body import PostShiprReposIdUnregisterBody
+from .post_shipr_repos_id_unregister_body_environments_item import (
+    PostShiprReposIdUnregisterBodyEnvironmentsItem,
+)
+from .post_shipr_repos_id_unregister_body_options import PostShiprReposIdUnregisterBodyOptions
+from .post_shipr_repos_id_unregister_response_202 import PostShiprReposIdUnregisterResponse202
+from .post_shipr_runs_body import PostShiprRunsBody
+from .post_shipr_runs_body_environments_item import PostShiprRunsBodyEnvironmentsItem
+from .post_shipr_runs_body_operation import PostShiprRunsBodyOperation
+from .post_shipr_runs_body_options import PostShiprRunsBodyOptions
+from .post_shipr_runs_body_scope_kind import PostShiprRunsBodyScopeKind
+from .post_shipr_runs_id_cancel_response_200 import PostShiprRunsIdCancelResponse200
+from .post_shipr_runs_response_202 import PostShiprRunsResponse202
 from .post_storage_uploads_body import PostStorageUploadsBody
 from .post_system_audit_events_body import PostSystemAuditEventsBody
 from .post_system_audit_events_response_201 import PostSystemAuditEventsResponse201
@@ -2077,6 +2163,9 @@ from .put_game_players_id_response_200 import PutGamePlayersIdResponse200
 from .put_gamification_realms_ecosystem_id_config_body import (
     PutGamificationRealmsEcosystemIdConfigBody,
 )
+from .put_gamification_realms_ecosystem_id_config_body_mode import (
+    PutGamificationRealmsEcosystemIdConfigBodyMode,
+)
 from .put_gamification_realms_ecosystem_id_config_body_skin import (
     PutGamificationRealmsEcosystemIdConfigBodySkin,
 )
@@ -2284,6 +2373,13 @@ from .put_project_work_items_id_fields_body_values_item import (
 )
 from .put_settings_notifications_id_body import PutSettingsNotificationsIdBody
 from .put_settings_notifications_id_response_200 import PutSettingsNotificationsIdResponse200
+from .put_shipr_groups_id_body import PutShiprGroupsIdBody
+from .put_shipr_groups_id_response_200 import PutShiprGroupsIdResponse200
+from .put_shipr_repos_id_personas_body import PutShiprReposIdPersonasBody
+from .put_shipr_repos_id_personas_response_200 import PutShiprReposIdPersonasResponse200
+from .put_shipr_repos_id_platforms_kind_body import PutShiprReposIdPlatformsKindBody
+from .put_shipr_repos_id_platforms_kind_response_200 import PutShiprReposIdPlatformsKindResponse200
+from .put_shipr_repos_id_platforms_kind_response_201 import PutShiprReposIdPlatformsKindResponse201
 from .put_system_admin_notes_response_200 import PutSystemAdminNotesResponse200
 from .put_system_audit_events_id_body import PutSystemAuditEventsIdBody
 from .put_system_audit_events_id_response_200 import PutSystemAuditEventsIdResponse200
@@ -2381,6 +2477,26 @@ from .send_invite_channel import SendInviteChannel
 from .send_invites_body import SendInvitesBody
 from .send_result import SendResult
 from .server_bag import ServerBag
+from .shipr_dev_repo import ShiprDevRepo
+from .shipr_group import ShiprGroup
+from .shipr_ladder import ShiprLadder
+from .shipr_ladder_rows_item import ShiprLadderRowsItem
+from .shipr_ladder_tips import ShiprLadderTips
+from .shipr_persona import ShiprPersona
+from .shipr_repo import ShiprRepo
+from .shipr_repo_env_branches import ShiprRepoEnvBranches
+from .shipr_repo_provisioned_type_0 import ShiprRepoProvisionedType0
+from .shipr_run import ShiprRun
+from .shipr_run_event import ShiprRunEvent
+from .shipr_run_event_stream import ShiprRunEventStream
+from .shipr_run_operation import ShiprRunOperation
+from .shipr_run_scope_kind import ShiprRunScopeKind
+from .shipr_run_state import ShiprRunState
+from .shipr_run_step import ShiprRunStep
+from .shipr_run_step_detail_type_0 import ShiprRunStepDetailType0
+from .shipr_run_step_stage import ShiprRunStepStage
+from .shipr_run_step_state import ShiprRunStepState
+from .shipr_run_summary_type_0 import ShiprRunSummaryType0
 from .signup_list_public import SignupListPublic
 from .signup_list_public_status import SignupListPublicStatus
 from .storage_attachment import StorageAttachment
@@ -2588,6 +2704,7 @@ __all__ = (
     "CustomerResolveResult",
     "DeleteAudienceCampaignsCampaignIdResponse200",
     "DeleteAudienceListsListIdMembersContactIdResponse200",
+    "DeleteCustomerMembershipsCustomerIdResponse200",
     "DeleteEcosystemFeatureFlagsIdKeyResponse200",
     "DeleteEcosystemServerBagIdKeyResponse200",
     "DeleteGamificationRealmsEcosystemIdBadgesIdResponse200",
@@ -2716,6 +2833,7 @@ __all__ = (
     "GamificationRealmBadgeTierType2Type1",
     "GamificationRealmBadgeTierType3Type1",
     "GamificationRealmConfig",
+    "GamificationRealmConfigMode",
     "GamificationRealmConfigSkin",
     "GamificationRealmConfigSurfaces",
     "GamificationRealmConfigUpdate",
@@ -2843,6 +2961,7 @@ __all__ = (
     "GetContentUrlsResponse200Item",
     "GetCustomerCustomersIdResponse200",
     "GetCustomerCustomersResponse200Item",
+    "GetCustomerMembershipsResponse200Item",
     "GetCustomerTransferPreviewResponse200",
     "GetCustomerTransferPreviewResponse200ConflictsItem",
     "GetDiscussionTopicsIdPostsResponse200",
@@ -2927,6 +3046,7 @@ __all__ = (
     "GetIntegrationsAdminConfigsResponse200",
     "GetIntegrationsEcosystemsEcosystemIdProviderConfigsResponse200",
     "GetIntegrationsProvidersProviderIdAuthUrlResponse200",
+    "GetIntegrationsProvidersProviderIdInstallUrlResponse200",
     "GetIntegrationsProvidersResponse200",
     "GetIntegrationsResponse200",
     "GetMonitoringEndpointsIdResponse200",
@@ -3035,6 +3155,26 @@ __all__ = (
     "GetSearchNotesResponse200",
     "GetSettingsNotificationsIdResponse200",
     "GetSettingsNotificationsResponse200Item",
+    "GetShiprConnectionsIdDeclarationResponse200",
+    "GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item",
+    "GetShiprConnectionsIdRepositoriesResponse200",
+    "GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem",
+    "GetShiprConnectionsResponse200",
+    "GetShiprConnectionsResponse200ConnectionsItem",
+    "GetShiprGroupsIdResponse200",
+    "GetShiprGroupsResponse200Item",
+    "GetShiprReposIdPlatformsResponse200",
+    "GetShiprReposIdPlatformsResponse200PlatformsItem",
+    "GetShiprReposIdPlatformsResponse200PlatformsItemKind",
+    "GetShiprReposIdResponse200",
+    "GetShiprReposResponse200",
+    "GetShiprReposResponse200ItemsItem",
+    "GetShiprReposResponse200ItemsItemStateType0",
+    "GetShiprReposResponse200VerbsItem",
+    "GetShiprReposResponse200Workspace",
+    "GetShiprRunsIdEventsResponse200",
+    "GetShiprRunsIdResponse200",
+    "GetShiprRunsResponse200",
     "GetSystemAuditEventsIdResponse200",
     "GetSystemAuditEventsResponse200Item",
     "GetSystemDebugEnvResponse200",
@@ -3071,6 +3211,8 @@ __all__ = (
     "IntegrationConnectAppPassword",
     "IntegrationConnectAppPasswordType",
     "IntegrationConnectFields",
+    "IntegrationConnectGithubApp",
+    "IntegrationConnectGithubAppType",
     "IntegrationConnectOAuth",
     "IntegrationConnectOAuthInstance",
     "IntegrationConnectOAuthInstanceType",
@@ -3148,6 +3290,7 @@ __all__ = (
     "OrgSheet",
     "OrgSheetStats",
     "OrgSheetSubjectType",
+    "OrganizationListRow",
     "PatchAccessPersonasIdToolsToolNameBody",
     "PatchAccessPersonasIdToolsToolNameResponse200",
     "PatchAccessRolesIdBody",
@@ -3216,6 +3359,8 @@ __all__ = (
     "PatchRegistryRegistriesRegistryIdEntriesEntryIdServicesServiceIdBody",
     "PatchRegistryRegistriesRegistryIdEntriesEntryIdServicesServiceIdBodyDeliveryMode",
     "PatchRegistryRegistriesRegistryIdEntriesEntryIdServicesServiceIdBodyPricingModel",
+    "PatchShiprReposIdBody",
+    "PatchShiprReposIdBodyEnvBranches",
     "PendingUser",
     "PendingUserStatus",
     "PersonaBootstrap",
@@ -3406,6 +3551,8 @@ __all__ = (
     "PostCustomerLoginMfaBodyMethod",
     "PostCustomerLoginMfaSmsSendBody",
     "PostCustomerLoginMfaSmsSendResponse202",
+    "PostCustomerMembershipsBody",
+    "PostCustomerMembershipsResponse200",
     "PostCustomerRefreshBody",
     "PostCustomerRegisterBody",
     "PostCustomerResolveBody",
@@ -3692,6 +3839,33 @@ __all__ = (
     "PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel",
     "PostSettingsNotificationsBody",
     "PostSettingsNotificationsResponse201",
+    "PostShiprGroupsBody",
+    "PostShiprGroupsResponse201",
+    "PostShiprRegisterBody",
+    "PostShiprRegisterResponse202",
+    "PostShiprReposIdDeployBody",
+    "PostShiprReposIdDeployBodyEnvironmentsItem",
+    "PostShiprReposIdDeployBodyOptions",
+    "PostShiprReposIdDeployResponse202",
+    "PostShiprReposIdPrepareBody",
+    "PostShiprReposIdPrepareBodyEnvironmentsItem",
+    "PostShiprReposIdPrepareBodyOptions",
+    "PostShiprReposIdPrepareResponse202",
+    "PostShiprReposIdStatusBody",
+    "PostShiprReposIdStatusBodyEnvironmentsItem",
+    "PostShiprReposIdStatusBodyOptions",
+    "PostShiprReposIdStatusResponse202",
+    "PostShiprReposIdUnregisterBody",
+    "PostShiprReposIdUnregisterBodyEnvironmentsItem",
+    "PostShiprReposIdUnregisterBodyOptions",
+    "PostShiprReposIdUnregisterResponse202",
+    "PostShiprRunsBody",
+    "PostShiprRunsBodyEnvironmentsItem",
+    "PostShiprRunsBodyOperation",
+    "PostShiprRunsBodyOptions",
+    "PostShiprRunsBodyScopeKind",
+    "PostShiprRunsIdCancelResponse200",
+    "PostShiprRunsResponse202",
     "PostStorageUploadsBody",
     "PostSystemAuditEventsBody",
     "PostSystemAuditEventsResponse201",
@@ -3958,6 +4132,7 @@ __all__ = (
     "PutGamePlayersIdBody",
     "PutGamePlayersIdResponse200",
     "PutGamificationRealmsEcosystemIdConfigBody",
+    "PutGamificationRealmsEcosystemIdConfigBodyMode",
     "PutGamificationRealmsEcosystemIdConfigBodySkin",
     "PutGamificationRealmsEcosystemIdConfigBodySurfaces",
     "PutGamificationRealmsEcosystemIdLevelsBody",
@@ -4059,6 +4234,13 @@ __all__ = (
     "PutProjectWorkItemsIdFieldsBodyValuesItem",
     "PutSettingsNotificationsIdBody",
     "PutSettingsNotificationsIdResponse200",
+    "PutShiprGroupsIdBody",
+    "PutShiprGroupsIdResponse200",
+    "PutShiprReposIdPersonasBody",
+    "PutShiprReposIdPersonasResponse200",
+    "PutShiprReposIdPlatformsKindBody",
+    "PutShiprReposIdPlatformsKindResponse200",
+    "PutShiprReposIdPlatformsKindResponse201",
     "PutSystemAdminNotesResponse200",
     "PutSystemAuditEventsIdBody",
     "PutSystemAuditEventsIdResponse200",
@@ -4144,6 +4326,26 @@ __all__ = (
     "SendInvitesBody",
     "SendResult",
     "ServerBag",
+    "ShiprDevRepo",
+    "ShiprGroup",
+    "ShiprLadder",
+    "ShiprLadderRowsItem",
+    "ShiprLadderTips",
+    "ShiprPersona",
+    "ShiprRepo",
+    "ShiprRepoEnvBranches",
+    "ShiprRepoProvisionedType0",
+    "ShiprRun",
+    "ShiprRunEvent",
+    "ShiprRunEventStream",
+    "ShiprRunOperation",
+    "ShiprRunScopeKind",
+    "ShiprRunState",
+    "ShiprRunStep",
+    "ShiprRunStepDetailType0",
+    "ShiprRunStepStage",
+    "ShiprRunStepState",
+    "ShiprRunSummaryType0",
     "SignupListPublic",
     "SignupListPublicStatus",
     "StorageAttachment",

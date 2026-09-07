@@ -1,0 +1,229 @@
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..models.shipr_run_operation import ShiprRunOperation
+from ..models.shipr_run_scope_kind import ShiprRunScopeKind
+from ..models.shipr_run_state import ShiprRunState
+from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.shipr_run_summary_type_0 import ShiprRunSummaryType0
+
+
+T = TypeVar("T", bound="ShiprRun")
+
+
+@_attrs_define
+class ShiprRun:
+    """One queued or completed operation over a scope.
+
+    Attributes:
+        id (Union[Unset, str]):
+        operation (Union[Unset, ShiprRunOperation]):
+        scope_kind (Union[Unset, ShiprRunScopeKind]):
+        scope_id (Union[None, Unset, str]):
+        environments (Union[Unset, list[str]]):
+        state (Union[Unset, ShiprRunState]):
+        summary (Union['ShiprRunSummaryType0', None, Unset]):
+        started_at (Union[None, Unset, str]):
+        finished_at (Union[None, Unset, str]):
+        created_at (Union[Unset, str]):
+    """
+
+    id: Unset | str = UNSET
+    operation: Unset | ShiprRunOperation = UNSET
+    scope_kind: Unset | ShiprRunScopeKind = UNSET
+    scope_id: None | Unset | str = UNSET
+    environments: Unset | list[str] = UNSET
+    state: Unset | ShiprRunState = UNSET
+    summary: Union["ShiprRunSummaryType0", None, Unset] = UNSET
+    started_at: None | Unset | str = UNSET
+    finished_at: None | Unset | str = UNSET
+    created_at: Unset | str = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.shipr_run_summary_type_0 import ShiprRunSummaryType0
+
+        id = self.id
+
+        operation: Unset | str = UNSET
+        if not isinstance(self.operation, Unset):
+            operation = self.operation.value
+
+        scope_kind: Unset | str = UNSET
+        if not isinstance(self.scope_kind, Unset):
+            scope_kind = self.scope_kind.value
+
+        scope_id: None | Unset | str
+        if isinstance(self.scope_id, Unset):
+            scope_id = UNSET
+        else:
+            scope_id = self.scope_id
+
+        environments: Unset | list[str] = UNSET
+        if not isinstance(self.environments, Unset):
+            environments = self.environments
+
+        state: Unset | str = UNSET
+        if not isinstance(self.state, Unset):
+            state = self.state.value
+
+        summary: None | Unset | dict[str, Any]
+        if isinstance(self.summary, Unset):
+            summary = UNSET
+        elif isinstance(self.summary, ShiprRunSummaryType0):
+            summary = self.summary.to_dict()
+        else:
+            summary = self.summary
+
+        started_at: None | Unset | str
+        if isinstance(self.started_at, Unset):
+            started_at = UNSET
+        else:
+            started_at = self.started_at
+
+        finished_at: None | Unset | str
+        if isinstance(self.finished_at, Unset):
+            finished_at = UNSET
+        else:
+            finished_at = self.finished_at
+
+        created_at = self.created_at
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update({})
+        if id is not UNSET:
+            field_dict["id"] = id
+        if operation is not UNSET:
+            field_dict["operation"] = operation
+        if scope_kind is not UNSET:
+            field_dict["scopeKind"] = scope_kind
+        if scope_id is not UNSET:
+            field_dict["scopeId"] = scope_id
+        if environments is not UNSET:
+            field_dict["environments"] = environments
+        if state is not UNSET:
+            field_dict["state"] = state
+        if summary is not UNSET:
+            field_dict["summary"] = summary
+        if started_at is not UNSET:
+            field_dict["startedAt"] = started_at
+        if finished_at is not UNSET:
+            field_dict["finishedAt"] = finished_at
+        if created_at is not UNSET:
+            field_dict["createdAt"] = created_at
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.shipr_run_summary_type_0 import ShiprRunSummaryType0
+
+        d = dict(src_dict)
+        id = d.pop("id", UNSET)
+
+        _operation = d.pop("operation", UNSET)
+        operation: Unset | ShiprRunOperation
+        if isinstance(_operation, Unset):
+            operation = UNSET
+        else:
+            operation = ShiprRunOperation(_operation)
+
+        _scope_kind = d.pop("scopeKind", UNSET)
+        scope_kind: Unset | ShiprRunScopeKind
+        if isinstance(_scope_kind, Unset):
+            scope_kind = UNSET
+        else:
+            scope_kind = ShiprRunScopeKind(_scope_kind)
+
+        def _parse_scope_id(data: object) -> None | Unset | str:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | Unset | str, data)
+
+        scope_id = _parse_scope_id(d.pop("scopeId", UNSET))
+
+        environments = cast(list[str], d.pop("environments", UNSET))
+
+        _state = d.pop("state", UNSET)
+        state: Unset | ShiprRunState
+        if isinstance(_state, Unset):
+            state = UNSET
+        else:
+            state = ShiprRunState(_state)
+
+        def _parse_summary(data: object) -> Union["ShiprRunSummaryType0", None, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                summary_type_0 = ShiprRunSummaryType0.from_dict(data)
+
+                return summary_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["ShiprRunSummaryType0", None, Unset], data)
+
+        summary = _parse_summary(d.pop("summary", UNSET))
+
+        def _parse_started_at(data: object) -> None | Unset | str:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | Unset | str, data)
+
+        started_at = _parse_started_at(d.pop("startedAt", UNSET))
+
+        def _parse_finished_at(data: object) -> None | Unset | str:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | Unset | str, data)
+
+        finished_at = _parse_finished_at(d.pop("finishedAt", UNSET))
+
+        created_at = d.pop("createdAt", UNSET)
+
+        shipr_run = cls(
+            id=id,
+            operation=operation,
+            scope_kind=scope_kind,
+            scope_id=scope_id,
+            environments=environments,
+            state=state,
+            summary=summary,
+            started_at=started_at,
+            finished_at=finished_at,
+            created_at=created_at,
+        )
+
+        shipr_run.additional_properties = d
+        return shipr_run
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

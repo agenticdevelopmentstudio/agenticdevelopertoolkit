@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.put_gamification_realms_ecosystem_id_config_body_mode import (
+    PutGamificationRealmsEcosystemIdConfigBodyMode,
+)
 from ..models.put_gamification_realms_ecosystem_id_config_body_skin import (
     PutGamificationRealmsEcosystemIdConfigBodySkin,
 )
@@ -23,14 +26,14 @@ T = TypeVar("T", bound="PutGamificationRealmsEcosystemIdConfigBody")
 class PutGamificationRealmsEcosystemIdConfigBody:
     """
     Attributes:
-        enabled (Union[Unset, bool]):
+        mode (Union[Unset, PutGamificationRealmsEcosystemIdConfigBodyMode]):
         skin (Union[Unset, PutGamificationRealmsEcosystemIdConfigBodySkin]):
         surfaces (Union[Unset, PutGamificationRealmsEcosystemIdConfigBodySurfaces]):
         seasons (Union['GamificationSeasonsType0', None, Unset]):
         timezone (Union[Unset, str]): IANA zone for the realm's day/streak boundary
     """
 
-    enabled: Unset | bool = UNSET
+    mode: Unset | PutGamificationRealmsEcosystemIdConfigBodyMode = UNSET
     skin: Unset | PutGamificationRealmsEcosystemIdConfigBodySkin = UNSET
     surfaces: Union[Unset, "PutGamificationRealmsEcosystemIdConfigBodySurfaces"] = UNSET
     seasons: Union["GamificationSeasonsType0", None, Unset] = UNSET
@@ -40,7 +43,9 @@ class PutGamificationRealmsEcosystemIdConfigBody:
     def to_dict(self) -> dict[str, Any]:
         from ..models.gamification_seasons_type_0 import GamificationSeasonsType0
 
-        enabled = self.enabled
+        mode: Unset | str = UNSET
+        if not isinstance(self.mode, Unset):
+            mode = self.mode.value
 
         skin: Unset | str = UNSET
         if not isinstance(self.skin, Unset):
@@ -63,8 +68,8 @@ class PutGamificationRealmsEcosystemIdConfigBody:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if enabled is not UNSET:
-            field_dict["enabled"] = enabled
+        if mode is not UNSET:
+            field_dict["mode"] = mode
         if skin is not UNSET:
             field_dict["skin"] = skin
         if surfaces is not UNSET:
@@ -84,7 +89,12 @@ class PutGamificationRealmsEcosystemIdConfigBody:
         )
 
         d = dict(src_dict)
-        enabled = d.pop("enabled", UNSET)
+        _mode = d.pop("mode", UNSET)
+        mode: Unset | PutGamificationRealmsEcosystemIdConfigBodyMode
+        if isinstance(_mode, Unset):
+            mode = UNSET
+        else:
+            mode = PutGamificationRealmsEcosystemIdConfigBodyMode(_mode)
 
         _skin = d.pop("skin", UNSET)
         skin: Unset | PutGamificationRealmsEcosystemIdConfigBodySkin
@@ -122,7 +132,7 @@ class PutGamificationRealmsEcosystemIdConfigBody:
         timezone = d.pop("timezone", UNSET)
 
         put_gamification_realms_ecosystem_id_config_body = cls(
-            enabled=enabled,
+            mode=mode,
             skin=skin,
             surfaces=surfaces,
             seasons=seasons,

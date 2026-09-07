@@ -1,0 +1,158 @@
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..models.get_shipr_repos_response_200_verbs_item import GetShiprReposResponse200VerbsItem
+from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.get_shipr_repos_response_200_items_item import GetShiprReposResponse200ItemsItem
+    from ..models.get_shipr_repos_response_200_workspace import GetShiprReposResponse200Workspace
+    from ..models.shipr_group import ShiprGroup
+    from ..models.shipr_persona import ShiprPersona
+
+
+T = TypeVar("T", bound="GetShiprReposResponse200")
+
+
+@_attrs_define
+class GetShiprReposResponse200:
+    """
+    Attributes:
+        groups (list['ShiprGroup']):
+        items (list['GetShiprReposResponse200ItemsItem']):
+        workspace (Union[Unset, GetShiprReposResponse200Workspace]):
+        verbs (Union[Unset, list[GetShiprReposResponse200VerbsItem]]): What the caller may do at workspace level. A hint
+            for what to DRAW — every route re-derives its own verb.
+        personas (Union[Unset, list['ShiprPersona']]): Every persona this workspace owns — the vocabulary for
+            `items[].personaIds`, carried once here rather than repeated on every row.
+    """
+
+    groups: list["ShiprGroup"]
+    items: list["GetShiprReposResponse200ItemsItem"]
+    workspace: Union[Unset, "GetShiprReposResponse200Workspace"] = UNSET
+    verbs: Unset | list[GetShiprReposResponse200VerbsItem] = UNSET
+    personas: Unset | list["ShiprPersona"] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        groups = []
+        for groups_item_data in self.groups:
+            groups_item = groups_item_data.to_dict()
+            groups.append(groups_item)
+
+        items = []
+        for items_item_data in self.items:
+            items_item = items_item_data.to_dict()
+            items.append(items_item)
+
+        workspace: Unset | dict[str, Any] = UNSET
+        if not isinstance(self.workspace, Unset):
+            workspace = self.workspace.to_dict()
+
+        verbs: Unset | list[str] = UNSET
+        if not isinstance(self.verbs, Unset):
+            verbs = []
+            for verbs_item_data in self.verbs:
+                verbs_item = verbs_item_data.value
+                verbs.append(verbs_item)
+
+        personas: Unset | list[dict[str, Any]] = UNSET
+        if not isinstance(self.personas, Unset):
+            personas = []
+            for personas_item_data in self.personas:
+                personas_item = personas_item_data.to_dict()
+                personas.append(personas_item)
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "groups": groups,
+                "items": items,
+            }
+        )
+        if workspace is not UNSET:
+            field_dict["workspace"] = workspace
+        if verbs is not UNSET:
+            field_dict["verbs"] = verbs
+        if personas is not UNSET:
+            field_dict["personas"] = personas
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.get_shipr_repos_response_200_items_item import (
+            GetShiprReposResponse200ItemsItem,
+        )
+        from ..models.get_shipr_repos_response_200_workspace import (
+            GetShiprReposResponse200Workspace,
+        )
+        from ..models.shipr_group import ShiprGroup
+        from ..models.shipr_persona import ShiprPersona
+
+        d = dict(src_dict)
+        groups = []
+        _groups = d.pop("groups")
+        for groups_item_data in _groups:
+            groups_item = ShiprGroup.from_dict(groups_item_data)
+
+            groups.append(groups_item)
+
+        items = []
+        _items = d.pop("items")
+        for items_item_data in _items:
+            items_item = GetShiprReposResponse200ItemsItem.from_dict(items_item_data)
+
+            items.append(items_item)
+
+        _workspace = d.pop("workspace", UNSET)
+        workspace: Unset | GetShiprReposResponse200Workspace
+        if isinstance(_workspace, Unset):
+            workspace = UNSET
+        else:
+            workspace = GetShiprReposResponse200Workspace.from_dict(_workspace)
+
+        verbs = []
+        _verbs = d.pop("verbs", UNSET)
+        for verbs_item_data in _verbs or []:
+            verbs_item = GetShiprReposResponse200VerbsItem(verbs_item_data)
+
+            verbs.append(verbs_item)
+
+        personas = []
+        _personas = d.pop("personas", UNSET)
+        for personas_item_data in _personas or []:
+            personas_item = ShiprPersona.from_dict(personas_item_data)
+
+            personas.append(personas_item)
+
+        get_shipr_repos_response_200 = cls(
+            groups=groups,
+            items=items,
+            workspace=workspace,
+            verbs=verbs,
+            personas=personas,
+        )
+
+        get_shipr_repos_response_200.additional_properties = d
+        return get_shipr_repos_response_200
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

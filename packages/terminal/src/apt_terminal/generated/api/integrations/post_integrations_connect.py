@@ -7,6 +7,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.integration_connect_api_key import IntegrationConnectApiKey
 from ...models.integration_connect_app_password import IntegrationConnectAppPassword
+from ...models.integration_connect_github_app import IntegrationConnectGithubApp
 from ...models.integration_connect_o_auth import IntegrationConnectOAuth
 from ...models.integration_connect_o_auth_instance import IntegrationConnectOAuthInstance
 from ...models.integration_connect_plaid_link import IntegrationConnectPlaidLink
@@ -20,6 +21,7 @@ def _get_kwargs(
     body: Union[
         "IntegrationConnectApiKey",
         "IntegrationConnectAppPassword",
+        "IntegrationConnectGithubApp",
         "IntegrationConnectOAuth",
         "IntegrationConnectOAuthInstance",
         "IntegrationConnectPlaidLink",
@@ -38,6 +40,7 @@ def _get_kwargs(
         or isinstance(body, IntegrationConnectApiKey)
         or isinstance(body, IntegrationConnectAppPassword)
         or isinstance(body, IntegrationConnectPlaidLink)
+        or isinstance(body, IntegrationConnectOAuthInstance)
     ):
         _kwargs["json"] = body.to_dict()
     else:
@@ -100,6 +103,7 @@ def sync_detailed(
     body: Union[
         "IntegrationConnectApiKey",
         "IntegrationConnectAppPassword",
+        "IntegrationConnectGithubApp",
         "IntegrationConnectOAuth",
         "IntegrationConnectOAuthInstance",
         "IntegrationConnectPlaidLink",
@@ -113,8 +117,8 @@ def sync_detailed(
 
     Args:
         body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectOAuth', 'IntegrationConnectOAuthInstance',
-            'IntegrationConnectPlaidLink']):
+            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
+            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,6 +145,7 @@ def sync(
     body: Union[
         "IntegrationConnectApiKey",
         "IntegrationConnectAppPassword",
+        "IntegrationConnectGithubApp",
         "IntegrationConnectOAuth",
         "IntegrationConnectOAuthInstance",
         "IntegrationConnectPlaidLink",
@@ -154,8 +159,8 @@ def sync(
 
     Args:
         body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectOAuth', 'IntegrationConnectOAuthInstance',
-            'IntegrationConnectPlaidLink']):
+            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
+            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -177,6 +182,7 @@ async def asyncio_detailed(
     body: Union[
         "IntegrationConnectApiKey",
         "IntegrationConnectAppPassword",
+        "IntegrationConnectGithubApp",
         "IntegrationConnectOAuth",
         "IntegrationConnectOAuthInstance",
         "IntegrationConnectPlaidLink",
@@ -190,8 +196,8 @@ async def asyncio_detailed(
 
     Args:
         body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectOAuth', 'IntegrationConnectOAuthInstance',
-            'IntegrationConnectPlaidLink']):
+            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
+            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -216,6 +222,7 @@ async def asyncio(
     body: Union[
         "IntegrationConnectApiKey",
         "IntegrationConnectAppPassword",
+        "IntegrationConnectGithubApp",
         "IntegrationConnectOAuth",
         "IntegrationConnectOAuthInstance",
         "IntegrationConnectPlaidLink",
@@ -229,8 +236,8 @@ async def asyncio(
 
     Args:
         body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectOAuth', 'IntegrationConnectOAuthInstance',
-            'IntegrationConnectPlaidLink']):
+            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
+            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

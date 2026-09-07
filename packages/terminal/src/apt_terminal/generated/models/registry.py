@@ -26,6 +26,8 @@ class Registry:
         description (str):
         category_root (str): the industry half of <industry>.<service-type>
         entry_term (str): what this registry calls an entry, e.g. "coach"
+        tags (list[str]): Discovery labels the owner puts on the registry. A SET: the server trims each label and drops
+            duplicates, so what comes back is not necessarily what was sent.
         visibility (RegistryVisibility):
         submission_policy (RegistrySubmissionPolicy):
         services_enabled (bool):
@@ -47,6 +49,7 @@ class Registry:
     description: str
     category_root: str
     entry_term: str
+    tags: list[str]
     visibility: RegistryVisibility
     submission_policy: RegistrySubmissionPolicy
     services_enabled: bool
@@ -77,6 +80,8 @@ class Registry:
         category_root = self.category_root
 
         entry_term = self.entry_term
+
+        tags = self.tags
 
         visibility = self.visibility.value
 
@@ -116,6 +121,7 @@ class Registry:
                 "description": description,
                 "categoryRoot": category_root,
                 "entryTerm": entry_term,
+                "tags": tags,
                 "visibility": visibility,
                 "submissionPolicy": submission_policy,
                 "servicesEnabled": services_enabled,
@@ -153,6 +159,8 @@ class Registry:
         category_root = d.pop("categoryRoot")
 
         entry_term = d.pop("entryTerm")
+
+        tags = cast(list[str], d.pop("tags"))
 
         visibility = RegistryVisibility(d.pop("visibility"))
 
@@ -195,6 +203,7 @@ class Registry:
             description=description,
             category_root=category_root,
             entry_term=entry_term,
+            tags=tags,
             visibility=visibility,
             submission_policy=submission_policy,
             services_enabled=services_enabled,

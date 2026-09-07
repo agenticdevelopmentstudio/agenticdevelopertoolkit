@@ -8,18 +8,26 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_organization_organizations_body import PostOrganizationOrganizationsBody
 from ...models.registry_provisioned_organization import RegistryProvisionedOrganization
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     body: PostOrganizationOrganizationsBody,
+    workspace: Unset | str = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
+
+    params: dict[str, Any] = {}
+
+    params["workspace"] = workspace
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/organization/organizations",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -48,6 +56,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
     if response.status_code == 409:
         response_409 = Error.from_dict(response.json())
 
@@ -74,10 +87,17 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: PostOrganizationOrganizationsBody,
+    workspace: Unset | str = UNSET,
 ) -> Response[Error | RegistryProvisionedOrganization]:
     """Create + provision an organization and its ownership chain
 
+     Creates the organization owned by `workspace` (default: the caller personal workspace). Creating
+    into an ORGANIZATION workspace requires admin of that org or of one above it in its ownership chain
+    (or the site-admin grant) — 403 otherwise: the new org lands on that workspace's rail and is
+    governed through its chain.
+
     Args:
+        workspace (Union[Unset, str]):
         body (PostOrganizationOrganizationsBody):
 
     Raises:
@@ -90,6 +110,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        workspace=workspace,
     )
 
     response = client.get_httpx_client().request(
@@ -103,10 +124,17 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: PostOrganizationOrganizationsBody,
+    workspace: Unset | str = UNSET,
 ) -> Error | RegistryProvisionedOrganization | None:
     """Create + provision an organization and its ownership chain
 
+     Creates the organization owned by `workspace` (default: the caller personal workspace). Creating
+    into an ORGANIZATION workspace requires admin of that org or of one above it in its ownership chain
+    (or the site-admin grant) — 403 otherwise: the new org lands on that workspace's rail and is
+    governed through its chain.
+
     Args:
+        workspace (Union[Unset, str]):
         body (PostOrganizationOrganizationsBody):
 
     Raises:
@@ -120,6 +148,7 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
+        workspace=workspace,
     ).parsed
 
 
@@ -127,10 +156,17 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: PostOrganizationOrganizationsBody,
+    workspace: Unset | str = UNSET,
 ) -> Response[Error | RegistryProvisionedOrganization]:
     """Create + provision an organization and its ownership chain
 
+     Creates the organization owned by `workspace` (default: the caller personal workspace). Creating
+    into an ORGANIZATION workspace requires admin of that org or of one above it in its ownership chain
+    (or the site-admin grant) — 403 otherwise: the new org lands on that workspace's rail and is
+    governed through its chain.
+
     Args:
+        workspace (Union[Unset, str]):
         body (PostOrganizationOrganizationsBody):
 
     Raises:
@@ -143,6 +179,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         body=body,
+        workspace=workspace,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -154,10 +191,17 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: PostOrganizationOrganizationsBody,
+    workspace: Unset | str = UNSET,
 ) -> Error | RegistryProvisionedOrganization | None:
     """Create + provision an organization and its ownership chain
 
+     Creates the organization owned by `workspace` (default: the caller personal workspace). Creating
+    into an ORGANIZATION workspace requires admin of that org or of one above it in its ownership chain
+    (or the site-admin grant) — 403 otherwise: the new org lands on that workspace's rail and is
+    governed through its chain.
+
     Args:
+        workspace (Union[Unset, str]):
         body (PostOrganizationOrganizationsBody):
 
     Raises:
@@ -172,5 +216,6 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
+            workspace=workspace,
         )
     ).parsed

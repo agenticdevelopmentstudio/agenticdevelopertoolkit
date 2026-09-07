@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -24,6 +24,7 @@ class PatchRegistryRegistriesIdBody:
         description (Union[Unset, str]):
         category_root (Union[Unset, str]):
         entry_term (Union[Unset, str]):
+        tags (Union[Unset, list[str]]): Discovery labels; trimmed and de-duplicated server-side.
         visibility (Union[Unset, PatchRegistryRegistriesIdBodyVisibility]):
         submission_policy (Union[Unset, PatchRegistryRegistriesIdBodySubmissionPolicy]):
         services_enabled (Union[Unset, bool]):
@@ -34,6 +35,7 @@ class PatchRegistryRegistriesIdBody:
     description: Unset | str = UNSET
     category_root: Unset | str = UNSET
     entry_term: Unset | str = UNSET
+    tags: Unset | list[str] = UNSET
     visibility: Unset | PatchRegistryRegistriesIdBodyVisibility = UNSET
     submission_policy: Unset | PatchRegistryRegistriesIdBodySubmissionPolicy = UNSET
     services_enabled: Unset | bool = UNSET
@@ -49,6 +51,10 @@ class PatchRegistryRegistriesIdBody:
         category_root = self.category_root
 
         entry_term = self.entry_term
+
+        tags: Unset | list[str] = UNSET
+        if not isinstance(self.tags, Unset):
+            tags = self.tags
 
         visibility: Unset | str = UNSET
         if not isinstance(self.visibility, Unset):
@@ -73,6 +79,8 @@ class PatchRegistryRegistriesIdBody:
             field_dict["categoryRoot"] = category_root
         if entry_term is not UNSET:
             field_dict["entryTerm"] = entry_term
+        if tags is not UNSET:
+            field_dict["tags"] = tags
         if visibility is not UNSET:
             field_dict["visibility"] = visibility
         if submission_policy is not UNSET:
@@ -94,6 +102,8 @@ class PatchRegistryRegistriesIdBody:
         category_root = d.pop("categoryRoot", UNSET)
 
         entry_term = d.pop("entryTerm", UNSET)
+
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         _visibility = d.pop("visibility", UNSET)
         visibility: Unset | PatchRegistryRegistriesIdBodyVisibility
@@ -117,6 +127,7 @@ class PatchRegistryRegistriesIdBody:
             description=description,
             category_root=category_root,
             entry_term=entry_term,
+            tags=tags,
             visibility=visibility,
             submission_policy=submission_policy,
             services_enabled=services_enabled,

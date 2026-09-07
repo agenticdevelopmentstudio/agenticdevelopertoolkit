@@ -22,7 +22,7 @@ class GameArtifact:
         id (str):
         game_id (str):
         kind (str):
-        role (str):
+        role (Union[None, str]):
         origin (str):
         visibility (GameArtifactVisibility):
         status (str):
@@ -43,7 +43,7 @@ class GameArtifact:
     id: str
     game_id: str
     kind: str
-    role: str
+    role: None | str
     origin: str
     visibility: GameArtifactVisibility
     status: str
@@ -71,6 +71,7 @@ class GameArtifact:
 
         kind = self.kind
 
+        role: None | str
         role = self.role
 
         origin = self.origin
@@ -189,7 +190,12 @@ class GameArtifact:
 
         kind = d.pop("kind")
 
-        role = d.pop("role")
+        def _parse_role(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        role = _parse_role(d.pop("role"))
 
         origin = d.pop("origin")
 

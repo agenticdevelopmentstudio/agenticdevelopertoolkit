@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.gamification_realm_config_mode import GamificationRealmConfigMode
 from ..models.gamification_realm_config_skin import GamificationRealmConfigSkin
 
 if TYPE_CHECKING:
@@ -19,7 +20,9 @@ class GamificationRealmConfig:
     """
     Attributes:
         ecosystem_id (str):
-        enabled (bool): false leaves telemetry flowing but suppresses awards/UI
+        mode (GamificationRealmConfigMode): 'none' leaves telemetry flowing but suppresses awards/UI; 'gamification'
+            turns on badges/levels/streaks/leaderboards; 'game' is a dedicated playable game, which brings gamification with
+            it
         skin (GamificationRealmConfigSkin):
         surfaces (GamificationRealmConfigSurfaces): Per-surface toggles; a surface is ON unless set false
         seasons (Union['GamificationSeasonsType0', None]):
@@ -27,7 +30,7 @@ class GamificationRealmConfig:
     """
 
     ecosystem_id: str
-    enabled: bool
+    mode: GamificationRealmConfigMode
     skin: GamificationRealmConfigSkin
     surfaces: "GamificationRealmConfigSurfaces"
     seasons: Union["GamificationSeasonsType0", None]
@@ -39,7 +42,7 @@ class GamificationRealmConfig:
 
         ecosystem_id = self.ecosystem_id
 
-        enabled = self.enabled
+        mode = self.mode.value
 
         skin = self.skin.value
 
@@ -58,7 +61,7 @@ class GamificationRealmConfig:
         field_dict.update(
             {
                 "ecosystemId": ecosystem_id,
-                "enabled": enabled,
+                "mode": mode,
                 "skin": skin,
                 "surfaces": surfaces,
                 "seasons": seasons,
@@ -76,7 +79,7 @@ class GamificationRealmConfig:
         d = dict(src_dict)
         ecosystem_id = d.pop("ecosystemId")
 
-        enabled = d.pop("enabled")
+        mode = GamificationRealmConfigMode(d.pop("mode"))
 
         skin = GamificationRealmConfigSkin(d.pop("skin"))
 
@@ -103,7 +106,7 @@ class GamificationRealmConfig:
 
         gamification_realm_config = cls(
             ecosystem_id=ecosystem_id,
-            enabled=enabled,
+            mode=mode,
             skin=skin,
             surfaces=surfaces,
             seasons=seasons,

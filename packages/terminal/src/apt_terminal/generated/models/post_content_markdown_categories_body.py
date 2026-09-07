@@ -14,8 +14,10 @@ class PostContentMarkdownCategoriesBody:
     """
     Attributes:
         name (str): The category name (unique per owner).
-        parent_ids (Union[Unset, list[str]]): Ids of the categories this one sits under — any number, or none. Omit or
-            send [] for an unfiled category.
+        parent_ids (Union[Unset, list[str]]): Ids of the categories this one sits under at creation — up to 8, or none.
+            Omit or send [] for an unfiled category. This cap bounds validation cost on the create call only; a category can
+            end up under any number of parents in total by adding further edges afterwards, via POST /content/category-
+            edges.
     """
 
     name: str

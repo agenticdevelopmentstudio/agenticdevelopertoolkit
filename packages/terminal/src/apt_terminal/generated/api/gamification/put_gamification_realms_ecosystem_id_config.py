@@ -79,8 +79,8 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PutGamificationRealmsEcosystemIdConfigBody,
 ) -> Response[Error | GamificationRealmConfigUpdate]:
-    """Update a realm’s gamification config (admin, partial) — enabling it (false → true) triggers a
-    retroactive replay
+    """Update a realm’s gamification config (admin, partial) — moving mode out of `none` triggers a
+    retroactive replay, and entering `game` mode provisions the ecosystem’s game
 
     Args:
         ecosystem_id (str):
@@ -112,8 +112,8 @@ def sync(
     client: AuthenticatedClient,
     body: PutGamificationRealmsEcosystemIdConfigBody,
 ) -> Error | GamificationRealmConfigUpdate | None:
-    """Update a realm’s gamification config (admin, partial) — enabling it (false → true) triggers a
-    retroactive replay
+    """Update a realm’s gamification config (admin, partial) — moving mode out of `none` triggers a
+    retroactive replay, and entering `game` mode provisions the ecosystem’s game
 
     Args:
         ecosystem_id (str):
@@ -140,8 +140,8 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PutGamificationRealmsEcosystemIdConfigBody,
 ) -> Response[Error | GamificationRealmConfigUpdate]:
-    """Update a realm’s gamification config (admin, partial) — enabling it (false → true) triggers a
-    retroactive replay
+    """Update a realm’s gamification config (admin, partial) — moving mode out of `none` triggers a
+    retroactive replay, and entering `game` mode provisions the ecosystem’s game
 
     Args:
         ecosystem_id (str):
@@ -171,8 +171,8 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PutGamificationRealmsEcosystemIdConfigBody,
 ) -> Error | GamificationRealmConfigUpdate | None:
-    """Update a realm’s gamification config (admin, partial) — enabling it (false → true) triggers a
-    retroactive replay
+    """Update a realm’s gamification config (admin, partial) — moving mode out of `none` triggers a
+    retroactive replay, and entering `game` mode provisions the ecosystem’s game
 
     Args:
         ecosystem_id (str):

@@ -20,12 +20,16 @@ class ReservedIdentifierPage:
         page_size (int): Clamped 1..200
         total (int): Saturates at a 2,000-row cap: the list merges heterogeneous sources and cannot be paged by a single
             SQL OFFSET
+        truncated (bool): A held name is missing from this response — a source scan came back at its cap, or the merge
+            overflowed the overall one. Clients that filter client-side MUST surface this: past the cap an empty result is
+            not evidence that a name is free.
     """
 
     items: list["ReservedIdentifier"]
     page: int
     page_size: int
     total: int
+    truncated: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,6 +44,8 @@ class ReservedIdentifierPage:
 
         total = self.total
 
+        truncated = self.truncated
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -48,6 +54,7 @@ class ReservedIdentifierPage:
                 "page": page,
                 "pageSize": page_size,
                 "total": total,
+                "truncated": truncated,
             }
         )
 
@@ -71,11 +78,14 @@ class ReservedIdentifierPage:
 
         total = d.pop("total")
 
+        truncated = d.pop("truncated")
+
         reserved_identifier_page = cls(
             items=items,
             page=page,
             page_size=page_size,
             total=total,
+            truncated=truncated,
         )
 
         reserved_identifier_page.additional_properties = d

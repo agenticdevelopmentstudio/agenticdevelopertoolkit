@@ -15,12 +15,15 @@ def _get_kwargs(
     *,
     game_id: Unset | str = UNSET,
     slug_query: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["game_id"] = game_id
 
     params["slug"] = slug_query
+
+    params["ecosystem"] = ecosystem
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -79,6 +82,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug_query: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
 ) -> Response[Error | GamePublicProfile]:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -89,12 +93,15 @@ def sync_detailed(
     `players.visibility` is `public` or `unlisted`; and the game is not retired. Distinguishing them
     would tell a caller that an account exists AND plays this game, which is the fact the setting exists
     to withhold. `characterName` is withheld when the game’s `character_names` is `off`, at read time —
-    a name stored before the operator turned the feature off is still in the column.
+    a name stored before the operator turned the feature off is still in the column. A fifth gate sits
+    under all of them: the product must be in `game` mode. `ecosystem` disambiguates which game a bare
+    `slug` names (an unqualified ambiguous slug is a 409).
 
     Args:
         slug_path (str):
         game_id (Union[Unset, str]):
         slug_query (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -108,6 +115,7 @@ def sync_detailed(
         slug_path=slug_path,
         game_id=game_id,
         slug_query=slug_query,
+        ecosystem=ecosystem,
     )
 
     response = client.get_httpx_client().request(
@@ -123,6 +131,7 @@ def sync(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug_query: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
 ) -> Error | GamePublicProfile | None:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -133,12 +142,15 @@ def sync(
     `players.visibility` is `public` or `unlisted`; and the game is not retired. Distinguishing them
     would tell a caller that an account exists AND plays this game, which is the fact the setting exists
     to withhold. `characterName` is withheld when the game’s `character_names` is `off`, at read time —
-    a name stored before the operator turned the feature off is still in the column.
+    a name stored before the operator turned the feature off is still in the column. A fifth gate sits
+    under all of them: the product must be in `game` mode. `ecosystem` disambiguates which game a bare
+    `slug` names (an unqualified ambiguous slug is a 409).
 
     Args:
         slug_path (str):
         game_id (Union[Unset, str]):
         slug_query (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -153,6 +165,7 @@ def sync(
         client=client,
         game_id=game_id,
         slug_query=slug_query,
+        ecosystem=ecosystem,
     ).parsed
 
 
@@ -162,6 +175,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug_query: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
 ) -> Response[Error | GamePublicProfile]:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -172,12 +186,15 @@ async def asyncio_detailed(
     `players.visibility` is `public` or `unlisted`; and the game is not retired. Distinguishing them
     would tell a caller that an account exists AND plays this game, which is the fact the setting exists
     to withhold. `characterName` is withheld when the game’s `character_names` is `off`, at read time —
-    a name stored before the operator turned the feature off is still in the column.
+    a name stored before the operator turned the feature off is still in the column. A fifth gate sits
+    under all of them: the product must be in `game` mode. `ecosystem` disambiguates which game a bare
+    `slug` names (an unqualified ambiguous slug is a 409).
 
     Args:
         slug_path (str):
         game_id (Union[Unset, str]):
         slug_query (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -191,6 +208,7 @@ async def asyncio_detailed(
         slug_path=slug_path,
         game_id=game_id,
         slug_query=slug_query,
+        ecosystem=ecosystem,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -204,6 +222,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug_query: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
 ) -> Error | GamePublicProfile | None:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -214,12 +233,15 @@ async def asyncio(
     `players.visibility` is `public` or `unlisted`; and the game is not retired. Distinguishing them
     would tell a caller that an account exists AND plays this game, which is the fact the setting exists
     to withhold. `characterName` is withheld when the game’s `character_names` is `off`, at read time —
-    a name stored before the operator turned the feature off is still in the column.
+    a name stored before the operator turned the feature off is still in the column. A fifth gate sits
+    under all of them: the product must be in `game` mode. `ecosystem` disambiguates which game a bare
+    `slug` names (an unqualified ambiguous slug is a 409).
 
     Args:
         slug_path (str):
         game_id (Union[Unset, str]):
         slug_query (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -235,5 +257,6 @@ async def asyncio(
             client=client,
             game_id=game_id,
             slug_query=slug_query,
+            ecosystem=ecosystem,
         )
     ).parsed

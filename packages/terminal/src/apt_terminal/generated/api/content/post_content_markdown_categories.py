@@ -100,7 +100,7 @@ def sync_detailed(
     category. A category NAME is unique per owner across the whole hierarchy — every other op addresses
     a category by name — so re-posting an existing name is idempotent ONLY when every parent it asks for
     is already one of that category's parents; asking for a new one is a 409. This never RE-FILES a
-    category: adding a parent to an existing one is an edge write on /content/category_edges. Any id in
+    category: adding a parent to an existing one is an edge write on /content/category-edges. Any id in
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
@@ -139,7 +139,7 @@ def sync(
     category. A category NAME is unique per owner across the whole hierarchy — every other op addresses
     a category by name — so re-posting an existing name is idempotent ONLY when every parent it asks for
     is already one of that category's parents; asking for a new one is a 409. This never RE-FILES a
-    category: adding a parent to an existing one is an edge write on /content/category_edges. Any id in
+    category: adding a parent to an existing one is an edge write on /content/category-edges. Any id in
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
@@ -173,7 +173,7 @@ async def asyncio_detailed(
     category. A category NAME is unique per owner across the whole hierarchy — every other op addresses
     a category by name — so re-posting an existing name is idempotent ONLY when every parent it asks for
     is already one of that category's parents; asking for a new one is a 409. This never RE-FILES a
-    category: adding a parent to an existing one is an edge write on /content/category_edges. Any id in
+    category: adding a parent to an existing one is an edge write on /content/category-edges. Any id in
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
@@ -210,7 +210,7 @@ async def asyncio(
     category. A category NAME is unique per owner across the whole hierarchy — every other op addresses
     a category by name — so re-posting an existing name is idempotent ONLY when every parent it asks for
     is already one of that category's parents; asking for a new one is a 409. This never RE-FILES a
-    category: adding a parent to an existing one is an edge write on /content/category_edges. Any id in
+    category: adding a parent to an existing one is an edge write on /content/category-edges. Any id in
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:

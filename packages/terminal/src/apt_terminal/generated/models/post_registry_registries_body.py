@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -23,6 +23,7 @@ class PostRegistryRegistriesBody:
         description (Union[Unset, str]):
         category_root (Union[Unset, str]):
         entry_term (Union[Unset, str]):
+        tags (Union[Unset, list[str]]): Discovery labels; trimmed and de-duplicated server-side.
         visibility (Union[Unset, PostRegistryRegistriesBodyVisibility]):
         submission_policy (Union[Unset, PostRegistryRegistriesBodySubmissionPolicy]):
         services_enabled (Union[Unset, bool]):
@@ -34,6 +35,7 @@ class PostRegistryRegistriesBody:
     description: Unset | str = UNSET
     category_root: Unset | str = UNSET
     entry_term: Unset | str = UNSET
+    tags: Unset | list[str] = UNSET
     visibility: Unset | PostRegistryRegistriesBodyVisibility = UNSET
     submission_policy: Unset | PostRegistryRegistriesBodySubmissionPolicy = UNSET
     services_enabled: Unset | bool = UNSET
@@ -51,6 +53,10 @@ class PostRegistryRegistriesBody:
         category_root = self.category_root
 
         entry_term = self.entry_term
+
+        tags: Unset | list[str] = UNSET
+        if not isinstance(self.tags, Unset):
+            tags = self.tags
 
         visibility: Unset | str = UNSET
         if not isinstance(self.visibility, Unset):
@@ -78,6 +84,8 @@ class PostRegistryRegistriesBody:
             field_dict["categoryRoot"] = category_root
         if entry_term is not UNSET:
             field_dict["entryTerm"] = entry_term
+        if tags is not UNSET:
+            field_dict["tags"] = tags
         if visibility is not UNSET:
             field_dict["visibility"] = visibility
         if submission_policy is not UNSET:
@@ -102,6 +110,8 @@ class PostRegistryRegistriesBody:
 
         entry_term = d.pop("entryTerm", UNSET)
 
+        tags = cast(list[str], d.pop("tags", UNSET))
+
         _visibility = d.pop("visibility", UNSET)
         visibility: Unset | PostRegistryRegistriesBodyVisibility
         if isinstance(_visibility, Unset):
@@ -125,6 +135,7 @@ class PostRegistryRegistriesBody:
             description=description,
             category_root=category_root,
             entry_term=entry_term,
+            tags=tags,
             visibility=visibility,
             submission_policy=submission_policy,
             services_enabled=services_enabled,

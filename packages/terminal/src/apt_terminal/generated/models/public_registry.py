@@ -22,6 +22,7 @@ class PublicRegistry:
         description (str):
         category_root (str): The industry half of <industry>.<service-type>, e.g. 'software'.
         entry_term (str): What this registry calls an entry — "consultant", "coach", "shop".
+        tags (list[str]): The owner's discovery labels.
         services_enabled (bool):
         bound_site_id (Union[None, str]): A fleet SITE SLUG from the frontend sites registry, when this registry is
             bound to a dedicated site; null otherwise.
@@ -35,6 +36,7 @@ class PublicRegistry:
     description: str
     category_root: str
     entry_term: str
+    tags: list[str]
     services_enabled: bool
     bound_site_id: None | str
     sections: list["PublicRegistrySection"]
@@ -53,6 +55,8 @@ class PublicRegistry:
         category_root = self.category_root
 
         entry_term = self.entry_term
+
+        tags = self.tags
 
         services_enabled = self.services_enabled
 
@@ -79,6 +83,7 @@ class PublicRegistry:
                 "description": description,
                 "categoryRoot": category_root,
                 "entryTerm": entry_term,
+                "tags": tags,
                 "servicesEnabled": services_enabled,
                 "boundSiteId": bound_site_id,
                 "sections": sections,
@@ -105,6 +110,8 @@ class PublicRegistry:
         category_root = d.pop("categoryRoot")
 
         entry_term = d.pop("entryTerm")
+
+        tags = cast(list[str], d.pop("tags"))
 
         services_enabled = d.pop("servicesEnabled")
 
@@ -136,6 +143,7 @@ class PublicRegistry:
             description=description,
             category_root=category_root,
             entry_term=entry_term,
+            tags=tags,
             services_enabled=services_enabled,
             bound_site_id=bound_site_id,
             sections=sections,

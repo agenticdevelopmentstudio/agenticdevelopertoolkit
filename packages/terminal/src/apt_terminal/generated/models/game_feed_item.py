@@ -21,7 +21,7 @@ class GameFeedItem:
         id (str):
         game_id (str):
         kind (str):
-        role (str):
+        role (Union[None, str]):
         slot (Union[None, Unset, str]):
         data (Union['GameFeedItemDataType0', None, Unset]):
         text (Union[None, Unset, str]):
@@ -35,7 +35,7 @@ class GameFeedItem:
     id: str
     game_id: str
     kind: str
-    role: str
+    role: None | str
     slot: None | Unset | str = UNSET
     data: Union["GameFeedItemDataType0", None, Unset] = UNSET
     text: None | Unset | str = UNSET
@@ -56,6 +56,7 @@ class GameFeedItem:
 
         kind = self.kind
 
+        role: None | str
         role = self.role
 
         slot: None | Unset | str
@@ -143,7 +144,12 @@ class GameFeedItem:
 
         kind = d.pop("kind")
 
-        role = d.pop("role")
+        def _parse_role(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        role = _parse_role(d.pop("role"))
 
         def _parse_slot(data: object) -> None | Unset | str:
             if data is None:

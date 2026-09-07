@@ -19,6 +19,7 @@ def _get_kwargs(
     tag: Unset | str = UNSET,
     source: Unset | str = UNSET,
     noted: Unset | bool = UNSET,
+    doc: Unset | bool = UNSET,
     workspace: Unset | str = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
@@ -36,6 +37,8 @@ def _get_kwargs(
     params["source"] = source
 
     params["noted"] = noted
+
+    params["doc"] = doc
 
     params["workspace"] = workspace
 
@@ -90,6 +93,7 @@ def sync_detailed(
     tag: Unset | str = UNSET,
     source: Unset | str = UNSET,
     noted: Unset | bool = UNSET,
+    doc: Unset | bool = UNSET,
     workspace: Unset | str = UNSET,
 ) -> Response[Error | GetContentMarkdownResponse200]:
     """List/search the caller's markdown documents (metadata only)
@@ -106,6 +110,7 @@ def sync_detailed(
         tag (Union[Unset, str]):
         source (Union[Unset, str]):
         noted (Union[Unset, bool]):
+        doc (Union[Unset, bool]):
         workspace (Union[Unset, str]):
 
     Raises:
@@ -124,6 +129,7 @@ def sync_detailed(
         tag=tag,
         source=source,
         noted=noted,
+        doc=doc,
         workspace=workspace,
     )
 
@@ -144,6 +150,7 @@ def sync(
     tag: Unset | str = UNSET,
     source: Unset | str = UNSET,
     noted: Unset | bool = UNSET,
+    doc: Unset | bool = UNSET,
     workspace: Unset | str = UNSET,
 ) -> Error | GetContentMarkdownResponse200 | None:
     """List/search the caller's markdown documents (metadata only)
@@ -160,6 +167,7 @@ def sync(
         tag (Union[Unset, str]):
         source (Union[Unset, str]):
         noted (Union[Unset, bool]):
+        doc (Union[Unset, bool]):
         workspace (Union[Unset, str]):
 
     Raises:
@@ -179,6 +187,7 @@ def sync(
         tag=tag,
         source=source,
         noted=noted,
+        doc=doc,
         workspace=workspace,
     ).parsed
 
@@ -193,6 +202,7 @@ async def asyncio_detailed(
     tag: Unset | str = UNSET,
     source: Unset | str = UNSET,
     noted: Unset | bool = UNSET,
+    doc: Unset | bool = UNSET,
     workspace: Unset | str = UNSET,
 ) -> Response[Error | GetContentMarkdownResponse200]:
     """List/search the caller's markdown documents (metadata only)
@@ -209,6 +219,7 @@ async def asyncio_detailed(
         tag (Union[Unset, str]):
         source (Union[Unset, str]):
         noted (Union[Unset, bool]):
+        doc (Union[Unset, bool]):
         workspace (Union[Unset, str]):
 
     Raises:
@@ -227,6 +238,7 @@ async def asyncio_detailed(
         tag=tag,
         source=source,
         noted=noted,
+        doc=doc,
         workspace=workspace,
     )
 
@@ -245,6 +257,7 @@ async def asyncio(
     tag: Unset | str = UNSET,
     source: Unset | str = UNSET,
     noted: Unset | bool = UNSET,
+    doc: Unset | bool = UNSET,
     workspace: Unset | str = UNSET,
 ) -> Error | GetContentMarkdownResponse200 | None:
     """List/search the caller's markdown documents (metadata only)
@@ -261,6 +274,7 @@ async def asyncio(
         tag (Union[Unset, str]):
         source (Union[Unset, str]):
         noted (Union[Unset, bool]):
+        doc (Union[Unset, bool]):
         workspace (Union[Unset, str]):
 
     Raises:
@@ -281,6 +295,7 @@ async def asyncio(
             tag=tag,
             source=source,
             noted=noted,
+            doc=doc,
             workspace=workspace,
         )
     ).parsed

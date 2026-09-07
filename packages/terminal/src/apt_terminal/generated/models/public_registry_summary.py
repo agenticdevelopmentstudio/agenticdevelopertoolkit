@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -15,12 +15,14 @@ class PublicRegistrySummary:
         name (str):
         purpose (str): One-line "what this registry is for".
         category_root (str): The industry half of <industry>.<service-type>, e.g. 'software'.
+        tags (list[str]): The owner's discovery labels.
     """
 
     slug: str
     name: str
     purpose: str
     category_root: str
+    tags: list[str]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,6 +34,8 @@ class PublicRegistrySummary:
 
         category_root = self.category_root
 
+        tags = self.tags
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -40,6 +44,7 @@ class PublicRegistrySummary:
                 "name": name,
                 "purpose": purpose,
                 "categoryRoot": category_root,
+                "tags": tags,
             }
         )
 
@@ -56,11 +61,14 @@ class PublicRegistrySummary:
 
         category_root = d.pop("categoryRoot")
 
+        tags = cast(list[str], d.pop("tags"))
+
         public_registry_summary = cls(
             slug=slug,
             name=name,
             purpose=purpose,
             category_root=category_root,
+            tags=tags,
         )
 
         public_registry_summary.additional_properties = d

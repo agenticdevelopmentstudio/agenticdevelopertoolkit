@@ -14,6 +14,7 @@ def _get_kwargs(
     *,
     game_id: Unset | str = UNSET,
     slug: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
     page: Unset | str = UNSET,
     page_size: Unset | str = UNSET,
 ) -> dict[str, Any]:
@@ -22,6 +23,8 @@ def _get_kwargs(
     params["game_id"] = game_id
 
     params["slug"] = slug
+
+    params["ecosystem"] = ecosystem
 
     params["page"] = page
 
@@ -83,6 +86,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
     page: Unset | str = UNSET,
     page_size: Unset | str = UNSET,
 ) -> Response[Error | GetGameFeedResponse200]:
@@ -90,12 +94,16 @@ def sync_detailed(
 
      The hot path, and it carries no `security`: it serves published artifacts to signed-out visitors and
     runs on the read replica so it does not contend with authenticated traffic. Three predicates are the
-    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`. The ecosystem
-    is taken from the resolved game row, never from the query string. A retired game is 404.
+    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`, which is taken
+    from the resolved game row and never used as a caller-supplied filter. `ecosystem` only
+    disambiguates which game a bare `slug` names — ecosystem slugs are unique under a parent, so two
+    products really can both own a game called `chess`, and an unqualified ambiguous slug is a 409. A
+    retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
         game_id (Union[Unset, str]):
         slug (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
         page (Union[Unset, str]):
         page_size (Union[Unset, str]):
 
@@ -110,6 +118,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         game_id=game_id,
         slug=slug,
+        ecosystem=ecosystem,
         page=page,
         page_size=page_size,
     )
@@ -126,6 +135,7 @@ def sync(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
     page: Unset | str = UNSET,
     page_size: Unset | str = UNSET,
 ) -> Error | GetGameFeedResponse200 | None:
@@ -133,12 +143,16 @@ def sync(
 
      The hot path, and it carries no `security`: it serves published artifacts to signed-out visitors and
     runs on the read replica so it does not contend with authenticated traffic. Three predicates are the
-    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`. The ecosystem
-    is taken from the resolved game row, never from the query string. A retired game is 404.
+    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`, which is taken
+    from the resolved game row and never used as a caller-supplied filter. `ecosystem` only
+    disambiguates which game a bare `slug` names — ecosystem slugs are unique under a parent, so two
+    products really can both own a game called `chess`, and an unqualified ambiguous slug is a 409. A
+    retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
         game_id (Union[Unset, str]):
         slug (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
         page (Union[Unset, str]):
         page_size (Union[Unset, str]):
 
@@ -154,6 +168,7 @@ def sync(
         client=client,
         game_id=game_id,
         slug=slug,
+        ecosystem=ecosystem,
         page=page,
         page_size=page_size,
     ).parsed
@@ -164,6 +179,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
     page: Unset | str = UNSET,
     page_size: Unset | str = UNSET,
 ) -> Response[Error | GetGameFeedResponse200]:
@@ -171,12 +187,16 @@ async def asyncio_detailed(
 
      The hot path, and it carries no `security`: it serves published artifacts to signed-out visitors and
     runs on the read replica so it does not contend with authenticated traffic. Three predicates are the
-    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`. The ecosystem
-    is taken from the resolved game row, never from the query string. A retired game is 404.
+    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`, which is taken
+    from the resolved game row and never used as a caller-supplied filter. `ecosystem` only
+    disambiguates which game a bare `slug` names — ecosystem slugs are unique under a parent, so two
+    products really can both own a game called `chess`, and an unqualified ambiguous slug is a 409. A
+    retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
         game_id (Union[Unset, str]):
         slug (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
         page (Union[Unset, str]):
         page_size (Union[Unset, str]):
 
@@ -191,6 +211,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         game_id=game_id,
         slug=slug,
+        ecosystem=ecosystem,
         page=page,
         page_size=page_size,
     )
@@ -205,6 +226,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     game_id: Unset | str = UNSET,
     slug: Unset | str = UNSET,
+    ecosystem: Unset | str = UNSET,
     page: Unset | str = UNSET,
     page_size: Unset | str = UNSET,
 ) -> Error | GetGameFeedResponse200 | None:
@@ -212,12 +234,16 @@ async def asyncio(
 
      The hot path, and it carries no `security`: it serves published artifacts to signed-out visitors and
     runs on the read replica so it does not contend with authenticated traffic. Three predicates are the
-    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`. The ecosystem
-    is taken from the resolved game row, never from the query string. A retired game is 404.
+    entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`, which is taken
+    from the resolved game row and never used as a caller-supplied filter. `ecosystem` only
+    disambiguates which game a bare `slug` names — ecosystem slugs are unique under a parent, so two
+    products really can both own a game called `chess`, and an unqualified ambiguous slug is a 409. A
+    retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
         game_id (Union[Unset, str]):
         slug (Union[Unset, str]):
+        ecosystem (Union[Unset, str]):
         page (Union[Unset, str]):
         page_size (Union[Unset, str]):
 
@@ -234,6 +260,7 @@ async def asyncio(
             client=client,
             game_id=game_id,
             slug=slug,
+            ecosystem=ecosystem,
             page=page,
             page_size=page_size,
         )

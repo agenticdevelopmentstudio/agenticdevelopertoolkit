@@ -25,6 +25,9 @@ class PostContentMarkdownBody:
         note (Union[Unset, bool]): Send `true` to file the new document in the owner's `notes` storage bucket (mints its
             content.notes marker). It stays an ordinary markdown document in every other respect — same versions, same
             category/tags — and `?noted=true` is how you list them back.
+        doc (Union[Unset, bool]): Send `true` to file the new document in the owner's `docs` storage bucket (mints its
+            content.docs marker). Independent of `note` — the markers are separate rows — and `?doc=true` is how you list
+            them back.
     """
 
     content: str
@@ -32,6 +35,7 @@ class PostContentMarkdownBody:
     tags: Unset | list[str] = UNSET
     author: Union[Unset, "PostContentMarkdownBodyAuthor"] = UNSET
     note: Unset | bool = UNSET
+    doc: Unset | bool = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,6 +53,8 @@ class PostContentMarkdownBody:
 
         note = self.note
 
+        doc = self.doc
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -64,6 +70,8 @@ class PostContentMarkdownBody:
             field_dict["author"] = author
         if note is not UNSET:
             field_dict["note"] = note
+        if doc is not UNSET:
+            field_dict["doc"] = doc
 
         return field_dict
 
@@ -87,12 +95,15 @@ class PostContentMarkdownBody:
 
         note = d.pop("note", UNSET)
 
+        doc = d.pop("doc", UNSET)
+
         post_content_markdown_body = cls(
             content=content,
             category=category,
             tags=tags,
             author=author,
             note=note,
+            doc=doc,
         )
 
         post_content_markdown_body.additional_properties = d
