@@ -5,6 +5,15 @@ import AgenticDeveloperToolkit
 
 /// The drawer that slides out beside a window. It knows about tabs and about
 /// NSDrawer's two sharp edges; it does not know what any tab contains.
+///
+/// This suite constructs `WindowDrawer` directly, and `WindowDrawer` is
+/// deliberately `@available(macOS, deprecated: 10.13)` so it can wrap
+/// `NSDrawer` warning-free — the deprecation warnings that raises at the
+/// call sites below are expected, not a defect. Annotating this suite the
+/// same way does not work: swift-testing's `@Suite`/`@Test` macros refuse
+/// to expand on a declaration already marked `@available(deprecated:)`, and
+/// the file stops compiling. `NSDrawer` itself is still named in exactly
+/// one file. See R4a in `.superpowers/sdd/2026-09-06-panes-and-project-window/rulings.md`.
 @MainActor
 @Suite("WindowDrawer")
 struct WindowDrawerTests {
