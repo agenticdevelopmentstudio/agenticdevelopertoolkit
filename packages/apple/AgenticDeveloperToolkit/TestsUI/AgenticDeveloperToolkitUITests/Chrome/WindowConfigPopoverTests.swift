@@ -252,4 +252,62 @@ struct WindowConfigPopoverTests {
         popover.rebuildControls()
         #expect(builds == 0)
     }
+
+    /// A host whose title can change — a pane named by whatever its content is
+    /// showing — would otherwise keep the name it had at construction at the
+    /// head of an otherwise live panel.
+    @Test("renaming an open panel changes the heading on screen")
+    func titleChangeRebuildsTheOpenPanel() throws {
+        let popover = WindowConfigPopover(title: "Olylo Window") { [] }
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 300),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        popover.gearButton.frame = NSRect(x: 0, y: 0, width: 40, height: 40)
+        window.contentView?.addSubview(popover.gearButton)
+        window.makeKeyAndOrderFront(nil)
+        popover.toggle()
+        try #require(popover.isShown)
+
+        let before = try #require(popover.popover.contentViewController)
+        #expect(labels(in: before.view).contains("Olylo Window"))
+
+        popover.title = "Files"
+
+        let after = try #require(popover.popover.contentViewController)
+        #expect(labels(in: after.view).contains("Files"))
+        #expect(!labels(in: after.view).contains("Olylo Window"))
+
+        popover.toggle()
+        window.orderOut(nil)
+    }
+
+    /// Assigning the name it already has must not throw the panel away — the
+    /// pane republishes its title on every `refreshTitle()`, most of which
+    /// change nothing.
+    @Test("assigning the same title leaves the panel alone")
+    func sameTitleDoesNotRebuild() throws {
+        var builds = 0
+        let popover = WindowConfigPopover(title: "Olylo Window") {
+            builds += 1
+            return []
+        }
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 300),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        popover.gearButton.frame = NSRect(x: 0, y: 0, width: 40, height: 40)
+        window.contentView?.addSubview(popover.gearButton)
+        window.makeKeyAndOrderFront(nil)
+        popover.toggle()
+        try #require(popover.isShown)
+        #expect(builds == 1)
+        let panel = try #require(popover.popover.contentViewController)
+
+        popover.title = "Olylo Window"
+
+        #expect(builds == 1)
+        #expect(popover.popover.contentViewController === panel)
+
+        popover.toggle()
+        window.orderOut(nil)
+    }
 }

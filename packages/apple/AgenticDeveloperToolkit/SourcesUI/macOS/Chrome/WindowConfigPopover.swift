@@ -39,7 +39,18 @@ public final class WindowConfigPopover: NSObject {
 
     public var isShown: Bool { popover.isShown }
 
-    private let title: String
+    /// The heading the panel shows. Settable, because a host whose title can
+    /// change — a pane named by its content — would otherwise keep the name it
+    /// had at construction at the head of an otherwise live panel. Assigning it
+    /// invalidates the built panel the same way `rebuildControls()` does:
+    /// rebuilt now if it is on screen, lazily if it is not.
+    public var title: String {
+        didSet {
+            guard title != oldValue else { return }
+            rebuildControls()
+        }
+    }
+
     private let makeControls: @MainActor () -> [NSView]
     private let preferredEdge: NSRectEdge
     /// Internal, not private, for the same reason `ContentViewController` is:
