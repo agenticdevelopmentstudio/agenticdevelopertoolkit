@@ -124,6 +124,26 @@ struct WindowDrawerTests {
         #expect(announcements == 2)
     }
 
+    /// A drawer the *user* drags shut never goes through `close()`, and AppKit
+    /// reports it only to `NSDrawerDelegate`. Without forwarding it, an owner
+    /// that remembers "disclosed" never learns the reader put it away.
+    @Test("a move the drawer did not make is announced too")
+    func announcesUserDrivenMoves() {
+        let drawer = WindowDrawer(
+            parentWindow: makeWindow(),
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        var announcements = 0
+        drawer.onVisibilityChange = { announcements += 1 }
+
+        // What AppKit sends when the drag finishes. The notification's contents
+        // are not read — the fact of it is the whole message.
+        drawer.drawerDidOpen(Notification(name: Notification.Name("drawerDidOpen")))
+        drawer.drawerDidClose(Notification(name: Notification.Name("drawerDidClose")))
+
+        #expect(announcements == 2)
+    }
+
     @Test("the tab strip is addressable")
     func stripIsIdentified() {
         let drawer = WindowDrawer(

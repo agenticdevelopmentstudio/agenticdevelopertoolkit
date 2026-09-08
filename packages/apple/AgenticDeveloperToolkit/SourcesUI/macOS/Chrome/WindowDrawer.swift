@@ -50,9 +50,17 @@ public struct DrawerTab {
 /// - It does not know what a tab contains. A tab is an id, a title, a symbol and
 ///   a `() -> NSView`, which is what lets this live below the code that has help
 ///   to show.
+///
+/// `@preconcurrency` on the `NSDrawerDelegate` conformance because that
+/// protocol predates the SDK's concurrency audit and so is un-isolated, while
+/// this type is `@MainActor` — AppKit only ever calls a drawer delegate on the
+/// main thread, and the attribute is how that promise is stated. Without it the
+/// conformance is a data-race warning today and an error under the Swift 6
+/// language mode. Sibling delegates here need no such attribute: `NSToolbarDelegate`
+/// and friends are already `@MainActor` in the SDK.
 @available(macOS, deprecated: 10.13, message: "Wraps NSDrawer, deprecated since macOS 10.13")
 @MainActor
-public final class WindowDrawer: NSObject {
+public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
 
     /// Wide enough for a comfortable measure at explanation size; the user can
     /// drag the outer edge between the min and max below from there.
@@ -113,7 +121,13 @@ public final class WindowDrawer: NSObject {
     public var tabStripIsHidden: Bool { self.tabStrip.isHidden }
 
     /// Fired after the drawer opens or closes, so a help button can restyle
-    /// itself. The drawer can be moved by something other than that button.
+    /// itself — and so an owner that remembers the state can correct itself
+    /// when the reader drags the drawer shut by hand rather than clicking that
+    /// button.
+    ///
+    /// **Make the handler idempotent.** One move can be announced twice: once
+    /// from `open()`/`close()` and once from `NSDrawer`'s own delegate. Both
+    /// are kept on purpose — see `open()` for why neither is enough alone.
     public var onVisibilityChange: (() -> Void)?
 
     /// - Parameter accessibilityPrefix: namespaces the drawer's own controls —
@@ -138,6 +152,10 @@ public final class WindowDrawer: NSObject {
 
         self.drawer.parentWindow = parentWindow
         self.drawer.contentView = self.container
+        // So a drawer the *user* moves is announced too — see the delegate
+        // methods below. `NSDrawer.delegate` is weak and this object owns the
+        // drawer, so pointing it back at ourselves makes no cycle.
+        self.drawer.delegate = self
         // Height is the window's to decide; only the width is draggable.
         self.drawer.minContentSize = NSSize(width: Self.minContentWidth, height: 0)
         self.drawer.maxContentSize = NSSize(width: Self.maxContentWidth, height: 0)
@@ -233,14 +251,40 @@ public final class WindowDrawer: NSObject {
 
     // MARK: - Open and close
 
+    /// Announces the change here as well as from `drawerDidOpen(_:)`, and for
+    /// a reason the delegate cannot cover: `NSDrawer` does not reliably notify
+    /// for a programmatic move made while the parent window is still off
+    /// screen, which is the exact case `reapplyVisibility` exists for. The
+    /// price is that one open can be announced twice, so a consumer of
+    /// `onVisibilityChange` has to be idempotent.
     public func open(selecting id: String? = nil) {
         self.select(id)
         self.drawer.open()
         self.onVisibilityChange?()
     }
 
+    /// Announces the change here as well as from `drawerDidClose(_:)`, for the
+    /// same reason `open()` does — and with the same requirement that the
+    /// consumer be idempotent.
     public func close() {
         self.drawer.close()
+        self.onVisibilityChange?()
+    }
+
+    // MARK: - NSDrawerDelegate
+
+    /// The drawer moved, and it was not `open()` or `close()` that moved it —
+    /// the user can drag a drawer open and shut by its outer edge, and AppKit
+    /// reports that nowhere else. Without this, an owner that remembers
+    /// "disclosed" never learns the reader put it away, and re-opens it the
+    /// next time the window becomes key.
+    public func drawerDidOpen(_ notification: Notification) {
+        self.onVisibilityChange?()
+    }
+
+    /// The other half of `drawerDidOpen(_:)`, and the half that matters: a
+    /// hand-dragged *close* is the one an owner's remembered state gets wrong.
+    public func drawerDidClose(_ notification: Notification) {
         self.onVisibilityChange?()
     }
 
