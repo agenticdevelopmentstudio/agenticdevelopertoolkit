@@ -20,7 +20,14 @@ public final class PaneMinimizedStripView: NSView {
     /// For content that does not implement `PaneMinimizedRepresenting` — a
     /// dashed square reads as "a pane is here" without claiming to be anything
     /// in particular.
-    public static let defaultSymbolName = "square.dashed"
+    ///
+    /// `nonisolated` for the same reason `WindowDrawer.defaultContentWidth` is:
+    /// it is the default argument of `init(edge:symbolName:tooltip:)` below,
+    /// and a default-argument expression compiles as a standalone, non-isolated
+    /// function regardless of the initializer's own actor. Reading a
+    /// `@MainActor`-isolated static from one is a warning today and an error
+    /// under the Swift 6 language mode.
+    public static nonisolated let defaultSymbolName = "square.dashed"
 
     public let restoreButton = NSButton()
     public let glyphView = NSImageView()
