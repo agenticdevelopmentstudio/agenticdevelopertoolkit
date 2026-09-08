@@ -40,20 +40,33 @@ public final class MarkdownEditorToolbar: NSView {
     public init() {
         super.init(frame: .zero)
 
+        // All three are named, not just the two buttons: the mode control is a
+        // segmented control, and until now nothing addressed it, because
+        // `AccessibilityCoverageUITests` scanned only types that a segmented
+        // control is not. It scans `.segmentedControl` now, and this strip is
+        // the editor's whole chrome wherever the editor is shown — the Notes
+        // window, a project's notes pane, the quick-note window.
         modeControl.segmentStyle = .texturedRounded
         modeControl.trackingMode = .selectOne
         modeControl.target = self
         modeControl.action = #selector(modeChanged)
+        modeControl.accessibilityID("markdown-editor.mode")
+        modeControl.setAccessibilityLabel("Editor Mode")
 
         helpButton.title = "?"
         helpButton.bezelStyle = .rounded
         helpButton.target = self
         helpButton.action = #selector(helpTapped)
+        helpButton.accessibilityID("markdown-editor.help")
+        // "?" is a title, not a description; VoiceOver reads it as punctuation.
+        helpButton.setAccessibilityLabel("Markdown Syntax Help")
 
         importButton.title = "Open…"
         importButton.bezelStyle = .rounded
         importButton.target = self
         importButton.action = #selector(importTapped)
+        importButton.accessibilityID("markdown-editor.import")
+        importButton.setAccessibilityLabel("Open Markdown File")
 
         let stack = NSStackView(views: [modeControl, NSView(), helpButton, importButton])
         stack.orientation = .horizontal
