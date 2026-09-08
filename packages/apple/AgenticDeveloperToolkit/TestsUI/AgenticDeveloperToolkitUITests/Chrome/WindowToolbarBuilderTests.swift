@@ -197,6 +197,49 @@ struct WindowToolbarBuilderTests {
         #expect(delegate.searchField?.placeholderString == "Search")
     }
 
+    /// Enablement and placeholder belong to the owner, and AppKit builds the
+    /// item whenever it gets round to it — so the owner is told the moment the
+    /// field exists rather than having to arrange a refresh that lands after.
+    /// A fresh `NSSearchField` is enabled with whatever placeholder it was
+    /// given, so an owner that never gets the call leaves the window showing a
+    /// live field over a pane that cannot be searched.
+    @Test("the owner is handed the search field the moment it is made")
+    func searchFieldCreationHook() {
+        var handed: [NSSearchField] = []
+        let delegate = WindowToolbarBuilder.Delegate(
+            items: [.search(identifier: Self.searchID, placeholder: "Search")],
+            target: nil,
+            onSearchFieldCreated: { handed.append($0) })
+        let toolbar = NSToolbar(identifier: "project.toolbar")
+
+        let item = delegate.toolbar(
+            toolbar, itemForItemIdentifier: Self.searchID, willBeInsertedIntoToolbar: true)
+
+        #expect(handed.count == 1)
+        #expect(handed.first === (item as? NSSearchToolbarItem)?.searchField)
+        #expect(handed.first === delegate.searchField)
+    }
+
+    /// A toolbar with no `.search` slot has no field to hand over.
+    @Test("a toolbar without a search slot never calls the hook")
+    func searchFieldCreationHookIsNotCalledWithoutASearchSlot() {
+        var calls = 0
+        let target = Target()
+        let delegate = WindowToolbarBuilder.Delegate(
+            items: [.button(
+                identifier: Self.helpID,
+                symbol: "questionmark.circle",
+                label: "Help",
+                action: #selector(Target.tapped))],
+            target: target,
+            onSearchFieldCreated: { _ in calls += 1 })
+        let toolbar = NSToolbar(identifier: "project.toolbar")
+
+        _ = delegate.toolbar(toolbar, itemForItemIdentifier: Self.helpID, willBeInsertedIntoToolbar: true)
+
+        #expect(calls == 0)
+    }
+
     /// `NSToolbar.delegate` is weak. A builder that returned a delegate nobody
     /// stored would render an empty toolbar and report nothing.
     @Test("makeToolbar wires the delegate the caller is holding")

@@ -137,12 +137,16 @@ extension WindowToolbarBuilder {
 
         private let items: [WindowToolbarItem]
 
-        /// Settable, not just an initialiser parameter: a window controller is
-        /// its own toolbar target and its own search delegate, and cannot hand
-        /// `self` to a stored property's initialiser. Still `weak` — the target
-        /// owns the delegate, never the other way round.
-        public weak var target: AnyObject?
-        public weak var searchDelegate: NSSearchFieldDelegate?
+        /// Both `weak` because the target owns the delegate, never the other
+        /// way round.
+        public private(set) weak var target: AnyObject?
+        public private(set) weak var searchDelegate: NSSearchFieldDelegate?
+
+        /// Called the moment the search field exists, so an owner can apply
+        /// enablement and placeholder at construction rather than hoping some
+        /// later refresh lands after AppKit got round to building the item.
+        /// A toolbar with no `.search` slot never calls it.
+        private let onSearchFieldCreated: ((NSSearchField) -> Void)?
 
         /// Kept because AppKit skips `NSToolbarItemValidation` for custom-view
         /// items, so the owner has to reach in and set `isEnabled` itself.
@@ -153,11 +157,13 @@ extension WindowToolbarBuilder {
         public init(
             items: [WindowToolbarItem],
             target: AnyObject?,
-            searchDelegate: NSSearchFieldDelegate? = nil
+            searchDelegate: NSSearchFieldDelegate? = nil,
+            onSearchFieldCreated: ((NSSearchField) -> Void)? = nil
         ) {
             self.items = items
             self.target = target
             self.searchDelegate = searchDelegate
+            self.onSearchFieldCreated = onSearchFieldCreated
             super.init()
         }
 
@@ -214,7 +220,10 @@ extension WindowToolbarBuilder {
                     identifier: identifier,
                     placeholder: placeholder,
                     delegate: self.searchDelegate)
+                // Assign first, then call: a callback that reads
+                // `delegate.searchField` has to see the field it was handed.
                 self.searchField = item.searchField
+                self.onSearchFieldCreated?(item.searchField)
                 return item
             }
         }
