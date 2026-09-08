@@ -179,6 +179,68 @@ struct WindowDrawerTests {
         #expect(drawer.bodyView.accessibilityIdentifier() == "project.drawer.tab.outline")
     }
 
+    // MARK: - Who shut it
+
+    /// AppKit shuts a drawer when its parent window is miniaturized, and
+    /// announces that through exactly the same `drawerDidClose(_:)` a drag on
+    /// the outer edge produces. An owner that reads every unexplained close as
+    /// "the reader put it away" therefore forgets the drawer the moment the
+    /// window is minimised — which is the one thing remembering it was for.
+    @Test("a close while the window is miniaturized is not the reader's")
+    func miniaturizedCloseIsNotTheReaders() {
+        let drawer = WindowDrawer(
+            parentWindow: MiniaturizedWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
+                styleMask: [.titled, .closable, .resizable, .miniaturizable],
+                backing: .buffered,
+                defer: false),
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+
+        #expect(drawer.closeIsAttributableToTheReader == false)
+    }
+
+    /// The other side of it: on a window the reader is actually looking at, a
+    /// shut drawer is one they could have shut.
+    @Test("a close on a plain visible window is the reader's")
+    func plainCloseIsTheReaders() {
+        let drawer = WindowDrawer(
+            parentWindow: makeWindow(),
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        #expect(drawer.closeIsAttributableToTheReader == true)
+
+        drawer.open(selecting: "help")
+        #expect(
+            drawer.closeIsAttributableToTheReader == false,
+            "An open drawer has no close to attribute to anyone")
+    }
+
+    /// `NSDrawer.delegate` is declared `assign` —
+    /// `AppKit.framework/Headers/NSDrawer.h:41` — which ARC imports as
+    /// `unowned(unsafe)`, not as a zeroing weak reference. The parent window
+    /// keeps its own drawers alive (`NSWindow.drawers`, line 65 of the same
+    /// header), so the `NSDrawer` outlives the wrapper that made it whenever
+    /// the window does, and a wrapper that went away without clearing the
+    /// pointer leaves AppKit free to message freed memory during teardown.
+    @Test("the delegate is cleared when the wrapper goes away")
+    func delegateIsClearedWhenTheWrapperGoes() {
+        let window = makeWindow()
+        var wrapper: WindowDrawer? = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        #expect(wrapper != nil)
+
+        // The parent window is the seam that outlives the wrapper: it is what
+        // holds the `NSDrawer` after the last reference to the wrapper goes.
+        let drawer = window.drawers?.first
+        #expect(drawer != nil)
+
+        wrapper = nil
+        #expect(drawer?.delegate == nil)
+    }
+
     /// The owner persists the width, so the owner has to be able to read it
     /// back after the user has dragged the outer edge.
     @Test("content width round-trips, clamped to the draggable range")
@@ -199,4 +261,11 @@ struct WindowDrawerTests {
         drawer.contentWidth = 10_000
         #expect(drawer.contentWidth == 520)
     }
+}
+
+/// A window that says it is minimised, because AppKit will not minimise one
+/// that was never ordered on screen and `isMiniaturized` is read-only.
+@MainActor
+private final class MiniaturizedWindow: NSWindow {
+    override var isMiniaturized: Bool { true }
 }

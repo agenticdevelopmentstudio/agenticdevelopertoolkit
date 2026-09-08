@@ -79,6 +79,14 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     private let drawer: NSDrawer
     private let tabs: [DrawerTab]
     private let accessibilityPrefix: String
+
+    /// The window this drawer hangs off, held rather than read back off
+    /// `NSDrawer.parentWindow` — that property is `assign` too
+    /// (`AppKit.framework/Headers/NSDrawer.h:38`), so a window that has gone
+    /// away leaves it dangling where this one simply becomes `nil`. And `nil`
+    /// is the answer `closeIsAttributableToTheReader` below wants: a window
+    /// that is gone is teardown, not a drag.
+    private weak var parentWindow: NSWindow?
     private let container = ThemedBackgroundView(role: .surface)
     private let body = NSView()
 
@@ -99,6 +107,28 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     public var isOpen: Bool {
         self.drawer.state == NSDrawer.State.openState.rawValue
             || self.drawer.state == NSDrawer.State.openingState.rawValue
+    }
+
+    /// Whether a close this drawer has just announced can be attributed to the
+    /// reader — that is, whether it is the drag on the outer edge that
+    /// `drawerDidClose(_:)` is mostly there to catch, rather than AppKit
+    /// tidying up.
+    ///
+    /// AppKit shuts a drawer along with its parent window: minimise the window
+    /// and the drawer closes, close the window and it closes, and both arrive
+    /// through the very same delegate callback a drag produces. An owner that
+    /// persists "the reader put the drawer away" on every announced close
+    /// therefore forgets the drawer the moment the window is minimised, which
+    /// is precisely what remembering it was for. This is the half of that
+    /// judgement `WindowDrawer` can make on its own — an owner still has to add
+    /// what only it knows, such as whether it is mid-teardown or applying a
+    /// remembered state.
+    ///
+    /// A `nil` `parentWindow` counts as *not* the reader: a window that has
+    /// gone away is teardown.
+    public var closeIsAttributableToTheReader: Bool {
+        guard !self.isOpen, let window = self.parentWindow else { return false }
+        return !window.isMiniaturized
     }
 
     /// How wide the drawer is, in points. The drawer does not remember this
@@ -151,10 +181,15 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
         self.buildContainer()
 
         self.drawer.parentWindow = parentWindow
+        self.parentWindow = parentWindow
         self.drawer.contentView = self.container
         // So a drawer the *user* moves is announced too — see the delegate
-        // methods below. `NSDrawer.delegate` is weak and this object owns the
-        // drawer, so pointing it back at ourselves makes no cycle.
+        // methods below. This object owns the drawer, so pointing the delegate
+        // back at ourselves makes no cycle — but it is not zeroing-weak
+        // either: the SDK declares it `assign`
+        // (`AppKit.framework/Headers/NSDrawer.h:41`), which ARC imports as
+        // `unowned(unsafe)`. The `deinit` below is what keeps that pointer
+        // from dangling.
         self.drawer.delegate = self
         // Height is the window's to decide; only the width is draggable.
         self.drawer.minContentSize = NSSize(width: Self.minContentWidth, height: 0)
@@ -162,6 +197,26 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
 
         self.showSelectedTab()
         self.observeParentWindow(parentWindow)
+    }
+
+    /// Undoes the `delegate` assignment above, and nothing else — the
+    /// `NotificationCenter` registration in `observeParentWindow(_:)` is
+    /// zeroing-weak and needs no undoing.
+    ///
+    /// It has to be undone because `NSDrawer.delegate` is `assign`
+    /// (`AppKit.framework/Headers/NSDrawer.h:41`), so it is `unowned(unsafe)`
+    /// on this side, and because the parent window keeps its own drawers alive
+    /// (`NSWindow.drawers`, line 65 of the same header) — which means the
+    /// `NSDrawer` outlives this wrapper whenever the window does. Left set, the
+    /// pointer dangles and AppKit is free to message freed memory on the way
+    /// out.
+    ///
+    /// `isolated` because the drawer is `@MainActor` state and a plain `deinit`
+    /// runs nonisolated: mutating `delegate` from one warns today
+    /// ("main actor-isolated property 'delegate' can not be mutated from a
+    /// nonisolated context") and is an error under Swift 6.
+    isolated deinit {
+        self.drawer.delegate = nil
     }
 
     private func buildTabStrip(prefix: String) {
@@ -309,7 +364,8 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// launch rather than on the second try.
     ///
     /// Registered by selector rather than by block so the observation is
-    /// zeroing-weak and needs no `deinit` to undo.
+    /// zeroing-weak — unlike the `delegate` assignment in `init`, it is not
+    /// what the `deinit` above is there to undo.
     private func observeParentWindow(_ window: NSWindow) {
         let center = NotificationCenter.default
         for name in [NSWindow.didBecomeKeyNotification, NSWindow.didBecomeMainNotification] {
