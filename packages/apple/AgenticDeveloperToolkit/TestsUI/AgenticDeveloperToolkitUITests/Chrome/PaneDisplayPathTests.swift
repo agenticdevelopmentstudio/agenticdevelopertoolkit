@@ -52,11 +52,19 @@ struct PaneDisplayPathTests {
             accessibilityPrefix: "project.footer"
         )
         host.loadViewIfNeeded()
+        // `loadViewIfNeeded()` builds the tree but never lays it out, so every
+        // frame is still `.zero` and any comparison between two of them is
+        // trivially true. Give the host a size and lay it out, or the
+        // assertions below hold just as well with the footer pinned to the top.
+        host.view.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        host.view.layoutSubtreeIfNeeded()
 
         #expect(host.children.contains { $0 === content })
         #expect(content.view.superview === host.view)
         #expect(host.footer.superview === host.view)
-        #expect(host.footer.frame.minY <= content.view.frame.minY)
+        #expect(host.footer.frame.minY == 0)
+        #expect(content.view.frame.minY == host.footer.frame.maxY)
+        #expect(host.footer.frame.height == WindowFooterBar.height)
     }
 
     @Test("the host's status is the footer's status")
