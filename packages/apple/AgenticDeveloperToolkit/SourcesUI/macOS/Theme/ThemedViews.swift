@@ -459,8 +459,19 @@ open class ThemedSplitViewController: NSSplitViewController {
     /// items. `NSSplitViewController`'s own implementation indexes
     /// `splitViewItems` unguarded and throws on the empty array, so the answer
     /// for an item that doesn't exist yet has to come from here.
+    ///
+    /// The bound is `dividerIndex + 1`, not `dividerIndex`, because super
+    /// answers for the items on **both** sides of the divider — `i` and
+    /// `i + 1`. A split with `n` items has `n - 1` dividers, so the last item
+    /// has no divider after it and `i == count - 1` is already out of range;
+    /// admitting it let super index one past the end and throw
+    /// `NSRangeException` from inside this call. That index is not hypothetical
+    /// and is not rare in the one case that matters: removing a pane from a
+    /// two-item split drops `splitViewItems` to 1 while `NSSplitView` is still
+    /// mid-`_updateStackConstraints` and still asking about divider 0. Closing
+    /// a pane killed the app.
     open override func splitView(_ splitView: NSSplitView, shouldHideDividerAt dividerIndex: Int) -> Bool {
-        guard dividerIndex < splitViewItems.count else { return false }
+        guard dividerIndex + 1 < splitViewItems.count else { return false }
         return super.splitView(splitView, shouldHideDividerAt: dividerIndex)
     }
 }

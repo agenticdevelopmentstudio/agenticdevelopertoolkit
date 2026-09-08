@@ -137,6 +137,7 @@
 		445C4E55AD43853985313134 /* MessageBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAED4116CDAE8D3E06C83AC3 /* MessageBubbleView.swift */; };
 		44694CBF6AB6A1AC80FEBB15 /* ParticipantKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F0E70F68D78BF23EB422E /* ParticipantKind.swift */; };
 		452186592A529BFD75B61336 /* ThemeTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865EDA96C8B6EC33421F94C4 /* ThemeTypography.swift */; };
+		453AE6EACEE0A3EF4378C430 /* ThemedSplitViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2355340282A793C8B4157D33 /* ThemedSplitViewControllerTests.swift */; };
 		455F0E76505599456250A7DB /* InteractiveWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882F8924F0A1EE042D35F0FA /* InteractiveWidget.swift */; };
 		4573A3CA38B8C7EE058C5132 /* Attachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB7C14F13390F91F1D316A /* Attachment.swift */; };
 		459C8BE77BFF0BF9A8040F10 /* GatingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12F9E9ADA915E8FDE42580F /* GatingHook.swift */; };
@@ -575,6 +576,7 @@
 		1F37FAFB9568FE8A5E237DC4 /* PaneTitleBarViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneTitleBarViewTests.swift; sourceTree = "<group>"; };
 		1FCB7C14F13390F91F1D316A /* Attachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attachment.swift; sourceTree = "<group>"; };
 		22E4A7CA1407BEDA7898566B /* AgenticDeveloperToolkitUITests-iOS.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = "AgenticDeveloperToolkitUITests-iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2355340282A793C8B4157D33 /* ThemedSplitViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemedSplitViewControllerTests.swift; sourceTree = "<group>"; };
 		253FB49B525463580F8AEF22 /* InlineChatViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineChatViewTests.swift; sourceTree = "<group>"; };
 		2590481B695425D5DC01223F /* ThinkingPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingPhase.swift; sourceTree = "<group>"; };
 		25DEE813184B56AA317370C3 /* MarkdownFileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownFileImporter.swift; sourceTree = "<group>"; };
@@ -1410,6 +1412,7 @@
 				D667356755A5CF0E5A448FAC /* InMemoryThemeStorage.swift */,
 				357DF1D759596F335886DAEA /* SemanticPaletteFontTests.swift */,
 				47D91EBFEE59685428E60920 /* ThemedControlsTests.swift */,
+				2355340282A793C8B4157D33 /* ThemedSplitViewControllerTests.swift */,
 				6E7C8DE72ABDD1D98D9939F4 /* ThemeManagerTests.swift */,
 				0E9E1EC3ABA53070757B4CC3 /* ThemeScopeTests.swift */,
 				6B3C24B9A6B7B12F7AF7A211 /* ToolkitFontsTests.swift */,
@@ -1698,6 +1701,7 @@
 				C774BC44DCFEE77591297E58 /* ThemeManagerTests.swift in Sources */,
 				76A647CACABD398DE8925476 /* ThemeScopeTests.swift in Sources */,
 				3BCD54979E6601C715350348 /* ThemedControlsTests.swift in Sources */,
+				453AE6EACEE0A3EF4378C430 /* ThemedSplitViewControllerTests.swift in Sources */,
 				5A2147DC04A0108DA4A780EE /* ThinkingIndicatorViewTests.swift in Sources */,
 				8F58FDD9358EB14EE3AACCC6 /* ThinkingPhaseTests.swift in Sources */,
 				93D711F078025172218991B8 /* ToolCallPillViewTests.swift in Sources */,
