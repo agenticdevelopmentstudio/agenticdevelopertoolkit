@@ -136,8 +136,13 @@ extension WindowToolbarBuilder {
     public final class Delegate: NSObject, NSToolbarDelegate {
 
         private let items: [WindowToolbarItem]
-        private weak var target: AnyObject?
-        private weak var searchDelegate: NSSearchFieldDelegate?
+
+        /// Settable, not just an initialiser parameter: a window controller is
+        /// its own toolbar target and its own search delegate, and cannot hand
+        /// `self` to a stored property's initialiser. Still `weak` — the target
+        /// owns the delegate, never the other way round.
+        public weak var target: AnyObject?
+        public weak var searchDelegate: NSSearchFieldDelegate?
 
         /// Kept because AppKit skips `NSToolbarItemValidation` for custom-view
         /// items, so the owner has to reach in and set `isEnabled` itself.
