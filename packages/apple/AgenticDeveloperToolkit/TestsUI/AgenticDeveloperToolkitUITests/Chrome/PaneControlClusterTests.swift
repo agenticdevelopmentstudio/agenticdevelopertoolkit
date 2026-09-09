@@ -119,4 +119,26 @@ struct PaneControlClusterTests {
         cluster.isMinimized = true
         #expect(cluster.minimizeButton.isEnabled)
     }
+
+    /// `isBordered = false` buys the borderless look the title bar wants and
+    /// costs AppKit's own dimming of a disabled control: a borderless button
+    /// draws its template image in `contentTintColor` whether or not it is
+    /// enabled. So a pane that fills its tab would show a minimize button that
+    /// looks live and does nothing unless the tint is resolved from
+    /// `isEnabled` — which is what the sibling `PaneMinimizePicker` does.
+    @Test("a disabled minimize button is tinted as disabled, not as live")
+    func disabledMinimizeLooksDisabled() {
+        let cluster = PaneControlCluster()
+        let palette = cluster.resolvedThemeScope.palette
+
+        cluster.canMinimize = true
+        #expect(cluster.minimizeButton.contentTintColor == palette.nsColor(.secondaryText))
+
+        cluster.canMinimize = false
+        #expect(cluster.minimizeButton.contentTintColor == palette.nsColor(.tertiaryText))
+
+        // Restore is always enabled, so it always looks it.
+        cluster.isMinimized = true
+        #expect(cluster.minimizeButton.contentTintColor == palette.nsColor(.secondaryText))
+    }
 }

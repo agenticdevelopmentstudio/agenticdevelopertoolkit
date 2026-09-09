@@ -261,6 +261,65 @@ struct WindowDrawerTests {
         drawer.contentWidth = 10_000
         #expect(drawer.contentWidth == 520)
     }
+
+    /// The initialiser's width goes straight into `NSDrawer(contentSize:)`,
+    /// which happens before `minContentSize`/`maxContentSize` exist to police
+    /// it — so a remembered width has to be clamped by the drawer itself or a
+    /// stored `0` produces a drawer with no content at all.
+    @Test("a width handed to init is clamped the same way the setter clamps")
+    func initClampsTheRememberedWidth() {
+        for (given, expected) in [(CGFloat(0), CGFloat(220)), (-50, 220), (10_000, 520)] {
+            let drawer = WindowDrawer(
+                parentWindow: makeWindow(),
+                accessibilityPrefix: "project.drawer",
+                tabs: [tab("help", "Help")],
+                contentWidth: given)
+            #expect(drawer.contentWidth == expected)
+        }
+    }
+
+    /// A remembered width is parsed from a string, and `Double("nan")` and
+    /// `Double("inf")` both succeed. `min(max(.nan, 220), 520)` is `.nan` —
+    /// every comparison against NaN is false, so both `min` and `max` hand it
+    /// straight back — and a NaN size makes AppKit lay out nothing.
+    @Test("a width that is not a finite number falls back to the default")
+    func nonFiniteWidthsFallBackToTheDefault() {
+        for given in [CGFloat.nan, .infinity, -.infinity] {
+            let drawer = WindowDrawer(
+                parentWindow: makeWindow(),
+                accessibilityPrefix: "project.drawer",
+                tabs: [tab("help", "Help")],
+                contentWidth: given)
+            #expect(drawer.contentWidth == WindowDrawer.defaultContentWidth)
+
+            drawer.contentWidth = given
+            #expect(drawer.contentWidth == WindowDrawer.defaultContentWidth)
+        }
+    }
+
+    /// A drawer is built while its window is still being assembled — before a
+    /// toolbar has grown the titlebar, before a saved frame is restored — so
+    /// the height captured at init is not the height the window ends up with.
+    @Test("opening re-reads the parent window's height")
+    func openTracksTheParentWindowHeight() {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+
+        // Not an exact number: `NSDrawer` takes the titlebar and its own edge
+        // offsets out of whatever height it is handed, so what it settles on
+        // is AppKit's business. That it moved at all is ours — without the
+        // re-read this is still, exactly, the height captured in `init`.
+        let before = drawer.contentHeight
+        window.setFrame(NSRect(x: 0, y: 0, width: 600, height: 900), display: false)
+        drawer.open()
+        #expect(drawer.contentHeight > before)
+        #expect(drawer.contentHeight <= window.frame.height)
+        // The width is the owner's to remember, so opening leaves it alone.
+        #expect(drawer.contentWidth == WindowDrawer.defaultContentWidth)
+    }
 }
 
 /// A window that says it is minimised, because AppKit will not minimise one

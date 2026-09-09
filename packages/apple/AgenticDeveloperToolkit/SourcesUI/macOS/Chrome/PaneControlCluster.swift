@@ -1,4 +1,5 @@
 import AppKit
+import AgenticDeveloperToolkit
 
 /// The close / minimize / zoom row at the leading edge of a pane's title bar.
 ///
@@ -79,8 +80,21 @@ public final class PaneControlCluster: NSStackView {
         button.target = self
         button.action = action
         button.observeTheme { button, palette in
-            button.contentTintColor = palette.nsColor(.secondaryText)
+            button.contentTintColor = Self.tint(for: button, in: palette)
         }
+    }
+
+    /// A disabled button has to *look* disabled. `isBordered = false` above
+    /// buys the borderless look the title bar wants, and costs AppKit's own
+    /// dimming of a disabled control along with it — a borderless button draws
+    /// its template image in `contentTintColor` whether or not it is enabled,
+    /// so without this the minimize button greys out functionally and not
+    /// visually, and a pane that fills its tab shows a button that looks live
+    /// and does nothing. The sibling `PaneMinimizePicker` already resolves its
+    /// tint this way; this is the same rule, in one place both call sites can
+    /// reach (`dry`).
+    private static func tint(for button: NSButton, in palette: SemanticPalette) -> NSColor {
+        palette.nsColor(button.isEnabled ? .secondaryText : .tertiaryText)
     }
 
     /// One place that turns the three flags into what the buttons look like.
@@ -100,6 +114,10 @@ public final class PaneControlCluster: NSStackView {
             minimizeButton.image = NSImage(systemSymbolName: "minus", accessibilityDescription: "Minimize Pane")
             minimizeButton.isEnabled = canMinimize
         }
+        // `observeTheme` fires on theme changes, and enabling is not one — so
+        // the tint has to be re-resolved here, at the point `isEnabled` moved.
+        minimizeButton.contentTintColor = Self.tint(
+            for: minimizeButton, in: resolvedThemeScope.palette)
 
         let zoomTitle = isZoomed ? "Unzoom Pane" : "Zoom Pane"
         let zoomSymbol = isZoomed

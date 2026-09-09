@@ -142,11 +142,36 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     public var contentWidth: CGFloat {
         get { self.drawer.contentSize.width }
         set {
-            let clamped = min(max(newValue, Self.minContentWidth), Self.maxContentWidth)
             self.drawer.contentSize = NSSize(
-                width: clamped, height: self.drawer.contentSize.height)
+                width: Self.clampedContentWidth(newValue),
+                height: self.drawer.contentSize.height)
         }
     }
+
+    /// The one place a width from outside becomes a width the drawer will
+    /// accept, so `init` and the setter cannot disagree — the initialiser
+    /// hands its width straight to `NSDrawer(contentSize:)`, which happens
+    /// before `minContentSize`/`maxContentSize` are set and so is not clamped
+    /// by anything else.
+    ///
+    /// The `isFinite` guard is not decoration: a remembered width is parsed
+    /// from a string, and `Double("nan")` and `Double("inf")` both succeed.
+    /// `min(max(.nan, 220), 520)` is `.nan` in Swift — comparisons against NaN
+    /// are all false, so both `min` and `max` return it — and a NaN size makes
+    /// AppKit's layout produce nothing at all. Anything not finite falls back
+    /// to the default rather than to a bound, because it carries no
+    /// information about which end the user meant.
+    private static func clampedContentWidth(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return Self.defaultContentWidth }
+        return min(max(value, Self.minContentWidth), Self.maxContentWidth)
+    }
+
+    /// The height the drawer is currently sized to. Read-only — height is the
+    /// window's to decide, which is why `minContentSize`/`maxContentSize`
+    /// leave it at zero — and public for the same reason `tabStrip` is: it is
+    /// the only way from outside this file to see that `open()` re-read the
+    /// parent window.
+    public var contentHeight: CGFloat { self.drawer.contentSize.height }
 
     public var tabStripIsHidden: Bool { self.tabStrip.isHidden }
 
@@ -169,7 +194,9 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
         contentWidth: CGFloat = WindowDrawer.defaultContentWidth
     ) {
         self.drawer = NSDrawer(
-            contentSize: NSSize(width: contentWidth, height: parentWindow.frame.height),
+            contentSize: NSSize(
+                width: WindowDrawer.clampedContentWidth(contentWidth),
+                height: parentWindow.frame.height),
             preferredEdge: .maxX)
         self.tabs = tabs
         self.accessibilityPrefix = accessibilityPrefix
@@ -312,8 +339,18 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// screen, which is the exact case `reapplyVisibility` exists for. The
     /// price is that one open can be announced twice, so a consumer of
     /// `onVisibilityChange` has to be idempotent.
+    /// The height is re-read here rather than trusted from `init`, because a
+    /// drawer is routinely built while its window is still being assembled —
+    /// before a toolbar has grown the titlebar, before a saved frame has been
+    /// restored — and the height captured then is not the height the window
+    /// ends up with. Reading it at open time makes the construction order stop
+    /// mattering. Width is left alone: that one is the owner's to remember.
     public func open(selecting id: String? = nil) {
         self.select(id)
+        if let height = self.parentWindow?.frame.height, height > 0 {
+            self.drawer.contentSize = NSSize(
+                width: self.drawer.contentSize.width, height: height)
+        }
         self.drawer.open()
         self.onVisibilityChange?()
     }
