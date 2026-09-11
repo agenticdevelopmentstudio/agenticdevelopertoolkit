@@ -324,18 +324,25 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
 
     /// Lays the bezel over `NSDrawerFrame`, once.
     ///
-    /// Called from `init` *and* from `open()` because the frame view is
-    /// AppKit's to make: it exists as soon as `contentView` is assigned in
-    /// every case seen so far, but a drawer whose window is still being
-    /// assembled is exactly the case `open()` already re-reads the parent for,
-    /// and a white rim is not worth an assumption. `superview == nil` is the
-    /// idempotence check, so the second call costs a pointer comparison.
+    /// Called from `init` *and* from both sides of `open()` because the frame
+    /// view is AppKit's to make: it exists as soon as `contentView` is assigned
+    /// in every case seen so far, but a drawer whose window is still being
+    /// assembled may not have one until it opens, and a white rim is not worth
+    /// an assumption.
+    ///
+    /// The idempotence check is "already in *this* frame view", not "already in
+    /// some superview". `NSDrawer` rebuilds its `NSDrawerFrame` when the edge
+    /// changes or `contentView` is reassigned, and after that the bezel is
+    /// stranded in the old, orphaned frame — which a `superview == nil` check
+    /// reads as installed and never repairs, so the rim comes back for good.
     ///
     /// Autoresized rather than constrained: `NSDrawerFrame` is not ours and
     /// lays its one subview out by frame, so a constraint against it would be
     /// a second, competing layout pass on a view AppKit owns.
     private func installBezelIfNeeded() {
-        guard self.bezel.superview == nil, let frameView = self.container.superview else { return }
+        guard let frameView = self.container.superview,
+              self.bezel.superview !== frameView else { return }
+        self.bezel.removeFromSuperview()
         self.bezel.frame = frameView.bounds
         self.bezel.autoresizingMask = [.width, .height]
         frameView.addSubview(self.bezel, positioned: .below, relativeTo: self.container)
@@ -428,6 +435,12 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
                 width: self.drawer.contentSize.width, height: height)
         }
         self.drawer.open()
+        // Again, after the fact: `NSDrawer` creates its frame view as part of
+        // opening, so the call above this one cannot see a frame that did not
+        // exist yet — which is the very case that call was added for. With the
+        // guard keyed to the current frame view, this costs one pointer
+        // comparison whenever the bezel is already where it belongs.
+        self.installBezelIfNeeded()
         self.onVisibilityChange?()
     }
 
