@@ -1,4 +1,35 @@
 import AppKit
+import AgenticDeveloperToolkit
+
+/// A view that paints whatever it wraps and never takes a click.
+///
+/// `hitTest(_:)` returning `nil` ends AppKit's search for this branch outright,
+/// children included — which is the point: this exists to lay colour over a
+/// view that owns the mouse, not to take the mouse from it.
+///
+/// Composition rather than a subclass of `ThemedBackgroundView` because that
+/// type is `final`, and rightly so: "what colour am I" and "do I take clicks"
+/// are two concerns, and this way either can be swapped without the other.
+@MainActor
+final class MouseTransparentView: NSView {
+
+    init(containing content: NSView) {
+        super.init(frame: .zero)
+        content.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: self.topAnchor),
+            content.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+}
 
 /// One tab in a `WindowDrawer`.
 ///
@@ -87,8 +118,32 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// is the answer `closeIsAttributableToTheReader` below wants: a window
     /// that is gone is teardown, not a drag.
     private weak var parentWindow: NSWindow?
-    private let container = ThemedBackgroundView(role: .surface)
+
+    /// The drawer's ground, and the colour its AppKit-drawn border is painted
+    /// over below.
+    ///
+    /// `.windowBackground` rather than `.surface`: a drawer is a piece of its
+    /// window, not a card floating above one, and what it holds is built from
+    /// the same views the window's own content is — which paint that role.
+    /// Two near-identical greys meeting at the drawer's edge only read as a
+    /// misprint.
+    private static let groundRole: ThemeRole = .windowBackground
+
+    private let container = ThemedBackgroundView(role: WindowDrawer.groundRole)
     private let body = NSView()
+
+    /// Paints AppKit's own drawer border in the theme's colour.
+    ///
+    /// `NSDrawer` puts the content view inside an `NSDrawerFrame` a few points
+    /// larger on every side, and that frame draws itself opaquely in the
+    /// *system* appearance — which is a white rim around a dark drawer
+    /// whenever the app's theme and the system's do not agree. The frame is
+    /// AppKit's and cannot be told what colour to be; a subview can, and a
+    /// subview draws after its superview's `drawRect`. So this is laid over
+    /// the frame, under the content, and is transparent to the mouse so the
+    /// drag on the outer edge that resizes the drawer still reaches the frame.
+    private let bezel = MouseTransparentView(
+        containing: ThemedBackgroundView(role: WindowDrawer.groundRole))
 
     /// The drawer's own content, and the view its body swaps into. Exposed for
     /// the identifiers on them — a test, and a UI test, need a handle on both.
@@ -210,6 +265,7 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
         self.drawer.parentWindow = parentWindow
         self.parentWindow = parentWindow
         self.drawer.contentView = self.container
+        self.installBezelIfNeeded()
         // So a drawer the *user* moves is announced too — see the delegate
         // methods below. This object owns the drawer, so pointing the delegate
         // back at ourselves makes no cycle — but it is not zeroing-weak
@@ -264,6 +320,32 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
         // One segment is a button that does nothing. Keep it in the hierarchy
         // so a second tab later needs no layout change — just unhide it.
         self.tabStrip.isHidden = self.tabs.count < 2
+    }
+
+    /// Lays the bezel over `NSDrawerFrame`, once.
+    ///
+    /// Called from `init` *and* from both sides of `open()` because the frame
+    /// view is AppKit's to make: it exists as soon as `contentView` is assigned
+    /// in every case seen so far, but a drawer whose window is still being
+    /// assembled may not have one until it opens, and a white rim is not worth
+    /// an assumption.
+    ///
+    /// The idempotence check is "already in *this* frame view", not "already in
+    /// some superview". `NSDrawer` rebuilds its `NSDrawerFrame` when the edge
+    /// changes or `contentView` is reassigned, and after that the bezel is
+    /// stranded in the old, orphaned frame — which a `superview == nil` check
+    /// reads as installed and never repairs, so the rim comes back for good.
+    ///
+    /// Autoresized rather than constrained: `NSDrawerFrame` is not ours and
+    /// lays its one subview out by frame, so a constraint against it would be
+    /// a second, competing layout pass on a view AppKit owns.
+    private func installBezelIfNeeded() {
+        guard let frameView = self.container.superview,
+              self.bezel.superview !== frameView else { return }
+        self.bezel.removeFromSuperview()
+        self.bezel.frame = frameView.bounds
+        self.bezel.autoresizingMask = [.width, .height]
+        frameView.addSubview(self.bezel, positioned: .below, relativeTo: self.container)
     }
 
     private func buildContainer() {
@@ -346,12 +428,19 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// ends up with. Reading it at open time makes the construction order stop
     /// mattering. Width is left alone: that one is the owner's to remember.
     public func open(selecting id: String? = nil) {
+        self.installBezelIfNeeded()
         self.select(id)
         if let height = self.parentWindow?.frame.height, height > 0 {
             self.drawer.contentSize = NSSize(
                 width: self.drawer.contentSize.width, height: height)
         }
         self.drawer.open()
+        // Again, after the fact: `NSDrawer` creates its frame view as part of
+        // opening, so the call above this one cannot see a frame that did not
+        // exist yet — which is the very case that call was added for. With the
+        // guard keyed to the current frame view, this costs one pointer
+        // comparison whenever the bezel is already where it belongs.
+        self.installBezelIfNeeded()
         self.onVisibilityChange?()
     }
 
