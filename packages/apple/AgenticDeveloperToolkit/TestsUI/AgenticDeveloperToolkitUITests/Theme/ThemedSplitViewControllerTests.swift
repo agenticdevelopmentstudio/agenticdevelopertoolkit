@@ -11,7 +11,8 @@ import AppKit
 /// override has to refuse before super sees them: the empty array AppKit asks
 /// about while it measures a split view inside `viewDidLoad`, and the
 /// `i == count - 1` that a pane removal produces, where AppKit still asks about
-/// the divider whose second item has just gone away.
+/// the divider whose second item has just gone away. A removal caught one beat
+/// earlier produces a third: divider `-1`, which super indexes unsigned.
 @MainActor
 @Suite("ThemedSplitViewController divider hiding")
 struct ThemedSplitViewControllerTests {
@@ -44,6 +45,19 @@ struct ThemedSplitViewControllerTests {
     func soloItem() {
         let controller = makeController(items: 1)
         #expect(controller.splitView(controller.splitView, shouldHideDividerAt: 0) == false)
+    }
+
+    /// The second half of the same regression, and the one that took the app
+    /// down on closing the notes pane: with the removed pane's view already out
+    /// of `arrangedSubviews` and its item still in `splitViewItems`, AppKit's
+    /// divider walk runs one short and asks about `-1`. Super indexes with it
+    /// unsigned, so the array reports `index 18446744073709551615`.
+    @Test("A negative divider is refused rather than indexed unsigned")
+    func negativeDivider() {
+        for count in 0...3 {
+            let controller = makeController(items: count)
+            #expect(controller.splitView(controller.splitView, shouldHideDividerAt: -1) == false)
+        }
     }
 
     /// And the guard is not so tight that it swallows the real question: a
