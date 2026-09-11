@@ -416,12 +416,12 @@ extension SemanticPalette {
     }
 }
 
-/// The project window's two resolved colors.
+/// The project window's resolved colors.
 ///
-/// Both are a theme override falling back to a role, and both are read from
-/// more than one place — the pane view and the split view's gutter both paint
-/// the backdrop, the pane view and the theme editor both need the outline — so
-/// the fallback lives here rather than being spelled out at each site (`dry`).
+/// Each is read from more than one place — the pane view and the split view's
+/// gutter both paint the backdrop, the workspace, the tabs and the theme editor
+/// all draw the outline — so what each one resolves to lives here rather than
+/// being spelled out at every site (`dry`).
 extension SemanticPalette {
 
     /// The plane a project window's panes sit on: what shows through the frame
@@ -432,10 +432,24 @@ extension SemanticPalette {
         theme.project?.paneBackdrop ?? elevatedSurface
     }
 
-    /// The border around the pane the user is working in. The outline role, not
-    /// a surface tone: this is a two-point line, and a line drawn in the tone of
-    /// an adjacent plane is a line nobody can see.
+    /// The line around the project window's own shapes — the workspace and the
+    /// tabs standing against it.
+    ///
+    /// The hairline tone, the same one the panes inside are drawn with: their
+    /// title bars end in it and their dividers are a step fainter still. The
+    /// workspace is the frame around all of that, so it is drawn as quietly as
+    /// what it frames — `projectActivePaneOutline` is the colour reserved for
+    /// saying *here*, and it says nothing if the frame is already shouting.
     public var projectPaneOutline: RGBAColor {
-        theme.project?.paneOutline ?? outline
+        theme.project?.paneOutline ?? border
     }
+
+    /// The line around the pane the user is working in.
+    ///
+    /// The theme's accent: the one colour a theme nominates for exactly this,
+    /// and the only place in the project window that earns it. Deliberately not
+    /// a theme override of its own — a theme that recolours `paneOutline`
+    /// restyles the frame, and the pane in front still stands out from whatever
+    /// it chose.
+    public var projectActivePaneOutline: RGBAColor { accent }
 }
