@@ -460,7 +460,7 @@ open class ThemedSplitViewController: NSSplitViewController {
     /// `splitViewItems` unguarded and throws on the empty array, so the answer
     /// for an item that doesn't exist yet has to come from here.
     ///
-    /// The bound is `dividerIndex + 1`, not `dividerIndex`, because super
+    /// The upper bound is `dividerIndex + 1`, not `dividerIndex`, because super
     /// answers for the items on **both** sides of the divider — `i` and
     /// `i + 1`. A split with `n` items has `n - 1` dividers, so the last item
     /// has no divider after it and `i == count - 1` is already out of range;
@@ -470,8 +470,15 @@ open class ThemedSplitViewController: NSSplitViewController {
     /// two-item split drops `splitViewItems` to 1 while `NSSplitView` is still
     /// mid-`_updateStackConstraints` and still asking about divider 0. Closing
     /// a pane killed the app.
+    ///
+    /// The lower bound is the same removal seen one moment earlier. While the
+    /// removed item's view is out of `arrangedSubviews` but its item is not yet
+    /// out of `splitViewItems`, AppKit's divider walk runs one short and asks
+    /// about divider `-1`. Super indexes with it unsigned — `index
+    /// 18446744073709551615 beyond bounds [0 .. 0]` — and closing the notes
+    /// pane killed the app again, from the same `_updateStackConstraints`.
     open override func splitView(_ splitView: NSSplitView, shouldHideDividerAt dividerIndex: Int) -> Bool {
-        guard dividerIndex + 1 < splitViewItems.count else { return false }
+        guard dividerIndex >= 0, dividerIndex + 1 < splitViewItems.count else { return false }
         return super.splitView(splitView, shouldHideDividerAt: dividerIndex)
     }
 }
