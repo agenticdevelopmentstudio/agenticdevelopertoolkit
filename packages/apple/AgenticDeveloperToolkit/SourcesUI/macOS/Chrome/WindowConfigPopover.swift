@@ -27,7 +27,7 @@ public final class WindowConfigPopover: NSObject {
     /// Place this in the window's chrome — `makeTitlebarAccessory()` does it
     /// the conventional way, but a borderless window with no title bar can put
     /// the same button in its own content instead.
-    public let gearButton = NSButton()
+    public let gearButton: NSButton
 
     /// Fires as the popover opens, before it is on screen and after the host
     /// window's refit has been frozen.
@@ -73,22 +73,37 @@ public final class WindowConfigPopover: NSObject {
         self.title = title
         self.makeControls = makeControls
         self.preferredEdge = preferredEdge
+        self.gearButton = Self.makeGearButton(tooltip: tooltip)
         super.init()
 
-        gearButton.translatesAutoresizingMaskIntoConstraints = false
-        gearButton.bezelStyle = .accessoryBarAction
-        gearButton.isBordered = false
-        gearButton.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: tooltip)
-        gearButton.imagePosition = .imageOnly
-        gearButton.toolTip = tooltip
         gearButton.target = self
         gearButton.action = #selector(gearTapped)
-        gearButton.observeTheme { button, palette in
-            button.contentTintColor = palette.nsColor(.secondaryText)
-        }
 
         popover.behavior = .transient
         popover.delegate = self
+    }
+
+    /// The gear, drawn the way this chrome draws every gear: borderless, the
+    /// `gearshape` symbol, tinted with the theme's secondary text.
+    ///
+    /// Public and separate from the popover because the *drawing* and the
+    /// *panel* are two different pieces of knowledge. A host whose gear raises
+    /// a menu instead of a popover is still showing this chrome's gear, and a
+    /// second spelling of these six lines is a second place to miss when the
+    /// symbol or the tint changes (`dry`). The caller supplies target and
+    /// action; everything about how it looks comes from here.
+    public static func makeGearButton(tooltip: String) -> NSButton {
+        let button = NSButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.bezelStyle = .accessoryBarAction
+        button.isBordered = false
+        button.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: tooltip)
+        button.imagePosition = .imageOnly
+        button.toolTip = tooltip
+        button.observeTheme { button, palette in
+            button.contentTintColor = palette.nsColor(.secondaryText)
+        }
+        return button
     }
 
     /// A right-hand title bar accessory holding the gear, plus whatever
