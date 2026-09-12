@@ -162,6 +162,16 @@ export interface TopicLevel {
    *  icon strip, which has nothing but the icon. This prop also currently suppresses the
    *  blocked marker — see the trap documented at the sr-only announcement in topic-detail.tsx. */
   hideItemIcons?: boolean
+  /** BATCH MODE for this level's rows: show a checkbox on each, so several can be acted on at
+   *  once from the stack's `toolbar`. The single selection underneath is untouched — ticking a
+   *  box never opens or closes a detail, which is the whole point (the user is picking rows to
+   *  Delete or Transfer, not rows to look at). Drive it with `useBatchSelect`, whose one job is
+   *  that leaving the mode clears the ticks; ignored while this level is collapsed or covered to
+   *  an icon strip, where a box has nothing visible to belong to. */
+  checkable?: boolean
+  /** Which of this level's rows are ticked. Read-only — rows call {@link onToggleChecked}. */
+  checkedIds?: ReadonlySet<string>
+  onToggleChecked?: (id: string) => void
 }
 
 /** The top bar: a breadcrumb trail (leading root, then each selected level, then any
@@ -1641,6 +1651,9 @@ function MinimizedStack({
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
               hideItemIcons={level.hideItemIcons}
+              checkable={level.checkable}
+              checkedIds={level.checkedIds}
+              onToggleChecked={level.onToggleChecked}
               collapsed={isCollapsed(level)}
               onToggle={manualCollapse ? (e) => setCollapse(i, e) : () => {}}
               onResize={(w) => onResizeLevel(level, w)}
@@ -2185,6 +2198,9 @@ function CoveredStack({
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
               hideItemIcons={level.hideItemIcons}
+              checkable={level.checkable}
+              checkedIds={level.checkedIds}
+              onToggleChecked={level.onToggleChecked}
               // (#4) ONLY the TOPMOST (frontier) menu gets a right-justified close (✕) in its header —
               // not every child. It dismisses that menu and clears the selection in the PARENT list
               // that opened it (the root never qualifies). Drop any open reveal so the stack settles
@@ -2432,6 +2448,9 @@ function NarrowStack({
             railSlot={level.railSlot}
             headerSlot={level.headerSlot}
             hideItemIcons={level.hideItemIcons}
+            checkable={level.checkable}
+            checkedIds={level.checkedIds}
+            onToggleChecked={level.onToggleChecked}
             // Nothing to disclose, cover or resize: the pane IS the whole view.
             collapsed={false}
             onToggle={() => {}}

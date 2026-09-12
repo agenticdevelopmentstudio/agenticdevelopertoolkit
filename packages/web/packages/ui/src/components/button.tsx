@@ -22,8 +22,24 @@ import { PressableButton } from "./button-pressable"
 // The family theme is var-driven (light/dark resolve through the runtime M3 role
 // vars), so no `dark:` forks here — they'd fire off the visitor's OS scheme and
 // diverge from the active theme. Values below are the family treatments.
+//
+// A SURFACE CAN RAISE THE FLOOR without restyling a single button. `--adh-button-min-height`
+// and `--adh-button-min-width` default to `0px`, so nothing changes anywhere until an
+// ancestor sets them; a surface that wants a bigger hit target (shipr's dialogs, where the
+// buttons were reported as too small) sets the pair once on itself and every descendant
+// button grows — whatever its `size`, and including ones nested components render that the
+// surface never names. The alternative was passing `size="lg"` down through every dialog,
+// every button bar and every shared component between them, which is the same decision made
+// in a hundred places and is why it drifted in the first place.
+//
+// The `icon*` sizes REDEFINE `--adh-button-min-width` on themselves, to the min-HEIGHT var: an
+// icon button is square by definition, and a wider floor than tall would turn it into a lozenge.
+// It redefines the variable rather than emitting a second `min-w-*` utility, because
+// `buttonVariants` is also called bare (`<Link className={buttonVariants()}/>`) where no
+// tailwind-merge runs to resolve the two — and which of two arbitrary `min-width` utilities wins
+// there is decided by CSS source order, i.e. by nothing anyone can see from here.
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-[pressed]:not-aria-[haspopup]:translate-y-px data-[pressed]:not-aria-[haspopup]:brightness-95 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive/50 aria-invalid:ring-3 aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-[pressed]:not-aria-[haspopup]:translate-y-px data-[pressed]:not-aria-[haspopup]:brightness-95 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive/50 aria-invalid:ring-3 aria-invalid:ring-destructive/40 min-h-[var(--adh-button-min-height,0px)] min-w-[var(--adh-button-min-width,0px)] [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -54,12 +70,12 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
+        icon: "size-8 [--adh-button-min-width:var(--adh-button-min-height,0px)]",
         "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+          "size-6 [--adh-button-min-width:var(--adh-button-min-height,0px)] rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+          "size-7 [--adh-button-min-width:var(--adh-button-min-height,0px)] rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-lg": "size-9 [--adh-button-min-width:var(--adh-button-min-height,0px)]",
       },
     },
     defaultVariants: {

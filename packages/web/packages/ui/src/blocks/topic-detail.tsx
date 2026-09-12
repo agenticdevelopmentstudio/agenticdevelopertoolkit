@@ -17,6 +17,7 @@ import {
 import { ChevronRight, Circle, Loader2, Plus, Trash2, X } from "lucide-react"
 
 import { AlertModal } from "../components/alert-modal"
+import { Checkbox } from "../components/checkbox"
 import { CollapseToggle } from "../components/collapse-toggle"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/tooltip"
 import { cn } from "../lib/utils"
@@ -181,6 +182,9 @@ function TopicList({
   hoverBar = true,
   hideItemIcons = false,
   onPrefetch,
+  checkable = false,
+  checkedIds,
+  onToggleChecked,
 }: {
   items: TopicDetailItem[]
   selectedId: string | null
@@ -221,6 +225,16 @@ function TopicList({
    *  keyboard focus has rested on it for {@link PREFETCH_DWELL_MS}. Fire-and-forget: the row
    *  never waits on it and never shows anything for it. Omit for no prefetching at all. */
   onPrefetch?: (id: string) => void
+  /** BATCH MODE: show a checkbox on every row, so several can be acted on at once. The row button
+   *  keeps its own single-selection behaviour underneath — ticking a box is not selecting a row,
+   *  and a surface that conflated the two would lose the open detail every time the user ticked a
+   *  fourth thing to delete. Ignored in the icon-only strips (collapsed / covered): a 16px box in a
+   *  40px peek has nothing to say which row it belongs to. Drive it with `useBatchSelect`, which
+   *  owns the one rule that matters — leaving the mode clears the ticks. */
+  checkable?: boolean
+  /** Which rows are ticked. Read-only: the row calls {@link onToggleChecked} and the owner writes. */
+  checkedIds?: ReadonlySet<string>
+  onToggleChecked?: (id: string) => void
 }) {
   // Icon-only layouts share the no-label row: `collapsed` CENTRES the icon (minimized icon strip);
   // `covered` keeps it LEFT-aligned so the icon stays inside the peek.
@@ -335,7 +349,10 @@ function TopicList({
                 // `pl-2` is the leading gap from the list's edge to the row's ICON — half the
                 // original inset, so rows sit closer to the edge and a covered list's 40px peek
                 // shows more of its icon. The root's selection dash below is sized to fit inside it.
-                "gap-2 pt-1 pb-0.5 pl-2 text-left font-mono text-[0.8rem] tracking-[0.02em]",
+                // In batch mode the checkbox is a SIBLING sitting in that gap (a box cannot nest in
+                // the row button), so the gap widens to hold it rather than the label sliding under it.
+                "gap-2 pt-1 pb-0.5 text-left font-mono text-[0.8rem] tracking-[0.02em]",
+                checkable && !hideLabel ? "pl-8" : "pl-2",
                 deletable ? "pr-9" : "pr-3",
               ),
           item.disabled
@@ -500,6 +517,7 @@ function TopicList({
           const active = item.id === selectedId
           const button = itemButton(item, active)
           const deletable = !!item.onDelete && !iconOnly
+          const checkboxed = checkable && !iconOnly
           return (
             <Fragment key={item.id}>
               <li>
@@ -512,13 +530,30 @@ function TopicList({
                       {item.label}
                     </TooltipContent>
                   </Tooltip>
-                ) : deletable ? (
-                  // The row and its hover-revealed trash render as SIBLINGS (a button cannot nest in
-                  // the row button). The trash carries `data-htd-delete` so the hierarchical stack's
-                  // connector overlay breaks the selection line around it (a computed gap — the
-                  // overlay paints above the rail, so occlusion is not possible).
+                ) : deletable || checkboxed ? (
+                  // The row and its accessories render as SIBLINGS (neither a checkbox nor a button
+                  // can nest inside the row button). The trash carries `data-htd-delete` so the
+                  // hierarchical stack's connector overlay breaks the selection line around it (a
+                  // computed gap — the overlay paints above the rail, so occlusion is not possible).
                   <div className="group/htd-row relative">
+                    {checkboxed && (
+                      // Sits in the leading gap the row's `pl-8` opened. Above the row (`z-10`) so
+                      // the tick lands on the box rather than changing the single selection — the
+                      // whole point of batch mode is acting on rows OTHER than the open one.
+                      <span
+                        data-htd-check
+                        className="absolute top-1/2 left-2 z-10 flex -translate-y-1/2 items-center"
+                      >
+                        <Checkbox
+                          checked={checkedIds?.has(item.id) ?? false}
+                          onCheckedChange={() => onToggleChecked?.(item.id)}
+                          disabled={item.disabled}
+                          aria-label={item.label}
+                        />
+                      </span>
+                    )}
                     {button}
+                    {deletable && (
                     <button
                       type="button"
                       data-htd-delete
@@ -536,6 +571,7 @@ function TopicList({
                     >
                       <Trash2 size={14} aria-hidden />
                     </button>
+                    )}
                   </div>
                 ) : (
                   button
@@ -616,6 +652,9 @@ export function TopicRail({
   hoverBar = true,
   hideItemIcons = false,
   onPrefetch,
+  checkable = false,
+  checkedIds,
+  onToggleChecked,
   onFit,
 }: {
   items: TopicDetailItem[]
@@ -713,6 +752,10 @@ export function TopicRail({
    *  through; this component neither calls it nor knows what it warms (data, a route, or both).
    *  It cannot: warming a ROUTE needs a router, and this package owns no router instance. */
   onPrefetch?: (id: string) => void
+  /** BATCH MODE for this rail's rows — see {@link TopicList}'s `checkable`. Forwarded verbatim. */
+  checkable?: boolean
+  checkedIds?: ReadonlySet<string>
+  onToggleChecked?: (id: string) => void
   /**
    * Report the width this rail's ROWS actually want, in px, already clamped to
    * [MIN_FIT_RAIL, MAX_FIT_RAIL].
@@ -1052,6 +1095,9 @@ export function TopicRail({
           hideItemIcons={hideItemIcons}
           rowDisclosure={rowDisclosure}
           onPrefetch={onPrefetch}
+          checkable={checkable}
+          checkedIds={checkedIds}
+          onToggleChecked={onToggleChecked}
         />
       </div>
       {footer && <div className="shrink-0 border-t border-apt-border p-2">{footer}</div>}
