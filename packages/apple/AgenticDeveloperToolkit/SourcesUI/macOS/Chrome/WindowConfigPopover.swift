@@ -187,7 +187,20 @@ public final class WindowConfigPopover: NSObject {
     /// every row's slider starts and ends in the same place. Internal so a
     /// test can assert the assembly without presenting a popover.
     final class ContentViewController: NSViewController {
-        static let popoverWidth: CGFloat = 300
+        /// Wide enough that a slider has room to be aimed with and a caption
+        /// like "140%" does not crowd the title beside it. It was 300 when the
+        /// rows were drawn at the small control size; they are at the standard
+        /// one now, so the same rows need more room.
+        static let popoverWidth: CGFloat = 340
+
+        /// The stack's side inset. Named, because the per-control width
+        /// constraint below has to subtract exactly twice it — a literal there
+        /// is how a row ends up wider than the panel the next time an inset
+        /// changes.
+        static let horizontalInset: CGFloat = 20
+
+        /// Above the title and below the last control.
+        static let verticalInset: CGFloat = 18
 
         private let popoverTitle: String
         private let controls: [NSView]
@@ -208,8 +221,10 @@ public final class WindowConfigPopover: NSObject {
             let stack = NSStackView(views: [titleLabel] + controls)
             stack.orientation = .vertical
             stack.alignment = .leading
-            stack.spacing = 12
-            stack.edgeInsets = NSEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+            stack.spacing = 16
+            stack.edgeInsets = NSEdgeInsets(
+                top: Self.verticalInset, left: Self.horizontalInset,
+                bottom: Self.verticalInset, right: Self.horizontalInset)
             stack.translatesAutoresizingMaskIntoConstraints = false
 
             // A popover floats above everything, so it takes the theme's most
@@ -228,7 +243,8 @@ public final class WindowConfigPopover: NSObject {
             // Leading-aligned content such as a checkbox is unaffected by the
             // extra trailing space.
             for control in controls {
-                constraints.append(control.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -32))
+                constraints.append(control.widthAnchor.constraint(
+                    equalTo: stack.widthAnchor, constant: -Self.horizontalInset * 2))
             }
             NSLayoutConstraint.activate(constraints)
             view = root
@@ -254,6 +270,11 @@ extension WindowConfigPopover: NSPopoverDelegate {
 /// The caption is the point. A slider between two unlabelled ends tells a
 /// reader only that they have moved it; "120%" tells them where they are and
 /// lets them put it back.
+///
+/// Title and caption are at the **standard** control size, not the small one
+/// they used to be. These are a window's own settings, read and aimed at like
+/// any other control, and the small size made the panel look like a tooltip
+/// about the gear rather than the place the settings live.
 @MainActor
 public final class WindowConfigSlider: NSView {
 
@@ -276,9 +297,9 @@ public final class WindowConfigSlider: NSView {
         super.init(frame: .zero)
 
         let titleLabel = NSTextField(labelWithString: title)
-        titleLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        titleLabel.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
 
-        captionLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        captionLabel.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         captionLabel.textColor = .secondaryLabelColor
         captionLabel.alignment = .right
         captionLabel.stringValue = caption(value)
@@ -299,7 +320,7 @@ public final class WindowConfigSlider: NSView {
         let stack = NSStackView(views: [header, slider])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 4
+        stack.spacing = 6
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         NSLayoutConstraint.activate([
@@ -336,7 +357,7 @@ public final class WindowConfigToggle: NSView {
         super.init(frame: .zero)
 
         checkbox.state = isOn ? .on : .off
-        checkbox.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        checkbox.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         checkbox.target = self
         checkbox.action = #selector(toggled)
         checkbox.translatesAutoresizingMaskIntoConstraints = false
@@ -355,4 +376,49 @@ public final class WindowConfigToggle: NSView {
     @objc private func toggled() {
         onChange(isOn)
     }
+}
+
+/// The "Reset to Defaults" button at the foot of a window's config panel,
+/// centered under the last control.
+///
+/// A component rather than a button each window spells out, because the wording
+/// and the position are the shared part: a reader who finds the reset centered
+/// at the bottom of one window's panel looks for it there in the next one.
+/// *What* it puts back is that window's own business — each one owns a
+/// different set of settings — so a host passes a closure and nothing else.
+@MainActor
+public final class WindowConfigResetButton: NSView {
+
+    /// One name for the action, so two panels cannot end up offering "Reset"
+    /// and "Restore Defaults" for the same button.
+    public static let title = "Reset to Defaults"
+
+    private let onReset: () -> Void
+
+    public init(onReset: @escaping () -> Void) {
+        self.onReset = onReset
+        super.init(frame: .zero)
+
+        let button = NSButton(title: Self.title, target: nil, action: nil)
+        button.bezelStyle = .rounded
+        button.target = self
+        button.action = #selector(pressed)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(button)
+        // Centered rather than stretched to the panel width: every row above it
+        // spans the full width, and a reset that did the same would read as one
+        // more of them instead of the action underneath them.
+        NSLayoutConstraint.activate([
+            button.topAnchor.constraint(equalTo: topAnchor),
+            button.bottomAnchor.constraint(equalTo: bottomAnchor),
+            button.centerXAnchor.constraint(equalTo: centerXAnchor),
+            button.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),
+            trailingAnchor.constraint(greaterThanOrEqualTo: button.trailingAnchor)
+        ])
+    }
+
+    @available(*, unavailable)
+    public required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @objc private func pressed() { onReset() }
 }

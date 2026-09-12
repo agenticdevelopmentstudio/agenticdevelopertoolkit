@@ -90,6 +90,26 @@ public struct WindowAppearanceDefaults: Sendable {
         nonmutating set { defaults.set(!newValue, forKey: key("blinkCaret.off")) }
     }
 
+    /// Forgets the three window settings — text size, transparency, and
+    /// whether the window floats — so each one reads as its own default again.
+    ///
+    /// Removing the keys rather than writing the default values back: every
+    /// default is stated once, in the getter above it, and a reset that
+    /// assigned `1` and `0` here would be a second copy of both that nothing
+    /// keeps in step. The legacy alpha key goes with the new one, or the
+    /// conversion above would resurrect the value the reset just cleared.
+    ///
+    /// `blinksCaret` and `showsBackdrop` are deliberately left alone: they are
+    /// reading preferences rather than the window's shape, and a reset that
+    /// quietly turned a backdrop back on would be doing something nobody asked
+    /// of it.
+    public func resetWindowAppearance() {
+        defaults.removeObject(forKey: key("textScale"))
+        defaults.removeObject(forKey: key("transparencyPercent"))
+        defaults.removeObject(forKey: key("transparency"))
+        defaults.removeObject(forKey: key("floating"))
+    }
+
     /// A stored double, or `fallback` when the key is absent — `UserDefaults`
     /// answers `0` for both, which as a text scale would lay the window out at
     /// no height. Clamped as well, so a hand-edited plist cannot do the same.

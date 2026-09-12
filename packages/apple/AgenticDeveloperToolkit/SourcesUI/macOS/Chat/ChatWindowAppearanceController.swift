@@ -146,7 +146,21 @@ public final class ChatWindowAppearanceController {
                         self?.chatView?.showsBackdrop = shows
                     }))
         }
+        // Last rather than directly under the text-size slider: the three it
+        // puts back are the first three rows, and a button wedged between them
+        // and the caret switch would read as belonging to the rows below it.
+        controls.append(WindowConfigResetButton { [weak self] in self?.resetAppearance() })
         return controls
+    }
+
+    /// Puts text size, transparency and floating back to their defaults.
+    ///
+    /// The panel is rebuilt afterwards because its controls read their values
+    /// once, as they are built — the same reason `nudgeTextScale` rebuilds it.
+    private func resetAppearance() {
+        defaults.resetWindowAppearance()
+        restore()
+        popover?.rebuildControls()
     }
 
     /// Through the chat's own `ThemeScope`, not `ThemeManager.textScale`.
