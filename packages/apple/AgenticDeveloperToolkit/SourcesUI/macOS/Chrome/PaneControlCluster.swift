@@ -11,8 +11,8 @@ import AgenticDeveloperToolkit
 ///
 /// It reports and does not decide. Closing a pane, working out where it may
 /// shrink to, and knowing whether it is currently zoomed all belong to whatever
-/// is hosting it; this view is told, through `isZoomed`, `isMinimized` and
-/// `canMinimize`, and it renders that.
+/// is hosting it; this view is told, through `isZoomed`, `isMinimized`,
+/// `canMinimize` and `canClose`, and it renders that.
 ///
 /// Four closures rather than a delegate: there are four events, the host is
 /// always exactly one object, and a protocol would make it declare conformance
@@ -44,6 +44,12 @@ public final class PaneControlCluster: NSStackView {
     /// space to. Ignored while minimized, because restoring has to stay
     /// reachable even if the tree changed shape underneath.
     public var canMinimize: Bool = true { didSet { applyState() } }
+
+    /// False for a pane its container will not give up — the one pane a tab is
+    /// required to have. A live-looking button that refuses every click reads as
+    /// a broken pane; a dim one reads as a protected pane, which is what it is
+    /// (`principle-of-least-astonishment`).
+    public var canClose: Bool = true { didSet { applyState() } }
 
     public init() {
         super.init(frame: .zero)
@@ -101,6 +107,10 @@ public final class PaneControlCluster: NSStackView {
     /// Spreading it across the three `didSet`s would make the middle button's
     /// appearance depend on the order the flags were assigned in.
     private func applyState() {
+        closeButton.isEnabled = canClose
+        closeButton.contentTintColor = Self.tint(
+            for: closeButton, in: resolvedThemeScope.palette)
+
         if isMinimized {
             minimizeButton.accessibilityID("pane.restore")
             minimizeButton.setAccessibilityLabel("Restore Pane")
