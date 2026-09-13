@@ -54,9 +54,9 @@ public final class PaneTitleBarView: NSView {
         }
     }
 
-    /// The gear button, supplied by whoever owns the options popover. A slot
-    /// rather than a built-in `WindowConfigPopover`, so this view does not have
-    /// to know what the popover contains or when it should rebuild.
+    /// The gear button, supplied by whoever owns the options dialog. A slot
+    /// rather than a built-in `WindowOptionsDialog`, so this view does not have
+    /// to know what the dialog contains or when it should rebuild.
     public var gearView: NSView? {
         didSet {
             oldValue?.removeFromSuperview()

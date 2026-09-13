@@ -10,7 +10,7 @@ import AppKit
 /// app supplies the two things that really are its own — the panel's title and
 /// the defaults namespace — and gets the rest.
 ///
-/// The three appliers are the same code the popover's controls call and the
+/// The three appliers are the same code the dialog's controls call and the
 /// same code `restore()` calls, so there is one description of what each
 /// setting *does* rather than one for changing and one for restoring.
 @MainActor
@@ -19,9 +19,9 @@ public final class ChatWindowAppearanceController {
     public let defaults: WindowAppearanceDefaults
 
     /// Held because `NSTitlebarAccessoryViewController` retains only the view:
-    /// the component that owns the popover and the gear's target has no other
+    /// the component that owns the dialog and the gear's target has no other
     /// owner.
-    private var popover: WindowConfigPopover?
+    private var options: WindowOptionsDialog?
 
     private let title: String
 
@@ -58,11 +58,11 @@ public final class ChatWindowAppearanceController {
     /// knows, and would move with whatever it was floating over.
     public func install(leading: [NSView] = []) {
         guard let window else { return }
-        let popover = WindowConfigPopover(title: title) { [weak self] in
+        let options = WindowOptionsDialog(title: title) { [weak self] in
             self?.makeControls() ?? []
         }
-        window.addTitlebarAccessoryViewController(popover.makeTitlebarAccessory(leading: leading))
-        self.popover = popover
+        window.addTitlebarAccessoryViewController(options.makeTitlebarAccessory(leading: leading))
+        self.options = options
         chatView?.onTextScaleNudge = { [weak self] step in self?.nudgeTextScale(by: step) }
         restore()
     }
@@ -79,7 +79,7 @@ public final class ChatWindowAppearanceController {
         defaults.textScale = clamped
         applyTextScale(clamped)
         // The panel, if it happens to be open, is showing the old number.
-        popover?.rebuildControls()
+        options?.rebuildControls()
     }
 
     /// Replays the saved settings onto the window and the chat, so the four
@@ -92,14 +92,14 @@ public final class ChatWindowAppearanceController {
         chatView?.showsBackdrop = defaults.showsBackdrop
     }
 
-    /// Built on first open rather than at construction, so the controls read
+    /// Built on each open rather than at construction, so the controls read
     /// live values and a window pays nothing for the panel at launch.
     ///
     /// Internal rather than private so the tests can ask what the panel *would*
     /// show without putting a window on screen to open it.
     func makeControls() -> [NSView] {
         var controls: [NSView] = [
-            WindowConfigSlider(
+            WindowOptionsSlider(
                 title: "Text Size",
                 value: defaults.textScale,
                 range: WindowAppearanceDefaults.textScaleRange,
@@ -108,7 +108,7 @@ public final class ChatWindowAppearanceController {
                     self?.defaults.textScale = scale
                     self?.applyTextScale(scale)
                 }),
-            WindowConfigSlider(
+            WindowOptionsSlider(
                 title: "Transparency",
                 value: defaults.transparency,
                 range: WindowAppearanceDefaults.transparencyRange,
@@ -117,14 +117,14 @@ public final class ChatWindowAppearanceController {
                     self?.defaults.transparency = transparency
                     self?.applyTransparency(transparency)
                 }),
-            WindowConfigToggle(
+            WindowOptionsToggle(
                 title: "Float above other windows",
                 isOn: defaults.isFloating,
                 onChange: { [weak self] floating in
                     self?.defaults.isFloating = floating
                     self?.applyFloating(floating)
                 }),
-            WindowConfigToggle(
+            WindowOptionsToggle(
                 title: "Blink caret",
                 isOn: defaults.blinksCaret,
                 onChange: { [weak self] blinks in
@@ -138,7 +138,7 @@ public final class ChatWindowAppearanceController {
         // — which is also what the documentation has always promised.
         if chatView?.backdrop != nil {
             controls.append(
-                WindowConfigToggle(
+                WindowOptionsToggle(
                     title: backdropToggleTitle,
                     isOn: defaults.showsBackdrop,
                     onChange: { [weak self] shows in
@@ -149,18 +149,18 @@ public final class ChatWindowAppearanceController {
         // Last rather than directly under the text-size slider: the three it
         // puts back are the first three rows, and a button wedged between them
         // and the caret switch would read as belonging to the rows below it.
-        controls.append(WindowConfigResetButton { [weak self] in self?.resetAppearance() })
+        controls.append(WindowOptionsResetButton { [weak self] in self?.resetAppearance() })
         return controls
     }
 
     /// Puts text size, transparency and floating back to their defaults.
     ///
-    /// The panel is rebuilt afterwards because its controls read their values
+    /// The dialog is rebuilt afterwards because its controls read their values
     /// once, as they are built — the same reason `nudgeTextScale` rebuilds it.
     private func resetAppearance() {
         defaults.resetWindowAppearance()
         restore()
-        popover?.rebuildControls()
+        options?.rebuildControls()
     }
 
     /// Through the chat's own `ThemeScope`, not `ThemeManager.textScale`.

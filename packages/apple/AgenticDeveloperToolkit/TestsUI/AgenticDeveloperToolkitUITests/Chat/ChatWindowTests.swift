@@ -5,8 +5,7 @@ import AgenticDeveloperToolkit
 @testable import AgenticDeveloperToolkitUI
 
 /// The window a host gets for free — the frame it remembers, the scope its
-/// content declares, the refit seam the gear freezes — and the switches behind
-/// its gear.
+/// content declares — and the switches behind its gear.
 @MainActor
 @Suite("Chat window")
 struct ChatWindowTests {
@@ -66,43 +65,6 @@ struct ChatWindowTests {
 
         #expect(content.resolvedThemeScope === controller.chatView.themeScope)
         #expect(sibling.resolvedThemeScope === controller.chatView.themeScope)
-    }
-
-    // MARK: The refit seam
-
-    /// Both halves are documented as idempotent, because the gear calls them
-    /// from notifications whose pairing it does not control.
-    @Test("suppressing and resuming the refit are each safe to repeat")
-    func refitSeamIsIdempotent() throws {
-        let controller = makeController()
-        let window = try #require(controller.window)
-        let minSize = window.contentMinSize
-        let maxSize = window.contentMaxSize
-
-        controller.suppressContentRefit()
-        controller.suppressContentRefit()
-        let frozen = window.contentRect(forFrameRect: window.frame).size
-        #expect(window.contentMinSize == frozen)
-        #expect(window.contentMaxSize == frozen)
-
-        controller.resumeContentRefit()
-        controller.resumeContentRefit()
-        #expect(window.contentMinSize == minSize)
-        #expect(window.contentMaxSize == maxSize)
-    }
-
-    /// A resume that never saw a suppress must not invent limits — that is what
-    /// "a window with nothing to refit is free to do nothing" means.
-    @Test("resuming a window that was never suppressed changes nothing")
-    func resumeWithoutSuppressIsANoOp() throws {
-        let controller = makeController()
-        let window = try #require(controller.window)
-        let minSize = window.contentMinSize
-        let maxSize = window.contentMaxSize
-
-        controller.resumeContentRefit()
-        #expect(window.contentMinSize == minSize)
-        #expect(window.contentMaxSize == maxSize)
     }
 
     // MARK: The switches behind the gear

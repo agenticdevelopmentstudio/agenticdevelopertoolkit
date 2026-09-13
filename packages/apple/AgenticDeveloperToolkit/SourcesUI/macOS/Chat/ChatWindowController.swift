@@ -61,7 +61,7 @@ public struct ChatWindowConfiguration: Sendable {
 /// Subclass it to add a host's own behaviour on top (a connect ritual, a
 /// status item, extra chrome); the window itself needs no subclass.
 @MainActor
-open class ChatWindowController: NSWindowController, ContentRefittingWindowController {
+open class ChatWindowController: NSWindowController {
 
     /// The chat this window holds. Public because a host's own machinery —
     /// a scripted arrival, a placeholder that changes with connection state —
@@ -207,49 +207,6 @@ open class ChatWindowController: NSWindowController, ContentRefittingWindowContr
     public func focusInput() {
         guard let field = window?.contentView?.firstEditableTextField() else { return }
         window?.makeFirstResponder(field)
-    }
-
-    // MARK: - ContentRefittingWindowController
-
-    /// Whether the gear's popover currently has the window frozen, so a slider
-    /// drag inside it cannot walk the window out from under the pointer.
-    private var isContentRefitSuppressed = false
-
-    /// The host's own limits, captured at freeze time. Restoring hardcoded
-    /// `.zero`/`.greatestFiniteMagnitude` instead would silently throw away any
-    /// minimum the host had set, the first time the gear was opened — and leave
-    /// the window draggable down to nothing.
-    private var suppressedContentMinSize: NSSize?
-    private var suppressedContentMaxSize: NSSize?
-
-    public func suppressContentRefit() {
-        guard !isContentRefitSuppressed, let window else { return }
-        isContentRefitSuppressed = true
-        suppressedContentMinSize = window.contentMinSize
-        suppressedContentMaxSize = window.contentMaxSize
-        let current = window.contentRect(forFrameRect: window.frame).size
-        window.contentMinSize = current
-        window.contentMaxSize = current
-    }
-
-    public func resumeContentRefit() {
-        guard isContentRefitSuppressed else { return }
-        isContentRefitSuppressed = false
-        if let window {
-            window.contentMinSize = suppressedContentMinSize ?? .zero
-            window.contentMaxSize = suppressedContentMaxSize
-                ?? NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
-        }
-        suppressedContentMinSize = nil
-        suppressedContentMaxSize = nil
-
-        // The refit the protocol asks for. This window does not size itself
-        // from its content — it keeps whatever size the reader dragged it to —
-        // so there is no frame to recompute; what there *is* is a layout pass
-        // owed to everything the sliders changed while the window was pinned,
-        // and running it here is what makes a text-size change land on the
-        // popover closing rather than at the next unrelated event.
-        window?.contentView?.layoutSubtreeIfNeeded()
     }
 }
 
