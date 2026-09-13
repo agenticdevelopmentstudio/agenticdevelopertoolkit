@@ -50,6 +50,7 @@ public final class PaneTitleBarView: NSView {
             }
             for view in newValue {
                 accessoryStack.addArrangedSubview(view)
+                if yieldsWidth { Self.yieldWidth(in: view) }
             }
         }
     }
@@ -63,6 +64,7 @@ public final class PaneTitleBarView: NSView {
             guard let gearView else { return }
             gearView.translatesAutoresizingMaskIntoConstraints = false
             addSubview(gearView)
+            if yieldsWidth { Self.yieldWidth(in: gearView) }
             NSLayoutConstraint.activate([
                 gearView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
                 gearView.centerYAnchor.constraint(equalTo: centerYAnchor)
@@ -73,6 +75,45 @@ public final class PaneTitleBarView: NSView {
             )
             accessoryTrailing.isActive = true
         }
+    }
+
+    /// Stops the bar insisting on the width its contents would prefer.
+    ///
+    /// A pane in a tree that divides whatever width its container has cannot
+    /// let its chrome demand more. Every view in here reaches the enclosing
+    /// split through this bar's required chain — `controls` pinned to the
+    /// leading edge, the gear to the trailing one, the title and the
+    /// accessories strung between them — so an intrinsic width in here lands
+    /// there as a floor the container never asked for, one per pane, and a tab
+    /// that opened a fourth editor drags the pane holding it wider. Below that
+    /// width the title truncates to nothing and the dots squeeze: the same
+    /// bargain the middle truncation already makes, and what
+    /// "the panes divide the width the container has, however little that is"
+    /// means for the chrome.
+    ///
+    /// One way. A pane does not stop being clamped to its container, and
+    /// restoring would mean remembering a priority per view — the label's is
+    /// not a button's — for a case that never happens (`yagni`).
+    public func yieldWidthToContainer() {
+        yieldsWidth = true
+        Self.yieldWidth(in: self)
+    }
+
+    /// Whether chrome installed from here on yields too. The gear and the
+    /// accessories arrive after `init`, and the accessories are replaced
+    /// whenever the content's controls change hands, so the bar re-applies this
+    /// itself rather than trusting each caller to re-ask.
+    private var yieldsWidth = false
+
+    /// The lowest priority a constraint may carry: a demand in name only.
+    private static let yieldingPriority = NSLayoutConstraint.Priority(rawValue: 1)
+
+    /// Depth-first, because a stack view's own priority says nothing about what
+    /// its children ask for — relaxing only the labels measurably left the
+    /// floor where it was.
+    private static func yieldWidth(in view: NSView) {
+        view.setContentCompressionResistancePriority(yieldingPriority, for: .horizontal)
+        for subview in view.subviews { yieldWidth(in: subview) }
     }
 
     private let background = ThemedBackgroundView(role: .elevatedSurface)
