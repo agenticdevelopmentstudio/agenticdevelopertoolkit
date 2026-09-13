@@ -47,7 +47,13 @@ public final class OptionsDialogViewController: NSViewController {
     /// crowd the title beside it. It was 320 when the rows were drawn at the
     /// small control size; they are at the standard one now, so the same rows
     /// need more room.
-    public static let defaultWidth: CGFloat = 340
+    ///
+    /// `nonisolated` because its only readers are the default arguments of two
+    /// `init`s — this class's own and `WindowOptionsDialog`'s — and a default
+    /// argument is evaluated in the caller's context, not the callee's. Reading
+    /// a main-actor static from there is an error under Swift 6, and the
+    /// constant has no isolation to give up: it is a `let` of a `Sendable` type.
+    nonisolated public static let defaultWidth: CGFloat = 340
 
     /// The rows are held off the edges by this much, and each row is pinned to
     /// the stack's width minus both sides — so a slider gets the full run and
