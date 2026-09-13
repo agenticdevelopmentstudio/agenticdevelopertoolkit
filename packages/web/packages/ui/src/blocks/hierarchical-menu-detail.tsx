@@ -220,7 +220,15 @@ function TopBar({
     <>
       {/* Alignment is the toolbar content's own business — see the same strip in HTDV. */}
       {toolbar && (
-        <div className="flex shrink-0 items-center gap-2 border-b border-apt-border bg-apt-bg px-4 py-2">
+        // AN EMPTY PORTAL SLOT COLLAPSES THE WHOLE STRIP — the same rule as HTDV's strip, and for
+        // the same reason. A host that publishes a slot for feature toolbars
+        // (`RailHostRegistry.toolbarSlot`) mounts the slot node unconditionally, because there is
+        // nothing to portal into until it is in the DOM and nothing tells the host whether any
+        // feature will ever use it. So `toolbar` is always truthy there, and without this every
+        // feature that portals nothing gains a blank bordered bar. Matched on
+        // `data-adh-toolbar-slot` rather than on `:empty` alone, so a caller passing real content
+        // that merely happens to render nothing this frame is untouched.
+        <div className="flex shrink-0 items-center gap-2 border-b border-apt-border bg-apt-bg px-4 py-2 has-[[data-adh-toolbar-slot]:empty]:hidden">
           {toolbar}
         </div>
       )}
@@ -382,7 +390,11 @@ export function HierarchicalMenuDetail({
   /** Content for the full-width strip above the breadcrumb — a feature's own bar (search,
    *  filters, a primary action) or a lone "New…" button. The strip is a flex row with no
    *  justification of its own, so this node places itself (`w-full` + a flexible space to
-   *  reach the right edge). */
+   *  reach the right edge).
+   *
+   *  A PORTAL SLOT — a node a host mounts for features to portal their bars into — must carry
+   *  `data-adh-toolbar-slot`, which is what lets the strip collapse on the (common) frame where
+   *  nothing has portalled anything. See the comment at the strip. */
   toolbar?: ReactNode
   /** Right-justified affordance on the breadcrumb bar (e.g. a help "?" for the view). */
   help?: ReactNode
