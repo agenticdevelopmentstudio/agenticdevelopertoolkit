@@ -81,6 +81,11 @@
       "development": "./src/lib/navigation-guard.ts",
       "import": "./dist/lib/navigation-guard.js"
     },
+    "./lib/file-exchange": {
+      "types": "./dist/lib/file-exchange.d.ts",
+      "development": "./src/lib/file-exchange.ts",
+      "import": "./dist/lib/file-exchange.js"
+    },
     "./hooks/useIsomorphicLayoutEffect": {
       "types": "./dist/hooks/useIsomorphicLayoutEffect.d.ts",
       "development": "./src/hooks/useIsomorphicLayoutEffect.ts",
