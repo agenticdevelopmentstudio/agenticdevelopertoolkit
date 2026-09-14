@@ -404,7 +404,16 @@ public final class WindowOptionsToggle: NSView {
     private let checkbox: NSButton
     private let onChange: (Bool) -> Void
 
-    public var isOn: Bool { checkbox.state == .on }
+    /// Settable, because the value a row shows can move while the dialog is
+    /// open — another scope changed underneath it, or a Reset button in the same
+    /// dialog cleared the override the row was reporting. Assigning does *not*
+    /// call `onChange`: this direction is the owner telling the row what is
+    /// true, and echoing it back as a user edit would write the value it just
+    /// read.
+    public var isOn: Bool {
+        get { checkbox.state == .on }
+        set { checkbox.state = newValue ? .on : .off }
+    }
 
     public init(title: String, isOn: Bool, onChange: @escaping (Bool) -> Void) {
         self.onChange = onChange
@@ -427,6 +436,19 @@ public final class WindowOptionsToggle: NSView {
 
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// Names the checkbox, not the box it sits in.
+    ///
+    /// `NSView.accessibilityID(_:)` would label this wrapper, which is layout
+    /// and nothing a script can press; what a script presses is the `NSButton`
+    /// inside. It cannot simply be shadowed — Swift refuses to override a
+    /// non-`@objc` method declared in an extension of a superclass — so this
+    /// carries its own name, and the name says which view it lands on.
+    @discardableResult
+    public func checkboxAccessibilityID(_ identifier: String) -> Self {
+        checkbox.setAccessibilityIdentifier(identifier)
+        return self
+    }
 
     @objc private func toggled() {
         onChange(isOn)
