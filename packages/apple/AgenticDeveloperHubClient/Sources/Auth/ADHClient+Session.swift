@@ -204,18 +204,66 @@ extension ADHClient {
         }
     }
 
-    public func exchangeOAuthCode(_ code: String) async throws -> Components.Schemas.User {
+    /// `POST /oauth/signin/exchange` — named here so the raw path below and
+    /// any middleware that keys off it describe the same request.
+    static let oauthExchangePath = "/oauth/signin/exchange"
+
+    /// Redeems a browser sign-in's exchange code for a session.
+    ///
+    /// `userAgent` is what makes this usable from a native app. The backend's
+    /// exchange store binds each code to the `User-Agent` of the client that
+    /// received it (`entry.userAgent !== userAgent` → the code is consumed and
+    /// refused), and the client that received it is the *browser*, not this
+    /// process. A web caller redeems from that same browser and wants `nil`; a
+    /// native caller captures the browser's header — the loopback sign-in flow
+    /// reads it off the capture page's own request — and passes it here.
+    /// Without it every native redemption 401s with a code already burned, so
+    /// the retry cannot help either.
+    ///
+    /// The `userAgent` path goes through ``rawJSON(method:path:query:body:headers:)``
+    /// rather than the generated operation: `User-Agent` is not part of the
+    /// documented request, so `postOauthSigninExchange` has nowhere to put it.
+    /// Both paths run the same middleware chain and store the same session.
+    public func exchangeOAuthCode(_ code: String, userAgent: String? = nil) async throws -> Components.Schemas.User {
         let store = try sessionStore()
-        let output = try await api.postOauthSigninExchange(body: .json(.init(code: code)))
-        switch output {
-        case .ok(let ok):
-            return adopt(try ok.body.json, into: store)
-        case .unauthorized:
-            throw SessionError.invalidCredentials
-        case .badRequest(let r):
-            throw SessionError.unexpectedResponse(Self.message(try r.body.json))
-        case .undocumented(let status, _):
-            throw SessionError.unexpectedResponse("HTTP \(status)")
+        guard let userAgent else {
+            let output = try await api.postOauthSigninExchange(body: .json(.init(code: code)))
+            switch output {
+            case .ok(let ok):
+                return adopt(try ok.body.json, into: store)
+            case .unauthorized:
+                throw SessionError.invalidCredentials
+            case .badRequest(let r):
+                throw SessionError.unexpectedResponse(Self.message(try r.body.json))
+            case .undocumented(let status, _):
+                throw SessionError.unexpectedResponse("HTTP \(status)")
+            }
+        }
+        do {
+            let response = try await rawJSON(
+                method: .post,
+                path: Self.oauthExchangePath,
+                body: try JSONEncoder().encode(["code": code]),
+                headers: ["User-Agent": userAgent]
+            )
+            return adopt(try response.decode(Components.Schemas.AuthResult.self), into: store)
+        } catch let error as RawRequestError {
+            throw Self.sessionError(for: error)
+        }
+    }
+
+    /// The `RawRequestError` → ``SessionError`` mapping the raw exchange needs,
+    /// kept identical to the typed path's: 401 is a rejected code, anything
+    /// else documented carries the backend's own message.
+    private static func sessionError(for error: RawRequestError) -> SessionError {
+        switch error {
+        case .invalidPath(let path):
+            return .unexpectedResponse("invalid path \(path)")
+        case .http(401, _):
+            return .invalidCredentials
+        case .http(let status, let body):
+            let decoded = try? JSONDecoder.adhDefault.decode(Components.Schemas._Error.self, from: body)
+            return .unexpectedResponse(decoded.map(message) ?? "HTTP \(status)")
         }
     }
 

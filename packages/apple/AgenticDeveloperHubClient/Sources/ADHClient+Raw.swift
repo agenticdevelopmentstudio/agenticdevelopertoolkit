@@ -71,11 +71,20 @@ extension ADHClient {
     static let revokePath = "/auth/revoke"
     static let revokeRawOperationID = rawOperationID(method: revokeMethod, path: revokePath)
 
+    /// `headers` is applied *after* the defaults below, so a caller can
+    /// override `Accept`/`Content-Type` — and, more to the point, can set a
+    /// header this client would never set for itself. The one real caller is
+    /// ``exchangeOAuthCode(_:userAgent:)``, which has to present the
+    /// *browser's* `User-Agent` because the backend binds an OAuth exchange
+    /// code to it. A name the HTTP field grammar rejects is dropped rather
+    /// than trapping: this is a transport detail, not a place to crash a
+    /// sign-in.
     public func rawJSON(
         method: HTTPRequest.Method,
         path: String,
         query: [String: String] = [:],
-        body: Data? = nil
+        body: Data? = nil,
+        headers: [String: String] = [:]
     ) async throws -> RawResponse {
         guard path.hasPrefix("/") else { throw RawRequestError.invalidPath(path) }
 
@@ -97,6 +106,10 @@ extension ADHClient {
         request.headerFields[.accept] = "application/json"
         if body != nil {
             request.headerFields[.contentType] = "application/json"
+        }
+        for (name, value) in headers.sorted(by: { $0.key < $1.key }) {
+            guard let field = HTTPField.Name(name) else { continue }
+            request.headerFields[field] = value
         }
 
         let operationID = Self.rawOperationID(method: method, path: path)
