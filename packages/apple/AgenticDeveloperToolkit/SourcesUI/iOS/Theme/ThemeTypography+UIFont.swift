@@ -54,3 +54,16 @@ extension SemanticPalette {
         theme.typography.style(role).uiFont(scaledSize: CGFloat(size(role)))
     }
 }
+
+extension SemanticPalette {
+    /// `font(_:)` re-weighted — the iOS twin of the macOS accessor of the same
+    /// name. For text that needs its own emphasis *within* a role (an all-caps
+    /// eyebrow, a bolded pane title) without inventing a point size the theme
+    /// does not own: family, size and scale still come from the role; only the
+    /// weight is the call site's.
+    public func font(_ role: TextRole, weight: FontWeight) -> UIFont {
+        var style = theme.typography.style(role)
+        style.weight = weight
+        return style.uiFont(scaledSize: CGFloat(size(role)))
+    }
+}

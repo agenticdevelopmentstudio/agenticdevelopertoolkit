@@ -37,11 +37,24 @@ public final class ThemedBackgroundView: NSView, Themeable {
 public final class ThemedLabel: NSTextField, Themeable {
     public var role: ThemeRole { didSet { applyTheme(resolvedThemeScope.palette) } }
     public var textRole: TextRole { didSet { applyTheme(resolvedThemeScope.palette) } }
+
+    /// Emphasis *within* the role — a medium field caption, a bold breadcrumb.
+    /// `nil` takes the role's own weight, which is what almost every label
+    /// wants. It exists because the alternative at those call sites was
+    /// `.boldSystemFont(ofSize:)`, which is a font the theme never gets to
+    /// choose and a size its scale never reaches.
+    public var weight: FontWeight? { didSet { applyTheme(resolvedThemeScope.palette) } }
     private var observer: ThemePaletteObserver?
 
-    public init(string: String = "", role: ThemeRole = .primaryText, textRole: TextRole = .body) {
+    public init(
+        string: String = "",
+        role: ThemeRole = .primaryText,
+        textRole: TextRole = .body,
+        weight: FontWeight? = nil
+    ) {
         self.role = role
         self.textRole = textRole
+        self.weight = weight
         super.init(frame: .zero)
         self.isEditable = false
         self.isBordered = false
@@ -65,7 +78,7 @@ public final class ThemedLabel: NSTextField, Themeable {
 
     public func applyTheme(_ palette: SemanticPalette) {
         textColor = palette.nsColor(role)
-        font = palette.font(textRole)
+        font = weight.map { palette.font(textRole, weight: $0) } ?? palette.font(textRole)
     }
 }
 
@@ -257,12 +270,14 @@ public extension NSButton {
     }
 }
 
-/// The themed secondary action as a *control* rather than a paint job: it sizes
+/// A themed action button as a *control* rather than a paint job: it sizes
 /// itself from the palette's own button font, and it reacts to being pressed.
 ///
-/// ``NSButton/applySecondaryActionTheme(_:)`` stays for the stock buttons in
-/// dialogs that a caller lays out by hand. What an extension cannot do is the
-/// two things a button in a toolbar needs.
+/// The `apply…ActionTheme(_:)` extensions stay for the stock buttons in dialogs
+/// that a caller lays out by hand, and for the ones that must remain
+/// `NSButton`s because they carry a key equivalent AppKit only honours on a
+/// stock push button. What an extension cannot do is the two things a button in
+/// a toolbar needs.
 ///
 /// Its size: a borderless button's intrinsic size is only its title, so callers
 /// pinned a hard width instead — and `palette.font(.button)` scales with the
@@ -275,7 +290,19 @@ public extension NSButton {
 /// so the painted version gave no feedback at all when clicked. The fill answers
 /// instead.
 @MainActor
-public final class ThemedSecondaryButton: NSButton, Themeable {
+public final class ThemedActionButton: NSButton, Themeable {
+
+    /// What the button *means*, which is what decides how it is painted. The
+    /// three are the three the palette actually distinguishes: the accent for
+    /// the action a dialog is for, an elevated surface for the ones beside it,
+    /// and the danger colour for one that destroys something.
+    public enum Style: Sendable {
+        case primary, secondary, destructive
+    }
+
+    public var style: Style {
+        didSet { applyTheme(resolvedThemeScope.palette) }
+    }
 
     /// The floor: the stock textured-rounded metrics, so a short title still
     /// looks like a button and a row of them stays even.
@@ -286,7 +313,8 @@ public final class ThemedSecondaryButton: NSButton, Themeable {
 
     private var observer: ThemePaletteObserver?
 
-    public init(title: String, target: AnyObject? = nil, action: Selector? = nil) {
+    public init(title: String, style: Style = .secondary, target: AnyObject? = nil, action: Selector? = nil) {
+        self.style = style
         super.init(frame: .zero)
         self.title = title
         self.target = target
@@ -309,6 +337,15 @@ public final class ThemedSecondaryButton: NSButton, Themeable {
         didSet { paintFill(resolvedThemeScope.palette) }
     }
 
+    /// Disabled has to be drawn here too. A stock button greys its own bezel
+    /// and title when it is off; a button that paints its own fill and carries
+    /// an explicit `.foregroundColor` on its attributed title does not — a
+    /// disabled Save looked exactly like an enabled one. Fading the whole
+    /// control keeps fill, outline and title in step whatever the style.
+    public override var isEnabled: Bool {
+        didSet { alphaValue = isEnabled ? 1 : 0.45 }
+    }
+
     public override var intrinsicContentSize: NSSize {
         let title = attributedTitle.size()
         return NSSize(
@@ -317,16 +354,41 @@ public final class ThemedSecondaryButton: NSButton, Themeable {
     }
 
     public func applyTheme(_ palette: SemanticPalette) {
-        applySecondaryActionTheme(palette)
+        switch style {
+        case .primary:     applyPrimaryActionTheme(palette)
+        case .secondary:   applySecondaryActionTheme(palette)
+        case .destructive: applyDestructiveActionTheme(palette)
+        }
         paintFill(palette)
         invalidateIntrinsicContentSize()
     }
 
+    /// The fill, pressed or at rest. Every style answers a click with the one
+    /// `selection` colour, so a row of mixed-style buttons responds
+    /// consistently; at rest each returns to the colour its style means.
+    ///
+    /// It is a separate method from ``applyTheme(_:)`` because `isHighlighted`
+    /// changes many times a second while the mouse is down, and re-deriving
+    /// fonts and attributed titles on each is work the fill does not need.
     private func paintFill(_ palette: SemanticPalette) {
-        layer?.backgroundColor = palette
-            .nsColor(isHighlighted ? .selection : .elevatedSurface).cgColor
+        let role: ThemeRole
+        if isHighlighted {
+            role = .selection
+        } else {
+            switch style {
+            case .primary:     role = .accent
+            case .secondary:   role = .elevatedSurface
+            case .destructive: role = .danger
+            }
+        }
+        layer?.backgroundColor = palette.nsColor(role).cgColor
     }
 }
+
+/// The secondary action, which is what this class was before it learned the
+/// other two styles. Kept as the name callers already use — it is the style
+/// they get by default, so nothing about them changes.
+public typealias ThemedSecondaryButton = ThemedActionButton
 
 /// A panel: a layer-backed surface fill with an optional outline stroke and
 /// rounded corners. Replaces raw `NSBox`/`.controlBackgroundColor` boxes so the
@@ -582,5 +644,73 @@ public final class ThemedTableRowView: NSTableRowView, Themeable {
         palette.nsColor(.selection).setFill()
         let path = NSBezierPath(roundedRect: bounds.insetBy(dx: 2, dy: 1), xRadius: 4, yRadius: 4)
         path.fill()
+    }
+}
+
+@MainActor
+public extension NSTextField {
+
+    /// Paint a stock editable field from the palette.
+    ///
+    /// `ThemedTextField` is the class to reach for when a call site builds its
+    /// own field. This exists for the ones that cannot: an `NSSecureTextField`,
+    /// a field a form builds by kind, a field that already carries a target,
+    /// action and delegate. Same five properties either way, stated once.
+    ///
+    /// The placeholder is rebuilt on every apply rather than colored once,
+    /// because `placeholderAttributedString` freezes whatever palette was in
+    /// force when it was set.
+    func applyEditableFieldTheme(_ palette: SemanticPalette) {
+        drawsBackground = true
+        backgroundColor = palette.controlBackgroundColor
+        textColor = palette.primaryTextColor
+        font = palette.font(.body)
+        if let placeholder = placeholderString {
+            placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
+                .foregroundColor: palette.placeholderTextColor,
+                .font: palette.font(.body)
+            ])
+        }
+    }
+}
+
+@MainActor
+public extension NSButton {
+
+    /// Paint a stock push button as a themed *primary* action — the default
+    /// button of a dialog, the Save of a form.
+    ///
+    /// The companion to ``applySecondaryActionTheme(_:)``, and it exists for
+    /// the same reason: a stock bezel is drawn by the appearance, not the
+    /// palette, so a themed window's default button comes out in the system
+    /// accent no matter what theme is selected.
+    func applyPrimaryActionTheme(_ palette: SemanticPalette) {
+        applyFilledActionTheme(fill: palette.accentColor, title: palette.onAccentTextColor, palette: palette)
+    }
+
+    /// Paint a stock push button as a themed *destructive* action — a Delete
+    /// that should read as dangerous in the theme's own red, not the system's.
+    func applyDestructiveActionTheme(_ palette: SemanticPalette) {
+        applyFilledActionTheme(fill: palette.dangerColor, title: palette.onAccentTextColor, palette: palette)
+    }
+
+    private func applyFilledActionTheme(fill: NSColor, title titleColor: NSColor, palette: SemanticPalette) {
+        isBordered = false
+        bezelStyle = .regularSquare
+        focusRingType = .none
+        wantsLayer = true
+        layer?.cornerRadius = 6
+        layer?.borderWidth = 0
+        layer?.backgroundColor = fill.cgColor
+        contentTintColor = titleColor
+        attributedTitle = NSAttributedString(string: title, attributes: [
+            .foregroundColor: titleColor,
+            .font: palette.font(.button),
+            .paragraphStyle: {
+                let style = NSMutableParagraphStyle()
+                style.alignment = .center
+                return style
+            }()
+        ])
     }
 }

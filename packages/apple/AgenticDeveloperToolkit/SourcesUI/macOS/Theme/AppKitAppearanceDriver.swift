@@ -19,9 +19,16 @@ public final class AppKitAppearanceDriver: ThemeAppearanceDriver {
     ///
     /// Returning `nil` (the default) means "whatever the system says", which is
     /// what `.auto` meant before any host had a control to ask.
-    public var autoAppearance: () -> NSAppearance?
+    ///
+    /// `@MainActor` on the closure rather than a bare function type: the driver
+    /// is main-actor isolated and calls this from there, and a host's answer is
+    /// invariably read off main-actor state (a preference object, a window).
+    /// Without it every call site pays for a hop it does not need —
+    /// `MainActor.assumeIsolated`, whose result must be `Sendable`, which
+    /// `NSAppearance` is not.
+    public var autoAppearance: @MainActor () -> NSAppearance?
 
-    public init(autoAppearance: @escaping () -> NSAppearance? = { nil }) {
+    public init(autoAppearance: @escaping @MainActor () -> NSAppearance? = { nil }) {
         self.autoAppearance = autoAppearance
     }
 
