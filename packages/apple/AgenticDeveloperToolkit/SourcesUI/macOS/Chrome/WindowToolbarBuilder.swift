@@ -55,6 +55,44 @@ public enum WindowToolbarBuilder {
         return (item, button)
     }
 
+    /// A two-or-more-segment picker in a custom-view item — the Finder
+    /// view-switcher idiom, for a window whose toolbar has to offer a small
+    /// closed set of modes rather than an action.
+    ///
+    /// Returns the control as well as the item, for the same reason
+    /// ``iconButtonItem(identifier:symbol:label:target:action:)`` returns the
+    /// button: a custom view is never validated, so the owner keeps the control
+    /// and both reads and writes `selectedSegment` itself.
+    public static func segmentedItem(
+        identifier: NSToolbarItem.Identifier,
+        label: String,
+        segments: [ToolbarSegment],
+        target: AnyObject?,
+        action: Selector
+    ) -> (item: NSToolbarItem, control: NSSegmentedControl) {
+        let control = NSSegmentedControl()
+        control.segmentCount = segments.count
+        control.segmentStyle = .texturedRounded
+        control.trackingMode = .selectOne
+        control.target = target
+        control.action = action
+        for (index, segment) in segments.enumerated() {
+            control.setImage(
+                NSImage(systemSymbolName: segment.symbol, accessibilityDescription: segment.toolTip),
+                forSegment: index)
+            control.setToolTip(segment.toolTip, forSegment: index)
+            control.setWidth(0, forSegment: index)  // 0 = size to the image.
+        }
+        control.accessibilityID(identifier.rawValue)
+
+        let item = NSToolbarItem(itemIdentifier: identifier)
+        item.label = label
+        item.paletteLabel = label
+        item.toolTip = label
+        item.view = control
+        return (item, control)
+    }
+
     /// A real `NSSearchToolbarItem` — the system one, which gets the
     /// expand/collapse behaviour and the ⌘F responder wiring for free — with
     /// its field identified for UI tests.
@@ -100,6 +138,17 @@ public enum WindowToolbarBuilder {
     }
 }
 
+/// One segment of a toolbar picker: the glyph a reader sees and what it means.
+public struct ToolbarSegment: Sendable {
+    public let symbol: String
+    public let toolTip: String
+
+    public init(symbol: String, toolTip: String) {
+        self.symbol = symbol
+        self.toolTip = toolTip
+    }
+}
+
 /// One slot in a toolbar built from a list.
 ///
 /// Deliberately small. A window whose toolbar needs more than this — a menu
@@ -109,12 +158,18 @@ public enum WindowToolbarBuilder {
 /// complicated as the delegate it was meant to replace.
 public enum WindowToolbarItem {
     case button(identifier: NSToolbarItem.Identifier, symbol: String, label: String, action: Selector)
+    case segmented(
+        identifier: NSToolbarItem.Identifier,
+        label: String,
+        segments: [ToolbarSegment],
+        action: Selector)
     case search(identifier: NSToolbarItem.Identifier, placeholder: String)
     case flexibleSpace
 
     var identifier: NSToolbarItem.Identifier {
         switch self {
         case .button(let identifier, _, _, _): identifier
+        case .segmented(let identifier, _, _, _): identifier
         case .search(let identifier, _): identifier
         case .flexibleSpace: .flexibleSpace
         }
@@ -152,6 +207,11 @@ extension WindowToolbarBuilder {
         /// items, so the owner has to reach in and set `isEnabled` itself.
         private var buttons: [NSToolbarItem.Identifier: NSButton] = [:]
 
+        /// Kept for the same reason as `buttons`, plus one of its own: a picker
+        /// shows a mode the window can also change from a menu or a key command,
+        /// so the owner has to write `selectedSegment` back, not only read it.
+        private var segmentedControls: [NSToolbarItem.Identifier: NSSegmentedControl] = [:]
+
         public private(set) var searchField: NSSearchField?
 
         public init(
@@ -171,6 +231,12 @@ extension WindowToolbarBuilder {
         /// asked for it (or for a slot that is not a button).
         public func button(for identifier: NSToolbarItem.Identifier) -> NSButton? {
             self.buttons[identifier]
+        }
+
+        /// The picker made for an identifier, or `nil` before the toolbar has
+        /// asked for it (or for a slot that is not a picker).
+        public func segmentedControl(for identifier: NSToolbarItem.Identifier) -> NSSegmentedControl? {
+            self.segmentedControls[identifier]
         }
 
         /// A toolbar already pointed at this delegate. Call it from somewhere
@@ -213,6 +279,16 @@ extension WindowToolbarBuilder {
                     target: self.target,
                     action: action)
                 self.buttons[identifier] = button
+                return item
+
+            case .segmented(let identifier, let label, let segments, let action):
+                let (item, control) = WindowToolbarBuilder.segmentedItem(
+                    identifier: identifier,
+                    label: label,
+                    segments: segments,
+                    target: self.target,
+                    action: action)
+                self.segmentedControls[identifier] = control
                 return item
 
             case .search(let identifier, let placeholder):
