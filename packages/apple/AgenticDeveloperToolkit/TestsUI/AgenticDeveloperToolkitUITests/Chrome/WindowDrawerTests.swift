@@ -297,6 +297,123 @@ struct WindowDrawerTests {
         }
     }
 
+    // MARK: - Reaching the drawer from outside
+
+    /// Every test here exists because an open drawer used to be unreachable.
+    /// `NSDrawer` puts its content in a window of its own, and that window is
+    /// in neither `NSApplication`'s `AXWindows` nor the parent window's
+    /// `AXChildren` — so the help it discloses was on screen and absent from
+    /// the accessibility tree at the same time. Three UI tests asserted on it
+    /// and all three were skipped for an unrelated reason, which is how it
+    /// went unnoticed.
+    private func proxy(in window: NSWindow) -> DrawerAccessibilityProxy? {
+        window.contentView?.subviews.compactMap { $0 as? DrawerAccessibilityProxy }.first
+    }
+
+    @Test("an open drawer is reachable from its parent window")
+    func openDrawerIsReachable() {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+
+        drawer.open()
+
+        let proxy = self.proxy(in: window)
+        #expect(proxy != nil)
+        #expect(proxy?.isAccessibilityElement() == true)
+        #expect(proxy?.accessibilityRole() == .group)
+        #expect(proxy?.accessibilityChildren() as? [NSView] == [drawer.contentView])
+    }
+
+    /// The other half, and the one a UI test asserting "the drawer closed"
+    /// depends on: a closed drawer must take its content back out of the tree
+    /// rather than leaving help for VoiceOver to walk into.
+    @Test("a closed drawer vends nothing")
+    func closedDrawerVendsNothing() {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+
+        drawer.open()
+        drawer.close()
+
+        #expect(self.proxy(in: window)?.accessibilityChildren() == nil)
+    }
+
+    /// AppKit flattens a plain `NSView` out of the accessibility tree and
+    /// hands its children to its parent — taking the identifier with it. Both
+    /// of these carry identifiers a UI test queries by, so both have to stay.
+    @Test("the container and the body survive as addressable groups")
+    func containerAndBodyAreGroups() {
+        let drawer = WindowDrawer(
+            parentWindow: makeWindow(),
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+
+        for view in [drawer.contentView, drawer.bodyView] {
+            #expect(view.isAccessibilityElement() == true)
+            #expect(view.accessibilityRole() == .group)
+        }
+    }
+
+    /// A published child needs a published parent: `container` lives in a
+    /// window nothing walks, so an assistive technology moving *up* out of the
+    /// drawer would otherwise arrive somewhere no reader can get back down to.
+    @Test("the drawer's content points back at the proxy")
+    func containerPointsAtTheProxy() {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        drawer.open()
+
+        #expect(drawer.contentView.accessibilityParent() as? NSView === self.proxy(in: window))
+    }
+
+    /// The parent window's content view owns the proxy and outlives the
+    /// drawer, so a proxy left behind is a permanent empty group in a window
+    /// that has no drawer any more.
+    @Test("the proxy goes when the drawer does")
+    func proxyIsRemovedWithTheDrawer() {
+        let window = makeWindow()
+        var drawer: WindowDrawer? = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        drawer?.open()
+        #expect(self.proxy(in: window) != nil)
+
+        drawer = nil
+        #expect(self.proxy(in: window) == nil)
+    }
+
+    /// A window controller that swaps its `contentView` after the drawer was
+    /// built takes the proxy away with the old one. The install guard is keyed
+    /// to *this* content view for that reason — a `superview != nil` check
+    /// reads a stranded proxy as installed and never repairs it.
+    @Test("swapping the window's content view reinstalls the proxy")
+    func contentViewSwapReinstallsTheProxy() {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        drawer.open()
+        let first = self.proxy(in: window)
+        #expect(first != nil)
+
+        window.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
+        #expect(self.proxy(in: window) == nil)
+
+        drawer.open()
+        #expect(self.proxy(in: window) === first)
+    }
+
     /// A drawer is built while its window is still being assembled — before a
     /// toolbar has grown the titlebar, before a saved frame is restored — so
     /// the height captured at init is not the height the window ends up with.

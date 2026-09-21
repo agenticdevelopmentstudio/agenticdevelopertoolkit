@@ -31,6 +31,65 @@ final class MouseTransparentView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
+/// Stands in for an open drawer inside its parent window's accessibility tree.
+///
+/// `NSDrawer` puts its content in a window of its own, and that window is in
+/// neither `NSApplication`'s `AXWindows` nor the parent window's `AXChildren`.
+/// The drawer is therefore *on screen and not in the accessibility hierarchy
+/// at all*: VoiceOver cannot reach the help it discloses, and neither can a UI
+/// test — `app.descendants(matching: .any)` walks the same tree and comes back
+/// empty however healthy the drawer is. AppKit exposed drawers itself once;
+/// that stopped somewhere along the twelve years `NSDrawer` has been
+/// deprecated, and it is not coming back.
+///
+/// A proxy rather than `contentView.setAccessibilityChildren(defaults + [container])`
+/// on the parent window, which also works: setting that array *replaces* the
+/// window's computed children with a snapshot, so every pane added or removed
+/// while the drawer is open would be invisible until it was closed. A view of
+/// our own answers `accessibilityChildren()` afresh each time it is asked and
+/// leaves everyone else's children to AppKit.
+///
+/// It is zero-sized and takes no clicks, so it is inert as a *view*; the frame
+/// it reports to accessibility is the drawer's own, on screen, which is where
+/// the children it vends actually are.
+@available(macOS, deprecated: 10.13, message: "Stands in for a WindowDrawer, which wraps NSDrawer")
+@MainActor
+final class DrawerAccessibilityProxy: NSView {
+
+    /// Weak, and not only for the cycle: the parent window's content view owns
+    /// this proxy, and a window outlives the drawer hanging off it whenever the
+    /// drawer's owner is torn down first.
+    weak var drawer: WindowDrawer?
+
+    override func isAccessibilityElement() -> Bool { true }
+
+    override func accessibilityRole() -> NSAccessibility.Role? { .group }
+
+    /// The drawer's content while it is open, and nothing at all while it is
+    /// not — a closed drawer must not leave its help in the tree for VoiceOver
+    /// to walk into, and a UI test asserting the drawer closed is asserting on
+    /// exactly this.
+    override func accessibilityChildren() -> [Any]? {
+        guard let drawer = self.drawer, drawer.isOpen else { return nil }
+        return [drawer.contentView]
+    }
+
+    /// Where the children really are. Without this the proxy reports the
+    /// zero-sized frame it occupies in its superview, which puts a group at the
+    /// window's corner claiming to contain views hundreds of points to the
+    /// right of it.
+    override func accessibilityFrame() -> NSRect {
+        guard let drawer = self.drawer, drawer.isOpen,
+              let window = drawer.contentView.window else {
+            return super.accessibilityFrame()
+        }
+        return window.convertToScreen(
+            drawer.contentView.convert(drawer.contentView.bounds, to: nil))
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+}
+
 /// One tab in a `WindowDrawer`.
 ///
 /// A value, not a view: the drawer makes the view the first time the tab is
@@ -144,6 +203,11 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// drag on the outer edge that resizes the drawer still reaches the frame.
     private let bezel = MouseTransparentView(
         containing: ThemedBackgroundView(role: WindowDrawer.groundRole))
+
+    /// Publishes the drawer into the parent window's accessibility tree — see
+    /// `DrawerAccessibilityProxy`, and `installAccessibilityProxyIfNeeded()`
+    /// for why it is installed at open time rather than in `init`.
+    private let accessibilityProxy = DrawerAccessibilityProxy()
 
     /// The drawer's own content, and the view its body swaps into. Exposed for
     /// the identifiers on them — a test, and a UI test, need a handle on both.
@@ -300,6 +364,12 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// nonisolated context") and is an error under Swift 6.
     isolated deinit {
         self.drawer.delegate = nil
+        // The parent window's content view owns the proxy and outlives this
+        // object, so a proxy left behind is a permanent accessibility group in
+        // a window that no longer has a drawer. Its `drawer` reference is weak,
+        // so it would vend nothing — an empty group is still noise VoiceOver
+        // reads out.
+        self.accessibilityProxy.removeFromSuperview()
     }
 
     private func buildTabStrip(prefix: String) {
@@ -348,8 +418,39 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
         frameView.addSubview(self.bezel, positioned: .below, relativeTo: self.container)
     }
 
+    /// Puts the accessibility proxy in the parent window's content view, once.
+    ///
+    /// At open time and not in `init`, for the same reason `installBezelIfNeeded()`
+    /// is: a drawer is routinely built while its window is still being
+    /// assembled, and a window controller that swaps its `contentView`
+    /// afterwards takes the proxy with the old one. The guard is "already in
+    /// *this* content view", so a swap reinstalls rather than reading a
+    /// stranded proxy as installed.
+    private func installAccessibilityProxyIfNeeded() {
+        guard let content = self.parentWindow?.contentView,
+              self.accessibilityProxy.superview !== content else { return }
+        self.accessibilityProxy.removeFromSuperview()
+        self.accessibilityProxy.drawer = self
+        self.accessibilityProxy.frame = .zero
+        self.accessibilityProxy.autoresizingMask = []
+        content.addSubview(self.accessibilityProxy)
+    }
+
     private func buildContainer() {
         self.container.accessibilityID(self.accessibilityPrefix)
+        // Both are plain `NSView`s, and AppKit flattens a plain view out of the
+        // accessibility tree and hands its children to its parent — carrying
+        // the identifier off with it. A drawer whose container and body have
+        // identifiers nothing can query is the same as one with none.
+        for view in [self.container, self.body] {
+            view.setAccessibilityElement(true)
+            view.setAccessibilityRole(.group)
+        }
+        // The published parent, to match the published child: `container` is a
+        // subview of a window nothing walks, so an assistive technology moving
+        // *up* out of the drawer would otherwise arrive somewhere no reader can
+        // get back down to.
+        self.container.setAccessibilityParent(self.accessibilityProxy)
         for child in [self.tabStrip, self.body] {
             child.translatesAutoresizingMaskIntoConstraints = false
             self.container.addSubview(child)
@@ -429,6 +530,7 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
     /// mattering. Width is left alone: that one is the owner's to remember.
     public func open(selecting id: String? = nil) {
         self.installBezelIfNeeded()
+        self.installAccessibilityProxyIfNeeded()
         self.select(id)
         if let height = self.parentWindow?.frame.height, height > 0 {
             self.drawer.contentSize = NSSize(

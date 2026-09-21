@@ -56,9 +56,19 @@ struct PaneMinimizePickerTests {
         #expect(cross.button(for: .leading).isEnabled == false)
     }
 
+    /// The cross is put in a window first, and it is not decoration:
+    /// `performClick` runs through `NSCell`, which does nothing at all for a
+    /// cell whose control view has no window — so the version of this test
+    /// without one watched two clicks report no edges and called it a pass.
+    /// The window is never ordered front (`quiet-development`); it exists so
+    /// the button has somewhere to be.
     @Test("clicking an arrow reports its edge")
     func clickReportsTheEdge() {
         let cross = PaneMinimizeCrossView(availableEdges: Set(PaneEdge.allCases))
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView?.addSubview(cross)
         var picked: [PaneEdge] = []
         cross.onPick = { picked.append($0) }
 
@@ -74,6 +84,50 @@ struct PaneMinimizePickerTests {
         let picker = PaneMinimizePicker(availableEdges: [.top, .bottom]) { _ in }
         #expect(picker.isShown == false)
         #expect(picker.crossView.button(for: .top).isEnabled)
+    }
+
+    // MARK: Leaving without picking
+
+    /// Escape has to put the picker away, and it does not come free.
+    /// `NSPopover` closes a `.transient` popover when the user interacts with
+    /// something *outside* it, and a key press is not that — escape is
+    /// `cancelOperation:`, sent down the responder chain of whichever window
+    /// is key. A popover whose content accepts no first responder never puts
+    /// itself in a responder chain at all, so the press goes to the window
+    /// underneath and the picker stays up over it, swallowing the next click
+    /// meant for the pane behind.
+    @Test("the cross takes first responder, so escape has somewhere to land")
+    func crossTakesFirstResponder() {
+        let cross = PaneMinimizeCrossView(availableEdges: [.leading])
+        #expect(cross.acceptsFirstResponder)
+    }
+
+    /// Cancelling is not picking. Reporting an edge here would minimize a pane
+    /// the user was backing out of touching.
+    @Test("escape reports a cancel and no edge")
+    func escapeCancels() {
+        let cross = PaneMinimizeCrossView(availableEdges: Set(PaneEdge.allCases))
+        var picked: [PaneEdge] = []
+        var cancels = 0
+        cross.onPick = { picked.append($0) }
+        cross.onCancel = { cancels += 1 }
+
+        cross.cancelOperation(nil)
+
+        #expect(cancels == 1)
+        #expect(picked.isEmpty)
+    }
+
+    @Test("the picker answers a cancel by closing, and reports nothing")
+    func cancellingClosesWithoutPicking() {
+        var picked: [PaneEdge] = []
+        let picker = PaneMinimizePicker(availableEdges: [.leading]) { picked.append($0) }
+
+        #expect(picker.crossView.onCancel != nil)
+        picker.crossView.onCancel?()
+
+        #expect(picker.isShown == false)
+        #expect(picked.isEmpty)
     }
 
     /// Picking closes the popover before the host acts on it: the pane is about

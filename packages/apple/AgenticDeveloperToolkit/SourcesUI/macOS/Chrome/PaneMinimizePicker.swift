@@ -28,6 +28,11 @@ public final class PaneMinimizeCrossView: NSView {
 
     public var onPick: ((PaneEdge) -> Void)?
 
+    /// Reported when the user backs out — escape, today. Separate from
+    /// `onPick` because leaving without choosing is not choosing: routing it
+    /// through `onPick` would minimize the pane the user just decided not to.
+    public var onCancel: (() -> Void)?
+
     private var buttons: [PaneEdge: NSButton] = [:]
 
     public init(availableEdges: Set<PaneEdge>) {
@@ -103,6 +108,19 @@ public final class PaneMinimizeCrossView: NSView {
         guard let edge = buttons.first(where: { $0.value === sender })?.key else { return }
         onPick?(edge)
     }
+
+    /// The cross is what escape has to reach, so the cross is what takes first
+    /// responder. Nothing else in here can: `NSButton` accepts it only under
+    /// Full Keyboard Access, so a popover holding four of them and nothing
+    /// else has no first responder, never becomes key, and never sees a key
+    /// press at all.
+    override public var acceptsFirstResponder: Bool { true }
+
+    /// Escape, arriving as `cancelOperation:` down the responder chain — the
+    /// same route that dismisses a sheet or a find bar (`native-controls`).
+    override public func cancelOperation(_ sender: Any?) {
+        onCancel?()
+    }
 }
 
 /// The cross, hung off a button in a popover.
@@ -133,12 +151,18 @@ public final class PaneMinimizePicker: NSObject {
 
         let controller = NSViewController()
         controller.view = crossView
+        // `.transient` covers a click elsewhere; it does not cover escape,
+        // which never reaches a popover that is not in a responder chain.
+        crossView.onCancel = { [weak self] in self?.close() }
+
         popover.contentViewController = controller
         popover.behavior = .transient
     }
 
     public func show(relativeTo anchor: NSView) {
         popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
+        // After showing, because the popover has no window until it is shown.
+        crossView.window?.makeFirstResponder(crossView)
     }
 
     public func close() {
