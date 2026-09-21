@@ -138,7 +138,17 @@ export function AlertModal({
 
   React.useEffect(() => {
     if (!open || busy) return
+    // The listener must ignore the keystroke that OPENED the modal. A caller that opens it
+    // from its own Enter handler is still inside that keydown: React flushes the state
+    // update synchronously for a discrete event, so this listener gets added while that very
+    // event is still bubbling on its way to window, and would confirm the dialog the instant
+    // it appeared. `preventDefault` in the caller does not help — it does not stop
+    // propagation. So arm on the clock and drop anything dispatched before we existed.
+    // `timeStamp` and `performance.now()` share an origin for a trusted event; an event with
+    // no usable timeStamp (a hand-built one in a test) is let through rather than swallowed.
+    const armedAt = performance.now()
     function onKey(e: KeyboardEvent): void {
+      if (e.timeStamp > 0 && e.timeStamp <= armedAt) return
       const action = keyMap[e.key]
       if (!action) return
       e.preventDefault()
