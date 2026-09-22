@@ -1,13 +1,13 @@
 ---
 id: 0c199036-81c3-47c3-9e79-e4b8187ca69a
 title: Field
-domain: agenticdeveloperhub://recipes/field
+domain: agenticdevelopercookbook://ingredients/field
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/field-group
+- agenticdevelopercookbook://recipes/field-group
 references: []
 ---
 
@@ -139,7 +139,33 @@ helper text below         ← hint: dim mono (apt-text-dim)
 | `children` | `ReactNode` | — (required) | The control (e.g. `Input`/`Select`/`Switch`/`Textarea`). |
 | `hint` | `ReactNode` | — | Dim-mono helper line below the control; shown only when `error` is unset. |
 | `error` | `ReactNode` | — | Red-mono inline error; when set, replaces `hint` in the same slot. |
+| `errorId` | `string` | — | Names the error line for a control that points `aria-describedby` at it. |
+| `layout` | `"stacked" \| "inline"` | `"stacked"` | Caption above the control (default) or beside it in a fixed-width right-aligned column for grouped rows. |
 | `className` | `string` | — | Extra classes merged onto the root `Label` via `cn()`. |
+
+## Deep Linking
+
+Not applicable: Field is a presentational primitive without its own routing or deep-link targets.
+
+## Localization
+
+Not applicable: Field renders whatever caption and error text the caller provides; localization belongs to the caller and the form owning the field.
+
+## Accessibility Options
+
+Not applicable: Field's mono treatment (caption, hint, error) does not respond to display preferences like reduced motion or increased contrast; the control nested inside may do so, but that is independent of Field.
+
+## Feature Flags
+
+Not applicable: Field is a core presentational block with no feature flag.
+
+## Analytics
+
+Not applicable: Field is presentation-only and forwards no events or telemetry; analytics belong to the control and the owning form.
+
+## Privacy
+
+Not applicable: Field renders layout and labels supplied by the caller; it collects no user data.
 
 ## Logging
 
@@ -148,17 +174,15 @@ any telemetry belong to the control and the owning form, not to `Field`.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field.tsx`, exported
-  via `@agenticdevelopertoolkit/ui/blocks/field`. Composes the shared `Label`
-  (`components/label`) and the `fieldCaptionClass` from `lib/typography`.
-- The row is deliberately server-safe (no `"use client"` directive): it is pure
-  layout, so it renders in server components; interactivity lives in the control the
-  caller nests.
-- Demo: `ui-showcase` Topic `field` (regenerate `sources.generated.ts` via
-  `gen-sources.py` after source changes).
-- Used platform-wide by settings/editor forms, typically grouped by `FieldGroup`
-  (`agenticdeveloperhub://recipes/field-group`).
-- **SwiftUI / Compose:** Not applicable — web-only shared block.
+- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks/field`. Composes the shared `Label` (`components/label`) and the `fieldCaptionClass` from `lib/typography`. The `inline` layout uses CSS Grid with `--apt-field-label-w` custom property for label column width; stacked layout is a vertical flexbox. Server-safe with no `"use client"` directive.
+
+- **SwiftUI:** Compose this using `VStack` for stacked layout, wrapping the label text and control in a `LabeledContent` where the label is capitalized and set to a consistent `.caption` size, then render hint or error text in a secondary `.caption2` style below. For inline layout, use `HStack` with fixed-width label column and `Spacer` for flex fill. Substitute SwiftUI's `@Environment(\.isEnabled)` for peer-disabled behavior.
+
+- **Compose (Kotlin):** Build with `Column` for stacked layout, applying the platform's `Typography.labelSmall` to caption text in uppercase, then nest the control followed by hint or error in a `Text` with reduced opacity. For inline layout, switch to a `Row` with `weight(1f)` modifier on the control column. Use `Modifier.alpha()` or `enabled` parameter for disabled dimming.
+
+- **AppKit / UIKit:** On iOS, compose with `UIStackView` axis `.vertical` or `.horizontal` (for inline), apply system font `.caption1` to the label, render as a tappable `UIButton` with `systemBlue` title color if not disabled, and use a secondary label for hint/error text. On macOS, use `NSStackView` with similar treatment; consider `NSTextField` for the label if click-to-focus is not needed. Both platforms should implement peer-disabled by graying the stack's `isEnabled` or individual control alpha.
+
+- **WinUI 3:** Use `StackPanel` orientation `Vertical` (stacked) or `Horizontal` (inline) as root; render the label as a `TextBlock` with `FontWeight.SemiBold`, `FontSize=12`, uppercase text, and `Foreground` bound to `SystemControlForegroundBaseBrush` (or design token equivalent). For inline, give the label a fixed `Width="104"` and right-align via `HorizontalAlignment="Right"`. Below or beside the control, add a secondary `TextBlock` for hint (dimmed via `SystemControlDisabledBaseBrush`) or error (red via `ErrorTextBrush` or similar semantically-named brush). Bind `StackPanel.IsEnabled` or individual control `IsEnabled` to achieve the disabled state dimming; WinUI 3 applies opacity automatically when controls are disabled.
 
 ## Design Decisions
 
@@ -176,6 +200,10 @@ any telemetry belong to the control and the owning form, not to `Field`.
 - **Decision**: Caption and error are mono at the same `0.7rem` metrics.
   **Rationale**: Error and hint read as the same "supporting text" rhythm, differing
   only by the `apt-red` tone that signals the error.
+- **Decision**: `layout` prop controls caption placement (stacked above or inline beside).
+  **Rationale**: Grouped inline forms (e.g., categories and tags rows) align captions
+  by sharing the `--apt-field-label-w` custom property, reducing per-call coupling
+  while keeping the default stacked layout simple and no-config.
 
 ## Compliance
 
@@ -189,4 +217,5 @@ any telemetry belong to the control and the owning form, not to `Field`.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Complete template sections with platform notes for all five platforms, document inline layout option. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe for the shared Field form row. |

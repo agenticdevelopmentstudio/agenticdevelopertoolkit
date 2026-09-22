@@ -3,11 +3,11 @@ id: 5a028319-034c-4852-a1ee-01247a747183
 title: EditorSection
 domain: agenticdeveloperhub://recipes/editor-section
 type: recipe
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -178,16 +178,15 @@ Composed shared primitives without their own recipe domains: `Badge`
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** Block at
-  `packages/web/packages/ui/src/blocks/editor-section.tsx`, exported via `./blocks/*`.
-  Assembles `ButtonBar`, `TopicDetail` (+ `TopicDetailItem`), `EmptyState`, and
-  `Badge` — all from `@agenticdevelopertoolkit/ui`. Adds no new visual primitives.
-- Demo: `ui-showcase` Topic `editor-section` (regenerate `sources.generated.ts`
-  via `gen-sources.py` after source changes).
-- **Responsive:** Verify via Playwright (ui-showcase) at 375 / 768 / 1440 — the
-  rail collapses to an icon strip and the toolbar wraps sensibly on mobile (both
-  are `TopicDetail`/`ButtonBar` behaviors).
-- **SwiftUI / Compose:** Not applicable — web-only shared block.
+- **SwiftUI**: A master/detail editor starts with NavigationSplitView (iPad/macOS) or NavigationStack with conditional .sheet (iPhone). Toolbar uses .toolbar with .principal placement for the title; action buttons (New, Delete, Cancel, Save) go in .confirmationDialog or direct .toolbar placement with .destructive styling for Delete. Records list is a List with selection binding (state-driven). Detail pane conditionally renders the form (editing) or EmptyState (nothing selected). Warn badges use .badge modifier on List items or overlay FontIcon views; count badges use Badge(count).
+
+- **Compose**: Root is a Column containing a Row for toolbar (Material3 TopAppBar or custom Row with Material3 Button), optional error Text (red foreground, small padding), and a horizontal Row splitting records LazyColumn and detail pane. Selection state (selectedId) drives List selection and pane visibility. Warn badges render inline in ListItem trailing slot as Badge composables or overlay Icons with warning color. State flows downward as MutableState props; mutations flow upward via callbacks.
+
+- **React/Web (TypeScript)**: Block at `packages/web/packages/ui/src/blocks/editor-section.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks`. Assembles `ButtonBar` (toolbar), `TopicDetail` (records rail + detail pane), `EmptyState`, and `Badge` from `@agenticdevelopertoolkit/ui/components`. Responsive collapsing (rail to icon strip) and mobile toolbar wrapping (375/768/1440px) are inherited from TopicDetail and ButtonBar; verify with Playwright in ui-showcase. Demo at ui-showcase Topic editor-section; regenerate sources.generated.ts via gen-sources.py after source changes.
+
+- **AppKit / UIKit**: Start with NSSplitViewController (macOS) or UISplitViewController (iOS). Toolbar is NSToolbar (macOS) with a title Run and button items, or UIToolbar (iOS) with UIBarButtonItems (New, Delete, Cancel, Save). Records rail is NSTableView/NSOutlineView (macOS) or UITableViewController (iOS) with selection bindings driving pane visibility. Detail pane is a conditional container: editing state shows the form, nothing-selected state shows EmptyState. Warn badges are overlay NSImageView/UIImageView icons (⚠ glyph) or cell background tints. All state and callbacks flow through the view controller.
+
+- **WinUI 3**: Root Grid with RowDefinitions for toolbar (~44px), optional error line (~24px), and content area (RowHeight=*). CommandBar holds title (TextBlock/Run in StackPanel, left-aligned, Foreground="{StaticResource GoldToken}") and Button commands (New, Delete, Cancel, Save) right-aligned with Binding to CanExecute and Click event handlers; button enabled states reflect editing, dirty, and busy conditions. Error TextBlock (Margin="12,0,12,0", Foreground="{StaticResource RedToken}") renders only when error property is set. Content area is a Grid with two ColumnDefinitions (ColumnWidth=240 for rail, ColumnWidth=* for pane): ListView for records (SelectionMode.Single, SelectedItem="{x:Bind SelectedId, Mode=TwoWay}", ItemsSource="{x:Bind Items}") and ContentPresenter for detail pane (Content="{x:Bind editing ? form : emptyState}"). Warn badges are FontIcon overlays (Unicode ⚠, Foreground="{StaticResource WarningToken}") or Badge controls in the ListViewItem.Template. All elements use Stretch sizing with explicit Heights/Margins for layout stability; apply Reveal hover effects on ListView items and toolbar buttons.
 
 API (`@agenticdevelopertoolkit/ui/blocks/editor-section`):
 
@@ -264,4 +263,5 @@ behaviors come from `TopicDetail`.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Expand Platform Notes with all five platforms; add concrete translation guidance for SwiftUI, Compose, AppKit/UIKit, and WinUI 3. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the EditorSection assembly of ButtonBar + TopicDetail + EmptyState. |

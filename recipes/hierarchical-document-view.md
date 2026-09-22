@@ -3,11 +3,11 @@ id: b7a4e24c-3dfe-4a33-b5bc-88736e520d90
 title: Hierarchical Document View
 domain: agenticdeveloperhub://recipes/hierarchical-document-view
 type: ingredient
-version: 1.5.0
-status: draft
+version: 1.6.0
+status: review
 language: en
 created: '2026-07-29'
-modified: '2026-07-29'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -570,46 +570,11 @@ render tracing would not already show.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):**
-  `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx`, `doc-article.tsx`,
-  `doc-metadata.tsx`, `doc-table-of-contents.tsx`, `view-source-disclosure.tsx`,
-  `doc-nav.tsx`, `hierarchical-document-view.tsx`,
-  `doc-link.tsx`, and the shared types in `doc-types.ts`. Exported from
-  `@agenticdevelopertoolkit/ui/blocks`.
-- **`useScrollSpy` lives at `src/hooks/useScrollSpy.ts`** and needed its own
-  `./hooks/useScrollSpy` key in the package's `exports` map: unlike
-  `./components/*` and `./blocks/*`, **`./hooks/*` is not a wildcard**, so a new
-  hook is unreachable until its key exists. (`tsup`'s entry list *is* globbed, so
-  the dist build needs no edit.)
-- **`doc-types.ts` is a `.ts` file**, so the package's `./blocks/*` export wildcard
-  (which resolves `.tsx` only) does not reach it. The `./blocks` barrel is its one
-  public import path — import the types from there.
-- **No `transpilePackages` needed.** A Next consumer resolves the package's
-  `development` condition to raw `src/` under `next dev` and `import` to `dist/` in
-  a production build; both paths were verified against the cookbook site.
-- Tailwind classes in these files are self-registered by the package's
-  `src/styles/components.css` (`@source "../blocks/**/*.{ts,tsx}"`), so a consuming
-  site needs no extra `@source` entry.
-- First consumer: an internal docs site's entry view and layout chrome, with
-  adapters for linking, frontmatter mapping, and nav-node narrowing (narrowing
-  away tree fields the UI never draws, done server-side so only the narrowed
-  copy crosses into the client), plus a router-position hook wired to the
-  header's existing sidebar-open state. Its own prior copies of breadcrumbs,
-  table-of-contents, the raw-markdown toggle, and the sidebar were deleted as
-  each stage landed, so the site never ran two implementations of the same row.
-  The frame lands last and leaves both files thin: the layout is the frame plus
-  the search dialog, the entry view is one `DocPage` of six blocks.
-- **The two frames go in different files on purpose.** `HierarchicalDocumentView`
-  belongs in the host's *layout* and `DocPage` in its *page*. Put the nav in the
-  page and the App Router remounts the tree on every navigation, shutting whatever
-  the reader had opened — the one behaviour `DocNavTree` exists to preserve.
-- Demo: `ui-showcase` Topic `hierarchical-document-view` (group
-  "Assemblies — master / detail"); regenerate `sources.generated.ts` via
-  `gen-sources.py` after source changes.
-- **Responsive:** the centre column is capped at `max-w-3xl`; verify at 375 / 768 /
-  1440 that breadcrumbs wrap rather than overflow and the metadata block stays
-  right-aligned.
-- **SwiftUI / Compose:** not applicable — web-only shared block.
+- **iOS (SwiftUI)**: Not applicable — web-only shared block.
+- **macOS (SwiftUI)**: Not applicable — web-only shared block.
+- **Android (Jetpack Compose / Kotlin)**: Not applicable — web-only shared block.
+- **WinUI 3**: Start from `NavigationView` with its pane set to a `TreeView` hierarchy for the document structure; place the document content region in the main area. Use `TreeViewNode` with `IsExpanded` binding for collapse state at the top level only, per the behavioral requirements. Breadcrumbs: render as `StackPanel (Horizontal)` with `TextBlock` and `HyperlinkButton` elements separated by `/` TextBlocks. Metadata: use a `ListView` or custom `ItemsControl` with two-column `DataTemplate` (label on left, value on right) mimicking the `dl`/`dt`/`dd` contract. Table of contents: render as a second `TreeView` in a parallel pane (or docked region) with `IsEnabled` binding to show/hide per viewport width equivalents. View source: use `Expander` control with a `TextBlock` child and `TextWrapping="Wrap"` for the source panel. Apply the ADH theme's color tokens via resource keys in your app's resource dictionary (e.g., `ThemeResource("ColorTextPrimary")`, `ThemeResource("ColorAccent")`). Drawer for mobile-equivalent: use `NavigationView` with `PaneDisplayMode="LeftMinimal"` or `"LeftCompact"` triggered by window width. Ensure `IsBackButtonVisible` coordinates with the breadcrumbs. Visual states: use `VisualStateManager` to control chevron rotation in collapse buttons via `RotateTransform`, and accent bar appearance via conditional rendering. XAML pattern: compose the layout as nested `Grid` with row/column definitions for the three-column structure, with `ScrollViewer` wrapping the document content to handle long articles.
+- **Web (TypeScript / React)**: `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx`, `doc-article.tsx`, `doc-metadata.tsx`, `doc-table-of-contents.tsx`, `view-source-disclosure.tsx`, `doc-nav.tsx`, `hierarchical-document-view.tsx`, `doc-link.tsx`, and the shared types in `doc-types.ts`. Exported from `@agenticdevelopertoolkit/ui/blocks`. `useScrollSpy` lives at `src/hooks/useScrollSpy.ts` and needed its own `./hooks/useScrollSpy` key in the package's `exports` map: unlike `./components/*` and `./blocks/*`, `./hooks/*` is not a wildcard, so a new hook is unreachable until its key exists. `doc-types.ts` is a `.ts` file, so the package's `./blocks/*` export wildcard (which resolves `.tsx` only) does not reach it; the `./blocks` barrel is its one public import path. No `transpilePackages` needed — a Next consumer resolves the package's `development` condition to raw `src/` under `next dev` and `import` to `dist/` in a production build. Tailwind classes are self-registered by `src/styles/components.css` (`@source "../blocks/**/*.{ts,tsx}"`). First consumer: an internal docs site's entry view and layout chrome. Implementation details: the two frames go in different files on purpose — `HierarchicalDocumentView` belongs in the host's layout and `DocPage` in its page; putting the nav in the page remounts the tree on every navigation. Demo: `ui-showcase` Topic `hierarchical-document-view`. Responsive: verify at 375 / 768 / 1440px that breadcrumbs wrap and metadata stays right-aligned.
 
 ## Design Decisions
 
@@ -822,9 +787,11 @@ render tracing would not already show.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.5.1 | 2026-09-22 | Mike Fullerton | Restructured Platform Notes section with platform-specific bullets for each supported platform (iOS, macOS, Android, Windows, Web), improving recipe clarity and following cookbook guidelines for platform translation guidance. |
 | 1.5.0 | 2026-07-29 | Mike Fullerton | Hardened the extraction against four defects a code review found, each with the rule and vectors that pin it: the drawer and the desktop column are two INSTANCES of one element description, so they now share one collapse state hoisted into `DocNav` — before, a section opened in the drawer was lost the moment the drawer closed; the scrim stops being a viewport-sized named `button` and becomes an `aria-hidden` `div`, leaving exactly one announced dismiss control; `useScrollSpy` carries visibility across callbacks and resolves the marked heading by the order of `ids`, because an `IntersectionObserver` batch reports only what CHANGED and guarantees nothing about order — taking the last entry made the rail depend on scroll direction; and `aria-controls` on the view-source trigger appears only while the panel does, since an IDREF pointing at nothing is an axe `aria-valid-attr-value` error. An inlined heading link now routes through `LinkComponent` too, instead of forcing a document load to reach a heading already on screen. |
 | 1.4.0 | 2026-07-29 | Mike Fullerton | Completed the reader with the frame that places its columns: `HierarchicalDocumentView` (the nav, then the document region) wrapping `DocPage` (the `max-w-3xl` measure, then the rail). Two components rather than one, because the nav belongs to the host's persistent layout and the document to its page — one component would remount the tree on every navigation. Both are slot-only and render no landmark, which retires a pre-existing bug: the cookbook site nested a second `main` inside its app shell's. `EntryView` and `LayoutChrome` are now compositions of toolkit blocks with no layout of their own. |
 | 1.3.0 | 2026-07-29 | Mike Fullerton | Added the left column: `DocNavTree`, the collapsible multi-depth document tree, and `DocNav`, the sticky desktop aside and controlled mobile drawer that carry it — ported from the cookbook site's `Sidebar`, which is deleted. The site's three mutually-recursive nav functions collapse into one recursive component; its dead `decisionHeadings` side-channel is deleted rather than ported, because it never rendered, and the unread `data-autoscroll` attribute goes with it. Parity was measured, not asserted: a constant 1105-byte delta across four pre/post pages, resolving to the lucide chevron plus the `type="button"` and `aria-expanded` the original toggle lacked. |
 | 1.2.0 | 2026-07-29 | Mike Fullerton | Added `ViewSourceDisclosure`, the "View source" row that closes the centre column, ported from the cookbook site's `RawMarkdownToggle`. It deliberately does NOT compose the existing `Disclosure` — see Design Decisions — and gains `aria-expanded`/`aria-controls`, which the original lacked. One recorded visual delta: lucide's chevron replaces the hand-rolled inline SVG. |
 | 1.1.0 | 2026-07-29 | Mike Fullerton | Added the right rail: `DocTableOfContents` and `useScrollSpy`, ported from the cookbook site's `TableOfContents`. Its `HIDDEN_HEADINGS` set became the `excludeIds` prop, passed from the host — so the toolkit holds no opinion about which headings are chrome. |
 | 1.0.0 | 2026-07-29 | Mike Fullerton | Initial recipe. HDV's centre column — `DocBreadcrumbs`, `DocArticle`, `DocMetadata` (plus `DefaultDocLink` and the shared `doc-types`) — extracted verbatim from the cookbook site's reader. |
+```

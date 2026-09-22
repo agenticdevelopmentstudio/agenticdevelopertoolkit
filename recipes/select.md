@@ -3,7 +3,7 @@ id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: Select
 domain: agenticdevelopercookbook://ingredients/select
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -73,10 +73,10 @@ The Select component is a form control that renders a native HTML `<select>` ele
 ## Accessibility
 
 - **Role**: Native `<select>` element has implicit ARIA role `combobox` (or `listbox` depending on platform interpretation); no custom role required.
-- **Label requirement**: A label MUST be provided via the `label` prop and MUST be associated to the select via the `htmlFor` attribute on the `<label>` element. The `id` of the select matches the `htmlFor` of the label. NEEDS REVIEW: Not implemented in source. A text control without an accessible label is a gap. Evidence that would settle it: whether the component accepts `aria-label` or `aria-labelledby` as fallback props when no label is provided.
+- **Label requirement**: A label MUST be provided via the `label` prop and MUST be associated to the select via the `htmlFor` attribute on the `<label>` element. The `id` of the select matches the `htmlFor` of the label. No fallback ARIA properties (`aria-label`, `aria-labelledby`) are implemented; the label association via `htmlFor` is the sole method for providing an accessible name.
 - **Keyboard navigation**: Native select supports keyboard navigation; users can open the dropdown with Space or Enter, navigate with arrow keys, and select with Enter. This is provided by the browser and requires no component implementation.
 - **Minimum touch target**: The native select element inherits the form field's minimum size; source does not explicitly constrain this. Visual target size follows `h-9` (36px height), which meets the 44×44pt minimum on web when accounting for text touch zones.
-- **Hint association**: Hint text is rendered as a sibling paragraph element but is not explicitly associated to the select via `aria-describedby`. NEEDS REVIEW: Not implemented in source. Behavior would be improved by linking the hint to the select for screen reader users. Evidence that would settle it: whether `aria-describedby` is implemented to connect the hint to the select element.
+- **Hint association**: Hint text is rendered as a sibling paragraph element but is not explicitly associated to the select via `aria-describedby`. NEEDS REVIEW: Not implemented in source. Screen readers cannot announce the hint as descriptive text for the control. Evidence that would settle it: whether `aria-describedby` is implemented to connect the hint paragraph ID to the select element's `aria-describedby` attribute.
 - **Disabled state announcement**: Native select announces disabled state to assistive technologies automatically; the component applies no additional ARIA attributes.
 
 ## Conformance Test Vectors
@@ -102,7 +102,7 @@ The Select component is a form control that renders a native HTML `<select>` ele
 
 - **Empty choices provided**: If `choices` is an empty array, the select renders with no options, and no selection is possible until choices are provided.
 - **Choice value mismatch**: If `value` does not match any choice's value, the native select does not highlight any option; the browser's default behavior applies (typically showing the first option or an empty selection).
-- **Missing required label**: If `label` is not provided (undefined), no label is rendered. Hint text is rendered if provided. If neither label nor hint exists, the select has no accessible name unless provided via aria-label (not implemented). This is an accessibility concern.
+- **Missing required label**: If `label` is not provided (undefined), no label is rendered. Hint text is rendered if provided. If neither label nor hint exists, the select has no accessible name. This is an accessibility concern, as the component provides no fallback method (such as `aria-label`) to name the control when the label prop is omitted.
 - **Disabled with focused select**: If the select is disabled while focused, focus moves to the next focusable element (browser behavior). No component-specific handling.
 - **Label without select id**: Since the component generates an ID if none is provided and associates the label via `htmlFor`, this edge case cannot occur by design.
 - **Null or undefined choices**: If `choices` is `null` or `undefined`, invoking `.map()` on a null/undefined value throws a runtime error. The component does not provide defensive null checking.
@@ -160,10 +160,10 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 ## Platform Notes
 
 - **React/Web**: Two implementations are provided in the source: one using `aws-field` styling (for AWS components) and one using `apt-*` tokens with a custom chevron icon. Both render a native `<select>` element with optional label, hint, and styling. The component is generic and can be adapted to any design system by replacing the class names and icon component.
-- **SwiftUI**: Use `Picker` with `.pickerStyle(.menu)` or `.segmented` for a compact form. Provide a label via the `label` parameter. Bind the selection via `@State`. For a native dropdown-style select, use `Menu` with a `Button` trigger, or adapt `Picker` to a custom styled variant.
-- **Compose**: Use `ExposedDropdownMenuBox` from Material 3 for a fully accessible dropdown, or `OutlinedExposedDropdownMenuBox` for outlined style. Provide a label via `OutlinedTextField` with `readOnly = true`. Use `DropdownMenuItem` to render each choice. Bind selection via `mutableStateOf()`.
-- **AppKit / UIKit**: On macOS, use `NSPopUpButton` or `NSComboBox`. On iOS, use `UIPickerView` embedded in a custom picker modal, or for a simpler dropdown-like behavior, use a custom `UITableViewController` or third-party dropdown library (native iOS does not have a select element). Provide a label via `UILabel`.
-- **WinUI 3**: Use `ComboBox` control with `ItemsSource` bound to the choices array, `SelectedItem` or `SelectedValuePath` for the value, and `SelectionChanged` event for the callback. Set `IsEditable="False"` to prevent typing. Provide a label via a separate `TextBlock` with explicit association. Use `ComboBoxItem` for each choice, or bind an observable collection of view models.
+- **SwiftUI**: Use `Picker` with `.pickerStyle(.menu)` for a dropdown-style control, or `.pickerStyle(.segmented)` for a compact form. Provide a label via the `label` parameter. Bind the selection via `@State`. Provide hint or descriptive text via a secondary `Text` view positioned below the Picker. For multiselect behavior, use a toggle list instead.
+- **Compose**: Use `ExposedDropdownMenuBox` from Material 3 for a fully accessible dropdown, or `OutlinedExposedDropdownMenuBox` for outlined style. Provide a label via `OutlinedTextField` with `readOnly = true`. Use `DropdownMenuItem` to render each choice. Bind selection via `mutableStateOf()`. Associate hint text via `supportingText` parameter on the `OutlinedTextField` for screen reader announcement.
+- **AppKit / UIKit**: On macOS, use `NSPopUpButton` or `NSComboBox` with a label via `NSTextField`. On iOS, use a custom select sheet with a `UIPickerView`, or adapt a `Menu` button for iOS 14+. For hint text, add an `NSTextField` or `UILabel` below the control with `lineBreakMode = .byWordWrapping`. Associate the hint via VoiceOver custom actions or by setting `accessibilityHint` on the control.
+- **WinUI 3**: Use `ComboBox` control with `ItemsSource` bound to the choices array, `SelectedItem` or `SelectedValuePath` for the value, and `SelectionChanged` event for the callback. Set `IsEditable="False"` to prevent typing. Provide a label via a separate `TextBlock` with explicit `Name` property for UIA name mapping. Place hint text in a `TextBlock` below the ComboBox and associate via `UIA.AutomationProperties.HelpText` attached property on the ComboBox.
 
 ## Design Decisions
 
@@ -175,7 +175,7 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 
 4. **Controlled component (value as prop)**: The component is a controlled component; `value` is a required prop and the parent manages state. The component does not maintain its own state. This design ensures the parent is always aware of the current value and can implement undo, validation, or other state management patterns.
 
-5. **Hint text as sibling without aria-describedby**: The hint is rendered as a `<p>` element below the select but is not explicitly associated via `aria-describedby`. This is a gap between what should be and what the source implements. A future enhancement should add the ARIA association.
+5. **Hint text as sibling without aria-describedby**: The hint is rendered as a `<p>` element below the select but is not explicitly associated via `aria-describedby`. This is a gap between what should be and what the source implements. A future enhancement should add the ARIA association so screen readers announce the hint as descriptive text for the control.
 
 ## Compliance
 
@@ -193,5 +193,7 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace aria-label fallback question with concrete fact; keep hint aria-describedby gap as genuine issue; enhance Platform Notes with concrete translation guidance for all platforms |
+| 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks source; confirm all requirements traceable to both web implementations |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace reviewer questions with concrete facts; keep accessible name and hint association as genuine gaps |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web (React) source |

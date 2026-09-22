@@ -3,11 +3,11 @@ id: 781740e8-c83f-40a1-8215-43abfb8d8f56
 title: FieldGroup
 domain: agenticdeveloperhub://recipes/field-group
 type: recipe
-version: 1.0.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -136,18 +136,11 @@ group.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field-group.tsx`,
-  exported via `@agenticdevelopertoolkit/ui/blocks/field-group`. Carries `"use client"` (it ships
-  alongside interactive form content) and composes `Field`
-  (`agenticdeveloperhub://recipes/field`) as its children plus the shared
-  `fieldCaptionClass` for the title.
-- Demo: `ui-showcase` Topic `field-group` (regenerate `sources.generated.ts` via
-  `gen-sources.py` after source changes).
-- Used platform-wide as the sectioning wrapper in settings/editor panes; commonly
-  the last group in such a pane is a destructive "danger zone" section.
-- **Responsive:** Verify via Playwright (ui-showcase) at 375 / 768 / 1440 — the
-  title/trailing row and the stacked Fields stay usable on mobile.
-- **SwiftUI / Compose:** Not applicable — web-only shared block.
+- **SwiftUI**: Not applicable — FieldGroup is a web-only layout component with no native SwiftUI equivalent. On Apple platforms, implement the titled card pattern using native SwiftUI views (VStack with header).
+- **Compose**: Not applicable — FieldGroup is a web-only layout component. On Android, use Compose's native Column layout with a header composable as the sectioning wrapper.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks/field-group`. The component carries `"use client"` (ships alongside interactive form content) and composes `Field` (`agenticdeveloperhub://recipes/field`) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile.
+- **AppKit / UIKit**: Not applicable — FieldGroup is a web-only layout component. On iOS/macOS, implement the titled card pattern using native UIView/NSView containers with a header label.
+- **WinUI 3**: Use a vertical `StackPanel` with `Spacing="3"` as the root container. Apply `Padding="12"`, `BorderThickness="1"` bound to the border token, `CornerRadius="8"`, and `Background` to the surface token for the recessed card effect. Nest a horizontal `StackPanel` in the title row with `HorizontalAlignment="Stretch"`, containing a `TextBlock` header (uppercase letter-spacing to match the web `fieldCaptionClass`) and an optional trailing `UIElement` aligned right via `HorizontalAlignment="Right"`. Below the title row, add a vertical `StackPanel` for the grouped field rows, inheriting the parent's `Spacing` for consistent gaps. No interactive states required — the component is a stateless layout wrapper.
 
 API (`@agenticdevelopertoolkit/ui/blocks/field-group`):
 
@@ -191,4 +184,6 @@ export function FieldGroup(props: FieldGroupProps): React.ReactElement
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete translation guidance — control names, properties, layout pattern, and XAML structure. Remove "Not applicable" wording. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Expand Platform Notes to all five platforms with translation guidance; set status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe for the titled FieldGroup sectioning wrapper. |

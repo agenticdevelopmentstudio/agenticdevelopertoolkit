@@ -1,13 +1,13 @@
 ---
 id: 88d69611-4a12-4777-9509-8af6c0626dc7
 title: CategoryPickerDialog
-domain: agenticdeveloperhub://recipes/category-picker
+domain: agenticdeveloperhub://recipes/category-picker-dialog
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.1
+status: review
 language: en
 created: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -87,7 +87,7 @@ Filter field, then either the tree or the filtered list, then the button bar:
 ├───────────────────────────────────────────┤
 │ ▸ Top level                                │  ← allowRoot row (FolderTree icon)
 │ ▾ Work                                     │  ← expanded parent (ChevronDown)
-│     Q1                                     │
+│     Q1                                     │  ← child of Work
 │     Q2                                     │
 │   Planning                                 │  ← collapsed sibling (ChevronRight)
 ├───────────────────────────────────────────┤
@@ -204,11 +204,12 @@ drives and owns any telemetry for it.
 ## Platform Notes
 
 - **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/category-picker-dialog.tsx`. `"use client"`.
-- Consumes `buildCategoryTree`, `categoryKey`, `CategoryNode`, `CategoryTreeNode` from the sibling `category-tree.ts` — the single fold every hierarchical category surface reads.
-- Demo: the UI showcase app's demo page (Topic id `category-picker`) + the showcase
-  source registry. The showcase is a consumer of this package and lives outside this repo.
-- First (and so far only) consumer: a hierarchical category browser's Move action.
-- Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the dialog's own `max-w-md` and internal scroll (`max-h-72`) keep it usable at phone width; keyboard-only and pointer flows both apply at every width.
+- **SwiftUI:** Compose a `Dialog` window with a `List` showing `DisclosureGroup` elements for hierarchical browsing, each group's label clickable to select a category; add a `SearchField` above that filters the list to show only matching categories with breadcrumb trails, switching the control from hierarchical to flat mode; the dialog's confirm button disables unless a selection is pickable or `allowRoot` is set; keyboard navigation uses arrow keys for tree expansion/collapse/movement (matching WAI-ARIA tree pattern).
+- **Compose:** Build on `AlertDialog` with a `LazyColumn` displaying expandable category items managed via mutable state; add a `TextField` for search/filtering that switches to showing a flat list with parent breadcrumbs; disabled categories use reduced opacity; selection state drives confirm button availability; arrow keys and roving focus pattern (one item at a time in tab order) provide keyboard-only navigation.
+- **AppKit / UIKit:** Use `NSAlert` (macOS) or `UIAlertController` (iOS) as the container, with an `NSOutlineView` (macOS) or custom hierarchical table (iOS) for browsing; add a `NSSearchField` or `UISearchBar` for filtering; when filtering, replace the tree with a flat list showing breadcrumbs; disabled items are visually muted; confirm button disables conditionally; keyboard navigation follows platform conventions for tree navigation.
+- **WinUI 3:** Use `ContentDialog` as the modal container with a `TreeView` control for hierarchical browsing of categories (each node has expand/collapse capability via `IsExpanded` property); add an `AutoSuggestBox` above the tree for search/filtering; when a filter is active, replace the tree with a `ListBox` or `ListView` showing flat filtered results with ancestor breadcrumbs below each match; apply disabled visual state (reduced opacity or disabled property) to items in the `disabledIds` set; the primary button (`IsPrimaryButtonEnabled`) binds to a computed property that checks whether a selection is pickable; keyboard support uses arrow keys for tree navigation (standard TreeView behavior) and `IsTabStop` on rows for roving focus pattern.
+
+Consumes `buildCategoryTree`, `categoryKey`, `CategoryNode`, `CategoryTreeNode` from the sibling `category-tree.ts` — the single fold every hierarchical category surface reads. Demo: the UI showcase app's demo page (Topic id `category-picker`) + the showcase source registry. The showcase is a consumer of this package and lives outside this repo. First (and so far only) consumer: a hierarchical category browser's Move action. Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the dialog's own `max-w-md` and internal scroll (`max-h-72`) keep it usable at phone width; keyboard-only and pointer flows both apply at every width.
 
 ## Design Decisions
 
@@ -265,5 +266,7 @@ drives and owns any telemetry for it.
 ## Change History
 
 | Version | Date | Author | Summary |
-|---|---|---|---|
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Add concrete WinUI 3 and other platform translation guidance to Platform Notes |
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revised recipe per writer guidelines for Phase 2 ui-blocks recipes. |
 | 1.0.0 | 2026-08-23 | Mike Fullerton | Initial component + recipe. |

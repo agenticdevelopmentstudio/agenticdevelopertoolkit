@@ -1,13 +1,13 @@
 ---
 id: e1859aa2-d0c4-4d9a-b926-203dd5fbbca3
 title: "AddUsersModal"
-domain: agenticdeveloperhub://recipes/add-users-modal
+domain: agenticdevelopercookbook://recipes/add-users-modal
 type: recipe
-version: 1.0.0
-status: draft
+version: 1.0.1
+status: review
 language: en
 created: 2026-06-26
-modified: 2026-06-26
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,8 +21,8 @@ tags:
   - table
   - users
 ingredients:
-  - agenticdeveloperhub://recipes/data-table
-  - agenticdeveloperhub://recipes/alert-and-dialog
+  - agenticdevelopercookbook://recipes/data-table
+  - agenticdevelopercookbook://recipes/alert-and-dialog
 depends-on: []
 related: []
 references: []
@@ -35,7 +35,7 @@ references: []
 A modal in `@agenticdevelopertoolkit/ui` for building a list of users to add. It composes
 `Dialog` + `DataTable` + `Input` + `AlertModal` + `Button`. Each "Add" appends
 the entry row to a table above; the dialog's final "Add" hands the rows to a
-caller callback (`onAdd`) — stubbed in Phase 2, wired in Phase 3.
+caller callback (`onAdd`).
 
 It is a controlled dialog: a growing `DataTable` of staged users on top, an
 inline entry row (name / email / phone / admin note) below it with an **Add**
@@ -45,8 +45,8 @@ button, and a footer (Cancel / Add).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| DataTable | agenticdeveloperhub://recipes/data-table | Growing table of staged `DraftUser` rows | yes | columns Name · Email · Phone · Admin note; selection; empty label |
-| AlertAndDialog | agenticdeveloperhub://recipes/alert-and-dialog | The modal `Dialog` shell (`DialogContent max-w-2xl`) + the discard-confirm `AlertModal` | yes | modal semantics; discard-confirm copy |
+| DataTable | agenticdevelopercookbook://recipes/data-table | Growing table of staged `DraftUser` rows | yes | columns Name · Email · Phone · Admin note; selection; empty label |
+| AlertAndDialog | agenticdevelopercookbook://recipes/alert-and-dialog | The modal `Dialog` shell (`DialogContent max-w-2xl`) + the discard-confirm `AlertModal` | yes | modal semantics; discard-confirm copy |
 
 Composed shared primitives without their own recipe domains: `Input` and `Field`
 (the entry row inputs) and `Button` (entry Add + footer Cancel/Add).
@@ -65,13 +65,13 @@ Composed shared primitives without their own recipe domains: `Input` and `Field`
   Note via a flexible spacer.
 - **must-disable-footer-add-when-empty**: The footer **Add** button MUST be
   `disabled` while the staged `DataTable` contains no rows.
+- **must-disable-footer-add-when-busy**: The footer **Add** button MUST be
+  `disabled` when `busy` is true.
 - **must-call-onadd-and-close**: Activating the footer **Add** MUST call
   `onAdd(stagedRows)` and close the dialog.
 - **must-confirm-cancel-when-dirty**: Cancel, Esc, or a backdrop click MUST open a
   discard-confirm `AlertModal` when the staged table has rows OR the entry row has
   content; otherwise it MUST close immediately. State resets on close.
-- **must-block-dismissal-when-busy**: When `busy` is true the AddUsersModal MUST
-  show a spinner and MUST block dismissal (Esc, backdrop, Cancel).
 
 ## Layout
 
@@ -102,7 +102,7 @@ Composed shared primitives without their own recipe domains: `Input` and `Field`
 | stagedRows (`DraftUser[]`) | AddUsersModal | DataTable, footer Add (enabled state), `onAdd` | Down / Up | Component state + prop; `onAdd` callback |
 | entryFields {name, email, phone, note} | AddUsersModal | Entry `Input`s | Down / Up | Component state + input `onChange` |
 | discardConfirm open | AddUsersModal | AlertAndDialog (AlertModal) | Down | Boolean state |
-| busy | Caller | Footer Add + dismissal guard + spinner | Down | Prop |
+| busy | Caller | Footer Add | Down | Prop |
 | open | Caller | Dialog | Down | Prop (`open`); `onClose` callback up |
 
 ## Integration Test Vectors
@@ -113,10 +113,10 @@ Composed shared primitives without their own recipe domains: `Input` and `Field`
 | T2 | must-ignore-blank-entry | Empty entry, press Enter / activate Add | No row added (no-op) |
 | T3 | must-disable-footer-add-when-empty | 0 staged rows | Footer Add disabled |
 | T4 | must-disable-footer-add-when-empty | ≥1 staged row | Footer Add enabled |
-| T5 | must-call-onadd-and-close | Footer Add with staged rows | `onAdd(stagedRows)` called; dialog closes |
-| T6 | must-confirm-cancel-when-dirty | Cancel with staged rows or entry content | Discard-confirm `AlertModal` opens |
-| T7 | must-confirm-cancel-when-dirty | Cancel with empty table and empty entry | Closes immediately, no confirm |
-| T8 | must-block-dismissal-when-busy | `busy=true`, press Esc / click backdrop / Cancel | Dismissal blocked; spinner shown |
+| T5 | must-disable-footer-add-when-busy | `busy=true` | Footer Add disabled |
+| T6 | must-call-onadd-and-close | Footer Add with staged rows | `onAdd(stagedRows)` called; dialog closes |
+| T7 | must-confirm-cancel-when-dirty | Cancel with staged rows or entry content | Discard-confirm `AlertModal` opens |
+| T8 | must-confirm-cancel-when-dirty | Cancel with empty table and empty entry | Closes immediately, no confirm |
 | T9 | must-keep-tab-order | Tab from Note | Focus lands on the Add button |
 
 ## Edge Cases
@@ -125,23 +125,23 @@ Composed shared primitives without their own recipe domains: `Input` and `Field`
   (email/phone) to be added.
 - Footer Add is disabled at 0 staged rows; an empty staged table shows the
   `DataTable` empty label.
-- `busy` blocks Esc / backdrop / Cancel dismissal and shows a spinner.
+- `busy` disables the footer Add button to prevent multiple submissions; user can
+  still dismiss via Cancel or Esc if there are unsaved changes.
 - Cancel / Esc / backdrop with a dirty state (rows or entry content) opens the
   discard confirm; with a clean state it closes immediately.
 - State resets on close, so reopening starts with an empty entry row and table.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** New block at
-  `packages/web/packages/ui/src/blocks/add-users-modal.tsx`. Composes `Dialog*`,
-  `DataTable`, `Input`, `Field`, `AlertModal`, `Button`. Consumed by the admin
-  "Pending Users" topic (sub-project 4) "Add users" action. Add a demo to
-  `ui-showcase` (+ regenerate sources).
-- **Responsive:** Verify via Playwright (ui-showcase) at 375 / 768 / 1440 — the
-  staging table and entry row stay usable on mobile.
-- **SwiftUI / Compose:** Not applicable — web-only shared block.
+- **SwiftUI**: Start from a modal presentation using `.sheet()` or an overlay container. Compose with a List or LazyVStack for staged rows, TextFields for input, and Buttons for actions. Differs: SwiftUI state binding and @State management patterns; TextField validation and keyboard handling; native modal dismissal semantics with `.interactiveDismissibilityDisabled()` when dirty.
+- **Compose**: Start from a Dialog composable with a LazyColumn for the user list, TextField composables for input fields, and Row/Column for layout. Differs: Compose's state hoisting pattern; Material Design 3 theming and elevation; TextField focus and keyboard handling via Compose's Focus API; back-button handling via LocalBackPressedDispatcher.
+- **React/Web**: Implementation at `packages/web/packages/ui/src/blocks/add-users-modal.tsx`. Composes Dialog*, DataTable, Input, Field, Button, and UnsavedChangesAlert components. Uses Tailwind for layout and spacing; focus management via useRef and requestAnimationFrame for post-render refocus on entry Name field.
+- **AppKit / UIKit**: On iOS, use a sheet presentation controller with UITableViewController for staged rows and UITextFields for input. On macOS, use a sheet or window-modal presentation. Differs: UIControl delegate patterns for input handling; platform keyboard lifecycle management; safe area insets and view controller transitions; UITableView cell reuse patterns.
+- **WinUI 3**: Use ContentDialog with a DataGrid control for staged rows and TextBox controls for input fields. Layout with StackPanel; use Button controls with Command bindings. Differs: XAML markup for UI definition; ItemsSource binding for grid data; TextBox TextChanged events vs React onChange; ContentDialog command patterns; grid column definitions via DataGridTextColumn.
 
-API (`@agenticdevelopertoolkit/ui/blocks/add-users-modal`):
+## API
+
+`@agenticdevelopertoolkit/ui/blocks/add-users-modal`:
 
 ```ts
 interface DraftUser { name: string; email: string; phone: string; note: string }
@@ -155,10 +155,13 @@ interface AddUsersModalProps {
 export function AddUsersModal(props: AddUsersModalProps): React.ReactElement
 ```
 
-Accessibility: `Dialog` modal semantics + focus trap/restore; entry inputs are
-labeled (`Field`). Tab order is explicit and lands on Add after Note; Enter-to-add
+## Accessibility
+
+`Dialog` modal semantics with focus trap and restore; entry inputs are
+labeled via `Field`. Tab order is explicit and natural: Name → Email →
+Phone → Note → Add button (via `flex-1` spacer), then Close (Esc). Enter-to-add
 keeps focus flowing back to Name for fast repeated entry. The empty staged table
-shows the `DataTable` empty label.
+displays the `DataTable` empty label.
 
 ## Design Decisions
 
@@ -171,8 +174,9 @@ shows the `DataTable` empty label.
   **Rationale**: Predictable keyboard flow to the primary entry action.
 - **Decision**: Cancel confirms only when dirty. **Rationale**: Avoids nagging the
   user when there is nothing to lose.
-- **Decision**: `onAdd` is stubbed in Phase 2 and wired in Phase 3. **Rationale**:
-  Phased rollout of the feature.
+- **Decision**: `busy` disables the footer Add button only; does not block Esc or
+  Cancel. **Rationale**: Prevents accidental duplicate submissions while allowing
+  users to abandon unsaved work if needed.
 
 ## Compliance
 
@@ -185,4 +189,5 @@ shows the `DataTable` empty label.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.0.1 | 2026-09-22 | Claude | Restructure Platform Notes with all five platform guidance bullets; correct `busy` behavior to match source; update domain URIs from agenticdeveloperhub to agenticdevelopercookbook; refine requirements for source fidelity. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec. |

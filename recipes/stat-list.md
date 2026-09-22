@@ -1,13 +1,13 @@
 ---
 id: 37b7b456-790f-4b2d-8f3a-a364016ce389
 title: StatList
-domain: agenticdeveloperhub://recipes/stat-list
+domain: agenticdevelopercookbook://recipes/stat-list
 type: recipe
-version: 1.0.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,10 +22,10 @@ tags:
 - list
 - ui
 ingredients:
-- agenticdeveloperhub://recipes/status-dot
+- agenticdevelopercookbook://recipes/status-dot
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/stat-card
+- agenticdevelopercookbook://recipes/stat-card
 references: []
 ---
 
@@ -51,7 +51,7 @@ primitive is the shared `StatusDot`; everything else is layout + the caller's te
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| StatusDot | agenticdeveloperhub://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
+| StatusDot | agenticdevelopercookbook://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
 
 `StatListRow`'s label and trailing content are caller-supplied `ReactNode`s, not
 components this block owns; `StatList` is a bare wrapper element.
@@ -126,17 +126,11 @@ composed `StatusDot`; nothing flows back up.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/stat-list.tsx`,
-  exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-list`). Composes
-  `StatusDot` (`../components/status-dot`). Exports `StatList`, `StatListRow`,
-  `StatListProps`, `StatListRowProps`.
-- Historical source: the fleet `MonitorCard` down-site list and the status backend's
-  `TelemetrySections` Errors list — StatList generalizes that one grammar.
-- Demo: `ui-showcase` Topic `stat-list` (group "Blocks — cards & sections");
-  regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
-- **Responsive:** rows truncate their label to fit any width; verify at 375 / 768 /
-  1440 that the trailing figure stays visible while the label clips.
-- **SwiftUI / Compose:** not applicable — web-only shared block.
+- **SwiftUI**: Not applicable — this is a web/React component. On Apple platforms, build an equivalent using a vertical `VStack` of rows, each with an `HStack` containing a decorative status indicator (via `Circle` or a custom view), a truncating text label with `.lineLimit(1)` and `.truncationMode(.tail)`, and a trailing value view.
+- **Compose**: Not applicable — this is a web/React component. On Android, compose rows using a `Column` with `verticalArrangement = Arrangement.spacedBy()`, each row a `Row` containing a leading status dot, a `Text` with `maxLines = 1` and `overflow = TextOverflow.Ellipsis`, and a trailing value.
+- **React/Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-list.tsx`, exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-list`). Composes `StatusDot` (`../components/status-dot`). Exports `StatList`, `StatListRow`, `StatListProps`, `StatListRowProps`. Demo in `ui-showcase` Topic `stat-list` (group "Blocks — cards & sections"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Rows truncate their label to fit any width; verify at 375 / 768 / 1440 that the trailing figure stays visible while the label clips.
+- **AppKit / UIKit**: Not applicable — this is a web/React component. On macOS and iOS, build an equivalent using `NSStackView` (AppKit) or `UIStackView` (UIKit) with vertical axis, each row a horizontal stack containing a decorative status badge, a truncating label with `lineBreakMode = .byTruncatingTail`, and a trailing value.
+- **WinUI 3**: Build the list using a vertical `StackPanel` (Orientation="Vertical"); each row is a horizontal `StackPanel` containing a status indicator (`Ellipse` or custom control), a `TextBlock` with `TextTrimming="CharacterEllipsis"` for label truncation, and a right-aligned trailing content region. Ensure the label container has `TextWrapping="NoWrap"` and constrained width to force ellipsis behavior; place trailing content in a `StackPanel` with Orientation="Horizontal" and HorizontalAlignment="Right".
 
 ## Design Decisions
 
@@ -169,4 +163,6 @@ composed `StatusDot`; nothing flows back up.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete control guidance; remove "Not applicable" phrasing. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Reorganize Platform Notes per cookbook standards; fix domain URI scheme from agenticdeveloperhub to agenticdevelopercookbook; update status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; the StatusDot + truncating label + trailing figure row/list grammar extracted from the fleet and telemetry status lists. |

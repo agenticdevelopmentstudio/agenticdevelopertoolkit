@@ -1,13 +1,13 @@
 ---
 id: b118c7bc-e163-40f0-bcc8-eb079e835794
 title: MarkdownEditor
-domain: agenticdeveloperhub://recipes/markdown-editor
+domain: agenticdevelopercookbook://recipes/markdown-editor
 type: recipe
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,11 +22,11 @@ tags:
 - toolbar
 - form
 ingredients:
-- agenticdeveloperhub://recipes/markdown-quick-reference
-- agenticdeveloperhub://recipes/button
+- agenticdevelopercookbook://recipes/markdown-quick-reference
+- agenticdevelopercookbook://recipes/button
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/markdown-quick-reference
+- agenticdevelopercookbook://recipes/markdown-quick-reference
 references: []
 ---
 
@@ -53,8 +53,8 @@ title, category, or classification fields — those stay with the consuming form
 | Textarea | — | The markdown source field | yes | `id` (from `useId`), `rows`, `spellCheck`, mono font |
 | Label | — | Caption bound to the textarea via `htmlFor` | yes | mono uppercase caption styling |
 | EditorToolbar | — | `role="toolbar"` row holding the controls | yes | `ariaLabel` |
-| MarkdownQuickReference | agenticdeveloperhub://recipes/markdown-quick-reference | Built-in quick-reference popover control | optional (`quickReference`, default on) | side/align defaults |
-| Button | agenticdeveloperhub://recipes/button | The "Upload .md" trigger | optional (only when `onUpload` set) | `variant="outline" size="sm"` |
+| MarkdownQuickReference | agenticdevelopercookbook://recipes/markdown-quick-reference | Built-in quick-reference popover control | optional (`quickReference`, default on) | side/align defaults |
+| Button | agenticdevelopercookbook://recipes/button | The "Upload .md" trigger | optional (only when `onUpload` set) | `variant="outline" size="sm"` |
 
 > The Textarea, Label, and EditorToolbar are atomic `@agenticdevelopertoolkit/ui` primitives
 > reused as-is; the `.md` upload control wraps a hidden native `<input
@@ -154,14 +154,11 @@ title, category, or classification fields — those stay with the consuming form
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** Block at
-  `packages/web/packages/ui/src/blocks/markdown-editor.tsx`, exported from
-  `@agenticdevelopertoolkit/ui/blocks`. Composes `Textarea` + `Label` + `EditorToolbar`
-  (`components/editor-toolbar`) + `MarkdownQuickReference`
-  (`components/markdown-quick-reference`) + `Button`. Consumed by hub's
-  `ResearchDetail`. Demo lives in `ui-showcase` (Compositions group); re-run
-  `gen-sources.py` after edits.
-- **SwiftUI / Compose:** Not applicable — this is a web-only shared component.
+- **React / Web (TypeScript):** Block at `packages/web/packages/ui/src/blocks/markdown-editor.tsx`, exported from `@agenticdevelopertoolkit/ui/blocks`. Composes `Textarea` + `Label` + `EditorToolbar` (`components/editor-toolbar`) + `MarkdownQuickReference` (`components/markdown-quick-reference`) + `Button`. Uses `useId()` for instance-unique textarea ids and `role="toolbar"` semantics. Consumed by hub's `ResearchDetail`. Demo lives in `ui-showcase` (Compositions group).
+- **SwiftUI:** Start with `TextEditor` for markdown source and `Text` for label. Wrap both in a `VStack` with a `ToolbarItem` above containing an `HStack` for toolbar controls. Use `@State` for controlled value. Note: `TextEditor` has no built-in file picker; use `FileImporter` modifier from `UniformTypeIdentifiers` to accept `.md`, `.markdown`, and `.txt` files, or wrap a custom file picker.
+- **Compose:** Start with `BasicTextField` for markdown source and `Text` for label. Wrap in a `Column` with a `LazyRow` (horizontal scroll) above for toolbar controls. Use `remember { mutableStateOf() }` for controlled value. Note: For file picking, use `ActivityResultContracts.OpenDocument()` to filter by MIME type `text/markdown` or `text/plain`.
+- **AppKit / UIKit:** Start with `NSTextView` (macOS) or `UITextView` (iOS) for markdown source, `NSTextField` or `UILabel` for label. Add `NSView` (macOS) or `UIView` (iOS) subclass for toolbar with `NSStackView` (macOS, `orientation: .horizontal`) or `UIStackView` (iOS, `axis: .horizontal`). Use `Combine` or property observers for value binding. Note: Native text views require custom file picker; use `NSSavePanel` (macOS) or `UIDocumentPickerViewController` (iOS) with type identifier `com.apple.iwork.pages.pages` or `public.text` to accept markdown.
+- **WinUI 3:** Start with `RichEditBox` or `TextBox` for markdown source, `TextBlock` for label. Create a `Grid` with `RowDefinitions` for label row and content row, and a secondary `Grid` or `StackPanel` with `Orientation="Horizontal"` for toolbar controls. Bind value to `TextBox.Text` or `RichEditBox.Document` via `x:Bind` or `Binding`. Note: File picker uses `Windows.Storage.Pickers.FileOpenPicker`; set `FileTypeFilter` to `new[] { ".md", ".markdown", ".txt" }` and `SuggestedStartLocation` to `PickerLocationId.DocumentsLibrary`.
 
 ## Design Decisions
 
@@ -193,4 +190,5 @@ title, category, or classification fields — those stay with the consuming form
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Expand Platform Notes with SwiftUI, Compose, AppKit/UIKit, and WinUI 3 translation guidance; update domain to agenticdevelopercookbook; set status to review |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared MarkdownEditor extracted from hub's ResearchDetail (contract c9). |

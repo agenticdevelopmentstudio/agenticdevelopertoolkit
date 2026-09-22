@@ -1,13 +1,13 @@
 ---
 id: 2ad7c681-6a9e-43ae-a9d9-b448939d3455
 title: InfoPanel
-domain: agenticdeveloperhub://recipes/info-panel
+domain: agenticdevelopercookbook://recipes/info-panel
 type: ingredient
-version: 1.1.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -185,6 +185,31 @@ Fill + scroll (`scroll`):
 `INFO_PANEL_HEADER_HEIGHT` (= 41) is exported so hosts can align non-`InfoPanel`
 chrome to the same header baseline.
 
+## Deep Linking
+
+Not applicable: `InfoPanel` is a presentational container component that wraps host-supplied content. Deep linking routes are the responsibility of the host application and the content it renders within the panel.
+
+## Localization
+
+Not applicable: `InfoPanel` contains no user-facing strings. The `title`, `titleAfter`, icon, `center`, and `actions` slots are entirely host-owned; any localization of content in those slots is the host's responsibility.
+
+## Accessibility Options
+
+Not applicable: The component does not respond to accessibility display options (e.g., Reduce Motion, Increase Contrast). The component's visual styling is controlled by the `apt-*` theme tokens, and the host's content determines any motion or contrast behavior.
+
+## Feature Flags
+
+Not applicable: No feature flags are defined in the component source. The component is always available and all behavioral modes (`scroll`, `flex`, padding overrides) are unconditionally enabled.
+
+## Analytics
+
+No analytics. `InfoPanel` is a presentational container; any data-loading or
+interaction telemetry belongs to the host content it wraps.
+
+## Privacy
+
+Not applicable: The component collects no data. It is a purely presentational container that renders host-supplied content and manages layout state. No telemetry, logging, or data collection occurs.
+
 ## Logging
 
 No logging. `InfoPanel` is a presentational container; any data-loading or
@@ -192,14 +217,11 @@ interaction telemetry belongs to the host content it wraps.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/blocks/info-panel.tsx`.
-- `"use client"` (uses `Ref` typing / client composition), though it holds no state
-  itself.
-- Styled with the family `apt-*` token utilities (`apt-border`, `apt-surface`,
-  `apt-text`, `apt-text-dim`) registered centrally via `@source`, so the utilities
-  exist on every site without per-site config.
-- Demo: `ui-showcase` Topic `info-panel` (regenerate `sources.generated.ts` via
-  `gen-sources.py` after source changes).
+- **SwiftUI**: Create a custom `View` that composes a fixed-height header `HStack` with leading icon, title, trailing `titleAfter`, centered content, and right-aligned actions, above a body that conditionally wraps content in a `ScrollView` when `scroll` is true. Use `GeometryReader` or `.frame(minHeight:)` to align sibling headers at a shared baseline height.
+- **Compose**: Build with `Column` holding a `Row` for the header (with `weight` and `align` modifiers for slots) above a body that uses `Modifier.weight(1f).fillMaxHeight()` and conditionally wraps content in a scrollable container. Leverage `Box` and `Row` compositions to implement the slot layout and the card styling.
+- **React/Web**: File: `packages/web/packages/ui/src/blocks/info-panel.tsx`. Uses Tailwind flexbox utilities (`flex`, `flex-col`, `gap-*`, `min-h-0`), the `apt-*` token classes for theming, and React's `Ref` API for exposing the body element. Template and host props determine all header slot content.
+- **AppKit / UIKit**: Implement as a `UIView` (iOS) or `NSView` (macOS) subclass that composes an `NSStackView` (macOS) or `UIStackView` (iOS) with fixed-height header and a scrollable content view. Conditionally add `NSScrollView` / `UIScrollView` wrapping when scroll mode is enabled. Use `layoutMargins` and `isLayoutMarginsRelativeArrangement` to apply body padding.
+- **WinUI 3**: Use a custom `UserControl` with a `StackPanel` (orientation Vertical) containing a `Border` for the header row (with `Height="41"` or binding to the constant) and a `ScrollViewer` (conditionally visible/enabled by scroll mode). Style the header and body using theme resources for borders, backgrounds, and text. The ScrollViewer's `Content` property holds the body content; set `ScrollViewer.VerticalScrollBarVisibility` to `Auto` in scroll mode and hide it in card mode.
 
 ## Design Decisions
 
@@ -234,3 +256,4 @@ interaction telemetry belongs to the host content it wraps.
 |---|---|---|---|
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the header anatomy, content-sized vs fill+scroll body, and the shared header-height alignment. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Host-attribute passthrough: remaining HTML attributes spread onto the root `<section>` (data-* tagging without a wrapper). |
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Complete recipe sections: add Deep Linking, Localization, Accessibility Options, Feature Flags, Privacy; expand Platform Notes with translation guidance for all five platforms; set status to review. |

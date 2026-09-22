@@ -3,7 +3,7 @@ id: a105b6cf-307d-4156-8b73-468f627f3c9b
 title: Checkbox
 domain: agenticdevelopercookbook://ingredients/checkbox
 type: ingredient
-version: 1.1.0
+version: 1.3.0
 status: review
 language: en
 created: '2026-09-22'
@@ -146,7 +146,7 @@ Not applicable: The component's label, hint, and any ARIA attributes are provide
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | No motion is animated. The only transition in the source is `transition-colors` on the primitive root (line 994, checkbox.tsx), which animates border and background color; neither source file queries `prefers-reduced-motion`. There is nothing to disable under Reduce Motion. |
-| Increase Contrast | All colors resolve from the `apt-border`, `apt-bg`, and `apt-gold` design tokens (line 994, line 996, checkbox.tsx); the component hardcodes no color value, so implementations MUST use those tokens and any high-contrast theme variant carries through automatically. NEEDS REVIEW: Neither source file defines the tokens, so whether a high-contrast variant exists and whether the checked fill meets WCAG 2.1 AA (4.5:1 for the checkmark on `apt-gold`, 3:1 for the `apt-border` outline on `apt-bg`) cannot be determined here. The stylesheet or theme file that defines the `apt-*` custom properties, run through a contrast checker, would settle it. |
+| Increase Contrast | All colors resolve from the `apt-border`, `apt-bg`, and `apt-gold` design tokens (line 994, line 996, checkbox.tsx); the component hardcodes no color value, so implementations MUST use those tokens and any high-contrast theme variant carries through automatically. NEEDS REVIEW: Token values and high-contrast compliance. Neither source file defines the token values, so whether a high-contrast variant exists and whether the checked fill meets WCAG 2.1 AA (4.5:1 for the checkmark on `apt-gold`, 3:1 for the `apt-border` outline on `apt-bg`) cannot be determined here. The stylesheet or theme file that defines the `apt-*` custom properties, run through a contrast checker, would settle it. |
 | Differentiate Without Color | Satisfied. The checked state is signalled by two independent channels: the `apt-gold` border and fill (line 996, checkbox.tsx) and the `Check` glyph rendered by the indicator (line 1006, checkbox.tsx), which is absent when unchecked. In switch appearance the input also carries `role="switch"` (line 955, Checkbox.tsx), so assistive technology announces on/off independently of appearance. Implementations MUST keep the glyph, not color alone, as the checked indicator. |
 
 ## Feature Flags
@@ -202,5 +202,7 @@ Not applicable: No logging or debugging output is present in the component sourc
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-09-22 | Claude Haiku 4.5 | Standardize review marker format in Accessibility Options table; keep genuine gaps (touch target size depends on external CSS, token-defined contrast requires theme verification) |
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks form-field wrapper alongside ui-primitives styled primitive; ensure complete platform guidance |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Answer source-visible questions in place (disabled selectors, color transition, checked-state signalling, required change callback); add Windows platform guidance; promote to review |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

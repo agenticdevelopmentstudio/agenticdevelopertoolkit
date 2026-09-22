@@ -1,13 +1,13 @@
 ---
 id: db6178e1-c613-4358-a0b4-8c6f5bfaaff9
 title: UserCard
-domain: agenticdeveloperhub://recipes/user-card
+domain: agenticdevelopercookbook://recipes/user-card
 type: ingredient
-version: 1.1.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -184,6 +184,30 @@ import { UserCard, UserCardSkeleton, type UserCardDto } from '@agenticdevelopert
 |---|---|---|---|
 | `className` | `string` | no | Extra classes on the skeleton root. |
 
+## Deep Linking
+
+Not applicable: The component is a pure presentational render with no integrated navigation. Deep linking is the responsibility of the page or layout that wraps this component.
+
+## Localization
+
+Not applicable: The component does not render user-facing translatable strings beyond fixed labels (`Social`, `Email`, `Phone`, `Address`, `Personas`, `Member since`) and platform names drawn from `PLATFORM_LABELS`. The platform names are static in the source and localization would be managed by consumers at the call site if needed.
+
+## Accessibility Options
+
+Not applicable: The component uses system focus styles and does not implement custom accessibility options like reduced-motion animations or high-contrast modes. It delegates to the design system's token values (e.g., `apt-border`, `apt-bg`) which are applied globally.
+
+## Feature Flags
+
+Not applicable: The component has no feature flag requirements. It is always available and renders deterministically based on its input DTO.
+
+## Analytics
+
+Not applicable: `UserCard` is a pure presentational component with no built-in instrumentation. Event tracking (if needed by a consumer) is the responsibility of the page or layout that wraps this component and calls it.
+
+## Privacy
+
+Not applicable: The component does not collect, store, or transmit any data. All privacy filtering is enforced server-side before the DTO is constructed; the component simply renders what it receives.
+
 ## Logging
 
 No logging. `UserCard` is a pure presentational component. It emits no telemetry
@@ -193,24 +217,11 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 
 ## Platform Notes
 
-- **Source file**: `packages/web/packages/ui/src/blocks/user-card.tsx`
-- **Dist**: `@agenticdevelopertoolkit/ui/blocks/user-card` (covered by the `./blocks/*` entry in
-  the package's `package.json`).
-- **Live demo**: the UI showcase app's `user-card` demo (spec "Full card",
-  "Identity only", and "Loading skeleton"). The showcase is a consumer of this
-  package and lives outside this repo.
-- **Hub-style consumer**: a hub-style profile page wraps `UserCard` with an
-  edit-profile affordance and a client-side upgrade fetch for the HUB+PUBLIC
-  variant.
-- **DTO structural alignment**: `UserCardDto` is intentionally a local structural
-  duplicate of the backend's public-profile schema, kept local rather than
-  imported so `@agenticdevelopertoolkit/ui` stays free of any API-types dependency;
-  callers whose backend client already produces that shape may pass it directly
-  since the shapes are identical.
-- **Responsive**: verified at 375 / 768 / 1440 via Playwright.
-- **`'use client'` boundary**: the component uses no server-specific APIs; the
-  `'use client'` directive is present to ensure hydration works correctly and
-  to allow future interactivity (e.g. avatar hover states) without a refactor.
+- **SwiftUI**: Build a view composition from `VStack` + `HStack`, using `AsyncImage` for the avatar with a fallback symbol (`Image(systemName: "person.circle")`). Render sections conditionally based on collection emptiness. Use SwiftUI's `@Environment` to access design token colors. Member since date formatting uses `Date.FormatStyle(date: .abbreviated)`.
+- **Compose**: Use `Column` for the layout with `AsyncImage` from Coil for avatar loading. Conditional rendering via Kotlin's `if` within the composable. Social links render as `ClickableText` or `Surface` with `navigateToExternalUrl()`. Section visibility determined by collection checks.
+- **React/Web**: Source is `packages/web/packages/ui/src/blocks/user-card.tsx` using Base UI's `@base-ui/react/avatar`, Lucide React icons, and Tailwind CSS (`apt-*` tokens). Conditional rendering suppresses empty sections. `UserCardSkeleton` uses the `Skeleton` component from the same package for the loading state.
+- **AppKit / UIKit**: Implement as a `UIViewController` (or SwiftUI `UIViewControllerRepresentable`) with `NSImageView`/`UIImageView` + `NSTextField`/`UILabel` composition. Use URLSession or a third-party image cache (e.g., Kingfisher) for async avatar loading. Render sections as `NSTableView`/`UITableView` or stacked views. Focus ring via `NSAppearance.currentAccentColor` / `UIColor.systemBlue`.
+- **WinUI 3**: Implement using WinUI `Grid` for layout, `Image` control with fallback `Glyph` (e.g., from Segoe MDL2 Assets) for the avatar. Use `TextBlock` for text with automatic wrapping. Section visibility via `Visibility` property (Collapsed/Visible). Apply Fluent 2 theme resources for colors and spacing. Social links use `HyperlinkButton` with `NavigateUri` binding.
 
 ## Design Decisions
 
@@ -249,3 +260,4 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 |---|---|---|---|
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe authoring for existing shared component. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Reattribute the avatar image engine from Radix to Base UI (`@base-ui/react/avatar`), matching `avatar.tsx`; behavior (load/error → initials fallback) unchanged. |
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with proper "not applicable" explanations; restructure Platform Notes into five-platform format with concrete implementation guidance for each platform; correct domain URI; set status to review. |

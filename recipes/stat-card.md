@@ -1,17 +1,17 @@
 ---
 id: b7a4a259-620f-42a3-8bc2-9e5c07c1819d
 title: StatCard
-domain: agenticdeveloperhub://recipes/stat-card
+domain: agenticdevelopercookbook://recipes/stat-card
 type: recipe
-version: 1.1.0
-status: draft
+version: 1.3.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The dashboard stat card — an InfoPanel headed by an icon + title with a “{tool} ↗” deep link, over StatRows, freeform children, and a muted mono footnote."
+summary: “The dashboard stat card — an InfoPanel headed by an icon + title with a “{tool} ↗” deep link, over StatRows, freeform children, and a muted mono footnote.”
 platforms:
 - typescript
 - web
@@ -22,9 +22,9 @@ tags:
 - dashboard
 - ui
 ingredients:
-- agenticdeveloperhub://recipes/info-panel
-- agenticdeveloperhub://recipes/stat
-- agenticdeveloperhub://recipes/external-link
+- agenticdevelopercookbook://recipes/info-panel
+- agenticdevelopercookbook://recipes/stat
+- agenticdevelopercookbook://recipes/external-link
 depends-on: []
 related: []
 references: []
@@ -55,9 +55,9 @@ It was extracted from a status site's Traffic/Errors telemetry cards, so every s
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| InfoPanel | agenticdeveloperhub://recipes/info-panel | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
-| StatRow | agenticdeveloperhub://recipes/stat | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
-| ExternalLink | agenticdeveloperhub://recipes/external-link | The "{label} ↗" deep link into the source tool, placed in the InfoPanel actions slot | no (only when `link` given) | `href` = `link.href`, children = `link.label`; opens a new tab (noopener) |
+| InfoPanel | agenticdevelopercookbook://recipes/info-panel | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
+| StatRow | agenticdevelopercookbook://recipes/stat | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
+| ExternalLink | agenticdevelopercookbook://recipes/external-link | The "{label} ↗" deep link into the source tool, placed in the InfoPanel actions slot | no (only when `link` given) | `href` = `link.href`, children = `link.label`; opens a new tab (noopener) |
 
 The body-stack container, the footnote treatment, and the `stats[]`→rows mapping are
 the only things this block owns; `StatCardStat` (`{ label, value, tone }`) is exported
@@ -156,20 +156,11 @@ into a composed part; nothing flows back up except the browser navigation an
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/stat-card.tsx`,
-  exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-card`). Composes
-  `InfoPanel` (`../blocks/info-panel`), `StatRow` (`../components/stat`), and
-  `ExternalLink` (`../components/external-link`). Exports `StatCard`, `StatCardProps`,
-  and the `StatCardStat` type.
-- Historical source: a status site's Traffic/Errors telemetry cards — StatCard
-  generalizes that pattern for every site.
-- Demo: `ui-showcase` Topic `stat-card` (group "Blocks — cards & sections"); the demo
-  shows a Traffic card (declarative stats + footnote), an Errors card (stats +
-  freeform children), and a monitor card (header `actions` status word, no link).
-  Regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
-- **Responsive:** the demo lays the cards in a `sm:grid-cols-2` grid; each card is
-  content-sized and full-width in its cell — verify at 375 / 768 / 1440.
-- **SwiftUI / Compose:** not applicable — web-only shared block.
+- **Swift / SwiftUI**: Not applicable: StatCard is a web-only React component. SwiftUI implementations of dashboard telemetry views would compose native UIKit views (UIStackView, custom label stacks, and system link controls) or SwiftUI equivalents (VStack, Text, Link), but the StatCard assembly pattern is web-specific.
+- **Kotlin / Compose**: Not applicable: StatCard is a web-only React component. Compose implementations would use a Column layout with Row pairs for each stat, but the compound component and the footnote treatment pattern are tied to React's component model.
+- **React / Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-card.tsx`, exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-card`). Composes `InfoPanel` (`../blocks/info-panel`), `StatRow` (`../components/stat`), and `ExternalLink` (`../components/external-link`). Exports `StatCard`, `StatCardProps`, and the `StatCardStat` type. Demo: `ui-showcase` Topic `stat-card` (group "Blocks — cards & sections"); the demo shows a Traffic card (declarative stats + footnote), an Errors card (stats + freeform children), and a monitor card (header `actions` status word, no link). Regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Responsive: the demo lays the cards in a `sm:grid-cols-2` grid; each card is content-sized and full-width in its cell — verify at 375 / 768 / 1440.
+- **AppKit / UIKit**: Not applicable: StatCard is a web-only React component. iOS/macOS implementations would use UIStackView (iOS) or NSStackView (macOS) for the vertical layout, with NSAttributedString for the muted footnote, but the component composition and mixed-content children pattern are web-specific.
+- **WinUI 3**: Start with a `Border` (CornerRadius for rounded corners, BorderBrush for the card outline) containing a vertical `StackPanel` with Spacing=10 (for gap-2.5 equivalence). The header is a `Grid` with three columns: icon (Image or SymbolIcon), title (TextBlock with heading-level font), and actions (HyperlinkButton for the deep link). Bind the link's Visibility to Collapsed when the link prop is absent. The body is a nested StackPanel with Spacing=10, containing TextBlock pairs for each stat row (label and value), followed by a ContentPresenter for freeform children, and a TextBlock for the footnote (FontSize=10, Foreground set to secondary text color). Bind the footnote's Visibility to Collapsed when null. Use a Resources section to define color and typography tokens matching the design system.
 
 ## Design Decisions
 
@@ -214,3 +205,5 @@ into a composed part; nothing flows back up except the browser navigation an
 |---|---|---|---|
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the InfoPanel + StatRow + ExternalLink assembly extracted from the status telemetry cards. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | `actions` header slot (extra controls after the deep link) + host-attribute passthrough to the panel root; adopted by the fleet status monitor card. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Correct domain URIs to agenticdevelopercookbook:// and complete Platform Notes with all five platform bullets and explanations. |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Rewrite WinUI 3 platform note with concrete translation guidance: Border, Grid header, StackPanel body, TextBlock pairs for stats, Visibility bindings for optional elements. |
