@@ -1,25 +1,101 @@
 {
   "recipes": "recipes",
   "roots": [
-    {"path": "packages/web/packages/ui/src/components",  "tier": "ui-primitives", "platform": "web"},
-    {"path": "packages/web/packages/ui/src/blocks",      "tier": "ui-blocks",     "platform": "web"},
-    {"path": "packages/web/packages/controls/src",       "tier": "ui-blocks",     "platform": "web"},
-    {"path": "packages/web/packages/chat/src/components","tier": "chat",          "platform": "web"},
-    {"path": "packages/web/packages/chat/src/modes",     "tier": "chat",          "platform": "web"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat",  "tier": "chat", "platform": "apple"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Chat",    "tier": "chat", "platform": "apple"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Chat", "tier": "chat", "platform": "apple"},
-    {"path": "packages/web/packages/popover/src",        "tier": "chrome",        "platform": "web"},
-    {"path": "packages/web/packages/chrome/src",         "tier": "chrome",        "platform": "web"},
-    {"path": "packages/web/packages/viewport/src",       "tier": "chrome",        "platform": "web"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome", "tier": "chrome", "platform": "apple"},
-    {"path": "packages/web/packages/markdown/src/components", "tier": "markdown", "platform": "web"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown",  "tier": "markdown", "platform": "apple"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown",    "tier": "markdown", "platform": "apple"},
-    {"path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown", "tier": "markdown", "platform": "apple"},
-    {"path": "packages/web/packages/landing/src",        "tier": "page-kits",     "platform": "web"},
-    {"path": "packages/web/packages/search/src/components", "tier": "page-kits",  "platform": "web"},
-    {"path": "packages/web/packages/registry-profile/src", "tier": "page-kits",   "platform": "web"}
+    {
+      "path": "packages/web/packages/ui/src/components",
+      "tier": "ui-primitives",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/ui/src/blocks",
+      "tier": "ui-blocks",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/controls/src",
+      "tier": "ui-blocks",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/chat/src/components",
+      "tier": "chat",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/chat/src/modes",
+      "tier": "chat",
+      "platform": "web"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat",
+      "tier": "chat",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Chat",
+      "tier": "chat",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Chat",
+      "tier": "chat",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/web/packages/popover/src",
+      "tier": "chrome",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/chrome/src",
+      "tier": "chrome",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/viewport/src",
+      "tier": "chrome",
+      "platform": "web"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome",
+      "tier": "chrome",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/web/packages/markdown/src/components",
+      "tier": "markdown",
+      "platform": "web"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown",
+      "tier": "markdown",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown",
+      "tier": "markdown",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown",
+      "tier": "markdown",
+      "platform": "apple"
+    },
+    {
+      "path": "packages/web/packages/landing/src",
+      "tier": "page-kits",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/search/src/components",
+      "tier": "page-kits",
+      "platform": "web"
+    },
+    {
+      "path": "packages/web/packages/registry-profile/src",
+      "tier": "page-kits",
+      "platform": "web"
+    }
   ],
   "ignore": [
     "**/__tests__/**",
@@ -58,5 +134,8 @@
     "three-pane-chat-view": "three-pane-chat",
     "markdown-editor-controller": "markdown-document-editor",
     "markdown-viewer-controller": "markdown-viewer"
+  },
+  "renames": {
+    "packages/web/packages/landing/src/blocks/Card.tsx": "landing-card"
   }
 }
