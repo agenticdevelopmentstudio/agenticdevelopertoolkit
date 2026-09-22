@@ -46,5 +46,17 @@
     "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/PlatformKit.swift",
     "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown/MarkdownFileImporter.swift",
     "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownFileImporter.swift"
-  ]
+  ],
+  "aliases": {
+    "chat-input-field": "chat-input",
+    "inline-chat-view": "inline-chat",
+    "message-bubble-view": "message-bubble",
+    "mobile-message-bubble-view": "message-bubble",
+    "mobile-chat-view-controller": "mobile-chat",
+    "thinking-indicator-view": "typing-indicator",
+    "mobile-thinking-indicator-view": "typing-indicator",
+    "three-pane-chat-view": "three-pane-chat",
+    "markdown-editor-controller": "markdown-document-editor",
+    "markdown-viewer-controller": "markdown-viewer"
+  }
 }
