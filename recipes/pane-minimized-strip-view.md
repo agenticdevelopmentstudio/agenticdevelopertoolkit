@@ -15,6 +15,7 @@ summary: A vertical rail representing a minimized pane, showing its glyph and re
   button.
 platforms:
 - swift
+- macos
 tags:
 - pane
 - layout
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Pane Minimized Strip View

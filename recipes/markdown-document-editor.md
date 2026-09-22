@@ -12,9 +12,12 @@ author: Claude Haiku 4.5
 copyright: 2026 Agentic Developer Toolkit
 license: MIT
 summary: "A markdown source editor with live preview, responsive layout toggling between split and tabbed views, and debounced rendering."
-platforms: 
-  - web
-  - swift
+platforms:
+- typescript
+- web
+- swift
+- macos
+- ios
 tags: 
   - markdown
   - editor
@@ -23,6 +26,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Document Editor

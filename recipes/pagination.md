@@ -25,6 +25,8 @@ depends-on:
 - agenticdevelopercookbook://ingredients/button
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Pagination

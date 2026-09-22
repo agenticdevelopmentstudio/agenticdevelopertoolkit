@@ -13,11 +13,8 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Text inputs for document title and slug with optional availability checking.
 platforms:
-- web
-- swift
-- kotlin
 - typescript
-- windows
+- web
 tags:
 - form
 - input
@@ -25,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Document Identity Field
@@ -212,4 +211,4 @@ No logging is implemented in the source code; this table is provided for impleme
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

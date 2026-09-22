@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Page-level shell that locks viewport and manages keyboard inset for the page.
 platforms:
+- typescript
 - web
 tags:
 - viewport
@@ -20,6 +21,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ViewportShell

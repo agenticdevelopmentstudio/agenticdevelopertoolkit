@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: A focused-item selector dropdown menu with optional All and New entry points.
 platforms:
+- typescript
 - web
 tags:
 - menu
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Popup Menu

@@ -14,6 +14,7 @@ license: MIT
 summary: A nested-menu framework rendering hierarchical lists with three disclosure
   styles and optional detail pane.
 platforms:
+- typescript
 - web
 tags:
 - menu
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Hierarchical Menu Detail
@@ -205,4 +208,4 @@ Not applicable: No compliance checks are defined in source. Accessibility compli
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

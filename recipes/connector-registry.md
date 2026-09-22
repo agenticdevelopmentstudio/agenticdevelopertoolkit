@@ -14,6 +14,7 @@ license: MIT
 summary: Registry for tracking and querying HTML element instances by unique identifier
   within a React application.
 platforms:
+- typescript
 - web
 tags:
 - context-provider
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Connector Registry

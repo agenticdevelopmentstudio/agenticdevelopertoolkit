@@ -14,6 +14,7 @@ license: MIT
 summary: Renders SVG connector lines between referenced DOM elements with real-time
   position tracking.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ConnectorSVG
@@ -141,4 +144,4 @@ Not applicable: No specific compliance checks are defined for this component.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -22,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Stepper
@@ -202,4 +204,4 @@ Subsystem: `com.aws.controls` | Category: `Stepper`
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from React/Web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React/Web source |

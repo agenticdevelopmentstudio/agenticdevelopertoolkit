@@ -14,6 +14,7 @@ license: MIT
 summary: Renders pre-rendered document HTML with prose typography and scroll-linked
   heading anchors.
 platforms:
+- typescript
 - web
 tags:
 - prose
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Doc Article
@@ -153,4 +156,4 @@ Not applicable: No compliance checks are defined for this component. Compliance 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

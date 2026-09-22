@@ -14,6 +14,7 @@ license: MIT
 summary: Semantic breadcrumb trail for documentation navigation, always with home
   crumb first.
 platforms:
+- typescript
 - web
 tags:
 - navigation
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # DocBreadcrumbs

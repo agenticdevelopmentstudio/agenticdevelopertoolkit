@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: A dropdown selector for choosing between predefined markdown viewing themes.
 platforms:
+- typescript
 - web
 tags:
 - theme-selection
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Theme Switcher

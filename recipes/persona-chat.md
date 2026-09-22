@@ -14,6 +14,7 @@ license: MIT
 summary: Mode-based routing container that renders inline, three-pane, or mobile chat
   interfaces with a persona participant and optional user participant.
 platforms:
+- typescript
 - web
 tags:
 - chat
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Persona Chat

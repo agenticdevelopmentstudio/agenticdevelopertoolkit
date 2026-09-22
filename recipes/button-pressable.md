@@ -15,6 +15,7 @@ summary: Client-side pointer-tracking layer that wraps the Base UI Button primit
   and reflects a held/pressed state via data-pressed, composing with consumer pointer
   handlers.
 platforms:
+- typescript
 - web
 tags:
 - component
@@ -26,6 +27,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://recipes/button
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # PressableButton

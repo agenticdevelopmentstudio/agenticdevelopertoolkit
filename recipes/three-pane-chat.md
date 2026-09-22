@@ -14,8 +14,10 @@ license: MIT
 summary: Multi-pane chat layout displaying transcript, topics list, and detail pane
   with visual connectors.
 platforms:
+- typescript
 - web
 - swift
+- macos
 tags:
 - chat-ui
 - layout
@@ -24,6 +26,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Three Pane Chat
@@ -197,4 +201,4 @@ Not applicable: Component does not interact with security, identity, or complian
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

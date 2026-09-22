@@ -184,4 +184,4 @@ Not applicable: No logging or console output is performed by this component. Deb
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

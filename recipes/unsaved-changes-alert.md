@@ -14,6 +14,7 @@ license: MIT
 summary: Modal alert that prompts the user before discarding unsaved edits, with a
   customizable description of what is at risk.
 platforms:
+- typescript
 - web
 tags:
 - dialog
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Unsaved Changes Alert
@@ -163,4 +166,4 @@ Not applicable: No specific compliance checks are defined for this component at 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

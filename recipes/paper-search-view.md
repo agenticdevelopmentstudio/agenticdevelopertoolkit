@@ -14,6 +14,7 @@ license: MIT
 summary: Searchable paper corpus interface with author filtering and customizable
   labels.
 platforms:
+- typescript
 - web
 tags:
 - search

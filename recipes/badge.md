@@ -14,6 +14,7 @@ license: MIT
 summary: 'Small pill-shaped status/tone label rendered as a span with six color variants:
   neutral, accent, orange, blue, success, error.'
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Badge
@@ -272,5 +275,5 @@ compliance checks.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.1 | 2026-09-22 | | Apply completeness rules; replace over-used review markers with "Not applicable" statements and provide platform translation guidance |
-| 1.0.0 | | | Initial creation |
+| 1.0.1 | 2026-09-22 | Mike Fullerton | Apply completeness rules; replace over-used review markers with "Not applicable" statements and provide platform translation guidance |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

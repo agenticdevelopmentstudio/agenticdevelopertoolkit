@@ -14,6 +14,7 @@ license: MIT
 summary: Container component that renders a collection of detail panes for visible
   topics.
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # PanelStack

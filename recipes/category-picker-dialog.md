@@ -30,6 +30,8 @@ related:
 - agenticdeveloperhub://recipes/list-chooser
 - agenticdeveloperhub://recipes/entity-chooser
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # CategoryPickerDialog

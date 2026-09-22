@@ -24,6 +24,8 @@ depends-on: []
 related:
   - agenticdevelopercookbook://recipes/alert-and-dialog
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Dialog

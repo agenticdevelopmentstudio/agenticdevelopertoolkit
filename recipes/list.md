@@ -14,6 +14,7 @@ license: MIT
 summary: A bordered container component with row dividers for displaying flat collections
   of items.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # List

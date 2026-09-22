@@ -14,6 +14,7 @@ license: MIT
 summary: A button control that cycles between auto, light, and dark appearance modes
   and displays the current state via icon and badge.
 platforms:
+- typescript
 - web
 tags:
 - appearance
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Appearance Mode Toggle
@@ -178,4 +181,4 @@ Not applicable: Component does not emit log messages.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove the review marker from Localization (not applicable); retain tap target marker as genuine gap |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -14,6 +14,7 @@ license: MIT
 summary: A recessed editing toolbar that renders preset action buttons (New/Delete/Cancel/Save)
   or custom content.
 platforms:
+- typescript
 - web
 tags:
 - toolbar
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Button Bar
@@ -209,4 +212,4 @@ Not applicable: No platform-wide security, compliance, or data-protection concer
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web implementation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web implementation |

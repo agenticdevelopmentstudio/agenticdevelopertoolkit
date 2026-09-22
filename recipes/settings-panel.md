@@ -14,6 +14,7 @@ license: MIT
 summary: Multi-pane settings interface with sidebar navigation and grouped section
   support
 platforms:
+- typescript
 - web
 tags:
 - settings
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Settings Panel

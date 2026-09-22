@@ -15,6 +15,8 @@ summary: A scrollable plain-text editor pane with theme support and unified macO
   API.
 platforms:
 - swift
+- macos
+- ios
 tags:
 - text-input
 - editor
@@ -22,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Text Pane
@@ -185,5 +189,5 @@ NEEDS REVIEW: No accessible name. `textView` is `private` in both variants, and 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.1.0 | 2026-09-22 | | Compliance: narrowed the accessibility NEEDS REVIEW marker to the missing fact (no accessible name, `textView` is private with no label-forwarding member) and what would settle it |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Compliance: narrowed the accessibility review marker to the missing fact (no accessible name, `textView` is private with no label-forwarding member) and what would settle it |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

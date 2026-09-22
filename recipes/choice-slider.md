@@ -13,8 +13,6 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: A slider control that selects from a discrete set of labeled choices.
 platforms:
-- swift
-- kotlin
 - typescript
 - web
 tags:
@@ -23,6 +21,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Choice Slider

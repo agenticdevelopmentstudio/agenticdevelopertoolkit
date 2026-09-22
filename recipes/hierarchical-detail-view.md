@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Context-driven switch between hierarchical menu and topic detail view implementations
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Hierarchical Detail View

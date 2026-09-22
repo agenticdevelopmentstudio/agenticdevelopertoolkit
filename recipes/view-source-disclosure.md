@@ -14,11 +14,14 @@ license: MIT
 summary: Collapsible disclosure component that reveals raw document source text on
   demand.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # View Source Disclosure
@@ -173,4 +176,4 @@ Not applicable: this component does not require compliance audit beyond standard
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

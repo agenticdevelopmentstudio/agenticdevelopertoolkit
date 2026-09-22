@@ -14,6 +14,7 @@ license: MIT
 summary: Hierarchical row display for nested parent-child relationships in tables
   and lists, exposing nesting depth and collapse-expand affordance.
 platforms:
+- typescript
 - web
 tags:
 - tree
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Tree Rows
@@ -215,4 +218,4 @@ Not applicable: No specific compliance checks (WCAG, security, data protection) 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Reduce Motion and Increase Contrast markers; clarify token requirements and motion animation behavior. |
-| 1.0.0 | 2026-09-22 | | Initial creation from tree-rows.tsx source. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from tree-rows.tsx source. |

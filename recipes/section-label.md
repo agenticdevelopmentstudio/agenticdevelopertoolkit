@@ -25,6 +25,8 @@ related:
 - agenticdevelopercookbook://ingredients/user-card
 - agenticdevelopercookbook://ingredients/field
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # SectionLabel

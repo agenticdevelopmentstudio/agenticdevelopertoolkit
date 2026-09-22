@@ -14,6 +14,7 @@ license: MIT
 summary: Accordion display of questions and answers using native HTML details/summary
   elements, requiring no JavaScript for expand/collapse.
 platforms:
+- typescript
 - web
 tags:
 - faq

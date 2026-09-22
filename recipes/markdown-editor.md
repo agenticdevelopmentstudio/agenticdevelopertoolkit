@@ -28,6 +28,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://recipes/markdown-quick-reference
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # MarkdownEditor

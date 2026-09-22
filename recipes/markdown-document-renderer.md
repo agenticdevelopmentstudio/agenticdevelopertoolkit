@@ -15,6 +15,8 @@ summary: Renders complete markdown documents with GitHub alert callouts, task li
   and semantic coloring.
 platforms:
 - swift
+- macos
+- ios
 tags:
 - markdown
 - document-rendering
@@ -22,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Document Renderer

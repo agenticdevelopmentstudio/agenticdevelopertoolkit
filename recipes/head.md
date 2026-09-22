@@ -129,4 +129,4 @@ Not applicable: This component is a presentational container with no compliance 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source |

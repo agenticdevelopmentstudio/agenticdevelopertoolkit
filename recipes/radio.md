@@ -14,11 +14,14 @@ license: MIT
 summary: Single-selection control in a group where users pick one option from multiple
   mutually exclusive choices.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Radio

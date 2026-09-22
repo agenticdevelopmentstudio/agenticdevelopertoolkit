@@ -14,6 +14,7 @@ license: MIT
 summary: A two-row composition pairing a single category selection with a set of tags,
   sharing label alignment.
 platforms:
+- typescript
 - web
 tags:
 - classification
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Categories and Tags

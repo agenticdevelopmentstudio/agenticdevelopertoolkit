@@ -14,6 +14,7 @@ license: MIT
 summary: Tabbed interface component for organizing content into labeled sections with
   keyboard and mouse navigation.
 platforms:
+- typescript
 - web
 tags:
 - tabs
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Tabs
@@ -180,4 +183,4 @@ Not applicable: No compliance checks are defined in source. Cookbook compliance 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

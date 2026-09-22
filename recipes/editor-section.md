@@ -26,6 +26,8 @@ depends-on: []
 related:
 - agenticdeveloperhub://recipes/list-with-details-pane
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # EditorSection

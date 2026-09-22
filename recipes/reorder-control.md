@@ -14,6 +14,7 @@ license: MIT
 summary: A pair of arrow buttons to move items up and down within a list, always visible
   with disabled state at boundaries.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Reorder Control
@@ -163,4 +166,4 @@ Not applicable: This component does not directly interact with regulatory, secur
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

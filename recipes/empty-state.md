@@ -23,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Empty State
@@ -169,4 +171,4 @@ Not applicable: Component performs no operations requiring debug or error loggin
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

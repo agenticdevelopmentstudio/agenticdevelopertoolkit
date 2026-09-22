@@ -14,6 +14,7 @@ license: MIT
 summary: A loading placeholder component that displays a pulsing block to indicate
   content is loading.
 platforms:
+- typescript
 - web
 tags:
 - loading
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Skeleton

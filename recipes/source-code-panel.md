@@ -14,11 +14,14 @@ license: MIT
 summary: A syntax-highlighted code display component with optional copy and filename
   display.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Source Code Panel

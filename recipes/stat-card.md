@@ -28,6 +28,8 @@ ingredients:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # StatCard

@@ -14,8 +14,11 @@ license: MIT
 summary: Converts markdown content to formatted output with syntax-highlighted code
   blocks and semantic palette theming.
 platforms:
-- apple
+- typescript
 - web
+- swift
+- macos
+- ios
 tags:
 - markdown
 - text-rendering
@@ -23,6 +26,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Renderer
@@ -190,5 +195,5 @@ Not applicable: Markdown Renderer conforms to CommonMark specification and appli
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.1.0 | 2026-09-22 | | Replace NEEDS REVIEW markers on the Compose and WinUI 3 Platform Notes bullets with concrete translation guidance |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Replace review markers on the Compose and WinUI 3 Platform Notes bullets with concrete translation guidance |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -14,6 +14,7 @@ license: MIT
 summary: A draggable and keyboard-operable separator that splits a container into
   two panes, reporting a ratio of space given to the leading pane.
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # SplitDivider
@@ -203,4 +206,4 @@ Not applicable: The component itself does not implement compliance checks (e.g.,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

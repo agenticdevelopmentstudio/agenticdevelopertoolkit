@@ -14,6 +14,7 @@ license: MIT
 summary: Introductory paragraph component that renders semantic text content under
   headings.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []

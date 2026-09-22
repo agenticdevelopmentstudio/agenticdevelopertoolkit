@@ -134,4 +134,4 @@ Not applicable: No specific compliance checks (WCAG, legal, or regulatory) are d
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

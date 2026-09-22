@@ -14,6 +14,7 @@ license: MIT
 summary: A semantic heading wrapper that renders an h2 element with optional CSS class
   composition.
 platforms:
+- typescript
 - web
 tags:
 - heading
@@ -23,6 +24,8 @@ related: []
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/h2
 - https://www.w3.org/TR/html-aria/
+approved-by: ''
+approved-date: ''
 ---
 
 # Header
@@ -144,4 +147,4 @@ Not applicable: The Header component does not fall under a specific compliance a
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

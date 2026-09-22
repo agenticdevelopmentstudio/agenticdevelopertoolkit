@@ -14,6 +14,7 @@ license: MIT
 summary: A content card for displaying a resource with title, optional identifier,
   description, and metadata in a navigational or interactive context.
 platforms:
+- typescript
 - web
 tags:
 - card
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Resource Card

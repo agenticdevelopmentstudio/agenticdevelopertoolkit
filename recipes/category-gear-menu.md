@@ -14,6 +14,7 @@ license: MIT
 summary: 'Dropdown menu for managing category actions: add, rename, move, file, and
   delete.'
 platforms:
+- typescript
 - web
 tags:
 - menu
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Category Gear Menu

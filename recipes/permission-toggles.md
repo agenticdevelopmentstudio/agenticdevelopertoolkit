@@ -23,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Permission Toggles
@@ -193,4 +195,4 @@ Color contrast compliance depends on design system color token values meeting WC
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Revision pass: clarify Reduce Motion gap, fold Compliance concerns into earlier sections |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

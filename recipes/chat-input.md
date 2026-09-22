@@ -13,9 +13,10 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Single-line text input field for composing and sending chat messages.
 platforms:
-- swift
 - typescript
 - web
+- swift
+- macos
 tags:
 - chat
 - input
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Chat Input
@@ -226,4 +229,4 @@ Subsystem: `agenticdevelopertoolkit` | Category: `ChatInput`
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

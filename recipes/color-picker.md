@@ -14,11 +14,14 @@ license: MIT
 summary: A controlled form field component that allows users to select a color using
   the native color picker and displays the hex value.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Color Picker
@@ -148,4 +151,4 @@ Not applicable. No specific compliance audits or external standards (e.g., WCAG,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

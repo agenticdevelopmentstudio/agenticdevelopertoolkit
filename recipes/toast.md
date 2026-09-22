@@ -12,14 +12,17 @@ author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "Transient notification displayed in a fixed viewport at the bottom-right corner with optional dismiss button."
-platforms: 
-  - web
+platforms:
+- typescript
+- web
 tags:
   - notification
   - toast
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Toast

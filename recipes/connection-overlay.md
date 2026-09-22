@@ -14,6 +14,7 @@ license: MIT
 summary: Modal card that obscures the current view when a live feed becomes unreachable,
   displaying connection status and retry countdown.
 platforms:
+- typescript
 - web
 tags:
 - connection-status
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Connection Overlay

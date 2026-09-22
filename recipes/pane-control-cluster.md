@@ -15,6 +15,7 @@ summary: A trio of control buttons (close, minimize, zoom) for a pane's title ba
   mirroring window-level controls.
 platforms:
 - swift
+- macos
 tags:
 - pane
 - controls
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Pane Control Cluster

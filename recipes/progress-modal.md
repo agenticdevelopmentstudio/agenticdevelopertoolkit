@@ -14,6 +14,7 @@ license: MIT
 summary: Modal dialog displaying real-time progress of a batch operation with error
   handling and decision points.
 platforms:
+- typescript
 - web
 tags:
 - modal
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Progress Modal

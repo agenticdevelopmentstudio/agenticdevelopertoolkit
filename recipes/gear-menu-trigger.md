@@ -14,6 +14,7 @@ license: MIT
 summary: A triggering button with a settings gear icon that opens a dropdown menu
   of actions on a list or collection.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Gear Menu Trigger
@@ -157,4 +160,4 @@ Not applicable. No compliance checks are defined for this component.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -14,6 +14,7 @@ license: MIT
 summary: Modal dialog for creating resources with form validation, unsaved-changes
   guard, and async error handling.
 platforms:
+- typescript
 - web
 tags:
 - dialog
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Create Resource Dialog

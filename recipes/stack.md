@@ -14,6 +14,7 @@ license: MIT
 summary: Vertical and horizontal layout containers that arrange children with flexible
   gap, alignment, and justification.
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Stack
@@ -145,4 +148,4 @@ Not applicable: Stack is a layout primitive with no security, compliance, or reg
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

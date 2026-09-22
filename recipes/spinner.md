@@ -14,6 +14,7 @@ license: MIT
 summary: Indeterminate loading indicator that animates continuously to show async
   operations in progress.
 platforms:
+- typescript
 - web
 tags:
 - loading
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Spinner
@@ -154,4 +157,4 @@ Not applicable: Component does not involve security-sensitive data handling, use
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from React source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React source |

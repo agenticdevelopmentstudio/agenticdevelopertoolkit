@@ -14,11 +14,14 @@ license: MIT
 summary: Display line under a form control showing either a validation error or hint
   text, with error taking precedence.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # FieldFootnote

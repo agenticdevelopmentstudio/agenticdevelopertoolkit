@@ -14,6 +14,7 @@ license: MIT
 summary: Native HTML select element with optional label and hint, supporting single-value
   selection from a fixed set of choices.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -23,6 +24,8 @@ related: []
 references:
 - https://www.w3.org/TR/html52/sec-forms.html#the-select-element
 - https://www.w3.org/TR/WCAG21/
+approved-by: ''
+approved-date: ''
 ---
 
 # Select

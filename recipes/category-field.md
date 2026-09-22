@@ -14,6 +14,7 @@ license: MIT
 summary: Form row for selecting one category from a hierarchy, with inline rename
   from breadcrumb display.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -23,6 +24,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://ingredients/tag-set-field
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # CategoryField
@@ -223,4 +226,4 @@ Not applicable: CategoryField is a general-purpose form component without securi
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web source code |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source code |

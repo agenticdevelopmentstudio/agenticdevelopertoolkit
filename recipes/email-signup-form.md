@@ -14,6 +14,7 @@ license: MIT
 summary: Embeddable waitlist signup form with anti-abuse protection and customizable
   copy.
 platforms:
+- typescript
 - web
 tags:
 - form
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Email Signup Form
@@ -260,4 +263,4 @@ Subsystem: Application console (developer-facing only)
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

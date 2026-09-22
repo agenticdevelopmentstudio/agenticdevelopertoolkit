@@ -14,6 +14,7 @@ license: MIT
 summary: A controlled toggle button that cycles between light, dark, and automatic
   (system) color modes.
 platforms:
+- typescript
 - web
 tags:
 - theme
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Color Mode Toggle

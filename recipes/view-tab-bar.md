@@ -14,6 +14,7 @@ license: MIT
 summary: A content-area tab strip combining client-state buttons and route navigation
   links in a unified, horizontally-scrollable row.
 platforms:
+- typescript
 - web
 tags:
 - tabs
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # View Tab Bar
@@ -194,4 +197,4 @@ Not implemented in source. No logging or debug output is emitted.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Modal dialog for renaming a single category with duplicate-name validation.
 platforms:
+- typescript
 - web
 tags:
 - dialog
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Category Rename Dialog
@@ -219,4 +222,4 @@ Not applicable: Component has no logging implementation in source code. Host is 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

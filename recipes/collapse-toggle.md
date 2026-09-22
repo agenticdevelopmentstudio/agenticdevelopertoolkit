@@ -14,6 +14,7 @@ license: MIT
 summary: A simple toggle button for collapsible sections using directional glyphs
   (» / «) to indicate state.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # CollapseToggle

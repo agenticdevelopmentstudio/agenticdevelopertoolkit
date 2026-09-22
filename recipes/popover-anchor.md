@@ -14,8 +14,6 @@ license: MIT
 summary: Positioning wrapper for a popover trigger and panel that prevents dismissal
   delay gaps when pointer moves between elements.
 platforms:
-- swift
-- kotlin
 - typescript
 - web
 tags:
@@ -25,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Popover Anchor

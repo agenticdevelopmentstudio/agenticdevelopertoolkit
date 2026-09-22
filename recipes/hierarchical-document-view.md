@@ -26,6 +26,8 @@ related:
 - agenticdeveloperhub://recipes/hierarchical-topic-detail
 - agenticdeveloperhub://recipes/disclosure
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Hierarchical Document View

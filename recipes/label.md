@@ -14,6 +14,7 @@ license: MIT
 summary: A semantic form label element with Tailwind styling that renders flexbox-aligned
   text with support for peer-based disabled state.
 platforms:
+- typescript
 - web
 tags:
 - form-controls
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Label
@@ -139,4 +142,4 @@ Not applicable: Label is a display-only primitive with no state management, auth
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

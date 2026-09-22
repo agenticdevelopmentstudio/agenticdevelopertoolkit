@@ -14,6 +14,7 @@ license: MIT
 summary: A bordered content container; two divergent web implementations exist — a
   fixed kicker/title/children block and a composable slot-based family.
 platforms:
+- typescript
 - web
 tags:
 - component
@@ -24,6 +25,8 @@ depends-on: []
 related: []
 references:
 - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+approved-by: ''
+approved-date: ''
 ---
 
 # Card
@@ -197,4 +200,4 @@ Not applicable: Card is a static, presentational container with no data collecti
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | State the Tailwind utilities, `apt-*` tokens and `lp-card`/`lp-card__kicker` class names as the appearance contract in place of unresolved-value placeholders; answer the sizing, kicker-guard and accessibility-option questions directly from source; fill the Accessibility Options table; add automation, semantics and layout detail to every platform note. One open accessibility question about the family's non-heading title is left for the reviewer. |
-| 1.0.0 | | | Initial creation from `packages/web/packages/landing/src/blocks/Card.tsx` and `packages/web/packages/ui/src/components/card.tsx`. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from `packages/web/packages/landing/src/blocks/Card.tsx` and `packages/web/packages/ui/src/components/card.tsx`. |

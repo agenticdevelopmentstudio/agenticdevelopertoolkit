@@ -26,6 +26,8 @@ depends-on:
 related:
   - agenticdevelopercookbook://recipes/markdown-editor
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # MarkdownQuickReference

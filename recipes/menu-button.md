@@ -14,6 +14,7 @@ license: MIT
 summary: A button that toggles between a hamburger menu icon and a close icon, with
   accessible label.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Menu Button
@@ -168,5 +171,5 @@ Not applicable: No specific compliance checks are defined in source. Standard HT
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.1.0 | 2026-09-22 | | Resolve NEEDS REVIEW markers: bar dimensions and tap target sourced from css/base.css |
-| 1.0.0 | 2026-09-22 | | Initial creation from MenuButton.tsx source |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Resolve review markers: bar dimensions and tap target sourced from css/base.css |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from MenuButton.tsx source |

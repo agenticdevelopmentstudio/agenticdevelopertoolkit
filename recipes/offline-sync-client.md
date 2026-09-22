@@ -14,8 +14,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: "The offline-sync client contract: enrollment-driven manifest lifecycle, cohort cursor, push modes, tombstones, purge rules — for any adh sync client."
 platforms:
-  - swift
-  - apple
+- swift
 tags:
   - sync
   - offline
@@ -23,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Offline Sync Client

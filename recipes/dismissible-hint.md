@@ -13,11 +13,14 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: A hint component with persistent dismissal state stored in localStorage.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Dismissible Hint
@@ -149,4 +152,4 @@ Not applicable: Component logs no diagnostic messages.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Fix marker on id prop: state type safety behavior from source |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

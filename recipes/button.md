@@ -24,6 +24,8 @@ depends-on: []
 related: []
 references:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+approved-by: ''
+approved-date: ''
 ---
 
 # Button

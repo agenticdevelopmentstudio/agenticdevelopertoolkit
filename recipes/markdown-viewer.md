@@ -13,12 +13,17 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Read-only markdown viewer with theme persistence and syntax highlighting.
 platforms:
+- typescript
 - web
 - swift
+- macos
+- ios
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Viewer

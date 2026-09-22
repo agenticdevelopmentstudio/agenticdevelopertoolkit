@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Canonical inline error display component for validation and alert messages
 platforms:
+- typescript
 - web
 tags:
 - error-text
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Error Text

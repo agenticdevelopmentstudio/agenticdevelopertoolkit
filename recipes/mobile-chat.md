@@ -12,9 +12,10 @@ author: Mike Fullerton
 summary: Full-screen chat surface with scrolling transcript, thinking indicator, and
   single-line composer for mobile devices.
 platforms:
-- swift
 - typescript
 - web
+- swift
+- ios
 tags:
 - chat
 - messaging
@@ -24,6 +25,8 @@ related: []
 references: []
 copyright: 2026 Mike Fullerton
 license: MIT
+approved-by: ''
+approved-date: ''
 ---
 
 # Mobile Chat

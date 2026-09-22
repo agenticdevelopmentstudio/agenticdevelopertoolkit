@@ -14,6 +14,7 @@ license: MIT
 summary: Connected wrapper that binds SearchDialog to the current site's search index,
   navigation, and site config.
 platforms:
+- typescript
 - web
 tags:
 - search
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Search Dialog Connected
@@ -117,4 +120,4 @@ Not applicable: SearchDialogConnected is a wrapper component for application-lev
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

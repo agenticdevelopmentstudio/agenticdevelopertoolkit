@@ -15,6 +15,7 @@ summary: A container-agnostic macOS dialog that presents customizable rows and a
   changes immediately without requiring commit or cancel.
 platforms:
 - swift
+- macos
 tags:
 - ui
 - dialog
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Options Dialog View Controller
@@ -171,4 +174,4 @@ No compliance checks are defined for this component. Accessibility compliance (i
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

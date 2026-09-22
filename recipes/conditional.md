@@ -13,10 +13,8 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Renders one of two content branches based on a boolean condition.
 platforms:
-- web
-- kotlin
-- swift
 - typescript
+- web
 tags:
 - conditional
 - branching
@@ -24,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Conditional

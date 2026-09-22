@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Server-side markdown processor renders sanitized HTML with configurable styling.
 platforms:
+- typescript
 - web
 tags:
 - markdown
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Content

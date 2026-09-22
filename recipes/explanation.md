@@ -14,6 +14,7 @@ license: MIT
 summary: A semantic paragraph wrapper that applies a default style class and accepts
   optional additional CSS classes.
 platforms:
+- typescript
 - web
 tags:
 - text
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Explanation
@@ -137,4 +140,4 @@ Not applicable: Explanation does not perform logging or error tracking.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

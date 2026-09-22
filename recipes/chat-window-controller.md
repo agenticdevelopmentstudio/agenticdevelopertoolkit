@@ -14,7 +14,8 @@ license: MIT
 summary: A macOS window controller that displays a chat interface with no title bar,
   transparent background, and appearance settings gear.
 platforms:
-- apple
+- swift
+- macos
 tags:
 - chat
 - window
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ChatWindowController
@@ -190,4 +193,4 @@ Subsystem: Determined by host application | Category: ChatWindowController
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

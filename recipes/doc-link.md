@@ -14,11 +14,14 @@ license: MIT
 summary: Injectable link component that renders an anchor element with customizable
   destination path.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # DocLink
@@ -126,4 +129,4 @@ Not applicable — this component is a low-level rendering primitive with no sec
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

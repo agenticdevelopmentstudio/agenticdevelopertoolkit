@@ -14,6 +14,7 @@ license: MIT
 summary: Stacked collapsible sections with clickable triggers and expanding/collapsing
   panels indicated by a rotating chevron.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Accordion

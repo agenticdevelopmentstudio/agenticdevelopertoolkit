@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Reorderable lists and boards, plus free-form dragging for calendars and timelines.
 platforms:
+- typescript
 - web
 tags:
 - drag-and-drop
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Drag-and-Drop

@@ -14,6 +14,7 @@ license: MIT
 summary: Blocks navigation and page unload while unsaved changes exist, prompting
   user confirmation before discard.
 platforms:
+- typescript
 - web
 tags:
 - navigation-guard
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Unsaved Changes Guard
@@ -149,4 +152,4 @@ Not applicable: This is a guard component with no security, privacy, or complian
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -14,6 +14,7 @@ license: MIT
 summary: A scrollable, column-based display for structured log lines with configurable
   columns, follow-tail behavior, and interactive cells.
 platforms:
+- typescript
 - web
 tags:
 - logging
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Log Panel
@@ -210,4 +213,4 @@ Not applicable: The component is a UI display component without security, authen
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise accessibility guidance; clarify keyboard navigation gap and tap target responsibility |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

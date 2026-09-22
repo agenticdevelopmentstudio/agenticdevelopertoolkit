@@ -14,6 +14,7 @@ license: MIT
 summary: A flexible button component that renders with variant-based styling, accepting
   standard HTML button attributes and optional children content.
 platforms:
+- typescript
 - web
 tags:
 - button
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Settings Button

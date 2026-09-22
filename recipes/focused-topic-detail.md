@@ -14,6 +14,7 @@ license: MIT
 summary: Layout component composing a selectable popup menu and topic-detail rail
   into a two-pane focused/all-items view.
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Focused Topic Detail

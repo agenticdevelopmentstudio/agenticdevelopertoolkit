@@ -14,6 +14,7 @@ license: MIT
 summary: A form control for editing a set of short labels from a growing vocabulary,
   combining autocomplete search and browse/create affordances.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # TagSetField

@@ -27,6 +27,8 @@ depends-on: []
 related:
 - agenticdeveloperhub://recipes/field
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # FieldGroup

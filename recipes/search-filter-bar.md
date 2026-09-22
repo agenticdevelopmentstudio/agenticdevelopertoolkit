@@ -25,6 +25,8 @@ depends-on:
 - agenticdeveloperhub://recipes/combobox
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # SearchFilterBar

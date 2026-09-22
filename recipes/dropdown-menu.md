@@ -14,11 +14,14 @@ license: MIT
 summary: Positioned menu triggered by a button or link, with support for nested submenus,
   checkbox, and radio items.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Dropdown Menu
@@ -191,4 +194,4 @@ Not applicable: No compliance checks are defined in the source code or component
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

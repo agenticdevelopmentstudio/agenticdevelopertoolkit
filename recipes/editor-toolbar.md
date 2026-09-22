@@ -14,11 +14,14 @@ license: MIT
 summary: Semantic HTML toolbar wrapper with flexbox layout and ARIA accessibility
   for text editor surfaces.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # EditorToolbar

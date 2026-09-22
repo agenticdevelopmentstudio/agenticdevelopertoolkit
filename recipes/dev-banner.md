@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Displays a fixed or static development preview banner with customizable message.
 platforms:
+- typescript
 - web
 tags:
 - banner
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # DevBanner

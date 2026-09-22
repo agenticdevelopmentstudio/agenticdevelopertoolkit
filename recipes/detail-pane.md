@@ -14,6 +14,7 @@ license: MIT
 summary: A collapsible panel that displays detailed information for a selected topic,
   including title, description, images, and related links.
 platforms:
+- typescript
 - web
 tags:
 - detail-display
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Detail Pane

@@ -14,6 +14,7 @@ license: MIT
 summary: Contextual label that appears on hover or focus, positioned relative to its
   trigger element with configurable placement and optional pointer.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -23,6 +24,8 @@ depends-on: []
 related: []
 references:
 - https://base-ui.io/react/components/tooltip/
+approved-by: ''
+approved-date: ''
 ---
 
 # Tooltip

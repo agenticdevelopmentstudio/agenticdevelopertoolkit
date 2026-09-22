@@ -14,6 +14,7 @@ license: MIT
 summary: A popover panel displaying contextual help, information, or feature announcements
   with a flavor icon, optional title, and body text.
 platforms:
+- typescript
 - web
 tags:
 - help
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Help Popover

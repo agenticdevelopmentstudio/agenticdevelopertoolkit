@@ -14,6 +14,7 @@ license: MIT
 summary: An AppKit container that stacks a content view controller above a fixed footer
   bar for window layouts.
 platforms:
+- swift
 - macos
 tags:
 - window-chrome
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # WindowFooterContentViewController
@@ -136,4 +139,4 @@ Not applicable.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

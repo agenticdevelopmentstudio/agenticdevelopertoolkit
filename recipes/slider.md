@@ -14,6 +14,7 @@ license: MIT
 summary: Labeled range input control that allows users to select a numeric value within
   a defined minimum and maximum.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -24,6 +25,8 @@ related: []
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/range
 - https://www.w3.org/TR/WCAG21/
+approved-by: ''
+approved-date: ''
 ---
 
 # Slider
@@ -188,4 +191,4 @@ Not applicable: Component compliance depends on CSS implementation and parent co
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Resolved label accessibility marker: labels are optional as per source code |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

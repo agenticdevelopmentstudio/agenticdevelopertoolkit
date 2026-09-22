@@ -14,8 +14,10 @@ license: MIT
 summary: Scrolling message transcript with typing indicator and single-line composer
   for inline chat interactions.
 platforms:
+- typescript
 - web
 - swift
+- macos
 tags:
 - chat
 - messaging
@@ -23,6 +25,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Inline Chat
@@ -255,4 +259,4 @@ Not applicable: Component does not perform logging; the Swift source includes de
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web and Apple sources |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web and Apple sources |

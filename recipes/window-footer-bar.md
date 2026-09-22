@@ -15,12 +15,15 @@ summary: Fixed-height footer bar for window bottom edge with status text and tra
   accessory slot.
 platforms:
 - swift
+- macos
 tags:
 - window-chrome
 - status-display
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # WindowFooterBar

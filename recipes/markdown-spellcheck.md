@@ -30,6 +30,8 @@ related:
   - agenticdevelopercookbook://recipes/markdown-quick-reference
 references:
   - https://writewithharper.com
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Spell Check

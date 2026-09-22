@@ -14,11 +14,14 @@ license: MIT
 summary: Context provider and hook for distributing localized help entries keyed by
   component id.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Help Content

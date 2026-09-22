@@ -14,6 +14,7 @@ license: MIT
 summary: A pane displaying a list of selectable topics with active state indication
   and visibility control.
 platforms:
+- typescript
 - web
 tags:
 - ui-container
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Topics Pane

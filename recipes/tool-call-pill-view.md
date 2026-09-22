@@ -15,10 +15,13 @@ summary: Displays a tool invocation as a bordered pill with status-based colorin
   and error messaging.
 platforms:
 - swift
+- macos
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Tool Call Pill View

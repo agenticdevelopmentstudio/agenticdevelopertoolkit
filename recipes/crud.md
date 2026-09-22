@@ -14,8 +14,8 @@ license: MIT
 summary: Data model for CRUD capability permissions (create, read, update, delete)
   with defaults and parent-clamping.
 platforms:
-- web
 - typescript
+- web
 tags:
 - permissions
 - access-control
@@ -23,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Crud
@@ -138,4 +140,4 @@ Not applicable: Crud is a data model with no runtime behavior to log.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web source `packages/web/packages/ui/src/components/crud.tsx`. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source `packages/web/packages/ui/src/components/crud.tsx`. |

@@ -14,11 +14,14 @@ license: MIT
 summary: Interactive text wrapper that reveals contextual help via a popover on hover
   or focus.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # HelpEnabled
@@ -176,4 +179,4 @@ Not applicable: Compliance checks are managed at the design system level. HelpEn
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

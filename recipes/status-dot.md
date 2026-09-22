@@ -24,6 +24,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://ingredients/stat-card
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # StatusDot

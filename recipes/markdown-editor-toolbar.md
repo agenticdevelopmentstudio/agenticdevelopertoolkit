@@ -14,8 +14,9 @@ license: MIT
 summary: Horizontal toolbar for switching between markdown editor modes and accessing
   help and file import functions.
 platforms:
-- ios
+- swift
 - macos
+- ios
 tags:
 - editor
 - toolbar
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Editor Toolbar

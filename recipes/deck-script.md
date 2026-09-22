@@ -153,4 +153,4 @@ Not applicable: DeckScript is a low-level initialization primitive and does not 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

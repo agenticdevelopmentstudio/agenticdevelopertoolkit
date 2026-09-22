@@ -14,6 +14,7 @@ license: MIT
 summary: Static SVG icon depicting a send or forward arrow for messaging and action
   contexts.
 platforms:
+- typescript
 - web
 tags:
 - icon
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # SendIcon

@@ -14,6 +14,7 @@ license: MIT
 summary: A controlled tab bar component for app-wide navigation with optional icons
   and a right-aligned action item.
 platforms:
+- typescript
 - web
 tags:
 - navigation
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # App Tabs

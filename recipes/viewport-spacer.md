@@ -14,11 +14,14 @@ license: MIT
 summary: Flex spacer that absorbs leftover vertical space in a ViewportShell, pushing
   siblings downward.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ViewportSpacer

@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Multi-select filter menu with count badge and quick-select actions.
 platforms:
+- typescript
 - web
 tags:
 - filter
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Facet Menu
@@ -204,4 +207,4 @@ Not applicable: FacetMenu is a UI component without data, network, or security i
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

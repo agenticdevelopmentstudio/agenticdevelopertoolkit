@@ -27,6 +27,8 @@ related:
 - agenticdevelopercookbook://ingredients/option-menu
 references:
 - https://base-ui.com/react/components/autocomplete
+approved-by: ''
+approved-date: ''
 ---
 
 # Combobox

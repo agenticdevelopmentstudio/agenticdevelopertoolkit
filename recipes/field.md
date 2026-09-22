@@ -25,6 +25,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://recipes/field-group
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Field

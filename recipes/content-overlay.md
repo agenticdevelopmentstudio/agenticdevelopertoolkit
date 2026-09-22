@@ -14,11 +14,14 @@ license: MIT
 summary: A controlled overlay component that displays content with a customizable
   close button.
 platforms:
+- typescript
 - web
 tags: []
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Content Overlay
@@ -146,5 +149,5 @@ No compliance checks are defined for this component at this time.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.1.0 | 2026-09-22 | Mike Fullerton | Filled Appearance and States from content-overlay.css; dropped the NEEDS REVIEW marker |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Filled Appearance and States from content-overlay.css; dropped the review marker |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

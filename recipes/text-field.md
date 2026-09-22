@@ -14,6 +14,7 @@ license: MIT
 summary: Single-line and multi-line text input field with label, hint, and autofill
   support.
 platforms:
+- typescript
 - web
 tags:
 - form
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Text Field

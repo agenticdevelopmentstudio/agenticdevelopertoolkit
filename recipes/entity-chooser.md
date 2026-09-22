@@ -29,6 +29,8 @@ related:
   - agenticdevelopercookbook://recipes/ui/recipient-input
 references:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+approved-by: ''
+approved-date: ''
 ---
 
 # EntityChooser

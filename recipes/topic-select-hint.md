@@ -14,6 +14,7 @@ license: MIT
 summary: A centered card prompt for selecting an item from a list when no selection
   is active.
 platforms:
+- typescript
 - web
 tags:
 - selection
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # TopicSelectHint
@@ -166,4 +169,4 @@ Not applicable: TopicSelectHint does not emit log events or debug output.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

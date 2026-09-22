@@ -12,8 +12,9 @@ author: Claude Haiku 4.5
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "Collapsible disclosure component that toggles visibility of supplemental content with title, description, and optional links."
-platforms: 
-  - web
+platforms:
+- typescript
+- web
 tags:
   - disclosure
   - popover
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Inline Popover

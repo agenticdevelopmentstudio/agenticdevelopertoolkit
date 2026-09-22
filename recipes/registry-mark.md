@@ -14,6 +14,7 @@ license: MIT
 summary: Credential mark linking a persona to its registry profile, displayed as a
   @ symbol with AI star accent.
 platforms:
+- typescript
 - web
 tags:
 - persona
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Registry Mark
@@ -166,4 +169,4 @@ Not applicable: the component does not emit debug or error logs.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from source analysis |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source analysis |

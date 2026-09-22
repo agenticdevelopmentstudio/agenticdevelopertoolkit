@@ -14,6 +14,7 @@ license: MIT
 summary: Transient overlay dialog for keyboard-driven command execution over grouped
   items without internal filtering.
 platforms:
+- typescript
 - web
 tags:
 - command-palette
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Command Palette

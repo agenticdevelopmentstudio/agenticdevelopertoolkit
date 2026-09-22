@@ -14,6 +14,7 @@ license: MIT
 summary: Full-viewport screen opening a guided tour stop with navigation and optional
   pillar content.
 platforms:
+- typescript
 - web
 tags:
 - tour
@@ -172,4 +173,4 @@ The component prioritizes tour orientation over visual hierarchy: the step progr
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -27,6 +27,8 @@ related:
   - agenticdevelopercookbook://recipes/search-filter-bar
   - agenticdevelopercookbook://recipes/hierarchical-topic-detail
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ListHeader

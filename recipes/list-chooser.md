@@ -13,11 +13,8 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: "Disclosed chooser whose single field filters a list and adds new entries, with arrow-keyed highlight, OK/Cancel, and full keyboard control."
 platforms:
-  - typescript
-  - web
-  - swift
-  - kotlin
-  - csharp
+- typescript
+- web
 tags:
   - component
   - list-chooser
@@ -30,6 +27,8 @@ related:
   - agenticdevelopercookbook://recipes/combobox
   - agenticdevelopercookbook://recipes/option-menu
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ListChooser

@@ -14,6 +14,7 @@ license: MIT
 summary: Hierarchical document navigation tree with collapsible sections, adaptive
   desktop/mobile layouts, and active page tracking.
 platforms:
+- typescript
 - web
 tags:
 - navigation
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Document Navigation Tree
@@ -216,4 +219,4 @@ Not applicable: the component does not perform any logging.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

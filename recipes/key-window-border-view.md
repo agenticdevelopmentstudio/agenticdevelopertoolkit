@@ -15,6 +15,7 @@ summary: A hairline accent-color border drawn inside the window frame, brighteni
   when the window is key.
 platforms:
 - swift
+- macos
 tags:
 - ui
 - chrome
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # KeyWindowBorderView

@@ -27,6 +27,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://recipes/stat-card
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # StatList

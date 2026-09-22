@@ -14,6 +14,7 @@ license: MIT
 summary: Navigation row displaying a series of site orbs with gradient backgrounds,
   emoji indicators, and current-page highlighting.
 platforms:
+- typescript
 - web
 tags:
 - navigation
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Orb Row
@@ -151,4 +154,4 @@ Not applicable: No specific compliance checks are defined in source or applicabl
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove non-genuine review marker; clarify missing property handling in Edge Cases |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

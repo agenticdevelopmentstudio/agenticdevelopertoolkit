@@ -254,4 +254,4 @@ Not applicable: SearchView does not cite specific compliance checks. Compliance 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -15,6 +15,7 @@ summary: A tabbed drawer that slides out beside a window's trailing edge, provid
   lazy-loaded tab content without reflow.
 platforms:
 - swift
+- macos
 tags:
 - drawer
 - window-chrome
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Window Drawer

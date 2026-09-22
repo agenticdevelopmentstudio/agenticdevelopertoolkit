@@ -14,10 +14,8 @@ license: MIT
 summary: Renders linked and embedded media content from structured data with built-in
   security filtering.
 platforms:
-- swift
-- kotlin
 - typescript
-- csharp
+- web
 tags:
 - content-rendering
 - media
@@ -25,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Rich Content

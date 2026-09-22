@@ -14,6 +14,7 @@ license: MIT
 summary: A control that toggles between tabbed and split layout views, collapsing
   to tabbed on narrow viewports.
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Split View Control

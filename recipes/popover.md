@@ -14,6 +14,7 @@ license: MIT
 summary: A positioned overlay component that displays content relative to a trigger
   element.
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Popover

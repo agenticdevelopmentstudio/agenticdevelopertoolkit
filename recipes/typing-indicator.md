@@ -14,9 +14,11 @@ license: MIT
 summary: A visual indicator showing that a persona is composing a response, with support
   for animated status words and phase-driven transitions.
 platforms:
-- swift
 - typescript
 - web
+- swift
+- macos
+- ios
 tags:
 - chat
 - indicator
@@ -25,6 +27,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Typing Indicator

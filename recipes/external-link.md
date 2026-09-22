@@ -25,6 +25,8 @@ related:
   - agenticdevelopercookbook://ingredients/stat-card
   - agenticdevelopercookbook://ingredients/user-card
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ExternalLink

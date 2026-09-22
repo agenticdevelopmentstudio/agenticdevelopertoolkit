@@ -14,6 +14,7 @@ license: MIT
 summary: Controlled dropdown component for selecting privacy level (only-me, hub,
   or public) with keyboard navigation and popover UI.
 platforms:
+- typescript
 - web
 tags:
 - privacy
@@ -24,6 +25,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Privacy Level Select
@@ -269,4 +272,4 @@ Not applicable: the component has no logging. Console or error tracking is the r
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

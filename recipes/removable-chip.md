@@ -25,6 +25,8 @@ depends-on: []
 related:
 - agenticdevelopercookbook://ingredients/badge
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # RemovableChip

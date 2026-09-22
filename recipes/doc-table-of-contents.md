@@ -14,6 +14,7 @@ license: MIT
 summary: Sticky right-rail component displaying a scrollable list of document headings
   with active-heading highlight.
 platforms:
+- typescript
 - web
 tags:
 - navigation
@@ -24,6 +25,8 @@ related: []
 references:
 - https://developer.mozilla.org/en-US/docs/Web/CSS/position
 - https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+approved-by: ''
+approved-date: ''
 ---
 
 # Doc Table of Contents

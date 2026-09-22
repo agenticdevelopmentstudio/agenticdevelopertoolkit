@@ -27,6 +27,8 @@ related:
 - agenticdevelopercookbook://recipes/alert-and-dialog
 - agenticdevelopercookbook://recipes/dialog
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # DialogActions

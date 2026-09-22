@@ -14,6 +14,7 @@ license: MIT
 summary: Hook and button for toggling multi-select mode in lists, with automatic selection
   clearing when visible rows change.
 platforms:
+- typescript
 - web
 tags:
 - selection
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Batch Select

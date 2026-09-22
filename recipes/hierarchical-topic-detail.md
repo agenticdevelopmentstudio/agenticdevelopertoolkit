@@ -33,6 +33,8 @@ depends-on: []
 related:
 - agenticdeveloperhub://recipes/topic-detail
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Hierarchical Topic / Detail View

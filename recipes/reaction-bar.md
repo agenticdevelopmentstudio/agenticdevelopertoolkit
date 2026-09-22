@@ -26,6 +26,8 @@ related:
 - agenticdevelopercookbook://recipes/button
 - agenticdevelopercookbook://recipes/popover
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ReactionBar

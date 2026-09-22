@@ -32,6 +32,8 @@ related:
 - agenticdevelopercookbook://recipes/dialog-actions
 - agenticdevelopercookbook://recipes/alert-and-dialog
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # AlertModal

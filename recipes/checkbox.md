@@ -14,6 +14,7 @@ license: MIT
 summary: A controllable checkbox or switch input supporting labeled form fields with
   hints and visual state feedback.
 platforms:
+- typescript
 - web
 tags:
 - form
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Checkbox

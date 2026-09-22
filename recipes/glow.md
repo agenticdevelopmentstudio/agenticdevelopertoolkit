@@ -14,6 +14,7 @@ license: MIT
 summary: Decorative visual element that renders a glow effect; purely visual with
   no interaction or semantic meaning.
 platforms:
+- typescript
 - web
 tags:
 - visual
@@ -133,4 +134,4 @@ Not applicable: This decorative element has no compliance requirements (no user 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

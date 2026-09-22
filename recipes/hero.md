@@ -158,4 +158,4 @@ Not applicable: No security, WCAG, or platform compliance checks apply to a stat
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

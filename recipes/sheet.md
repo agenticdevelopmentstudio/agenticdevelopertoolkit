@@ -14,6 +14,7 @@ license: MIT
 summary: A side drawer panel that slides in from a specified edge, used for supplementary
   content or actions without full-screen navigation.
 platforms:
+- typescript
 - web
 tags:
 - sheet
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Sheet
@@ -191,4 +194,4 @@ Sheet's wrapper component inherits focus management, Escape key handling, and AR
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Remove review marker from Compliance section; state Base UI Dialog inheritance as fact and list satisfied WCAG compliance items |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

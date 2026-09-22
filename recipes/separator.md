@@ -14,8 +14,6 @@ license: MIT
 summary: A visual divider line that separates sections horizontally or vertically
   with semantic accessibility markup.
 platforms:
-- kotlin
-- swift
 - typescript
 - web
 tags:
@@ -25,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Separator

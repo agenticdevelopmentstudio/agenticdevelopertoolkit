@@ -14,6 +14,7 @@ license: MIT
 summary: Modal dialog component for searching and selecting from indexed entries,
   with keyboard navigation and visual result preview.
 platforms:
+- typescript
 - web
 tags:
 - search
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Search Dialog
@@ -260,4 +263,4 @@ Logging is not implemented in the component source. Call site or wrapper MUST ad
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Clarify review marker with evidence criteria; relabel Platform Notes Windows bullet to WinUI 3; clarify "Not applicable" sections; remove implementation-specific language from Accessibility Options |
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

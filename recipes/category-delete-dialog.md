@@ -14,6 +14,7 @@ license: MIT
 summary: Modal confirmation dialog for deleting a category, with warnings about orphaned
   subcategories.
 platforms:
+- typescript
 - web
 tags:
 - dialog
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Category Delete Dialog
@@ -168,4 +171,4 @@ Not applicable: No compliance checks are defined for this component. Compliance 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -14,6 +14,7 @@ license: MIT
 summary: A group of mutually exclusive radio button options where only one choice
   can be selected at a time.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Radio Group

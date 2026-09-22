@@ -14,11 +14,8 @@ license: MIT
 summary: A layout header for content sections with title, optional eyebrow label,
   help popover, and action slots.
 platforms:
-- kotlin
-- swift
 - typescript
 - web
-- windows
 tags:
 - layout
 - header
@@ -26,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Section Header
@@ -174,4 +173,4 @@ Not applicable: Section Header is a foundational layout component without direct
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

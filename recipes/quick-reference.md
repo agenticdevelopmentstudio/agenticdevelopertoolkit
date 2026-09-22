@@ -14,6 +14,7 @@ license: MIT
 summary: Toolbar control that opens a dismissible popover displaying a syntax cheatsheet
   for language features.
 platforms:
+- typescript
 - web
 tags:
 - toolbar
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Syntax Quick Reference

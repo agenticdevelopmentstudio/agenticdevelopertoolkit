@@ -14,6 +14,7 @@ license: MIT
 summary: A semantic section component that groups related content with optional title
   and hint.
 platforms:
+- typescript
 - web
 tags:
 - layout
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Group
@@ -142,4 +145,4 @@ Not applicable: Group is a foundational layout component that does not involve s
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation from web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

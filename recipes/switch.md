@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: A binary toggle control that displays on/off state with animated visual feedback.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Switch

@@ -14,9 +14,11 @@ license: MIT
 summary: A themed chat message display for a single message with text, metadata, delivery
   state, and optional rich content.
 platforms:
-- swift
 - typescript
 - web
+- swift
+- macos
+- ios
 tags:
 - chat
 - messaging
@@ -24,6 +26,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Message Bubble

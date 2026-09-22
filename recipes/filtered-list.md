@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Searchable list component with keyboard navigation and item highlighting.
 platforms:
+- typescript
 - web
 tags:
 - list
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Filtered List

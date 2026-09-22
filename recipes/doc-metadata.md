@@ -14,6 +14,7 @@ license: MIT
 summary: Right-aligned definition list for rendering document frontmatter metadata
   fields.
 platforms:
+- typescript
 - web
 tags:
 - metadata
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # DocMetadata

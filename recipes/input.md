@@ -14,6 +14,7 @@ license: MIT
 summary: Single-line text input field with theme support, autofill handling, and validation
   state display.
 platforms:
+- typescript
 - web
 tags:
 - form-control
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Input

@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Server-safe wrapper that applies a reading theme palette to markdown content.
 platforms:
+- typescript
 - web
 tags:
 - markdown
@@ -21,6 +22,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Markdown Reading Palette
@@ -137,4 +140,4 @@ Not applicable: MarkdownReadingPalette has no operational logging. Error handlin
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 |  | Initial creation from source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source |

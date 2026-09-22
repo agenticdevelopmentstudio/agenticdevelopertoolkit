@@ -16,6 +16,7 @@ summary: 'Modal dialog for window-specific appearance settings: text size, trans
   host window level.'
 platforms:
 - swift
+- macos
 tags:
 - ui
 - modal
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Window Options Dialog

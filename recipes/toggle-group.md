@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: "A segmented control — mutually-exclusive option buttons on the field shell, gold fill on the pressed item; single-select via value={[selected]}."
 platforms:
+- typescript
 - web
 tags:
 - component
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # ToggleGroup

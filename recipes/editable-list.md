@@ -14,6 +14,7 @@ license: MIT
 summary: Table-and-bar list with search, filters, sorting, selection, and optional
   details pane.
 platforms:
+- typescript
 - web
 tags:
 - list
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Editable List
@@ -291,4 +294,4 @@ Not applicable: This component implements no specific compliance requirements. C
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

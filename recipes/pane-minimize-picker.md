@@ -15,6 +15,7 @@ summary: Four directional arrow buttons in a cross pattern within a popover, for
   which edge a pane should minimize toward.
 platforms:
 - swift
+- macos
 tags:
 - pane-management
 - popover
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Pane Minimize Picker

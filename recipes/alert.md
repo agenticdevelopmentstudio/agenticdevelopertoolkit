@@ -14,6 +14,7 @@ license: MIT
 summary: 'Inline, non-modal callout — a bordered, tonal box with an optional icon,
   title, and description; five color variants: default, info, success, error, accent.'
 platforms:
+- typescript
 - web
 tags:
 - ui
@@ -22,6 +23,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Alert
@@ -299,4 +302,4 @@ Not applicable: Alert is a foundational UI primitive with no security, data-hand
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

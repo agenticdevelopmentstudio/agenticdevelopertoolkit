@@ -14,6 +14,7 @@ license: MIT
 summary: A scrollable container that renders a sequence of chat messages with optional
   typing indicator and fade-to-transparent gradient for older messages.
 platforms:
+- typescript
 - web
 tags:
 - chat
@@ -23,6 +24,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Transcript

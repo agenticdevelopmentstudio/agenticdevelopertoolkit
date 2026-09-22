@@ -13,6 +13,7 @@ copyright: 2026 Mike Fullerton
 license: MIT
 summary: Multi-line text input field with focus, disabled, and validation error states.
 platforms:
+- typescript
 - web
 tags:
 - form-input
@@ -20,6 +21,8 @@ tags:
 depends-on: []
 related: []
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # Textarea
@@ -168,4 +171,4 @@ Not applicable: Textarea does not define platform-specific compliance checks. Im
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

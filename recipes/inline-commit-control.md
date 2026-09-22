@@ -28,6 +28,8 @@ related:
 - button
 - alert-modal
 references: []
+approved-by: ''
+approved-date: ''
 ---
 
 # InlineCommitControl
