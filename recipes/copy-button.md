@@ -1,13 +1,13 @@
 ---
 id: ecaba9e2-de10-45ac-80d8-398e9ab02626
 title: CopyButton
-domain: agenticdeveloperhub://recipes/copy-button
+domain: agenticdevelopercookbook://ingredients/copy-button
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ tags:
 - button
 - ui
 depends-on:
-- agenticdeveloperhub://recipes/button
+- agenticdevelopercookbook://ingredients/button
 related: []
 references: []
 ---
@@ -139,6 +139,30 @@ success    [ ✓ ]   apt-green check, title "Copied!"  (1200 ms)  then reverts
 The 1200 ms success window and the outline/icon/`size-6` chrome are fixed by the
 component and are not exposed as props — see Design Decisions.
 
+## Deep Linking
+
+Not applicable. The component is a stateless icon button with no navigation logic or route parameters; deep linking is not relevant to a presentational control.
+
+## Localization
+
+Not applicable. The only hard-coded string is the success title `"Copied!"` (line 946 in source), which is a technical confirmation not meant for translation; localized copy labels are the responsibility of the consumer via the `label` prop.
+
+## Accessibility Options
+
+Not applicable. The component does not respond to system accessibility preferences like Reduce Motion or Increase Contrast; it inherits focus styling from the shared `Button` component but does not implement motion reduction or contrast customization.
+
+## Feature Flags
+
+Not applicable. The component has no conditional behavior, build variants, or A/B testing paths; it is always enabled and its behavior is fully specified by its requirements.
+
+## Analytics
+
+Not applicable. The component is a presentational affordance with no built-in telemetry (as stated in Logging). Analytics instrumentation is the responsibility of the consumer application.
+
+## Privacy
+
+Not applicable. The component does not collect, store, or transmit any data; it only reads from `getText()` at click time and writes to `navigator.clipboard`, both of which are caller-managed and session-local.
+
 ## Logging
 
 No logging. `CopyButton` is a presentational affordance; what a given copy means, and
@@ -147,15 +171,11 @@ button.
 
 ## Platform Notes
 
-- Files: `packages/web/packages/ui/src/components/copy-button.tsx`; hook
-  `packages/web/packages/ui/src/hooks/useClipboard.ts`.
-- Carries `"use client"` — it reads `navigator.clipboard` and holds the transient
-  `copied` state.
-- Composes the shared `Button` and the lucide `Copy` / `Check` icons; no bespoke chrome.
-- Demo: `ui-showcase` Topic `copy-button` in the "Composite controls" group
-  (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
-- Web/TypeScript only. Requires a secure context for `navigator.clipboard`; outside
-  one, the write is a silent no-op.
+- **Web/TypeScript**: Source files `packages/web/packages/ui/src/components/copy-button.tsx` and hook `packages/web/packages/ui/src/hooks/useClipboard.ts`. The component carries `"use client"` directive (reads `navigator.clipboard` and holds transient `copied` state). Composes the shared `Button` (variant="outline", size="icon", overridden to size-6) and lucide `Copy`/`Check` icons. Demo available in `ui-showcase` Topic "copy-button" under "Composite controls" group (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
+- **SwiftUI**: A Swift equivalent would compose the native `Button` or `NSButton` with a clipboard write operation. Key differences: SwiftUI has no built-in clipboard access; use `NSPasteboard` (macOS) or `UIPasteboard` (iOS). The 1200ms flash pattern and glyph swap should work identically via state transitions. Requires app entitlements for clipboard access on iOS 15+.
+- **Compose (Android)**: Use `IconButton` or `Button` in Material 3 Compose, paired with `ClipboardManager` for clipboard writes. The lazy text resolution pattern (`getText` thunk) maps cleanly to a lambda. Success state and icon swap work via `remember { mutableStateOf() }`. Clipboard failure handling depends on runtime permissions; fail silently if permission is denied.
+- **AppKit / UIKit**: `NSButton` (macOS) or `UIButton` (iOS) styled with outline appearance and smaller icon size. Clipboard access via `NSPasteboard` (macOS) or `UIPasteboard` (iOS). Implement the 1200ms timer with `DispatchSourceTimer` or `Timer`. iOS requires clipboard permission (introduced iOS 16+); deny gracefully as the component does.
+- **WinUI 3**: Use `Button` with `IconSource` (lucide or Segoe MDL2 assets for `Copy` → `CheckMark` swap). Content property holds the icon, TemplateSettings control size. Clipboard write via `Windows.ApplicationModel.DataTransfer.Clipboard.SetTextAsync()`. The 1200ms revert uses `DispatcherTimer`. WinUI provides built-in `ToolTipService` for the dynamic `title` behavior (label at idle, "Copied!" on success). Requires no special permissions; clipboard access is always available in UWP/Win App SDK sandboxes.
 
 ## Design Decisions
 
@@ -191,4 +211,5 @@ button.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); expand Platform Notes with concrete guidance for all platforms; update domain and depends-on URIs to canonical agenticdevelopercookbook namespace; mark status review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the clipboard CopyButton on shared Button + useClipboard. |

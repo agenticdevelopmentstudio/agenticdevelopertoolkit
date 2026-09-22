@@ -1,35 +1,35 @@
 ---
 id: 81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094
 title: Markdown Spell Check
-domain: agenticdeveloperhub://recipes/markdown-spellcheck
+domain: agenticdevelopercookbook://recipes/markdown-spellcheck
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.1
+status: review
 language: en
-created: '2026-06-26'
-modified: '2026-06-26'
+created: 2026-06-26
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "An off-by-default editor-toolbar toggle that runs a markdown-aware spell/grammar check via harper.js and lists problems in a popover with apply actions."
 platforms:
-- typescript
-- web
+  - typescript
+  - web
 tags:
-- markdown
-- spellcheck
-- grammar
-- harper
-- editor
-- toolbar
+  - markdown
+  - spellcheck
+  - grammar
+  - harper
+  - editor
+  - toolbar
 depends-on:
-- agenticdeveloperhub://recipes/button
-- agenticdeveloperhub://recipes/markdown-editor
+  - agenticdevelopercookbook://recipes/button
+  - agenticdevelopercookbook://recipes/markdown-editor
 related:
-- agenticdeveloperhub://recipes/markdown-editor
-- agenticdeveloperhub://recipes/markdown-quick-reference
+  - agenticdevelopercookbook://recipes/markdown-editor
+  - agenticdevelopercookbook://recipes/markdown-quick-reference
 references:
-- https://writewithharper.com
+  - https://writewithharper.com
 ---
 
 # Markdown Spell Check
@@ -113,7 +113,7 @@ toolbar ────────────────────────
   count.
 - Panel: the shared `PopoverContent` (`bg-apt-surface`, `border-apt-border`,
   `text-apt-text`), `w-80`, `max-h-[24rem] overflow-auto`.
-- Caption: `font-mono text-[0.7rem] uppercase tracking-wider text-apt-text-muted`.
+- Caption: `fieldCaptionClass` (from typography utilities).
 - Each problem: a `<li>` with the flagged text in a `rounded bg-apt-surface-2`
   mono chip (`text-apt-red`), the message in `text-xs text-apt-text-muted`, and
   apply chips as the shared `Button` (`variant="outline" size="xs"`) with a
@@ -231,23 +231,26 @@ harper, so consumers do not need harper resolvable to type-check.
 
 ## Logging
 
-This control is presentational and emits no structured log events. Enabling,
+Not applicable: This control is presentational and emits no structured log events. Enabling,
 dismissing, and applying a suggestion are local UI interactions; only the applied
 source change is reported to the consumer (`onApply`). A harper load/lint failure
 is surfaced to the user via the error state rather than logged.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** Component at
+- **SwiftUI**: SwiftUI applications use native platform spell-check APIs (via `NSSpellChecker` or system integration) or third-party grammar libraries (e.g., Grammarly SDK) if available for the markdown source context.
+- **Compose**: Android Compose applications rely on native platform `EditText` spell-checking features or external grammar services; to replicate markdown-aware filtering, iterate over the document range and identify prose sections (excluding code blocks and markup) before submitting to the spell checker.
+- **React/Web (TypeScript)**: Component at
   `packages/web/packages/ui/src/components/markdown-spellcheck.tsx`, exported from
-  `@agenticdevelopertoolkit/ui/components/markdown-spellcheck`. Built on the shared `Popover` +
-  `Button` + `Badge` + `Spinner`. harper.js is a dependency of `@agenticdevelopertoolkit/ui`,
+  `@agenticdevelopertoolkit/ui/components/markdown-spellcheck`. Built on the shared `Popover`,
+  `Button`, `Badge`, and `Spinner` components. harper.js is a dependency of `@agenticdevelopertoolkit/ui`,
   marked `external` in `tsup.config.ts` so the dist re-emits the dynamic
   `import('harper.js')` verbatim and the **consumer's** bundler (Next.js)
-  code-splits + lazy-loads the WASM. Consumed by hub's `ResearchDetail` (in the
+  code-splits and lazy-loads the WASM binary. Consumed by hub's `ResearchDetail` (in the
   `MarkdownEditor` `toolbarExtras` slot). Demo lives in `ui-showcase` (Overlays
-  group); re-run `gen-sources.py` after edits.
-- **SwiftUI / Compose:** Not applicable — this is a web-only shared component.
+  group); regenerate demo sources after edits.
+- **AppKit / UIKit**: macOS and iOS apps implement native spell-check using `NSSpellChecker` (macOS) or `UITextInputDelegate` + `UITextChecker` (iOS). To apply markdown-aware filtering (skipping code blocks and markup), iterate the document to identify prose-only ranges and spell-check those ranges in isolation.
+- **WinUI 3**: Windows desktop applications use `TextBox` with `IsSpellCheckEnabled` property set to `true`, or `RichEditBox` with spell-checking enabled. To replicate the markdown-aware exclusion of code blocks and markdown syntax, implement a custom spell-check pass: parse the document to identify prose sections (exclude fenced code blocks, inline code, and markdown markers), then iterate over those prose ranges and invoke the platform spell-checker for each range, similar to harper.js's markdown source mode.
 
 ## Design Decisions
 
@@ -283,4 +286,6 @@ is surfaced to the user via the error state rather than logged.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
-| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown spell/grammar-check toolbar control (harper.js WorkerLinter), contract c12. |
+| 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes; add concrete guidance for markdown-aware filtering on all platforms (SwiftUI, Compose, AppKit/UIKit, WinUI 3 with TextBox/RichEditBox and document range iteration) |
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise recipe: fix frontmatter URIs (agenticdevelopercookbook), restructure Platform Notes to cover all five platforms (all marked Not applicable except React/Web), fix Logging section format, promote to review status |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown spell/grammar-check toolbar control (harper.js WorkerLinter), contract c12 |

@@ -1,30 +1,30 @@
 ---
 id: f5d2eb1c-fb0e-48e3-b124-7e730ac8231c
 title: MarkdownQuickReference
-domain: agenticdeveloperhub://recipes/markdown-quick-reference
+domain: agenticdevelopercookbook://ingredients/markdown-quick-reference
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "An outline-button toolbar control that opens a dismissible popover listing common markdown syntax (headings, bold/italic, code, lists, links, quote)."
 platforms:
-- typescript
-- web
+  - typescript
+  - web
 tags:
-- markdown
-- popover
-- help
-- reference
-- toolbar
+  - markdown
+  - popover
+  - help
+  - reference
+  - toolbar
 depends-on:
-- agenticdeveloperhub://recipes/button
+  - agenticdevelopercookbook://ingredients/button
 related:
-- agenticdeveloperhub://recipes/markdown-editor
+  - agenticdevelopercookbook://recipes/markdown-editor
 references: []
 ---
 
@@ -159,6 +159,30 @@ export function MarkdownQuickReference(props: {
 }): React.ReactElement
 ```
 
+## Deep Linking
+
+Not applicable: this is a reusable UI primitive exported for toolbar integration and does not participate in app routing or deep linking.
+
+## Localization
+
+Not applicable: all user-facing strings are hard-coded in the component (`"Markdown quick reference"` as aria-label, `"Markdown"` as default trigger text) and are not localized per source.
+
+## Accessibility Options
+
+Not applicable: this is a lightweight reference popover that inherits focus management and keyboard dismissal from the shared `Popover` primitive. Consumers may wrap it with accessibility option handlers (e.g., reduce motion) if needed.
+
+## Feature Flags
+
+Not applicable: this ingredient is a reusable UI component and is not gated by feature flags.
+
+## Analytics
+
+Not applicable: this ingredient is presentational. Consumers may instrument trigger activation and popover interactions in their own event tracking systems.
+
+## Privacy
+
+Not applicable: this component collects no data, performs no network requests, and stores no persistent state.
+
 ## Logging
 
 This ingredient is presentational and emits no structured log events. Opening or
@@ -166,11 +190,11 @@ dismissing the reference is local UI state and is not reported to the consumer.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** Component at
-  `packages/web/packages/ui/src/components/markdown-quick-reference.tsx`, built on the
-  shared `Popover` + `Button`. Demo lives in `ui-showcase` (Overlays group);
-  re-run `gen-sources.py` after edits.
-- **SwiftUI / Compose:** Not applicable — this is a web-only shared component.
+- **React / Web (TypeScript)**: Component at `packages/web/packages/ui/src/components/markdown-quick-reference.tsx`, built on the shared `Popover` + `Button` primitives. Re-exports `SyntaxQuickReference` composed with the authoritative `MARKDOWN_SYNTAX` array. Demo lives in `ui-showcase` (Overlays group); re-run `gen-sources.py` after edits.
+- **SwiftUI**: Start with a `Popover` anchored to a `Button` trigger. The reference list renders as a scrollable container of label–snippet pairs, each pair using a two-column layout (label on the left in secondary foreground color, snippet on the right in monospace font `Font.system(.body, design: .monospaced)`). Dismissal via the popover's auto-dismiss on outside tap and keyboard handling with `.onKeyPress(.escape)`.
+- **Compose**: Start with a Material Design 3 `Popover` (or `DropdownMenu` for a simpler alternative) anchored to an `IconButton` trigger. Render the syntax list as a `LazyColumn` of rows, each holding a label and a monospace code snippet using `fontFamily = FontFamily.Monospace`. Dismissal is handled by tapping outside the popover or pressing Escape.
+- **AppKit / UIKit**: macOS uses an `NSPopover` anchored to the trigger button in the toolbar; iOS 16+ uses a `UIMenu` with child actions for each syntax item. On both platforms, render the list as a scrollable container with term–snippet pairs displayed in rows. Use monospace fonts (macOS: `NSFont(name: "Monaco", size: 11)`, iOS: `UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)`). Dismissal on outside tap (Popover) or menu selection (UIMenu).
+- **WinUI 3**: Start with a `Flyout` or `TeachingTip` anchored to the trigger `Button` and opened via `Flyout.ShowAt(sender)`. Render the syntax reference as an `ItemsRepeater` or `Grid` within the Flyout, with rows containing a `TextBlock` pair (label and snippet), both in monospace `FontFamily="Cascadia Mono"`. Light-dismiss is built-in; map web outside-click dismissal to `Flyout.IsLightDismissEnabled="true"` and Escape key dismissal to the Flyout's keyboard handling.
 
 ## Design Decisions
 
@@ -196,4 +220,6 @@ dismissing the reference is local UI state and is not reported to the consumer.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
-| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown quick-reference popover (contract c11). |
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Rewrite Platform Notes with concrete translation guidance for SwiftUI, Compose, AppKit/UIKit, and WinUI 3 |
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Update domain URI, fill all template sections with "Not applicable" explanations where no source implementation exists, correct status to review |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown quick-reference popover (contract c11) |

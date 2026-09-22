@@ -1,13 +1,13 @@
 ---
 id: b3a92adc-a28e-4a33-8120-c33f8f0abdf6
 title: Progress
-domain: agenticdeveloperhub://recipes/progress
+domain: agenticdevelopercookbook://ingredients/progress
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -130,6 +130,34 @@ value = 100      █████████████████████
 | `className` | `string` | — | Extra classes for the track element; merged via `cn()`. |
 | `...props` | `React.ComponentProps<"div">` | — | Any native div props (incl. `aria-label`, `id`, `data-*`) are forwarded onto the track. |
 
+## Deep Linking
+
+Not applicable: Progress is a presentational primitive with no deep-linking semantics or navigation behavior.
+
+## Localization
+
+Not applicable: Progress has no user-facing strings to localize; all content is supplied by the consumer.
+
+## Accessibility Options
+
+| Option | Behavior |
+|---|---|
+| Reduce Motion | Fill animation duration respects the `--apt-anim-scale` CSS custom property (default 1); set to 0 to disable transitions. |
+| Increase Contrast | Not applicable: the component uses fixed token-based colors (`apt-surface-2`, `apt-gold`) that meet platform contrast standards. |
+| Differentiate Without Color | Not applicable: the component conveys progress via fill width and horizontal translation, not color alone. |
+
+## Feature Flags
+
+Not applicable: Progress is a stateless primitive shipped without feature gate requirements.
+
+## Analytics
+
+Not applicable: Progress is a presentational primitive with no internal events. Analytics around progress tracking belong to the consumer component.
+
+## Privacy
+
+Not applicable: Progress stores no user data and collects no information.
+
 ## Logging
 
 No logging. `Progress` is a presentational primitive; the meaning of a value and any
@@ -137,12 +165,11 @@ telemetry around a job's progress belong to the consumer, not the bar.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/progress.tsx`.
-- Carries `"use client"` because it renders an inline `style` transform, but holds no
-  internal state — `value` is controlled by the consumer.
-- Demo: `ui-showcase` Topic `progress` (regenerate `sources.generated.ts` after source
-  changes via `gen-sources.py`).
-- Web/TypeScript only; token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
+- **Web/TypeScript**: File `packages/web/packages/ui/src/components/progress.tsx`. Carries `"use client"` because it renders an inline `style` transform, but holds no internal state — `value` is fully controlled by the consumer. Demo in `ui-showcase` Topic `progress` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`).
+- **SwiftUI**: Start from `ProgressView` with a `.linear` style and custom `ProgressViewStyle` to match token-based colors. Translate the fill position via a modifier rather than width animation for compositor efficiency.
+- **Compose**: Use `LinearProgressIndicator` with `progress` parameter clamped to 0–1. Animate fill translation via `Modifier.graphicsLayer()` with `translationX` keyed to the progress value.
+- **AppKit / UIKit**: Use `NSProgressIndicator` (AppKit) or `UIProgressView` (UIKit). Both are determinate by default; configure with a custom tint and animate progress updates on the main thread.
+- **WinUI 3**: Use `ProgressBar` with `Maximum=100`, `Value=clampedValue`, and bind `ProgressBarTemplate` to customize fill color via `TemplateBinding`. Animate value changes using a `Storyboard` on the `Value` property with `DoubleAnimation` duration 300ms.
 
 ## Design Decisions
 
@@ -172,4 +199,5 @@ telemetry around a job's progress belong to the consumer, not the bar.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); update platform notes to cover all target platforms; correct domain URI. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the self-contained determinate Progress bar. |

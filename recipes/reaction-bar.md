@@ -1,13 +1,13 @@
 ---
 id: 169da1b6-2a22-4fec-9f01-8118e5242bd5
 title: ReactionBar
-domain: agenticdeveloperhub://recipes/reaction-bar
+domain: agenticdevelopercookbook://recipes/reaction-bar
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/button
-- agenticdeveloperhub://recipes/removable-chip
+- agenticdevelopercookbook://recipes/button
+- agenticdevelopercookbook://recipes/popover
 references: []
 ---
 
@@ -166,22 +166,45 @@ fact rather than restating a literal per surface.
 
 `ReactionBarItem` is `{ emoji: string; count: number; mine: boolean }`.
 
+## Deep Linking
+
+Not applicable: ReactionBar is a presentational component with no navigable state or independent views to deep-link to. Navigation concerns belong to the consumer.
+
+## Localization
+
+Not applicable: The component displays emoji (language-neutral) and all user-facing text labels (aria-label, accessible names) are supplied by the consumer through `subjectLabel`. The component itself carries no translatable strings.
+
+## Accessibility Options
+
+Not applicable: The component responds to all standard browser and OS-level accessibility features through its native HTML `<button>` elements and the `aria-pressed` attribute. Assistive technologies interact with these standard mechanisms directly; no component-specific accessibility options are defined.
+
+## Feature Flags
+
+Not applicable: The component is not feature-flagged. It is always available as part of `@agenticdevelopertoolkit/ui`.
+
+## Analytics
+
+Not applicable: ReactionBar is presentational and signals user interactions through the `onToggle` callback only. The caller owns the logic of what a toggle means and any analytics associated with it — logging, event classification, and telemetry belong in the consumer's implementation of `onToggle`.
+
+## Privacy
+
+Not applicable: The component is presentational and carries no data collection, storage, transmission, or retention logic. It passes user choices to the consumer's `onToggle` handler; privacy and data handling are the consumer's responsibility.
+
 ## Logging
 
-No logging. `ReactionBar` is presentational; what a toggle means, and any telemetry about it,
-belong to the consumer's `onToggle` handler.
+No logging. `ReactionBar` is presentational; what a toggle means, and any telemetry about it, belong to the consumer's `onToggle` handler.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/reaction-bar.tsx`, exported from
-  `@agenticdevelopertoolkit/ui/components/reaction-bar` via the package's `./components/*` wildcard.
-- Composes the shared `Button` and `Popover`/`PopoverTrigger`/`PopoverContent`, plus a lucide
-  `SmilePlus` icon; carries `"use client"` (it owns the popover's open state).
-- First consumer: a work-item comments feature, which folds `content.reactions`
-  rows into `ReactionBarItem[]` with a `tally()` helper.
-- Demo: `ui-showcase` Topic `reaction-bar`, in the "Composite controls" group (regenerate
-  `sources.generated.ts` via `gen-sources.py` after source changes).
-- Web/TypeScript only; token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
+- **React/Web**: File: `packages/web/packages/ui/src/components/reaction-bar.tsx`, exported from `@agenticdevelopertoolkit/ui/components/reaction-bar` via the package's `./components/*` wildcard. Composes the shared `Button` and `Popover`/`PopoverTrigger`/`PopoverContent` primitives, plus a lucide `SmilePlus` icon; carries `"use client"` directive to own the popover's open state. Themes via `@agenticdevelopertoolkit/ui` token system (`apt-gold`, `apt-border`, `apt-text-*`, etc.).
+
+- **SwiftUI**: Start from a `VStack` or `HStack` with wrapping layout; use SwiftUI `Button` for each reaction chip with a `@State` boolean to track whether the viewer has reacted. The palette could be a `Menu` or custom `Popup`/`Popover` with emoji buttons. Count display uses `Text` with `.monospacedDigit()` font modifier. State management via `@State` for open/closed palette.
+
+- **Compose**: Implement using `Row` with `Modifier.fillMaxWidth(1f)` and `wrapContentHeight()` for wrapping layout. Each reaction is a `Button` composable, with a separate trigger `Button` styled as a circular icon for the palette. Palette is a `Popup` or `DropdownMenu`. Counts display in `Text` with `.fontFeatureSettings("tnum")` for monospaced digits. Use `remember { mutableStateOf(false) }` for palette open state.
+
+- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `distribution = .fillEqually` and `axis = .horizontal` wrapping to a new line; alternately, use a grid layout. Each chip is an `NSButton` (AppKit, `bezelStyle = .rounded`) or `UIButton` (UIKit, custom styling). The palette is an `NSPopover` (AppKit) or `UIMenuActions`/`UIMenu` (UIKit 13+). Accessibility via `NSAccessibilityRole` (AppKit) or `accessibilityTraits` (UIKit) set to `.button` and custom `NSAccessibilityElement` / `accessibilityLabel` construction for each chip and trigger.
+
+- **WinUI 3**: Use a `StackPanel` with `Orientation="Horizontal"` and `TextWrapping="Wrap"` for the row layout. Each reaction is a `Button` with `IsToggled` property for the `mine` state (or custom `ToggleButton`); style with border and background per the Fluent 2 Design System. The palette is a `Flyout` or `MenuFlyout` attached to a `Button` trigger. Count display uses `TextBlock` with `FontFamily="Segoe UI Variable"` and `NumberSubstitution.CultureOverride` set for monospaced numerals. Accessibility via `AutomationProperties.Name` (equivalent to aria-label) for every interactive element.
 
 ## Design Decisions
 
@@ -215,4 +238,5 @@ belong to the consumer's `onToggle` handler.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark inapplicable sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy). |
 | 1.0.0 | 2026-08-08 | Mike Fullerton | Initial recipe; documents the toggle chips, the palette, and the presentational contract. |

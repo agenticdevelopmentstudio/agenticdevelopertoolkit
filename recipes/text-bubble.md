@@ -1,26 +1,26 @@
 ---
 id: 7f84a93a-013e-452f-a963-7ffb4808dd5c
 title: TextBubble
-domain: agenticdeveloperhub://recipes/text-bubble
+domain: agenticdevelopercookbook://ingredients/text-bubble
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
-created: '2026-07-03'
-modified: '2026-07-03'
+created: 2026-07-03
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "A decorative traveling-lens text effect: a lens sweeps the string, scaling/blurring the glyphs under it — plain, accessible text when inactive."
 platforms:
-- typescript
-- web
+  - typescript
+  - web
 tags:
-- component
-- animation
-- text
-- decorative
-- ui
+  - component
+  - animation
+  - text
+  - decorative
+  - ui
 depends-on: []
 related: []
 references: []
@@ -171,6 +171,30 @@ The founder note text under the traveling lens
 `useTextBubble<T>(options)` returns a `RefObject<T | null>` to attach to any real
 DOM element; `TextBubble` is the ready-made wrapper around it.
 
+## Deep Linking
+
+Not applicable: TextBubble is a decoration-only animation component with no user-facing navigation or state that would warrant deep-linkable URLs.
+
+## Localization
+
+Not applicable: TextBubble applies a visual animation to provided text content. The text itself is the caller's responsibility; the component preserves it and adds no additional strings.
+
+## Accessibility Options
+
+Not applicable: The lens animation is purely visual and does not interact with platform accessibility display options. The component respects `prefers-reduced-motion` through caller discretion (hosts MAY gate `active` on this preference), but the component itself does not detect or respond to system settings.
+
+## Feature Flags
+
+Not applicable: TextBubble is a self-contained UI component with no feature-gating needs. The caller controls behavior via `active`.
+
+## Analytics
+
+Not applicable: TextBubble is a purely cosmetic animation. It emits no events, user interactions, or telemetry.
+
+## Privacy
+
+Not applicable: TextBubble operates entirely on client-side text content and rendering, with no data collection, transmission, or persistence.
+
 ## Logging
 
 No logging. `TextBubble` is a purely cosmetic animation; it emits no events or
@@ -178,14 +202,11 @@ telemetry.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/text-bubble.tsx`.
-- `"use client"` — it uses `useEffect`/`useRef`, `requestAnimationFrame`, and a
-  `ResizeObserver`, all guarded for SSR (`typeof ResizeObserver`).
-- Uses `color-mix(in oklab, …)` for the colour shift — a modern-CSS feature; older
-  engines simply see the base colour.
-- Demo: `ui-showcase` Topic `text-bubble` (regenerate `sources.generated.ts` via
-  `gen-sources.py` after source changes). Used by the concept graph's founder note.
-- No external dependencies beyond React.
+- **React/Web** (source): File `packages/web/packages/ui/src/components/text-bubble.tsx`. Client-side only (`"use client"`), uses `useEffect`/`useRef`, `requestAnimationFrame`, and `ResizeObserver` (guarded for SSR). Color shift via `color-mix(in oklab, …)` — a modern CSS feature; older engines see the base colour. No external dependencies beyond React.
+- **SwiftUI**: Start from a `Text` view with a custom modifier that imperatively splits its attributed string into character-level views, applying per-character transforms as the lens frame updates. Use `GeometryReader` to measure glyph centers and `displayScale` for DPI-aware radius. Prefer `CADisplayLink` over `Timer` for frame timing to match 60/120Hz refresh.
+- **Compose (Android)**: Build from a `Text` composable with a custom `DrawScope` modifier. Split text into per-character `AnnotatedString` entries and apply per-character `graphicsLayer` transforms. Use `Animatable` values for smooth lens position interpolation and measure glyphs via `TextLayoutResult`.
+- **AppKit / UIKit**: On macOS, use `NSTextField` with attributed string splitting; on iOS, use `UITextView` or a custom `UIView` subclass. Measure glyph frames from `CTLine`/`CTRun` via Core Text, not bounding rects. Use `CADisplayLink` for animation timing. RTL detection: `NSLocale.characterDirection(forLanguage:)` or `UITextView.textDirection`.
+- **WinUI 3**: Render with a `TextBlock` containing per-character `Run` elements, each in an inline container. Measure character centers via `DesiredSize` after layout pass. Animate via `Storyboard` + `DoubleAnimation` on `ScaleTransform`, `BlurEffect`, and `Foreground` color channels. Use `SizeChanged` event on the container to re-measure on layout changes. For color mixing in oklab, compute manually or defer to sRGB `Color.FromArgb` blends as a fallback.
 
 ## Design Decisions
 
@@ -221,4 +242,5 @@ telemetry.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Bump version, update modified date, add all template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy marked not applicable; expand Platform Notes with concrete WinUI/AppKit/UIKit/Compose guidance). |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the decorative traveling-lens effect, its sweep params, and the preserved accessible text. |

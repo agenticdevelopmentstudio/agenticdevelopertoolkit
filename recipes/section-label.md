@@ -1,13 +1,13 @@
 ---
 id: fce1333d-7f42-49f8-86da-508159701043
 title: SectionLabel
-domain: agenticdeveloperhub://recipes/section-label
+domain: agenticdevelopercookbook://ingredients/section-label
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,8 +22,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/user-card
-- agenticdeveloperhub://recipes/field
+- agenticdevelopercookbook://ingredients/user-card
+- agenticdevelopercookbook://ingredients/field
 references: []
 ---
 
@@ -143,6 +143,30 @@ with trailing (justify-between row)
 | `className` | `string` | — | Extra classes merged after `sectionLabelClass` on the label div via `cn()`. |
 | `sectionLabelClass` | `string` (export) | — | The raw treatment string, for applying the micro-heading look to any element directly. |
 
+## Deep Linking
+
+Not applicable: SectionLabel is an internal presentational component, not an app screen or navigation destination.
+
+## Localization
+
+Not applicable: The component renders only its children (caller-provided text); it carries no strings of its own.
+
+## Accessibility Options
+
+Not applicable: SectionLabel responds to no display options such as Reduce Motion or Increase Contrast; it is a static label.
+
+## Feature Flags
+
+Not applicable: The component is not gated behind a feature flag.
+
+## Analytics
+
+Not applicable: The component has no interactive behavior and logs no analytics events.
+
+## Privacy
+
+Not applicable: The component collects, stores, and transmits no user data.
+
 ## Logging
 
 No logging. `SectionLabel` is a presentational label; it holds no state and takes
@@ -150,16 +174,11 @@ no action.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/section-label.tsx`.
-- No `"use client"` — it is a stateless div; it renders in a server component.
-- Sibling treatments live in `lib/typography.ts` (`fieldCaptionClass`) and
-  `blocks/section-header.tsx` (`SectionHeader`); do not collapse them together.
-- Consumed by `blocks/user-card.tsx` (Social / Email / Phone / Address / Personas
-  section labels) and available across panes and cards.
-- Demo: `ui-showcase` Topic `section-label` in the "Primitives — display" group
-  (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
-- Web/TypeScript only; token-driven so it themes with the rest of
-  `@agenticdevelopertoolkit/ui`.
+- **SwiftUI**: A SwiftUI implementation would start from `Text` or `Label` with font modifiers for the micro-heading treatment — `.font(.system(.caption2, design: .monospaced))`, `.fontWeight(.medium)`, `.tracking(0.1)`, and foreground color bound to the muted text semantic color.
+- **Compose**: An Android/Compose implementation would start from `Text` with `fontSize` (0.625rem equivalent), `fontWeight` of medium, `letterSpacing` (0.1em equivalent), and text color matching the web treatment's `apt-text-dim` muted tone.
+- **React/Web**: Component exported from `packages/web/packages/ui/src/components/section-label.tsx`. Stateless div with optional flex-row wrapper for the trailing slot. Merges consumer `className` after `sectionLabelClass` via the `cn()` utility (from `lib/utils`). No `"use client"` directive — renders in a server component. Sibling treatments (`fieldCaptionClass` and `SectionHeader`) are defined separately; do not collapse them.
+- **AppKit / UIKit**: An iOS/macOS implementation would start from `UILabel` or `Text` with font set to monospaced at 0.625rem size, medium weight, letter spacing of 0.1em, and text color bound to the muted secondary text semantic color.
+- **WinUI 3**: A Windows/WinUI implementation would start from `TextBlock` with `Style="{StaticResource CaptionTextBlockStyle}"` as the base. Set `CharacterCasing` to `Upper` to match the source uppercase treatment, or bind to a converter if the source text passes mixed case. Bind `Foreground` to the muted text brush resource. Apply `Margin` matching the source spacing (consistent with the flex gap and padding of the web version). For the trailing slot equivalent, use `StackPanel` with `Orientation="Horizontal"` and `HorizontalAlignment="Stretch"` to replicate the `justify-between` row.
 
 ## Design Decisions
 
@@ -192,4 +211,6 @@ no action.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Platform Notes: remove "Not applicable" phrasing from non-web bullets; add concrete WinUI 3 translation guidance (TextBlock, CharacterCasing, Foreground, Margin, StackPanel for trailing). |
+| 1.0.1 | 2026-09-22 | Mike Fullerton | Revise recipe: fix domain URI, add "Not applicable" sections per cookbook guidelines, restructure Platform Notes as translation guidance, update status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents SectionLabel + sectionLabelClass and its boundary vs caption/title. |

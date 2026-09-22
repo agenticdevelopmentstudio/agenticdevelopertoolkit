@@ -1,13 +1,13 @@
 ---
 id: c99e2822-f5a9-4e84-8740-9341880bb82a
 title: Disclosure
-domain: agenticdeveloperhub://recipes/disclosure
+domain: agenticdevelopercookbook://recipes/disclosure
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -98,9 +98,11 @@ None — a presentational primitive. Callers own any open/close telemetry.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/components/disclosure.tsx`, lucide `ChevronRight`. `"use client"`.
-- **Responsive:** the header truncates rather than wrapping; verify via Playwright (ui-showcase) at 375 / 768 / 1440.
-- **SwiftUI / Compose:** Not applicable — web-only shared component.
+- **SwiftUI**: Use native `DisclosureGroup` (SwiftUI) or build an equivalent with `@State` for toggle state and a `.rotation3D` animation for the chevron toggle.
+- **Compose**: Use Material Design's `ExpandableItem` pattern or build with a `var isExpanded: Boolean` state and an `IconButton` for the chevron toggle.
+- **React/Web**: `packages/web/packages/ui/src/components/disclosure.tsx`. Uses lucide `ChevronRight` icon for the toggle chevron. Marked `"use client"` for Next.js server components. Respects Tailwind theme tokens (`apt-*` family). Header truncates rather than wrapping; verify responsive behavior via Playwright at 375 / 768 / 1440.
+- **AppKit / UIKit**: Use native `DisclosureGroup` (SwiftUI) or build with `NSButton`/`UIButton` for the toggle and manage disclosure state imperatively.
+- **WinUI 3**: Use `Expander` control with `IsExpanded` property for toggle state, `Header` property for the header content, `RotateTransform` on the chevron glyph for the 90° rotation animation, and `Expanding`/`Collapsing` events for state callbacks.
 
 ## Design Decisions
 
@@ -119,4 +121,6 @@ None — a presentational primitive. Callers own any open/close telemetry.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise Platform Notes: remove "Not applicable" phrasing from non-web bullets; sharpen guidance with concrete control names, properties, and XAML patterns |
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Expand Platform Notes to include all five required bullets with concrete platform-specific guidance; update status to review; fix domain URI |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial draft |

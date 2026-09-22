@@ -1,13 +1,13 @@
 ---
 id: 1a044d34-d585-46b4-b703-dea3fb9b9642
 title: StatusDot
-domain: agenticdeveloperhub://recipes/status-dot
+domain: agenticdevelopercookbook://ingredients/status-dot
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/stat-card
+- agenticdevelopercookbook://ingredients/stat-card
 references: []
 ---
 
@@ -143,6 +143,30 @@ size=8   ·      size=12   ●      size=18   ⬤   (glow radius grows with size
 | `label` | `string` | — | Accessible name. Present → `role="img"` + `aria-label`; omitted → `aria-hidden` decoration. |
 | `className` | `string` | — | Extra classes merged after the tone class via `cn()` (e.g. layout/margins). |
 
+## Deep Linking
+
+Not applicable: StatusDot is a pure presentational component with no navigation semantics.
+
+## Localization
+
+Not applicable: StatusDot contains no text or UI strings; the `label` prop is provided by the consumer and is a fully localized value.
+
+## Accessibility Options
+
+Not applicable: StatusDot is a bare visual indicator. Motion, contrast, and color-differentiation preferences are managed by the tone system and inherited from the parent container's accessibility context, not by the component itself.
+
+## Feature Flags
+
+Not applicable: StatusDot is a primitive library component published as a reusable ingredient; feature flagging is the responsibility of consuming applications.
+
+## Analytics
+
+Not applicable: StatusDot is a presentational indicator with no internal state or event generation. The meaning of a status change and any telemetry around it belong to the consumer computing the tone, not the component.
+
+## Privacy
+
+Not applicable: StatusDot collects, stores, and transmits no data.
+
 ## Logging
 
 No logging. `StatusDot` is a presentational indicator; the meaning of a status
@@ -151,15 +175,11 @@ tone, not the dot.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/status-dot.tsx`.
-- No `"use client"` — it is a stateless span with inline style; it renders fine
-  in a server component.
-- Uses CSS `color-mix(in srgb, …)` for the glow; supported by the evergreen
-  browsers the suite targets.
-- Demo: `ui-showcase` Topic `status-dot` in the "Primitives — display" group
-  (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
-- Web/TypeScript only; token-driven so it themes with the rest of
-  `@agenticdevelopertoolkit/ui`.
+- **Web/TypeScript**: File `packages/web/packages/ui/src/components/status-dot.tsx`. React functional component, memoized for re-render prevention. No `"use client"` directive — it is a stateless span with inline style and renders in server components. Uses CSS `color-mix(in srgb, …)` for the glow; supported by evergreen browsers. The `cn()` utility for className merging comes from `../lib/utils`.
+- **SwiftUI**: Start from a capsule shape with a computed shadow modifier. Map `tone` to SwiftUI's color system (equivalent to the `apt-*` palette). Use `max(6, round(size * 0.55))` for shadow blur radius. The `label` parameter determines whether the capsule carries `accessibilityElement(children: .ignore)` + `accessibilityLabel()` (labeled) or `.hidden` (unlabeled).
+- **Compose**: Use a `Canvas` composable or `Box` with `Modifier.shadow()`. The `tone` maps to the Material 3 color system or custom palette. Glow radius scales identically. Semantics: with `label`, add `semantics { contentDescription = label }` and mark as an image; without, mark as `decorative`.
+- **AppKit / UIKit**: Use `NSView`/`UIView` with `CALayer` shadow. Fill is `layer.backgroundColor = UIColor(named: "apt-<tone>")`. Glow is `layer.shadowColor` and `layer.shadowRadius` using `max(6, round(size * 0.55))`. `label` drives accessibility: if present, set `accessibilityRole = .image` + `accessibilityLabel`; if absent, set `isAccessibilityElement = false`.
+- **WinUI 3**: A `Border` with `CornerRadius="<size>"` and `Background` bound to a tone-based brush. Use a `ThemeShadow` with computed blur radius (`max(6, round(size * 0.55))`) and 40%-opacity color derived from the brush. Automation ID from the `label` parameter: set `AutomationProperties.Name` if present, otherwise omit. Pair with a `ContentPresenter` or inline text for the status word; color alone is insufficient.
 
 ## Design Decisions
 
@@ -191,4 +211,5 @@ tone, not the dot.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Revise: fix domain (cookbook), add missing "not applicable" sections, complete Platform Notes for all platforms, set status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the currentColor-driven glowing StatusDot. |

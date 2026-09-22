@@ -1,13 +1,13 @@
 ---
 id: 4d0e04ff-39eb-472c-93a0-8070f1b64a6a
 title: "OptionMenu"
-domain: agenticdeveloperhub://recipes/option-menu
+domain: agenticdevelopercookbook://ingredients/option-menu
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.0.1
+status: review
 language: en
 created: 2026-06-26
-modified: 2026-06-26
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,23 +159,46 @@ Open, with editable "Other" as the last item:
 | `disabled` | `boolean` | `false` | Disables the control. |
 | `className` | `string` | — | Extra classes. |
 
+## Deep Linking
+
+Not applicable: This is a UI component, not a full application feature that requires deep linking.
+
+## Localization
+
+Not applicable: All user-facing strings are passed via props (`ariaLabel`, `otherLabel`, `placeholder`, `otherPlaceholder`), allowing callers to localize at point of use.
+
+## Accessibility Options
+
+Not applicable: This component uses no animations that respond to accessibility preferences.
+
+## Feature Flags
+
+Not applicable: This is a library component with no feature-flag gating.
+
+## Analytics
+
+Not applicable: This is a presentational form control that does not emit analytics events.
+
+## Privacy
+
+Not applicable: This component handles no sensitive data and emits no telemetry.
+
 ## Logging
 
 No logging. OptionMenu is a presentational form control; it emits no structured log events.
 
 ## Platform Notes
 
-- New file: `packages/web/packages/ui/src/components/option-menu.tsx`.
-- Export: covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json` (no export change needed).
-- Demo: the UI showcase app's demo page (+ showcase source registry). The
-  showcase is a consumer of this package and lives outside this repo.
-- Consumed first by: the invitation modal (hub).
-- Responsive: verify via Playwright (ui-showcase) at 375 / 768 / 1440 — keyboard-only and pointer flows on each.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/components/option-menu.tsx`. Uses a hand-managed roving tabindex selection model (tracked in component state) rather than menu roles, to allow an embedded text input in the "Other" row without focus/keyboard conflicts. The component composes `Popover`, `Input`, and `Button` primitives and manages focus via `useRef` and `requestAnimationFrame` to ensure surface focus after arrow navigation. Start from the source and build platform equivalents using the selection model described in Design Decisions.
+- **SwiftUI**: Start with a native `Menu` control for the list, but replace with a custom disclosure pattern (e.g., `.popover` modifier) to support the embedded text input in "Other". Hand-manage keyboard navigation via `onKeyPress` callbacks. Use `@FocusState` to track which element should have focus after each navigation action. The roving selection pattern is the same as web: track highlighted index in state, separate from what is committed.
+- **Compose**: Start with `DropdownMenu` for the list, but switch to a custom `Box` with a popover surface for the embedded text input. Implement keyboard navigation via `KeyEventQueue` or a custom state machine tracking roving selection. Use `FocusRequester` to move focus between the input and the list after arrow keys. Match the web component's separation of selection (transient highlight) from commitment (firing `onChange`).
+- **AppKit / UIKit**: On iOS, use `UIMenu` as the menu overlay, but compose a custom `UIViewController` or a SwiftUI overlay to support the "Other" text input. On macOS, consider a popover-based approach with `NSPopover` containing the list and input. Manage focus and keyboard events via responder chain and `UIKeyCommand`. The critical invariant is the same across all platforms: selection moves independently of commit, and only commit fires the `onChange` callback.
+- **WinUI 3**: Use a `Flyout` or `MenuFlyout` for the list surface. For the "Other" input, embed a `TextBox` in the flyout with a `Button` for OK. Implement keyboard navigation via `PreviewKeyDown` events on the flyout, tracking selection in app state. Ensure focus management transitions focus between list items and the input as appropriate. The selection/commitment model must match the source: roving highlight never fires `onChange`, only user intent (Enter, click, or OK click) does.
 
 ## Design Decisions
 
 - **Hand-managed roving selection, not a menu role.** Selection (the highlighted row) is tracked in component state independent of DOM focus, so arrow keys work whether focus is on a row or in the Other input. Building on `DropdownMenu` / Base-UI menu was rejected because menu roles hijack typeahead and focus and fight an embedded text input.
-- **Selection vs. commit are distinct.** Selection is a transient highlight that never fires `onChange`; only commit (Enter, OK, row click) fires `onChange` and closes.
+- **Selection vs. commit are distinct.** Selection is a transient highlight that never fires `onChange`; only a commit (Enter, OK, row click) fires `onChange` and closes.
 
 ## Compliance
 
@@ -185,4 +208,5 @@ No additional compliance categories apply to this presentational control.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.0.1 | 2026-09-22 | Mike Fullerton | Add full optional sections (marked Not applicable where appropriate), fix domain URI to use agenticdevelopercookbook, and expand Platform Notes with translation guidance for all platforms. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec. |

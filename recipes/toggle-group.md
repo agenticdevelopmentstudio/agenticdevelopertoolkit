@@ -1,19 +1,18 @@
 ---
 id: dffc1431-7386-4acf-94bc-6043c5c7eebc
 title: ToggleGroup
-domain: agenticdeveloperhub://recipes/toggle-group
+domain: agenticdevelopercookbook://recipes/toggle-group
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: "A segmented control — mutually-exclusive option buttons on the field shell, gold fill on the pressed item; single-select via value={[selected]}."
 platforms:
-- typescript
 - web
 tags:
 - component
@@ -155,6 +154,30 @@ and/or `defaultValue`.
 | `className` | `string` | — | Extra classes for the item pill; merged via `cn()`. |
 | `...props` | Base UI `Toggle.Props` | — | All toggle props forwarded; `children` may include an icon + label. |
 
+## Deep Linking
+
+Not applicable: ToggleGroup is a shared component within a React library, not a top-level page or feature.
+
+## Localization
+
+Not applicable: ToggleGroup is a presentational control; it contains no user-facing strings.
+
+## Accessibility Options
+
+Not applicable: ToggleGroup responds to the underlying platform's reduce-motion and contrast settings via Base UI's native defaults; the component does not expose separate accessibility option handling.
+
+## Feature Flags
+
+Not applicable: ToggleGroup is a shared component; feature gating belongs to the consumer application.
+
+## Analytics
+
+Not applicable: ToggleGroup is a presentational control; telemetry belongs to the consumer's `onValueChange` event handler.
+
+## Privacy
+
+Not applicable: ToggleGroup is a presentational control with no data collection, storage, or transmission.
+
 ## Logging
 
 No logging. `ToggleGroup` is a presentational control; the meaning of a selection and
@@ -162,14 +185,11 @@ any telemetry belong to the consumer's `onValueChange` handler, not the control.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/toggle-group.tsx`.
-- Built on `@base-ui/react/toggle-group` + `@base-ui/react/toggle`; the group sits on
-  `fieldShellClass` exported from `./input`, keeping it visually aligned with the
-  other field-shell inputs.
-- Carries `"use client"` (Base UI interactivity).
-- Demo: `ui-showcase` Topic `toggle-group` (regenerate `sources.generated.ts` after
-  source changes via `gen-sources.py`).
-- Web/TypeScript only; token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
+- **React/Web**: File: `packages/web/packages/ui/src/components/toggle-group.tsx`. Built on `@base-ui/react/toggle-group` + `@base-ui/react/toggle`; the group sits on `fieldShellClass` exported from `./input`, keeping it visually aligned with the other field-shell inputs. Carries `"use client"` (Base UI interactivity). Demo: `ui-showcase` Topic `toggle-group` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). Token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
+- **SwiftUI**: Start from `Picker` with `.pickerStyle(.segmented)` or compose a button row with `@State`-managed selection. Apply a border using `.border()`, style the selected item with `.background(Color.gold)`, and implement keyboard navigation with `.keyboardShortcut()` modifiers on each button.
+- **Compose**: Start from Material's `SegmentedButton` row or compose `Button` components in a `Row` with `Modifier.border()`. Track selection in a `mutableStateOf`, apply gold background to the selected item, and route focus via `Modifier.focusable()` with arrow-key handlers.
+- **AppKit / UIKit**: Use `NSSegmentedControl` (macOS) or `UISegmentedControl` (iOS) with a custom appearance proxy to apply gold fills and focus rings. Implement disabled state via the control's built-in `isEnabled` property. For keyboard support on iOS, use `UIKeyCommand` on the view controller.
+- **WinUI 3**: Compose a `ItemsControl` with `Button` items in a `StackPanel` (Horizontal). Bind to a view-model property for selection state. Apply `ControlTemplate` styling to show the gold fill on pressed state and use `VisualState` for the focus ring. Handle keyboard navigation via `KeyDown` event handlers.
 
 ## Design Decisions
 
@@ -199,4 +219,5 @@ any telemetry belong to the consumer's `onValueChange` handler, not the control.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Complete recipe with all template sections; add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark non-applicable sections. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the Base UI segmented control and its single-select convention. |

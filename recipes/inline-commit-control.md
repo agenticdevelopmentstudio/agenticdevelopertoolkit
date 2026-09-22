@@ -3,11 +3,11 @@ id: 26df832c-a7f7-4cf6-b3f5-240c61e8bd68
 title: InlineCommitControl
 domain: agenticdeveloperhub://recipes/inline-commit-control
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -243,6 +243,30 @@ unsaved-changes prompt, not a per-page message.
 patch)`, `clear(id)`, `isArmed(id)`, `toggleArmed(id)`, `isBusy(id)`,
 `errorOf(id)`, `errors`, `runCommit(id, fn)`, and `settle(id, committed)`.
 
+## Deep Linking
+
+Not applicable: The control is not a standalone page and has no deep linking entry points.
+
+## Localization
+
+Not applicable: The control has no user-facing strings; consumers supply all labels via the `subject` prop and button labels are composed dynamically.
+
+## Accessibility Options
+
+Not applicable: The control does not respond to platform accessibility display options; it relies on the Button component's handling of Reduce Motion and high-contrast modes.
+
+## Feature Flags
+
+Not applicable: The control is not gated by feature flags.
+
+## Analytics
+
+Not applicable: The control emits no analytics events; consumers log through their own mutation layer.
+
+## Privacy
+
+Not applicable: The control does not collect, store, or transmit any personal data.
+
 ## Logging
 
 None. The control emits no telemetry; consumers log through their own
@@ -250,16 +274,11 @@ mutation layer.
 
 ## Platform Notes
 
-- Web (React 19, Base UI, Tailwind v4). Ships in `@agenticdevelopertoolkit/ui`
-  `components/inline-commit-control` + `components/unsaved-changes-guard`.
-- DataTable rows already carry the hover scope (`group/icc`); other
-  containers opt in with `inlineCommitHoverScopeClass`.
-- The guard intercepts document-capture clicks so it runs before Next.js
-  `<Link>` handlers. Programmatic navigation (no anchor click to intercept) is
-  covered by a small registry: the guard registers a callback, and shared
-  chrome that calls `router.push` (`useSiteMenu`, `RouteSwitcher`, the admin
-  logout) awaits `confirmNavigation()` first. With no guard mounted it resolves
-  `true` synchronously, so guard-free pages pay nothing.
+- **React/Web**: The component ships in `@agenticdevelopertoolkit/ui` from `components/inline-commit-control` and `components/unsaved-changes-guard` (TypeScript, React 19, Base UI components, Tailwind v4). DataTable rows already carry the hover scope; other containers opt in with `inlineCommitHoverScopeClass`. The guard intercepts document-capture clicks before Next.js `<Link>` handlers run; programmatic navigation is covered by a registry callback.
+- **SwiftUI**: Start from a `HStack` with icon buttons composed from the shared `Button` component. The state machine (dirty, deleting, busy) maps to SwiftUI `@State` and bindings; focus management uses `@FocusState` and `UIResponder` methods. The optional `useInlineDrafts` equivalent would be a `@EnvironmentObject` holding the per-row PATCH draft state.
+- **Compose**: Start from a `Row` with `IconButton` composables. State management uses Compose `State<>` and `MutableState`; focus is managed with `FocusRequester` and `keyboardInteractionModifier`. The PATCH draft pattern maps to a ViewModel holding the row's draft map.
+- **AppKit / UIKit**: Use `NSStackView` / `UIStackView` with `NSButton` / `UIButton` (icon style). State is held in a view controller or SwiftUI view. Focus navigation uses responder chain and `becomeFirstResponder()`. The draft state machine maps to `@Published` properties in an observable object.
+- **WinUI 3**: Use a `StackPanel` with `Button` controls in `Flyout` style. Bind `dirty`, `deleting`, and `busy` states to XAML via `INotifyPropertyChanged`. Focus management uses `UIElement.Focus()` and `PointerEntered` / `PointerExited` for hover reveal. The PATCH draft state maps to a ViewModel with an `ObservableCollection<DraftChange>`.
 
 ## Design Decisions
 
@@ -303,4 +322,5 @@ mutation layer.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Promote to review; add missing sections and cross-platform Platform Notes |
 | 1.0.0 | 2026-07-07 | Mike Fullerton | Initial draft |

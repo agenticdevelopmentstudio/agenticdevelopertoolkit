@@ -1,13 +1,13 @@
 ---
 id: bba42d5f-8a52-487f-88c5-4f988dfa714b
 title: Stat
-domain: agenticdeveloperhub://recipes/stat
+domain: agenticdevelopercookbook://recipes/stat
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.0.2
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/stat-card
+- agenticdevelopercookbook://recipes/stat-card
 references: []
 ---
 
@@ -161,14 +161,11 @@ and any telemetry around it belong to the host, not the display element.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/stat.tsx`.
-- No `"use client"` — it renders static spans with no state or effects, so it works
-  in a server component.
-- Styled with the family `apt-*` token utilities registered centrally via `@source`,
-  so the tokens exist on every site without per-site config.
-- Demo: `ui-showcase` Topic `stat` (group "Primitives — display"); regenerate
-  `sources.generated.ts` via `gen-sources.py` after source changes.
-- Web/TypeScript only; no SwiftUI/Compose counterpart.
+- **Web/TypeScript**: File `packages/web/packages/ui/src/components/stat.tsx`. No `"use client"` directive — renders static spans with no state or effects, works as a server component. Styled with `apt-*` token utilities registered centrally via `@source`. Demo in `ui-showcase` Topic `stat` (group "Primitives — display"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
+- **SwiftUI**: Start with `VStack(alignment: .trailing, spacing: 4)` containing `Text(value)` with `.font(.title2).fontWeight(.bold).monospaced()` and `Text(label)` with `.font(.caption2).tracking(0.06).foregroundStyle(.secondary)`. This mirrors the column form: value (large, bold, monospaced) over label (small, dimmed, tracked).
+- **Compose**: Use `Column(horizontalAlignment = Alignment.End, modifier = Modifier.gap(4.dp))` with `Text(value, style = MaterialTheme.typography.bodyLarge, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)` and `Text(label, style = MaterialTheme.typography.labelSmall)` with dimmed foreground. This mirrors the column form: right-aligned value and label with monospace, bold emphasis.
+- **AppKit / UIKit**: Compose with `NSStackView` / `UIStackView` (vertical orientation) arranging `NSTextField` / `UILabel` instances for value and label. Apply `.font(.systemFont(ofSize: 18, weight: .bold))` and `.setMonospaced()` to the value, and `.font(.systemFont(ofSize: 11, weight: .regular))` with dimmed foreground to the label. Set `alignment: .right` to mirror the column form.
+- **WinUI 3**: Compose `TextBlock` elements within a `StackPanel` with `Orientation="Vertical"`. Apply `HorizontalAlignment="Right"` and appropriate `Margin` (4pt spacing). Set `FontFamily="Consolas"`, `FontWeight="Bold"`, `FontSize="18"` for the value and `FontSize="10"`, `FontWeight="Regular"` with dimmed foreground for the label. This mirrors the column form.
 
 ## Design Decisions
 
@@ -197,4 +194,6 @@ and any telemetry around it belong to the host, not the display element.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.0.2 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes non-web bullets; sharpen translation guidance. |
+| 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Move to review; fix domain URIs and expand Platform Notes to cover all platforms. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents StatRow/Stat, the tone grammar, and the label/value treatment. |

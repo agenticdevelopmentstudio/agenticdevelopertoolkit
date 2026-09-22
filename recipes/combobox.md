@@ -1,13 +1,13 @@
 ---
 id: 43c55f5e-d9b3-430b-9026-d0af510fda15
 title: Combobox
-domain: agenticdeveloperhub://recipes/combobox
+domain: agenticdevelopercookbook://ingredients/combobox
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: review
 language: en
 created: '2026-06-26'
-modified: '2026-06-26'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/list-chooser
-- agenticdeveloperhub://recipes/option-menu
+- agenticdevelopercookbook://ingredients/list-chooser
+- agenticdevelopercookbook://ingredients/option-menu
 references:
 - https://base-ui.com/react/components/autocomplete
 ---
@@ -135,19 +135,41 @@ array (an async caller can show its own spinner alongside).
 | `className` | `string` | — | Extra classes for the input. |
 | `id` | `string` | — | Optional input id (to pair with an external `<label htmlFor>`). |
 
+## Deep Linking
+
+Not applicable: Combobox is a form control embedded in a page, not a routable destination, so deep linking does not apply.
+
+## Localization
+
+Not applicable: All localizable strings (`ariaLabel`, `placeholder`, `emptyLabel`) are passed as component props by the caller, giving full control over localization.
+
+## Accessibility Options
+
+Not applicable: This component is a form control with no internal state or display preferences that respond to system accessibility settings such as reduce motion or increase contrast.
+
+## Feature Flags
+
+Not applicable: Combobox is a presentational component with no feature toggles or runtime configuration flags.
+
+## Analytics
+
+Not applicable: This component is a presentational form control that emits no structured analytics events.
+
+## Privacy
+
+Not applicable: Combobox is a presentational form control; it does not collect, store, or transmit user data.
+
 ## Logging
 
 No logging. Combobox is a presentational form control; it emits no structured log events.
 
 ## Platform Notes
 
-- New file: `packages/web/packages/ui/src/components/combobox.tsx`.
-- Export: covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json` (no export change needed).
-- Dependency: `@base-ui/react/autocomplete` (already a dependency of `@agenticdevelopertoolkit/ui`).
-- Demo: the UI showcase app's demo page (+ showcase source registry). The
-  showcase is a consumer of this package and lives outside this repo.
-- Replaces: ad-hoc site-local `<input list>` / `<datalist>` usages.
-- Responsive: verify via Playwright (ui-showcase) at 375 / 768 / 1440 — keyboard-only and pointer flows on each.
+- **Web (React)**: New file `packages/web/packages/ui/src/components/combobox.tsx`. Wraps Base UI's headless `Autocomplete` primitive. Export covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json`. Dependency on `@base-ui/react/autocomplete` already present in `@agenticdevelopertoolkit/ui`. Responsive design verified via Playwright at 375 / 768 / 1440 widths; both keyboard-only and pointer flows tested at each breakpoint.
+- **SwiftUI**: Start with SwiftUI's native `Menu` combined with a `TextField` that filters a list; bind the text to the input value and handle arrow keys via key press event modifiers. Replicate Base UI's `aria-activedescendant` pattern with a local state variable tracking the highlighted item index.
+- **Compose**: Use `OutlinedTextField` paired with a `DropdownMenu`; filter suggestions on text change and dismiss the menu when the user picks or presses Escape. Handle arrow navigation with `KeyEvent` callbacks on the text field.
+- **AppKit / UIKit**: On AppKit, pair `NSTextField` with a table view in a popover; on UIKit, use `UITextField` with a table view controller presented in a `UIPopoverPresentationController`. Both platforms require manual keyboard event handling for arrow navigation and ARIA equivalent attribute bridging.
+- **WinUI 3**: Use `AutoSuggestBox` control with its built-in filtering and suggestion list; set `IsSuggestionEnabled` to true, bind `SuggestedItemsSource` to the filtered items, and set `UpdateTextOnSelect` to control value synchronization on pick. Handle `ItemSelected` event to fire the equivalent of `onValueChange`. Verify keyboard navigation (Up/Down, Enter, Escape) via WinUI 3's built-in roving focus.
 
 ## Design Decisions
 
@@ -164,4 +186,5 @@ No additional compliance categories apply to this presentational control.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) as not applicable; fix domain URI to use agenticdevelopercookbook scheme; expand Platform Notes with cross-platform guidance. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + recipe. |

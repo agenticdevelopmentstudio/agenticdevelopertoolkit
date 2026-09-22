@@ -3,11 +3,11 @@ id: c57b1aed-ef38-4803-b38a-2d7e0aeced5f
 title: SearchFilterBar
 domain: agenticdeveloperhub://recipes/search-filter-bar
 type: ingredient
-version: 1.1.0
-status: draft
+version: 1.2.1
+status: review
 language: en
 created: '2026-06-26'
-modified: '2026-08-24'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -208,6 +208,30 @@ interface SearchFilterBarProps {
 export function SearchFilterBar(props: SearchFilterBarProps): React.ReactElement
 ```
 
+## Deep Linking
+
+Not applicable: this is a presentational component with no associated document or state to link to. Deep linking is the responsibility of the consuming feature.
+
+## Localization
+
+Not applicable: the component itself defines no user-facing strings. The search placeholder, filter labels, and all-pass option text are supplied by the caller as part of the component configuration and are localized at the point of use.
+
+## Accessibility Options
+
+Not applicable: accessibility preferences (Reduce Motion, Increase Contrast, Differentiate Without Color) are handled by the composed `Input` and `Select` primitives and inherited by SearchFilterBar.
+
+## Feature Flags
+
+Not applicable: this is a reusable UI primitive with no feature-flag concerns. Feature gating occurs at the level of the consuming feature, not the component.
+
+## Analytics
+
+Not applicable: this is a presentational component that emits no telemetry. Searches and filter changes are observed and logged by the consuming feature (e.g., the research pane's list fetch and event tracking), not by the bar itself.
+
+## Privacy
+
+Not applicable: the component stores no data, collects no telemetry, and transmits nothing. All user input is relayed to the caller via `onChange` callbacks; what the caller does with that input is the caller's responsibility.
+
 ## Logging
 
 This ingredient is presentational and emits no structured log events. Searches and
@@ -226,7 +250,10 @@ fetch + telemetry), not by the bar.
   `asForm` is the fix for those pages; the attribute bag the shared `Input`
   applies (`autocomplete="off"` plus the password-manager opt-outs) is not
   sufficient on its own.
-- **SwiftUI / Compose:** Not applicable — web-only shared component.
+- **SwiftUI:** Build from `SearchField` for the search input and a `Picker` per filter wrapped in a `VStack`. The search field is `SearchField` with modifier `.searchScopes([.default])` or custom suggestions handler bound to `search.value` and `search.onChange`. Each filter renders as a `Picker` with its options in a horizontal row (use `HStack` with `orientation="inline"`, or `VStack` for `orientation="stacked"`). The all-pass option is rendered as the `.tag("")` entry. The `asForm` property maps to wrapping the stack in a `Form` that no-ops its submission.
+- **Compose:** Build from `OutlinedTextField` for the search input and `ExposedDropdownMenuBox` per filter in a horizontal row (use `Row` with `horizontalArrangement = Arrangement.spacedBy(8.dp)` for `orientation="inline"`, or `Column` for `orientation="stacked"`). The search field is fully controlled by `value`/`onValueChange` with a leading search icon (`Icons.Default.Search`) rendered via a `leadingIcon` lambda. Each dropdown's all-pass option is the default selection (value `""`). The `asForm` property wraps the layout in a `Column` — no form submission exists in Compose; treat it as a composition point for caller validation logic.
+- **AppKit / UIKit:** Build from `NSSearchField` (macOS) or `UISearchBar` (iOS) for the search, and `NSPopUpButton` (macOS) or `UIPickerView` (iOS) for each filter in an `NSStackView`/`UIStackView` horizontal arrangement. On iOS, `UISegmentedControl` is an alternative for filters with few options. The search field is bound to `search.value` via target-action (`editingChanged:` event). Each picker/segmented control is bound to its `onChange` handler. The row layout respects the `orientation` parameter; stack it vertically by default (`NSStackView.Orientation.vertical` / `UIStackView.Axis.vertical`) or horizontally for inline. The `asForm` property wraps the entire stack in a `UIView` with a title label for naming the search region (equivalent to `role="search"`).
+- **WinUI 3:** Build from `AutoSuggestBox` or `TextBox` with `ComboBox` per filter in a horizontal `StackPanel` or `Grid`. The search field is a `TextBox` with `PlaceholderText` bound to `search.placeholder`, two-way binding to `search.value`, and `TextChanged` event handler calling `search.onChange` — debounce using `DispatcherTimer` if needed (the component provides no built-in debounce; see Design Decisions for the 300ms threshold). Each filter is a `ComboBox` with items bound to the options list, the all-pass entry prepended manually, two-way binding to `value`, and `SelectionChanged` event calling `onChange`. Render filters in a `StackPanel` with `Orientation="Horizontal"` for inline layout, or `Vertical` for stacked. The `asForm` property wraps the root in a `Windows.UI.Xaml.Controls.ContentControl` with a `Name` property set to reflect the search region (no native form equivalent; treat as a composition container for validation and submission).
 
 ## Design Decisions
 
@@ -277,3 +304,5 @@ fetch + telemetry), not by the bar.
 |---|---|---|---|
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe — extracted from the hub research filter bar into `@adh-shared/ui`. |
 | 1.1.0 | 2026-08-24 | Mike Fullerton | Added `asForm` for the iOS autofill scoping the registry search needs. Brought the spec back level with the component: `{ value, label }` options, `orientation`, `children`, `aria-label`, `onKeyDown`, and the moved source path. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Added missing sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with appropriate non-applicable explanations. Moved status to review. |
+| 1.2.1 | 2026-09-22 | Mike Fullerton | Expanded Platform Notes with concrete translation guidance for SwiftUI, Compose, AppKit / UIKit, and WinUI 3; removed "Not applicable" from all non-source platforms. |

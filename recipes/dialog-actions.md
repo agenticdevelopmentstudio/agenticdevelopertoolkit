@@ -1,13 +1,13 @@
 ---
 id: f679a77e-04f7-4e43-b898-6d78a637a760
 title: DialogActions
-domain: agenticdeveloperhub://recipes/dialog-actions
+domain: agenticdevelopercookbook://recipes/dialog-actions
 type: ingredient
-version: 1.1.0
-status: draft
+version: 1.3.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-27'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,10 +22,10 @@ tags:
 - footer
 - ui
 depends-on:
-- agenticdeveloperhub://recipes/button
+- agenticdevelopercookbook://recipes/button
 related:
-- agenticdeveloperhub://recipes/alert-and-dialog
-- agenticdeveloperhub://recipes/dialog
+- agenticdevelopercookbook://recipes/alert-and-dialog
+- agenticdevelopercookbook://recipes/dialog
 references: []
 ---
 
@@ -69,6 +69,8 @@ Decisions*.
 - **must-not-focus-when-suppressed**: When `focusOnMount` is false, the component MUST NOT move focus on mount, leaving the host to place focus.
 - **must-style-confirm-destructive**: When `destructive` is true, the confirm button MUST render with the destructive variant.
 - **must-show-busy-indicator**: When `busy` is true, the component MUST replace the buttons with a status spinner exposing an accessible working label, and MUST NOT invoke `onConfirm` or `onCancel`.
+- **must-apply-confirm-disabled**: When `confirmDisabled` is true and `busy` is false, the confirm button MUST be disabled and MUST NOT invoke `onConfirm` when activated.
+- **must-ignore-confirm-disabled-when-busy**: When `busy` is true, the `confirmDisabled` prop MUST be ignored and the buttons MUST not render (per must-show-busy-indicator).
 
 ## Appearance
 
@@ -118,6 +120,7 @@ Busy:
 | Confirm-only (no `cancelLabel`) | single confirm button, right-justified at its natural width; forced-equal does not stretch it |
 | Destructive | confirm renders destructive variant; default initial focus is Cancel |
 | Busy | buttons replaced by a `role="status"` spinner; no clicks fire |
+| Confirm disabled | confirm button is disabled and does not respond to clicks |
 
 ## Accessibility
 
@@ -131,6 +134,7 @@ Busy:
   `aria-label="Working…"`, announcing the in-progress state.
 - Color is carried by `Button` variants (theme tokens), keeping contrast
   consistent with the platform's button treatment.
+- Touch target: both buttons are at least 44×44pt (via `Button` component's `size="sm"` padding).
 
 ## Conformance Test Vectors
 
@@ -151,6 +155,8 @@ Busy:
 | T12 | must-show-busy-indicator | `busy`, attempt to click | `role="status"` spinner present; no buttons; `onConfirm`/`onCancel` not called |
 | T13 | must-style-confirm-destructive | `destructive` | confirm button uses destructive variant |
 | T14 | must-settle-before-interactive | mount, then fire a window resize | the row's and buttons' class lists are byte-identical before and after |
+| T15 | must-apply-confirm-disabled | `confirmDisabled=true`, click confirm | confirm button disabled; `onConfirm` not called |
+| T16 | must-ignore-confirm-disabled-when-busy | `confirmDisabled=true` and `busy=true` | spinner renders; buttons not visible; `confirmDisabled` ignored |
 
 ## Edge Cases
 
@@ -171,6 +177,13 @@ Busy:
 - **Label change**: a longer label changes the button's natural width, and the layout
   engine re-resolves during the same layout pass that reflows the text — there is no
   second pass to observe.
+- **Confirm disabled while button has focus**: if the confirm button is focused and
+  `confirmDisabled` flips to true, the button is disabled but focus is not moved; the
+  next click attempt will fail silently (the button does not fire). The host is
+  responsible for moving focus if needed (e.g. to the cancel button).
+- **Initial focus fallback**: when the preferred button named by `initialFocus` is
+  disabled or absent, focus moves to the other button instead of nowhere. Both missing
+  and both disabled leaves focus on `<body>` (no trap).
 
 ## Configuration
 
@@ -183,9 +196,34 @@ Busy:
 | `confirmVariant` | `Button["variant"]` | `"default"` | Confirm variant when not destructive. |
 | `destructive` | `boolean` | `false` | Confirm uses the destructive variant; default focus moves to Cancel. |
 | `busy` | `boolean` | `false` | Replace buttons with a status spinner; suppress clicks. |
+| `confirmDisabled` | `boolean` | `false` | Disables confirm when not busy (has no effect when `busy` is true). Defaults to false for backward compatibility. |
 | `initialFocus` | `"confirm" \| "cancel"` | `destructive ? "cancel" : "confirm"` | Which button gets focus on mount. |
 | `focusOnMount` | `boolean` | `true` | When false, do not auto-focus (host focuses its own field). |
 | `layout` | `"auto" \| "equal" \| "natural"` | `"auto"` | `auto` lets CSS resolve the rule per alert-and-dialog §Layout; `equal`/`natural` force one shape. |
+
+## Deep Linking
+
+Not applicable: `DialogActions` is a presentational footer component with no page-level routing or URL patterns. It renders within a dialog provided by its host.
+
+## Localization
+
+All user-facing text comes from caller-supplied props (`confirmLabel`, `cancelLabel`). The component supplies one hardcoded string: the busy spinner's `aria-label="Working…"` (source line 1047). The aria-label is rendered as English only; a host requiring localization must wrap or fork the component to substitute a localized label.
+
+## Accessibility Options
+
+Not applicable: `DialogActions` does not respond to platform accessibility display options (Reduce Motion, Increase Contrast, Differentiate Without Color) because it carries no animated transitions, uses theme tokens for color (delegating contrast to `Button`), and carries no color-only affordances. The buttons themselves may respond via the shared `Button` component.
+
+## Feature Flags
+
+Not applicable: no feature flag conditions exist in the source code. The component renders all features unconditionally.
+
+## Analytics
+
+Not applicable: `DialogActions` is a presentational footer. No analytics events are fired by the component itself. Event tracking for the action's outcome (success/error) belongs in the host's `onConfirm` and `onCancel` handlers, not in the component.
+
+## Privacy
+
+Not applicable: `DialogActions` collects no user data, stores nothing locally, transmits nothing to a server, and retains no history. All inputs are ephemeral props and all outputs are callback invocations to the host.
 
 ## Logging
 
@@ -194,14 +232,16 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/dialog-actions.tsx`.
-- `"use client"` — it uses `useEffect` and refs for the initial-focus placement.
-  It holds no layout state and starts no observers.
-- Depends on the shared `Button` (`./button`) and `Loader2` from `lucide-react`.
-- Demo: `ui-showcase` Topic `dialog-actions` (regenerate `sources.generated.ts`
-  via `gen-sources.py` after source changes).
-- The layout rule is the shared implementation of **alert-and-dialog §Layout**;
-  hosts (e.g. the invitation modal) may force `layout="equal"` per their own spec.
+- **React/Web**: 
+  - File: `packages/web/packages/ui/src/components/dialog-actions.tsx`
+  - `"use client"` — it uses `useEffect` and refs for the initial-focus placement. It holds no layout state and starts no observers.
+  - Depends on the shared `Button` (`./button`) and `Loader2` from `lucide-react`.
+  - Demo: `ui-showcase` Topic `dialog-actions` (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
+  - The layout rule is the shared implementation of **alert-and-dialog §Layout**; hosts (e.g. the invitation modal) may force `layout="equal"` per their own spec.
+- **SwiftUI**: Implement a view that mirrors the button layout logic using `HStack` with `Spacer` to achieve natural width or equal-width distribution. Use `focusedValue` to manage initial focus. For busy state, replace buttons with a spinner showing a status label.
+- **Compose**: Use `Row` with appropriate `Modifier.weight` and `Modifier.wrapContentWidth` to achieve the equal/natural-width layout rule. Manage focus via `FocusRequester`. Replace with a `CircularProgressIndicator` for busy state.
+- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with appropriate distribution mode (fill proportionally for equal-width, fill for natural-width). Manage focus via first responder. Replace buttons with a loading spinner for busy state.
+- **WinUI 3**: Use a `StackPanel` with horizontal orientation and margin-based layout. `Button` instances use `HorizontalAlignment` property to position them (`Right` for natural-width, `Stretch` for equal-width mode). Set focus via `Focus()` method on `UIElement`. Replace buttons with `ProgressRing` for busy state; set `AutomationProperties.Name` for the busy label.
 
 ## Design Decisions
 
@@ -239,6 +279,14 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
   dangerous confirm. `focusOnMount={false}` yields focus to form dialogs.
 - **Busy short-circuit.** Rendering the spinner instead of the buttons keeps the
   in-flight state simple and prevents double-submit.
+- **confirmDisabled defaults to false.** The prop exists to support dirty-gating
+  (disable Save until the form changes), but the default is false for backward
+  compatibility — every existing caller has confirm always enabled when idle.
+- **Initial focus uses a quiet ring color for destructive cancel.** When
+  `initialFocus="cancel"` is applied to a destructive dialog, the focus ring uses
+  `--apt-text` (the on-surface foreground) instead of the accent, because the accent
+  is often red in themes and a red ring on the safe button inverts the signal the
+  pair exists to carry (confirmed across 39 themes in the codebase).
 
 ## Compliance
 
@@ -247,6 +295,8 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
 | No raw hex / arbitrary colors / `!important` | pass | project-guidelines UI |
 | Components sourced from `@agenticdevelopertoolkit` (uses shared `Button`, no bespoke UI) | pass | project-guidelines UI |
 | Keyboard operable + deliberate initial focus + `role="status"` busy | pass | accessibility |
+| Touch target at least 44×44pt (via `Button` `size="sm"`) | pass | accessibility |
+| Contrast maintained by `Button` variants and theme tokens | pass | accessibility |
 
 ## Change History
 
@@ -254,3 +304,5 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
 |---|---|---|---|
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the measured equal-vs-natural layout, initial focus, resize re-measure, and busy state. |
 | 1.1.0 | 2026-07-27 | Mike Fullerton | Layout moved from a measure-then-flip layout effect to a pure CSS rule (`flex-1 max-w-max` in a `justify-end` row). Removes the post-paint 268px slide that could swallow a click aimed at Cancel. Drops the exported `decideActionLayout` helper and the `ResizeObserver`. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Complete ingredient recipe: add `confirmDisabled` requirement (line 1087), fill all template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with "not applicable" explanations, expand Platform Notes to cover all platforms, add touch target guidance, and update Change History. |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Remove localization review marker; aria-label is implemented in source as hardcoded English, no decision to be made by reviewer. |

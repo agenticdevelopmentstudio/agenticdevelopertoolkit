@@ -1,13 +1,13 @@
 ---
 id: 9191eade-c18a-4899-b802-f000a1905c80
 title: RemovableChip
-domain: agenticdeveloperhub://recipes/removable-chip
+domain: agenticdevelopercookbook://ingredients/removable-chip
 type: ingredient
-version: 1.0.0
-status: draft
+version: 1.2.0
+status: review
 language: en
 created: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/recipient-input
-- agenticdeveloperhub://recipes/entity-chooser
+- agenticdevelopercookbook://ingredients/badge
 references: []
 ---
 
@@ -137,6 +136,30 @@ A single export ships from `@agenticdevelopertoolkit/ui/components/removable-chi
 | `className` | `string` | — | Extra classes for the badge body; merged via `cn()`. |
 | `...props` | `Omit<React.ComponentProps<"span">, "children">` | — | Native span props forwarded onto the `Badge`. |
 
+## Deep Linking
+
+Not applicable: RemovableChip is a presentational component with no navigation behavior.
+
+## Localization
+
+Not applicable: RemovableChip renders only the `children` content supplied by the caller; localization is the caller's responsibility.
+
+## Accessibility Options
+
+Not applicable: RemovableChip is a simple presentational element composed of a Badge and a button; it does not respond to platform accessibility display options like Reduce Motion or Increase Contrast.
+
+## Feature Flags
+
+Not applicable: RemovableChip is a foundational UI component with no conditional behavior or feature gates.
+
+## Analytics
+
+Not applicable: RemovableChip is a stateless presentational element; the consumer's `onRemove` handler owns any telemetry or event tracking.
+
+## Privacy
+
+Not applicable: RemovableChip collects no data and transmits nothing; it is a presentational component.
+
 ## Logging
 
 No logging. `RemovableChip` is a presentational element; what removal means and any
@@ -144,14 +167,11 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 
 ## Platform Notes
 
-- File: `packages/web/packages/ui/src/components/removable-chip.tsx`.
-- Composes the shared `Badge` (`./badge`) for the body and a lucide `X` icon for the
-  affordance; carries `"use client"`.
-- Consumed by `RecipientInput` and `EntityChooser` — the single source of the
-  removable-chip treatment, so those callers do not re-implement a badge-plus-✕.
-- Demo: `ui-showcase` Topic `removable-chip` (regenerate `sources.generated.ts` after
-  source changes via `gen-sources.py`).
-- Web/TypeScript only; token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
+- **React/Web**: File: `packages/web/packages/ui/src/components/removable-chip.tsx`. Composes the shared `Badge` (`./badge`) for the body and a lucide `X` icon for the affordance; carries `"use client"`.
+- **SwiftUI**: Compose a `HStack` containing the badge body (background + rounded corner pill using `.background()` and `.clipShape(Capsule())`) and a `Button` with an `Image(systemName: "xmark")`. Apply `.buttonStyle(.plain)` to strip button styling from the remove button. Set `.disabled(disabled)` on the button. Wrap the remove button in an accessibility container with `.accessibilityLabel(removeLabel)` and `.accessibilityRemoveAction()`. On hover or focus, brighten the icon color and apply the visual states for pressed and disabled.
+- **Kotlin (Compose)**: Build a `Row` with `Modifier.border(1.dp, color)` and `Modifier.clip(RoundedCornerShape(8.dp))` for the pill shape. Render content as `Text`, then a `Button` with `Modifier.size(24.dp)` containing an `Icon` (Material Design `Icons.Default.Close`). Set `enabled = !disabled` on the button. Bind the button's `onClick` to the remove callback. Apply `Modifier.semantics { contentDescription = removeLabel }` for accessibility. Style icon color as muted by default, brightened on hover/pressed.
+- **AppKit / UIKit**: On **AppKit**, create an `NSBox` with `boxType = .custom`, `cornerRadius = 12`, and `borderColor` from the variant tone. Nest an `NSStackView` (horizontal, spacing `4`) inside it containing `NSTextField` (read-only, for content) and `NSButton` (image button, with close glyph `⊗` or Font Awesome's `xmark`). Bind the button's `action` to the remove callback. On **UIKit**, create a `UIView` container with `layer.cornerRadius = 12` and `layer.borderColor`; nest a `UIStackView` (horizontal, spacing `4`) with `UILabel` and `UIButton`. Configure the button with `setImage(_:for:)` using a close glyph (system `image(named: "xmark.circle.fill")` or similar), and bind `UIControlEventTouchUpInside` to the remove callback. Set `button.isEnabled = !disabled` in both. Apply visual states for hover (brightness), pressed (opacity), and disabled (gray out).
+- **WinUI 3**: Create a `Border` with `CornerRadius` set to match the pill styling, wrapping a horizontal `StackPanel` (`Orientation = Horizontal`, `Spacing = 4`). Inside the `StackPanel`, render a `TextBlock` for the content and a `Button` with a `FontIcon` using the glyph `&#xE711;` (WinUI "Cancel" icon) for the remove affordance. Map the button's `Click` event to invoke the source's remove callback. Set `Button.IsEnabled = !disabled`. Use `AutomationProperties.Name` on the button to set the accessible label to `removeLabel`. Define visual states for hover (highlight background brightens), pressed (scale down slightly), and disabled (foreground grays out, cursor becomes `Arrow`).
 
 ## Design Decisions
 
@@ -181,4 +201,6 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise Platform Notes: replace "Not applicable" bullets with concrete translation guidance for SwiftUI, Kotlin, AppKit/UIKit, and WinUI 3. |
+| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, and Privacy sections as "Not applicable"; fix domain to agenticdevelopercookbook; update status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the Badge-plus-✕ removable chip and its named remove button. |
