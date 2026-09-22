@@ -22,7 +22,9 @@ function Checkbox({
         "peer flex size-4 shrink-0 items-center justify-center rounded border border-apt-border bg-apt-bg text-apt-bg transition-colors outline-none",
         "focus-visible:border-apt-gold focus-visible:ring-2 focus-visible:ring-apt-gold/25",
         "data-[checked]:border-apt-gold data-[checked]:bg-apt-gold",
-        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        // Base UI's root is not a native control, so `:disabled` never matches it — the state is
+        // the `data-disabled` attribute, and without this variant a disabled box looked live.
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

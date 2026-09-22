@@ -74,12 +74,19 @@ export interface TopicDetailItem {
   leadsTo?: "list" | "detail"
   /** Render a separator row after this item (hub: before Settings). */
   dividerAfter?: boolean
+  /** With {@link dividerAfter}: a caption under the separator naming the section it opens
+   *  (the feature picker's "Coming soon"). Hidden in the icon-only strips, like every label. */
+  dividerLabel?: string
   /** Render a flexible spacer after this item, pushing every following item to the
    *  rail's bottom edge (e.g. a bottom-pinned Settings). Applies in the collapsed /
    *  covered icon strips too. */
   spacerAfter?: boolean
   /** Dimmed + non-clickable (hub: scoped topics while "All" is active). */
   disabled?: boolean
+  /** BATCH MODE only: the row's CHECKBOX is disabled while the row itself stays selectable —
+   *  a tick that is a statement of fact rather than a control (the feature picker's
+   *  already-added features, whose details you can still read). */
+  checkDisabled?: boolean
   /** Trailing accessory pinned to the row's right edge (e.g. a warn Badge or a
    *  count). Hidden in icon-only modes (collapsed / covered), like the label. */
   trailing?: ReactNode
@@ -547,7 +554,7 @@ function TopicList({
                         <Checkbox
                           checked={checkedIds?.has(item.id) ?? false}
                           onCheckedChange={() => onToggleChecked?.(item.id)}
-                          disabled={item.disabled}
+                          disabled={item.disabled || item.checkDisabled}
                           aria-label={item.label}
                         />
                       </span>
@@ -580,8 +587,17 @@ function TopicList({
               {item.dividerAfter && (
                 <li
                   role="separator"
+                  aria-label={item.dividerLabel}
                   className={cn("my-1 h-px bg-apt-border", collapsed ? "mx-2" : "mx-3")}
                 />
+              )}
+              {item.dividerAfter && item.dividerLabel && !iconOnly && (
+                <li
+                  aria-hidden
+                  className="px-3 pt-1 pb-1 font-mono text-[0.6875rem] tracking-wide text-apt-text-muted uppercase"
+                >
+                  {item.dividerLabel}
+                </li>
               )}
               {item.spacerAfter && <li aria-hidden className="min-h-4 flex-1" />}
             </Fragment>

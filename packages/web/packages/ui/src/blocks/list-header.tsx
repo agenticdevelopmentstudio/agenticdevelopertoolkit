@@ -78,7 +78,9 @@ export function ListHeader({
           />
         </div>
       )}
-      <div className="flex-1" />
+      {/* The spacer pushes actions right when the field is capped. A growing field IS the
+          flex: a second `flex-1` beside it split the row in half and left the field half-width. */}
+      {!search?.grow && <div className="flex-1" />}
       {actions}
     </ButtonBar>
   )

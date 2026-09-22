@@ -74,4 +74,29 @@ describe('TopicLevel.checkable', () => {
     fireEvent.click(screen.getByRole('button', { name: /GitHub \(acme\)/ }))
     expect(onSelect).toHaveBeenCalledWith('gh1')
   })
+  it('checkDisabled disables only the checkbox — the row stays selectable', () => {
+    const onSelect = vi.fn()
+    const onToggleChecked = vi.fn()
+    renderLevel(
+      {
+        items: [{ ...ITEMS[0]!, checkDisabled: true }, ITEMS[1]!],
+        checkable: true,
+        checkedIds: new Set(['gh1']),
+        onToggleChecked,
+      },
+      onSelect,
+    )
+    const box = screen.getByRole('checkbox', { name: 'GitHub (acme)' })
+    expect(box).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('checkbox', { name: 'GitHub (fishlamp)' })).not.toHaveAttribute('aria-disabled', 'true')
+    fireEvent.click(box)
+    expect(onToggleChecked).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /GitHub \(acme\)/ }))
+    expect(onSelect).toHaveBeenCalledWith('gh1')
+  })
+  it('dividerLabel captions the separator after a row, naming the section it opens', () => {
+    renderLevel({ items: [{ ...ITEMS[0]!, dividerAfter: true, dividerLabel: 'Coming soon' }, ITEMS[1]!] })
+    expect(screen.getByRole('separator', { name: 'Coming soon' })).toBeInTheDocument()
+    expect(screen.getByText('Coming soon')).toBeInTheDocument()
+  })
 })

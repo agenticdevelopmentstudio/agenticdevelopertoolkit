@@ -30,6 +30,18 @@ describe('ListHeader', () => {
     expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Filter' }))
   })
 
+  it('gives a growing field the whole row — no spacer beside it to split the width', () => {
+    const { container } = render(
+      <ListHeader ariaLabel="Filter" search={{ value: '', onChange: vi.fn(), grow: true }} />,
+    )
+    const field = screen.getByRole('searchbox').parentElement!
+    expect(field.className).toContain('flex-1')
+    expect(field.className).not.toContain('max-w-xs')
+    // The field is the only flexible child of the bar.
+    const flexible = container.querySelectorAll('.flex-1')
+    expect([...flexible]).toEqual([field])
+  })
+
   it('omits the filter field when no search is supplied (action-only header)', () => {
     render(<ListHeader ariaLabel="Groups actions" title="Groups" actions={<button type="button">+ New group</button>} />)
     expect(screen.queryByRole('searchbox')).toBeNull()
