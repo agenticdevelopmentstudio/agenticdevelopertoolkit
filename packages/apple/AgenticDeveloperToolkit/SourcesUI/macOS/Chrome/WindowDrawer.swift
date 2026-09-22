@@ -88,6 +88,36 @@ final class DrawerAccessibilityProxy: NSView {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    /// Notices being carried out of the window, and asks the drawer to put the
+    /// proxy back where it now belongs.
+    ///
+    /// **A content view swap strands the proxy, and nothing else would say
+    /// so.** The proxy is a subview of the parent window's content view, so a
+    /// window controller that assigns a new `contentView` takes the old one —
+    /// and this proxy with it — out of the window entirely. The drawer stays
+    /// open and on screen, and the only thing that reinstalls the proxy is the
+    /// *next* `open()`, which for a drawer that is already open never comes.
+    /// The window is then back to having a visible drawer that VoiceOver and
+    /// `XCUIElement` queries cannot see at all, which is precisely the state
+    /// this proxy exists to prevent.
+    ///
+    /// AppKit sends this to the whole removed subtree, so it is the one signal
+    /// that fires for the swap without observing anything. Asynchronously,
+    /// because during the swap the window's `contentView` may still be the old
+    /// one; by the next turn of the run loop it is the new one. The reinstall
+    /// is a no-op when the proxy is already in the right place, which is what
+    /// makes the ordinary `removeFromSuperview()` in `install…IfNeeded()` — and
+    /// the one in `WindowDrawer.deinit`, where `drawer` is already nil — cost
+    /// nothing here *(idempotency)*.
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard self.window == nil else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let drawer = self.drawer, drawer.isOpen else { return }
+            drawer.reinstallAccessibilityProxyIfNeeded()
+        }
+    }
 }
 
 /// One tab in a `WindowDrawer`.
@@ -416,6 +446,17 @@ public final class WindowDrawer: NSObject, @preconcurrency NSDrawerDelegate {
         self.bezel.frame = frameView.bounds
         self.bezel.autoresizingMask = [.width, .height]
         frameView.addSubview(self.bezel, positioned: .below, relativeTo: self.container)
+    }
+
+    /// The one way into `installAccessibilityProxyIfNeeded()` from outside the
+    /// drawer: what `DrawerAccessibilityProxy.viewDidMoveToWindow()` calls once
+    /// the content view it was living in has been taken out of the window.
+    ///
+    /// A separate name rather than relaxing the private one's, so that the only
+    /// caller is the one this exists for, and so that reading either of them
+    /// says which direction the repair came from.
+    func reinstallAccessibilityProxyIfNeeded() {
+        self.installAccessibilityProxyIfNeeded()
     }
 
     /// Puts the accessibility proxy in the parent window's content view, once.

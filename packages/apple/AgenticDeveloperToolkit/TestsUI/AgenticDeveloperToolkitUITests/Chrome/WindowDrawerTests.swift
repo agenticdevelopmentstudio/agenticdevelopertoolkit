@@ -414,6 +414,66 @@ struct WindowDrawerTests {
         #expect(self.proxy(in: window) === first)
     }
 
+    /// And it repairs itself, without waiting for an `open()` that is never
+    /// coming.
+    ///
+    /// `contentViewSwapReinstallsTheProxy` above pins the *guard* — that a
+    /// stranded proxy is not mistaken for an installed one — and it reinstalls
+    /// by opening the drawer a second time. A drawer that is already open is
+    /// never opened again, so for the case that actually happens that test
+    /// proves nothing: the window keeps a visible drawer that VoiceOver and
+    /// every `XCUIElement` query cannot see, for as long as it stays open.
+    ///
+    /// The repair is asynchronous because during the swap the window's
+    /// `contentView` is still the old one, so this waits a turn of the main
+    /// queue the same way the fix does. Enqueueing behind it is enough: the
+    /// main queue is FIFO, so by the time this resumes the repair has run or
+    /// has decided not to.
+    @Test("a content view swap under an open drawer repairs itself")
+    func contentViewSwapRepairsItselfWhileOpen() async {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        drawer.open()
+        let first = self.proxy(in: window)
+        #expect(first != nil)
+
+        window.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
+        await nextMainQueueTurn()
+
+        #expect(self.proxy(in: window) === first)
+    }
+
+    /// A drawer the user has closed has nothing to reach, so a swap under it
+    /// must leave the new content view alone — reinstalling there would put an
+    /// `AXGroup` for a drawer that is not on screen into every window that
+    /// swaps its content view.
+    @Test("a content view swap under a closed drawer installs nothing")
+    func contentViewSwapUnderAClosedDrawerInstallsNothing() async {
+        let window = makeWindow()
+        let drawer = WindowDrawer(
+            parentWindow: window,
+            accessibilityPrefix: "project.drawer",
+            tabs: [tab("help", "Help")])
+        drawer.open()
+        #expect(self.proxy(in: window) != nil)
+        drawer.close()
+
+        window.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
+        await nextMainQueueTurn()
+
+        #expect(self.proxy(in: window) == nil)
+    }
+
+    /// Resumes after everything already on the main queue has run.
+    private func nextMainQueueTurn() async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async { continuation.resume() }
+        }
+    }
+
     /// A drawer is built while its window is still being assembled — before a
     /// toolbar has grown the titlebar, before a saved frame is restored — so
     /// the height captured at init is not the height the window ends up with.
