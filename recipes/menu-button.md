@@ -1,7 +1,7 @@
 ---
 id: e82102a9-a60c-4498-aba3-7cd5a33ade3c
 title: Menu Button
-domain: agenticdevelopercookbook://ingredients/menu-button
+domain: agenticdevelopertoolkit://recipes/menu-button
 type: ingredient
 version: 1.1.0
 status: review

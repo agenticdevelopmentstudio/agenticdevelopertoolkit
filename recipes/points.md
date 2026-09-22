@@ -1,7 +1,7 @@
 ---
 id: 91db9191-1ab2-4d09-a9a8-b0dc23669066
 title: Points
-domain: agenticdevelopercookbook://ingredients/points
+domain: agenticdevelopertoolkit://recipes/points
 type: ingredient
 version: 1.0.0
 status: review

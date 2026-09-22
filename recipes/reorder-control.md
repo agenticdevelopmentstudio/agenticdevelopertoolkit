@@ -1,7 +1,7 @@
 ---
 id: a70a5906-e2c2-4e15-8b2c-913453ff3714
 title: Reorder Control
-domain: agenticdevelopercookbook://ingredients/reorder-control
+domain: agenticdevelopertoolkit://recipes/reorder-control
 type: ingredient
 version: 1.0.0
 status: review

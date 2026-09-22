@@ -1,7 +1,7 @@
 ---
 id: 6f5f455d-b744-425d-a21e-494fc18caaf2
 title: Flow
-domain: agenticdevelopercookbook://ingredients/flow
+domain: agenticdevelopertoolkit://recipes/flow
 type: ingredient
 version: 1.0.0
 status: review

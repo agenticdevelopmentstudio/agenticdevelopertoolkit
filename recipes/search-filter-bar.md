@@ -1,7 +1,7 @@
 ---
 id: c57b1aed-ef38-4803-b38a-2d7e0aeced5f
 title: SearchFilterBar
-domain: agenticdeveloperhub://recipes/search-filter-bar
+domain: agenticdevelopertoolkit://recipes/search-filter-bar
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - select
 - toolbar
 depends-on:
-- agenticdeveloperhub://recipes/combobox
+- agenticdevelopertoolkit://recipes/combobox
 related: []
 references: []
 approved-by: ''

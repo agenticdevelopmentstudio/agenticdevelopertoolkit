@@ -1,7 +1,7 @@
 ---
 id: b118c7bc-e163-40f0-bcc8-eb079e835794
 title: MarkdownEditor
-domain: agenticdevelopercookbook://recipes/markdown-editor
+domain: agenticdevelopertoolkit://recipes/markdown-editor
 type: recipe
 version: 1.1.0
 status: review
@@ -22,11 +22,11 @@ tags:
 - toolbar
 - form
 ingredients:
-- agenticdevelopercookbook://recipes/markdown-quick-reference
-- agenticdevelopercookbook://recipes/button
+- agenticdevelopertoolkit://recipes/markdown-quick-reference
+- agenticdevelopertoolkit://recipes/button
 depends-on: []
 related:
-- agenticdevelopercookbook://recipes/markdown-quick-reference
+- agenticdevelopertoolkit://recipes/markdown-quick-reference
 references: []
 approved-by: ''
 approved-date: ''
@@ -55,8 +55,8 @@ title, category, or classification fields — those stay with the consuming form
 | Textarea | — | The markdown source field | yes | `id` (from `useId`), `rows`, `spellCheck`, mono font |
 | Label | — | Caption bound to the textarea via `htmlFor` | yes | mono uppercase caption styling |
 | EditorToolbar | — | `role="toolbar"` row holding the controls | yes | `ariaLabel` |
-| MarkdownQuickReference | agenticdevelopercookbook://recipes/markdown-quick-reference | Built-in quick-reference popover control | optional (`quickReference`, default on) | side/align defaults |
-| Button | agenticdevelopercookbook://recipes/button | The "Upload .md" trigger | optional (only when `onUpload` set) | `variant="outline" size="sm"` |
+| MarkdownQuickReference | agenticdevelopertoolkit://recipes/markdown-quick-reference | Built-in quick-reference popover control | optional (`quickReference`, default on) | side/align defaults |
+| Button | agenticdevelopertoolkit://recipes/button | The "Upload .md" trigger | optional (only when `onUpload` set) | `variant="outline" size="sm"` |
 
 > The Textarea, Label, and EditorToolbar are atomic `@agenticdevelopertoolkit/ui` primitives
 > reused as-is; the `.md` upload control wraps a hidden native `<input

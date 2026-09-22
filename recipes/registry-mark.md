@@ -1,7 +1,7 @@
 ---
 id: f8e3d2a1-4c9b-4d7e-8f2b-a5c3e7b1d4f6
 title: Registry Mark
-domain: agenticdevelopercookbook://ingredients/registry-mark
+domain: agenticdevelopertoolkit://recipes/registry-mark
 type: ingredient
 version: 1.0.0
 status: review

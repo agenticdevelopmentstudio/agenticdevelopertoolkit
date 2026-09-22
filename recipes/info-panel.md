@@ -1,7 +1,7 @@
 ---
 id: 2ad7c681-6a9e-43ae-a9d9-b448939d3455
 title: InfoPanel
-domain: agenticdevelopercookbook://recipes/info-panel
+domain: agenticdevelopertoolkit://recipes/info-panel
 type: ingredient
 version: 1.2.0
 status: review

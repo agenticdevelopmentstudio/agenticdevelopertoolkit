@@ -1,7 +1,7 @@
 ---
 id: 8f2e4a12-7c3b-4d9f-a1e2-6b5f9c1d3e4a
 title: "Toast"
-domain: agenticdevelopercookbook://ingredients/toast
+domain: agenticdevelopertoolkit://recipes/toast
 type: ingredient
 version: 1.0.1
 status: review

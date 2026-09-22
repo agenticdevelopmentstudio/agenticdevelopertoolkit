@@ -1,7 +1,7 @@
 ---
 id: e9504a52-046c-4777-9704-20f611cf76f7
 title: FieldFootnote
-domain: agenticdevelopercookbook://ingredients/field-footnote
+domain: agenticdevelopertoolkit://recipes/field-footnote
 type: ingredient
 version: 1.0.0
 status: review

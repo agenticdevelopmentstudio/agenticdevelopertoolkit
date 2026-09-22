@@ -1,7 +1,7 @@
 ---
 id: ea565474-df7a-42bd-9613-5dd0cd861911
 title: Card
-domain: agenticdevelopercookbook://ingredients/card
+domain: agenticdevelopertoolkit://recipes/card
 type: ingredient
 version: 1.1.0
 status: review

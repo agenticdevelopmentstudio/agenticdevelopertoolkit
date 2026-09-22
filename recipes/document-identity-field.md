@@ -1,7 +1,7 @@
 ---
 id: 054522c7-53c8-45e4-9003-8c317a93b674
 title: Document Identity Field
-domain: agenticdevelopercookbook://ingredients/document-identity-field
+domain: agenticdevelopertoolkit://recipes/document-identity-field
 type: ingredient
 version: 1.0.0
 status: review

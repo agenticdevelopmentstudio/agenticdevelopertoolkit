@@ -1,7 +1,7 @@
 ---
 id: fae23662-e69b-4472-9c7d-049feadf1211
 title: Hero
-domain: agenticdevelopercookbook://ingredients/hero
+domain: agenticdevelopertoolkit://recipes/hero
 type: ingredient
 version: 1.0.0
 status: review

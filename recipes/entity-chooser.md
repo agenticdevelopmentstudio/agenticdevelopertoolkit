@@ -1,7 +1,7 @@
 ---
 id: 79f7ed30-3193-49bc-856b-d7dd01303baa
 title: EntityChooser
-domain: agenticdevelopercookbook://recipes/ui/entity-chooser
+domain: agenticdevelopertoolkit://recipes/entity-chooser
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,11 +22,11 @@ tags:
   - tags
   - ui
 depends-on:
-  - agenticdevelopercookbook://recipes/ui/list-chooser
+  - agenticdevelopertoolkit://recipes/list-chooser
 related:
-  - agenticdevelopercookbook://recipes/ui/list-chooser
-  - agenticdevelopercookbook://recipes/ui/combobox
-  - agenticdevelopercookbook://recipes/ui/recipient-input
+  - agenticdevelopertoolkit://recipes/list-chooser
+  - agenticdevelopertoolkit://recipes/combobox
+  - agenticdevelopertoolkit://recipes/recipient-input
 references:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 approved-by: ''

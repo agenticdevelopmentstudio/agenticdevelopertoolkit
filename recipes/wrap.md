@@ -1,7 +1,7 @@
 ---
 id: 51d3b1ba-ced7-4c08-8a63-c83094d91299
 title: Wrap
-domain: agenticdevelopercookbook://ingredients/wrap
+domain: agenticdevelopertoolkit://recipes/wrap
 type: ingredient
 version: 1.0.0
 status: review

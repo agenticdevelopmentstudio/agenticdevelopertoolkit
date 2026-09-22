@@ -1,7 +1,7 @@
 ---
 id: 1675b18e-34d5-4d8e-987f-92697539a5e6
 title: Btn
-domain: agenticdevelopercookbook://ingredients/btn
+domain: agenticdevelopertoolkit://recipes/btn
 type: ingredient
 version: 1.0.0
 status: review

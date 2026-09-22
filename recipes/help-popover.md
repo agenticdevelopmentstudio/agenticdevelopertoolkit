@@ -1,7 +1,7 @@
 ---
 id: 56828ee6-f522-45da-a9d8-6e1a99adf4e2
 title: Help Popover
-domain: agenticdevelopercookbook://ingredients/help-popover
+domain: agenticdevelopertoolkit://recipes/help-popover
 type: ingredient
 version: 1.0.0
 status: review

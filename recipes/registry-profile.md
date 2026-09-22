@@ -1,7 +1,7 @@
 ---
 id: 6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4
 title: Registry Profile
-domain: agenticdevelopercookbook://ingredients/registry-profile
+domain: agenticdevelopertoolkit://recipes/registry-profile
 type: ingredient
 version: 1.0.0
 status: review

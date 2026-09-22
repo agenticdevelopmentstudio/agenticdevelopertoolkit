@@ -1,7 +1,7 @@
 ---
 id: fcb8a0a4-2446-46f9-99bb-49b0317529d4
 title: HelpEnabled
-domain: agenticdevelopercookbook://ingredients/help-enabled
+domain: agenticdevelopertoolkit://recipes/help-enabled
 type: ingredient
 version: 1.0.0
 status: review

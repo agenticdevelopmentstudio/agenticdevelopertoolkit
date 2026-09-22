@@ -1,7 +1,7 @@
 ---
 id: 93e8b186-b7a6-41c5-90a8-21b67a47ef72
 title: Site Header
-domain: agenticdevelopercookbook://ingredients/site-header
+domain: agenticdevelopertoolkit://recipes/site-header
 type: ingredient
 version: 1.0.0
 status: review

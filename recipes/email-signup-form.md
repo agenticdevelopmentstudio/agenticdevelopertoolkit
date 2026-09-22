@@ -1,7 +1,7 @@
 ---
 id: 46b0cb5d-bd0c-45d0-ab14-95054e1c59ab
 title: Email Signup Form
-domain: agenticdevelopercookbook://ingredients/email-signup-form
+domain: agenticdevelopertoolkit://recipes/email-signup-form
 type: ingredient
 version: 1.0.0
 status: review

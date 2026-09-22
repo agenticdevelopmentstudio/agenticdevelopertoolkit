@@ -1,7 +1,7 @@
 ---
 id: 7e4a2c5b-8f3d-4a7e-b9f2-1c5e8d3b6a2f
 title: "Cards"
-domain: agenticdevelopercookbook://ingredients/cards
+domain: agenticdevelopertoolkit://recipes/cards
 type: ingredient
 version: 1.0.0
 status: review

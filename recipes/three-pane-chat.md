@@ -1,7 +1,7 @@
 ---
 id: 2d27892d-a3df-4e7d-ba47-dfd6c45b4c6d
 title: Three Pane Chat
-domain: agenticdevelopercookbook://ingredients/three-pane-chat
+domain: agenticdevelopertoolkit://recipes/three-pane-chat
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: 10cd0ad8-b7b7-4674-9f8c-80a071fecb6f
 title: Sheet
-domain: agenticdevelopercookbook://ingredients/sheet
+domain: agenticdevelopertoolkit://recipes/sheet
 type: ingredient
 version: 1.0.1
 status: review

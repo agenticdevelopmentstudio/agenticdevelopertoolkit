@@ -1,7 +1,7 @@
 ---
 id: abd8ebe3-468d-4dda-8da2-cb00a97ae84c
 title: Markdown Result Row
-domain: agenticdevelopercookbook://ingredients/markdown-result-row
+domain: agenticdevelopertoolkit://recipes/markdown-result-row
 type: ingredient
 version: 1.0.0
 status: review

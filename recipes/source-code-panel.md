@@ -1,7 +1,7 @@
 ---
 id: f86178c6-4255-4d66-86e7-0b3b5a2e00c0
 title: Source Code Panel
-domain: agenticdevelopercookbook://ingredients/source-code-panel
+domain: agenticdevelopertoolkit://recipes/source-code-panel
 type: ingredient
 version: 1.0.0
 status: review

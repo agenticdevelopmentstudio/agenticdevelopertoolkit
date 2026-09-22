@@ -1,7 +1,7 @@
 ---
 id: e1859aa2-d0c4-4d9a-b926-203dd5fbbca3
 title: "AddUsersModal"
-domain: agenticdevelopercookbook://recipes/add-users-modal
+domain: agenticdevelopertoolkit://recipes/add-users-modal
 type: recipe
 version: 1.0.1
 status: review
@@ -21,8 +21,8 @@ tags:
   - table
   - users
 ingredients:
-  - agenticdevelopercookbook://recipes/data-table
-  - agenticdevelopercookbook://recipes/alert-and-dialog
+  - agenticdevelopertoolkit://recipes/data-table
+  - agenticdevelopertoolkit://recipes/alert-and-dialog
 depends-on: []
 related: []
 references: []
@@ -47,8 +47,8 @@ button, and a footer (Cancel / Add).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| DataTable | agenticdevelopercookbook://recipes/data-table | Growing table of staged `DraftUser` rows | yes | columns Name · Email · Phone · Admin note; selection; empty label |
-| AlertAndDialog | agenticdevelopercookbook://recipes/alert-and-dialog | The modal `Dialog` shell (`DialogContent max-w-2xl`) + the discard-confirm `AlertModal` | yes | modal semantics; discard-confirm copy |
+| DataTable | agenticdevelopertoolkit://recipes/data-table | Growing table of staged `DraftUser` rows | yes | columns Name · Email · Phone · Admin note; selection; empty label |
+| AlertAndDialog | agenticdevelopertoolkit://recipes/alert-and-dialog | The modal `Dialog` shell (`DialogContent max-w-2xl`) + the discard-confirm `AlertModal` | yes | modal semantics; discard-confirm copy |
 
 Composed shared primitives without their own recipe domains: `Input` and `Field`
 (the entry row inputs) and `Button` (entry Add + footer Cancel/Add).

@@ -1,7 +1,7 @@
 ---
 id: 781740e8-c83f-40a1-8215-43abfb8d8f56
 title: FieldGroup
-domain: agenticdeveloperhub://recipes/field-group
+domain: agenticdevelopertoolkit://recipes/field-group
 type: recipe
 version: 1.2.0
 status: review
@@ -22,10 +22,10 @@ tags:
 - field
 - ui
 ingredients:
-- agenticdeveloperhub://recipes/field
+- agenticdevelopertoolkit://recipes/field
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/field
+- agenticdevelopertoolkit://recipes/field
 references: []
 approved-by: ''
 approved-date: ''
@@ -45,7 +45,7 @@ edge — a status line ("Saved"), a small action (a "Reset" button), or a badge 
 that belongs to the group as a whole rather than to any one field.
 
 `FieldGroup` is presentation-only: it owns no form state and imposes no field type.
-It composes the shared `Field` (`agenticdeveloperhub://recipes/field`) as its
+It composes the shared `Field` (`agenticdevelopertoolkit://recipes/field`) as its
 expected children and reuses the same `fieldCaptionClass` caption treatment as the
 field caption, so the group title and the field captions share one visual language.
 
@@ -53,7 +53,7 @@ field caption, so the group title and the field captions share one visual langua
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Field | agenticdeveloperhub://recipes/field | The grouped rows — each caption+control+hint/error that the group stacks | yes | Passed as `children`; the group applies `gap-3` between them |
+| Field | agenticdevelopertoolkit://recipes/field | The grouped rows — each caption+control+hint/error that the group stacks | yes | Passed as `children`; the group applies `gap-3` between them |
 
 The group title reuses the shared `fieldCaptionClass` from `@agenticdevelopertoolkit/ui/lib/typography`
 (the same uppercase-mono caption treatment `Field` uses), so titles and field
@@ -140,7 +140,7 @@ group.
 
 - **SwiftUI**: Not applicable — FieldGroup is a web-only layout component with no native SwiftUI equivalent. On Apple platforms, implement the titled card pattern using native SwiftUI views (VStack with header).
 - **Compose**: Not applicable — FieldGroup is a web-only layout component. On Android, use Compose's native Column layout with a header composable as the sectioning wrapper.
-- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks/field-group`. The component carries `"use client"` (ships alongside interactive form content) and composes `Field` (`agenticdeveloperhub://recipes/field`) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks/field-group`. The component carries `"use client"` (ships alongside interactive form content) and composes `Field` (`agenticdevelopertoolkit://recipes/field`) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile.
 - **AppKit / UIKit**: Not applicable — FieldGroup is a web-only layout component. On iOS/macOS, implement the titled card pattern using native UIView/NSView containers with a header label.
 - **WinUI 3**: Use a vertical `StackPanel` with `Spacing="3"` as the root container. Apply `Padding="12"`, `BorderThickness="1"` bound to the border token, `CornerRadius="8"`, and `Background` to the surface token for the recessed card effect. Nest a horizontal `StackPanel` in the title row with `HorizontalAlignment="Stretch"`, containing a `TextBlock` header (uppercase letter-spacing to match the web `fieldCaptionClass`) and an optional trailing `UIElement` aligned right via `HorizontalAlignment="Right"`. Below the title row, add a vertical `StackPanel` for the grouped field rows, inheriting the parent's `Spacing` for consistent gaps. No interactive states required — the component is a stateless layout wrapper.
 

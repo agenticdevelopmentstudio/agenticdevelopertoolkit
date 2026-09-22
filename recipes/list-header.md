@@ -1,7 +1,7 @@
 ---
 id: a8f66760-7db0-4a10-927e-856c2170dd4f
 title: "ListHeader"
-domain: agenticdevelopercookbook://recipes/list-header
+domain: agenticdevelopertoolkit://recipes/list-header
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,9 +23,9 @@ tags:
   - ui
 depends-on: []
 related:
-  - agenticdevelopercookbook://recipes/list-with-details-pane
-  - agenticdevelopercookbook://recipes/search-filter-bar
-  - agenticdevelopercookbook://recipes/hierarchical-topic-detail
+  - agenticdevelopertoolkit://recipes/list-with-details-pane
+  - agenticdevelopertoolkit://recipes/search-filter-bar
+  - agenticdevelopertoolkit://recipes/hierarchical-topic-detail
 references: []
 approved-by: ''
 approved-date: ''

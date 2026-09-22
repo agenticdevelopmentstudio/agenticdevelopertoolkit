@@ -1,7 +1,7 @@
 ---
 id: 43c55f5e-d9b3-430b-9026-d0af510fda15
 title: Combobox
-domain: agenticdevelopercookbook://ingredients/combobox
+domain: agenticdevelopertoolkit://recipes/combobox
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://ingredients/list-chooser
-- agenticdevelopercookbook://ingredients/option-menu
+- agenticdevelopertoolkit://recipes/list-chooser
+- agenticdevelopertoolkit://recipes/option-menu
 references:
 - https://base-ui.com/react/components/autocomplete
 approved-by: ''

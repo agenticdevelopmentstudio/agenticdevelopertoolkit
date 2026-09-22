@@ -1,7 +1,7 @@
 ---
 id: 4d2b7231-1235-49e9-8b7d-1e7507c6eba7
 title: NavChrome
-domain: agenticdevelopercookbook://ingredients/nav-chrome
+domain: agenticdevelopertoolkit://recipes/nav-chrome
 type: ingredient
 version: 1.0.0
 status: review

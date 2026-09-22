@@ -1,7 +1,7 @@
 ---
 id: 7b54db6e-755d-4665-a091-d34cfcaac146
 title: Color Mode Toggle
-domain: agenticdevelopercookbook://ingredients/color-mode-toggle
+domain: agenticdevelopertoolkit://recipes/color-mode-toggle
 type: ingredient
 version: 1.1.0
 status: review

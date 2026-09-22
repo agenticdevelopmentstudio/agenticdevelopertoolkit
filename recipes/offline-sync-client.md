@@ -1,7 +1,7 @@
 ---
 id: d55f560e-63cf-4656-8c5d-43b93964c3bc
 title: Offline Sync Client
-domain: agenticdeveloperhub://recipes/offline-sync-client
+domain: agenticdevelopertoolkit://recipes/offline-sync-client
 type: ingredient
 category: engine
 version: 1.0.0

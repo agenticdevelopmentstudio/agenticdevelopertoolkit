@@ -1,7 +1,7 @@
 ---
 id: a7e2f9d1-4c8a-4b9e-8f3d-2c5b7e1a9d4f
 title: "Inline Popover"
-domain: agenticdevelopercookbook://ingredients/inline-popover
+domain: agenticdevelopertoolkit://recipes/inline-popover
 type: ingredient
 version: 1.0.0
 status: review

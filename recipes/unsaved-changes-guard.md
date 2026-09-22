@@ -1,7 +1,7 @@
 ---
 id: 6d2dc0d3-e373-448c-81c9-76b2e5c03057
 title: Unsaved Changes Guard
-domain: agenticdevelopercookbook://ingredients/unsaved-changes-guard
+domain: agenticdevelopertoolkit://recipes/unsaved-changes-guard
 type: ingredient
 version: 1.0.0
 status: review

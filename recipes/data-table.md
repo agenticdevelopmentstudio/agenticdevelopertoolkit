@@ -1,7 +1,7 @@
 ---
 id: d04eef56-2dbf-4148-964b-c095f242227f
 title: "DataTable"
-domain: agenticdevelopercookbook://recipes/data-table
+domain: agenticdevelopertoolkit://recipes/data-table
 type: ingredient
 version: 1.3.1
 status: review

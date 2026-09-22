@@ -1,7 +1,7 @@
 ---
 id: f8cbc576-a5ef-4e8c-90a0-7d0712b24b72
 title: FlowHero
-domain: agenticdevelopercookbook://ingredients/flow-hero
+domain: agenticdevelopertoolkit://recipes/flow-hero
 type: ingredient
 version: 1.0.0
 status: review

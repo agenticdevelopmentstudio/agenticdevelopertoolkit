@@ -1,7 +1,7 @@
 ---
 id: a105b6cf-307d-4156-8b73-468f627f3c9b
 title: Checkbox
-domain: agenticdevelopercookbook://ingredients/checkbox
+domain: agenticdevelopertoolkit://recipes/checkbox
 type: ingredient
 version: 1.3.0
 status: review

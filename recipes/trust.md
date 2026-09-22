@@ -1,7 +1,7 @@
 ---
 id: 79093eb5-83e8-46d8-9efe-3cc6ff88d8db
 title: Trust
-domain: agenticdevelopercookbook://ingredients/trust
+domain: agenticdevelopertoolkit://recipes/trust
 type: ingredient
 version: 1.0.0
 status: review

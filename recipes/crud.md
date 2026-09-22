@@ -1,7 +1,7 @@
 ---
 id: a7cbe25c-53d1-4aec-b76e-59b1c0876728
 title: Crud
-domain: agenticdevelopercookbook://ingredients/crud
+domain: agenticdevelopertoolkit://recipes/crud
 type: ingredient
 version: 1.0.0
 status: review

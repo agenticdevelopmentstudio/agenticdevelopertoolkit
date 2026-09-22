@@ -1,7 +1,7 @@
 ---
 id: f7fbabba-4b48-4b6b-a99c-b888cedec056
 title: Pane Control Cluster
-domain: agenticdevelopercookbook://ingredients/pane-control-cluster
+domain: agenticdevelopertoolkit://recipes/pane-control-cluster
 type: ingredient
 version: 1.0.0
 status: review

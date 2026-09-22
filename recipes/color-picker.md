@@ -1,7 +1,7 @@
 ---
 id: f8b8792e-12f2-4ca1-80a8-9ae7f2c5b31d
 title: Color Picker
-domain: agenticdevelopercookbook://ingredients/color-picker
+domain: agenticdevelopertoolkit://recipes/color-picker
 type: ingredient
 version: 1.0.0
 status: review

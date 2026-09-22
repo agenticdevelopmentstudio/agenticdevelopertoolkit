@@ -1,7 +1,7 @@
 ---
 id: 17433dd1-f3db-4d7b-9f58-997996a2b92e
 title: Filtered List
-domain: agenticdevelopercookbook://ingredients/filtered-list
+domain: agenticdevelopertoolkit://recipes/filtered-list
 type: ingredient
 version: 1.1.0
 status: review

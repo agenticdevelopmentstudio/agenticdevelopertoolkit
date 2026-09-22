@@ -1,7 +1,7 @@
 ---
 id: a17a8253-0be8-4646-a76a-6941b1af3528
 title: Tooltip
-domain: agenticdevelopercookbook://ingredients/tooltip
+domain: agenticdevelopertoolkit://recipes/tooltip
 type: ingredient
 version: 1.0.1
 status: review

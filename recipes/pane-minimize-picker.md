@@ -1,7 +1,7 @@
 ---
 id: 0c8a7db3-9948-466c-8c97-20de2ae53a17
 title: Pane Minimize Picker
-domain: agenticdevelopercookbook://ingredients/pane-minimize-picker
+domain: agenticdevelopertoolkit://recipes/pane-minimize-picker
 type: ingredient
 version: 1.0.0
 status: review

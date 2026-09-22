@@ -1,7 +1,7 @@
 ---
 id: f5d2eb1c-fb0e-48e3-b124-7e730ac8231c
 title: MarkdownQuickReference
-domain: agenticdevelopercookbook://ingredients/markdown-quick-reference
+domain: agenticdevelopertoolkit://recipes/markdown-quick-reference
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,9 +22,9 @@ tags:
   - reference
   - toolbar
 depends-on:
-  - agenticdevelopercookbook://ingredients/button
+  - agenticdevelopertoolkit://recipes/button
 related:
-  - agenticdevelopercookbook://recipes/markdown-editor
+  - agenticdevelopertoolkit://recipes/markdown-editor
 references: []
 approved-by: ''
 approved-date: ''

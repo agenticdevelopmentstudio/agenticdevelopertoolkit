@@ -1,7 +1,7 @@
 ---
 id: b0ce8cbb-31ac-425a-889c-68e699d24578
 title: Table
-domain: agenticdevelopercookbook://ingredients/table
+domain: agenticdevelopertoolkit://recipes/table
 type: ingredient
 version: 1.0.0
 status: review

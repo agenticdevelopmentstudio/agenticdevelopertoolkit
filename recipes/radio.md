@@ -1,7 +1,7 @@
 ---
 id: 3b509297-83b2-4a5b-a331-56d0d4be548d
 title: Radio
-domain: agenticdevelopercookbook://ingredients/radio
+domain: agenticdevelopertoolkit://recipes/radio
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: e26e765d-2caa-40f8-a668-661ed2b0632c
 title: AlertModal
-domain: agenticdevelopercookbook://recipes/alert-modal
+domain: agenticdevelopertoolkit://recipes/alert-modal
 type: ingredient
 version: 1.0.0
 status: review
@@ -24,13 +24,13 @@ tags:
 - overlay
 - base-ui
 depends-on:
-- agenticdevelopercookbook://recipes/dialog
-- agenticdevelopercookbook://recipes/dialog-actions
-- agenticdevelopercookbook://recipes/button
+- agenticdevelopertoolkit://recipes/dialog
+- agenticdevelopertoolkit://recipes/dialog-actions
+- agenticdevelopertoolkit://recipes/button
 related:
-- agenticdevelopercookbook://recipes/dialog
-- agenticdevelopercookbook://recipes/dialog-actions
-- agenticdevelopercookbook://recipes/alert-and-dialog
+- agenticdevelopertoolkit://recipes/dialog
+- agenticdevelopertoolkit://recipes/dialog-actions
+- agenticdevelopertoolkit://recipes/alert-and-dialog
 references: []
 approved-by: ''
 approved-date: ''
@@ -92,7 +92,7 @@ disables keyboard shortcuts.
 
 ## Appearance
 
-- **Corner radius**: Not applicable — owned by `DialogContent` via the Dialog recipe (`agenticdevelopercookbook://recipes/dialog`).
+- **Corner radius**: Not applicable — owned by `DialogContent` via the Dialog recipe (`agenticdevelopertoolkit://recipes/dialog`).
 - **Padding**: Not applicable — owned by `DialogContent` via the Dialog recipe.
 - **Font**: Title weight/size are inherited from `DialogTitle` (unmodified here); `AlertModal` only overrides the title's text color and adds a leading-icon layout (`flex items-center gap-2 text-apt-gold`).
 - **Background**: Not applicable — owned by `DialogContent` via the Dialog recipe.
@@ -118,12 +118,12 @@ disables keyboard shortcuts.
 
 ## Accessibility
 
-- Dialog role, `aria-modal`, focus trap, and focus restoration to the opener are inherited unchanged from the `Dialog` primitive (`agenticdevelopercookbook://recipes/dialog`); `AlertModal` does not re-derive or override them.
+- Dialog role, `aria-modal`, focus trap, and focus restoration to the opener are inherited unchanged from the `Dialog` primitive (`agenticdevelopertoolkit://recipes/dialog`); `AlertModal` does not re-derive or override them.
 - The dialog MUST be labelled by `title` (via `DialogTitle`) and, when provided, described by `description` (via `DialogDescription`).
 - The tone icon is decorative: it is rendered with `aria-hidden` and never substitutes for a text label.
-- The alert-mode busy spinner exposes `role="status"` and `aria-label="Working…"`; confirm-mode busy is forwarded to `DialogActions`, which applies the identical `role="status"` / `aria-label="Working…"` treatment (`agenticdevelopercookbook://recipes/dialog-actions`).
-- Both footer buttons are the shared `Button` component, which renders a real, focusable `<button>` — keyboard activation (Space/Enter) is native (`agenticdevelopercookbook://recipes/button`).
-- Minimum touch/click target size, minimum contrast ratio, and other platform-specific accessibility requirements are inherited from the `Button` component and the shared design-token stylesheet; see `agenticdevelopercookbook://recipes/button` and the WCAG 2.1 AA reference in `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
+- The alert-mode busy spinner exposes `role="status"` and `aria-label="Working…"`; confirm-mode busy is forwarded to `DialogActions`, which applies the identical `role="status"` / `aria-label="Working…"` treatment (`agenticdevelopertoolkit://recipes/dialog-actions`).
+- Both footer buttons are the shared `Button` component, which renders a real, focusable `<button>` — keyboard activation (Space/Enter) is native (`agenticdevelopertoolkit://recipes/button`).
+- Minimum touch/click target size, minimum contrast ratio, and other platform-specific accessibility requirements are inherited from the `Button` component and the shared design-token stylesheet; see `agenticdevelopertoolkit://recipes/button` and the WCAG 2.1 AA reference in `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
 
 ## Conformance Test Vectors
 
@@ -231,7 +231,7 @@ Not applicable — `AlertModal` is a presentational component and issues no log 
 
 - **SwiftUI**: Not applicable — no SwiftUI implementation is in scope for this recipe.
 - **Compose**: Not applicable — no Compose implementation is in scope for this recipe.
-- **React/Web**: `packages/web/packages/ui/src/components/alert-modal.tsx`, `"use client"`, built on `@base-ui/react/dialog` via the shared `Dialog` primitive (`agenticdevelopercookbook://recipes/dialog`). Renders `DialogActions` (agenticdevelopercookbook://recipes/dialog-actions`) in confirm mode and the shared `Button` (`agenticdevelopercookbook://recipes/button`) in alert mode.
+- **React/Web**: `packages/web/packages/ui/src/components/alert-modal.tsx`, `"use client"`, built on `@base-ui/react/dialog` via the shared `Dialog` primitive (`agenticdevelopertoolkit://recipes/dialog`). Renders `DialogActions` (agenticdevelopertoolkit://recipes/dialog-actions`) in confirm mode and the shared `Button` (`agenticdevelopertoolkit://recipes/button`) in alert mode.
 - **AppKit / UIKit**: Not applicable — no AppKit/UIKit implementation is in scope for this recipe.
 - **WinUI 3**: Start from `ContentDialog` (Fluent 2's modal primitive). In alert mode, render a single `PrimaryButtonText` button; in confirm mode, add `SecondaryButtonText` and set `SecondaryButtonClick` to invoke cancel. Replace buttons with a custom busy `Content` template (a `ProgressRing` inside a `StackPanel`) when busy. The `dismissible` and `busy` flags block light-dismiss behavior via `IsPrimaryButtonEnabled` (set to `false` when `busy` or `!dismissible`; hide the close button via a custom template override). For keyboard policy: `ContentDialog` has no built-in per-instance `Escape`/`Enter` remapping, so attach a `KeyDown` handler to the dialog when `keyboard` is an explicit map or `"none"`; when `keyboard="default"`, defer to the default behavior (Enter → `PrimaryButton`, Escape → cancel/dismiss). The `destructive` flag changes the primary button's styling to danger/red and forces the keyboard handler to block all key actions.
 
@@ -239,7 +239,7 @@ Not applicable — `AlertModal` is a presentational component and issues no log 
 
 - **Escape double-fire with an explicit keyboard map.** The component's own doc comment states "The window keydown listener handles Enter only, so there is no double-fire path," but that is only true for `keyboard="default"`. When `keyboard` is an explicit object, the returned `keyMap` is that object verbatim, and the keydown listener dispatches on *any* key present in it — including `"Escape"`, if the caller included it. Base UI's `onOpenChange` independently routes reason `"escape-key"` to the same cancel/confirm call. A caller-supplied map containing `Escape` will therefore invoke the mapped callback twice for one keypress. This is documented here as a discrepancy between the source's own comment and its actual behavior, not as a guaranteed contract — see `must-honor-explicit-keyboard-map` and the matching Edge Cases entry.
 - **`destructive` bundles two independent effects.** Setting `destructive={true}` simultaneously forces the error tone (icon + color) and forces the keyboard policy to behave as `"none"`, from a single boolean. A caller cannot get one effect without the other (e.g., a red action button that still accepts Enter).
-- **Busy-state spinner is implemented twice.** In alert mode, `AlertModal` renders its own inline `Loader2` with `role="status"` / `aria-label="Working…"`. In confirm mode, the identical treatment is delegated to `DialogActions` (`agenticdeveloperhub://recipes/dialog-actions`) via the forwarded `busy` prop. The visual/accessible output is the same, but it is produced by two separate code paths rather than one shared one.
+- **Busy-state spinner is implemented twice.** In alert mode, `AlertModal` renders its own inline `Loader2` with `role="status"` / `aria-label="Working…"`. In confirm mode, the identical treatment is delegated to `DialogActions` (`agenticdevelopertoolkit://recipes/dialog-actions`) via the forwarded `busy` prop. The visual/accessible output is the same, but it is produced by two separate code paths rather than one shared one.
 
 ## Compliance
 

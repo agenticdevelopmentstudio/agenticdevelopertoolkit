@@ -1,7 +1,7 @@
 ---
 id: 24f42d31-dd5f-4e1e-a95c-3327e136ad46
 title: Settings Panel
-domain: agenticdevelopercookbook://ingredients/settings-panel
+domain: agenticdevelopertoolkit://recipes/settings-panel
 type: ingredient
 version: 1.0.0
 status: review

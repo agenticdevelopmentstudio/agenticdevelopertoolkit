@@ -1,7 +1,7 @@
 ---
 id: 245c45fe-4724-4a8c-bfef-0049e09c18e1
 title: Badge
-domain: agenticdevelopercookbook://ingredients/ui/components/badge
+domain: agenticdevelopertoolkit://recipes/badge
 type: ingredient
 version: 1.1.0
 status: review

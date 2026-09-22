@@ -1,7 +1,7 @@
 ---
 id: 8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a
 title: Markdown Viewer
-domain: agenticdevelopercookbook://ingredients/markdown-viewer
+domain: agenticdevelopertoolkit://recipes/markdown-viewer
 type: ingredient
 version: 1.0.0
 status: review

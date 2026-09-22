@@ -1,7 +1,7 @@
 ---
 id: 556f7dbf-2a14-4e97-aaa2-0954c7488e6f
 title: ViewportSpacer
-domain: agenticdevelopercookbook://ingredients/viewport-spacer
+domain: agenticdevelopertoolkit://recipes/viewport-spacer
 type: ingredient
 version: 1.0.0
 status: review

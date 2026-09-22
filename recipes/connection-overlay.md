@@ -1,7 +1,7 @@
 ---
 id: 8e7fa376-f174-4a10-b2ef-2a5c10854d4e
 title: Connection Overlay
-domain: agenticdevelopercookbook://ingredients/connection-overlay
+domain: agenticdevelopertoolkit://recipes/connection-overlay
 type: ingredient
 version: 1.1.0
 status: review

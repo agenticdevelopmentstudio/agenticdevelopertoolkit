@@ -1,7 +1,7 @@
 ---
 id: 5a028319-034c-4852-a1ee-01247a747183
 title: EditorSection
-domain: agenticdeveloperhub://recipes/editor-section
+domain: agenticdevelopertoolkit://recipes/editor-section
 type: recipe
 version: 1.1.0
 status: review
@@ -21,10 +21,10 @@ tags:
 - layout
 - toolbar
 ingredients:
-- agenticdeveloperhub://recipes/topic-detail
+- agenticdevelopertoolkit://recipes/topic-detail
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/list-with-details-pane
+- agenticdevelopertoolkit://recipes/list-with-details-pane
 references: []
 approved-by: ''
 approved-date: ''
@@ -62,7 +62,7 @@ It is the base editor shell behind hub/admin topics that manage a list of record
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
 | ButtonBar | — | The fixed editing toolbar: gold mono title (`leading`) + the New/Delete/Cancel/Save preset | yes | `leading` = title + `titleBadge`; `actions` = `{ onCreate, createLabel, onCancel, canCancel, onSave, canSave, saving, onDelete, canDelete }`; `showDelete` = `!!onDelete` |
-| TopicDetail | agenticdeveloperhub://recipes/topic-detail | The two-pane rail\|pane primitive: collapsible records rail + detail pane | yes | `items` (mapped from `EditorSectionItem[]`), `selectedId`, `onSelect`, `emptyLabel` = `emptyList`, `railSlot` = `listHeader`, `railWidth`, `panePadding={false}` |
+| TopicDetail | agenticdevelopertoolkit://recipes/topic-detail | The two-pane rail\|pane primitive: collapsible records rail + detail pane | yes | `items` (mapped from `EditorSectionItem[]`), `selectedId`, `onSelect`, `emptyLabel` = `emptyList`, `railSlot` = `listHeader`, `railWidth`, `panePadding={false}` |
 | EmptyState | — | The "nothing selected" placeholder rendered in the pane when not editing | yes | `title` = `emptyDetail`; fixed `className="m-3.5 min-h-[200px] flex-1"` |
 
 Composed shared primitives without their own recipe domains: `Badge`

@@ -1,7 +1,7 @@
 ---
 id: 31198bb7-2270-449e-94c1-026b68d2bc81
 title: Head
-domain: agenticdevelopercookbook://ingredients/head
+domain: agenticdevelopertoolkit://recipes/head
 type: ingredient
 version: 1.0.0
 status: review

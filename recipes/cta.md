@@ -1,7 +1,7 @@
 ---
 id: f98e53f7-ac16-48b0-afa5-544d05bf3f70
 title: Cta
-domain: agenticdevelopercookbook://ingredients/cta
+domain: agenticdevelopertoolkit://recipes/cta
 type: ingredient
 version: 1.0.0
 status: review

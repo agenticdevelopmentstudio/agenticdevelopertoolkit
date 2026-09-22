@@ -1,7 +1,7 @@
 ---
 id: ef7191ff-63a9-442a-b6d0-f8452a0aa1d6
 title: Document Navigation Tree
-domain: agenticdevelopercookbook://ingredients/doc-nav
+domain: agenticdevelopertoolkit://recipes/doc-nav
 type: ingredient
 version: 1.0.0
 status: review

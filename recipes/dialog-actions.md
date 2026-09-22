@@ -1,7 +1,7 @@
 ---
 id: f679a77e-04f7-4e43-b898-6d78a637a760
 title: DialogActions
-domain: agenticdevelopercookbook://recipes/dialog-actions
+domain: agenticdevelopertoolkit://recipes/dialog-actions
 type: ingredient
 version: 1.3.0
 status: review
@@ -22,10 +22,10 @@ tags:
 - footer
 - ui
 depends-on:
-- agenticdevelopercookbook://recipes/button
+- agenticdevelopertoolkit://recipes/button
 related:
-- agenticdevelopercookbook://recipes/alert-and-dialog
-- agenticdevelopercookbook://recipes/dialog
+- agenticdevelopertoolkit://recipes/alert-and-dialog
+- agenticdevelopertoolkit://recipes/dialog
 references: []
 approved-by: ''
 approved-date: ''

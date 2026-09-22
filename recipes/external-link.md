@@ -1,7 +1,7 @@
 ---
 id: b329d08b-9812-47d0-8094-516359d82d19
 title: ExternalLink
-domain: agenticdevelopercookbook://ingredients/external-link
+domain: agenticdevelopertoolkit://recipes/external-link
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - ui
 depends-on: []
 related:
-  - agenticdevelopercookbook://ingredients/stat-card
-  - agenticdevelopercookbook://ingredients/user-card
+  - agenticdevelopertoolkit://recipes/stat-card
+  - agenticdevelopertoolkit://recipes/user-card
 references: []
 approved-by: ''
 approved-date: ''

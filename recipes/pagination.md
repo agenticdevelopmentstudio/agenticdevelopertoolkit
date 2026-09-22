@@ -1,7 +1,7 @@
 ---
 id: ca0fb28f-7f22-4fde-a291-ecfde846f5c3
 title: Pagination
-domain: agenticdevelopercookbook://ingredients/pagination
+domain: agenticdevelopertoolkit://recipes/pagination
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,7 +22,7 @@ tags:
 - navigation
 - ui
 depends-on:
-- agenticdevelopercookbook://ingredients/button
+- agenticdevelopertoolkit://recipes/button
 related: []
 references: []
 approved-by: ''

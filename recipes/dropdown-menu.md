@@ -1,7 +1,7 @@
 ---
 id: 25de0c8f-b6cb-4e9f-ba30-38afca642232
 title: Dropdown Menu
-domain: agenticdevelopercookbook://ingredients/dropdown-menu
+domain: agenticdevelopertoolkit://recipes/dropdown-menu
 type: ingredient
 version: 1.0.0
 status: review

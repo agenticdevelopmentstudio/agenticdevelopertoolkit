@@ -1,7 +1,7 @@
 ---
 id: 9c1e6915-44ec-435e-a159-57b80b455698
 title: Window Options Dialog
-domain: agenticdevelopercookbook://ingredients/window-options-dialog
+domain: agenticdevelopertoolkit://recipes/window-options-dialog
 type: ingredient
 version: 1.0.0
 status: review

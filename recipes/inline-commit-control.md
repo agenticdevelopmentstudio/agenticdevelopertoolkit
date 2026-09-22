@@ -1,7 +1,7 @@
 ---
 id: 26df832c-a7f7-4cf6-b3f5-240c61e8bd68
 title: InlineCommitControl
-domain: agenticdeveloperhub://recipes/inline-commit-control
+domain: agenticdevelopertoolkit://recipes/inline-commit-control
 type: ingredient
 version: 1.1.0
 status: review

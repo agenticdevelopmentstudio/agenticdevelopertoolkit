@@ -1,7 +1,7 @@
 ---
 id: b3a92adc-a28e-4a33-8120-c33f8f0abdf6
 title: Progress
-domain: agenticdevelopercookbook://ingredients/progress
+domain: agenticdevelopertoolkit://recipes/progress
 type: ingredient
 version: 1.1.0
 status: review

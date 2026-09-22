@@ -1,7 +1,7 @@
 ---
 id: da56ecc7-18f6-412e-9368-3beb29309d8d
 title: Separator
-domain: agenticdevelopercookbook://ingredients/separator
+domain: agenticdevelopertoolkit://recipes/separator
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: fed0a111-253c-427b-89c0-14f729657a7d
 title: SearchView
-domain: agenticdevelopercookbook://ingredients/search-view
+domain: agenticdevelopertoolkit://recipes/search-view
 type: ingredient
 version: 1.0.0
 status: review

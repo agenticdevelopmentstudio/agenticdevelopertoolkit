@@ -1,7 +1,7 @@
 ---
 id: 61f589a9-d32f-4e9b-85db-1f9aa0eee009
 title: Markdown Text Pane
-domain: agenticdevelopercookbook://recipes/ui/markdown-text-pane
+domain: agenticdevelopertoolkit://recipes/markdown-text-pane
 type: ingredient
 version: 1.1.0
 status: review

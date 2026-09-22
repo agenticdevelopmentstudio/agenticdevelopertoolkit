@@ -1,7 +1,7 @@
 ---
 id: 37b7b456-790f-4b2d-8f3a-a364016ce389
 title: StatList
-domain: agenticdevelopercookbook://recipes/stat-list
+domain: agenticdevelopertoolkit://recipes/stat-list
 type: recipe
 version: 1.2.0
 status: review
@@ -22,10 +22,10 @@ tags:
 - list
 - ui
 ingredients:
-- agenticdevelopercookbook://recipes/status-dot
+- agenticdevelopertoolkit://recipes/status-dot
 depends-on: []
 related:
-- agenticdevelopercookbook://recipes/stat-card
+- agenticdevelopertoolkit://recipes/stat-card
 references: []
 approved-by: ''
 approved-date: ''
@@ -53,7 +53,7 @@ primitive is the shared `StatusDot`; everything else is layout + the caller's te
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| StatusDot | agenticdevelopercookbook://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
+| StatusDot | agenticdevelopertoolkit://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
 
 `StatListRow`'s label and trailing content are caller-supplied `ReactNode`s, not
 components this block owns; `StatList` is a bare wrapper element.

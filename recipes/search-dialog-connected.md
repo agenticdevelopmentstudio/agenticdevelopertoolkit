@@ -1,7 +1,7 @@
 ---
 id: e626a6fc-0d60-4ba5-a42a-d1849d7e1506
 title: Search Dialog Connected
-domain: agenticdevelopercookbook://ingredients/search-dialog-connected
+domain: agenticdevelopertoolkit://recipes/search-dialog-connected
 type: ingredient
 version: 1.0.0
 status: review

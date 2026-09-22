@@ -1,7 +1,7 @@
 ---
 id: 88dc87c9-8058-446d-9513-acfa618c950f
 title: Search Dialog
-domain: agenticdevelopercookbook://recipes/ui/search-dialog
+domain: agenticdevelopertoolkit://recipes/search-dialog
 type: ingredient
 version: 1.1.0
 status: review

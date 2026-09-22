@@ -1,7 +1,7 @@
 ---
 id: 42e7a2ea-f138-4edb-899f-43c1946e4ef8
 title: FAQ
-domain: agenticdevelopercookbook://ingredients/faq
+domain: agenticdevelopertoolkit://recipes/faq
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: aaebd90e-991f-4133-a12d-0783586eae5a
 title: Hierarchical Menu Detail
-domain: agenticdevelopercookbook://ingredients/hierarchical-menu-detail
+domain: agenticdevelopertoolkit://recipes/hierarchical-menu-detail
 type: ingredient
 version: 1.0.0
 status: review

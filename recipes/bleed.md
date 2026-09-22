@@ -1,7 +1,7 @@
 ---
 id: feee183a-6488-489e-8e20-c7150bb3e914
 title: Bleed
-domain: agenticdevelopercookbook://ingredients/bleed
+domain: agenticdevelopertoolkit://recipes/bleed
 type: ingredient
 version: 1.0.0
 status: review

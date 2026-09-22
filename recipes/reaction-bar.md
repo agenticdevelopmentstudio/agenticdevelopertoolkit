@@ -1,7 +1,7 @@
 ---
 id: 169da1b6-2a22-4fec-9f01-8118e5242bd5
 title: ReactionBar
-domain: agenticdevelopercookbook://recipes/reaction-bar
+domain: agenticdevelopertoolkit://recipes/reaction-bar
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://recipes/button
-- agenticdevelopercookbook://recipes/popover
+- agenticdevelopertoolkit://recipes/button
+- agenticdevelopertoolkit://recipes/popover
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,7 +1,7 @@
 ---
 id: d6ff2cc3-89c8-4744-b3f4-7262e45a3414
 title: Help Content
-domain: agenticdevelopercookbook://ingredients/help-content
+domain: agenticdevelopertoolkit://recipes/help-content
 type: ingredient
 version: 1.0.1
 status: review

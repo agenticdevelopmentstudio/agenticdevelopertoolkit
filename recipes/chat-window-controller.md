@@ -1,7 +1,7 @@
 ---
 id: 91114bf5-ad41-4cbd-b91b-c49bba9625d5
 title: ChatWindowController
-domain: agenticdevelopercookbook://ingredients/chat-window-controller
+domain: agenticdevelopertoolkit://recipes/chat-window-controller
 type: ingredient
 version: 1.0.0
 status: review

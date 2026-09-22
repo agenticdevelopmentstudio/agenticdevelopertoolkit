@@ -1,7 +1,7 @@
 ---
 id: dc548100-af44-4d93-9cb9-93c35546e08c
 title: Text Field
-domain: agenticdevelopercookbook://ingredients/text-field
+domain: agenticdevelopertoolkit://recipes/text-field
 type: ingredient
 version: 1.0.0
 status: review

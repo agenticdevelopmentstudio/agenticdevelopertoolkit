@@ -1,7 +1,7 @@
 ---
 id: d431934e-d64c-4dcf-bdab-b7c3465ee71b
 title: Radio Group
-domain: agenticdevelopercookbook://ingredients/radio-group
+domain: agenticdevelopertoolkit://recipes/radio-group
 type: ingredient
 version: 1.0.0
 status: review

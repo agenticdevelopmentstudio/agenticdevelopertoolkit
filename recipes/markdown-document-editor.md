@@ -1,7 +1,7 @@
 ---
 id: d8f2a4c1-9e5b-4a2f-b8c9-e7f3a2d5c1b6
 title: "Markdown Document Editor"
-domain: agenticdevelopercookbook://ingredients/markdown-document-editor
+domain: agenticdevelopertoolkit://recipes/markdown-document-editor
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,5 +1,6 @@
 {
   "recipes": "recipes",
+  "scheme": "agenticdevelopertoolkit",
   "roots": [
     {
       "path": "packages/web/packages/ui/src/components",

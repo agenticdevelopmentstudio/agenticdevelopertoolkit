@@ -1,7 +1,7 @@
 ---
 id: ecaba9e2-de10-45ac-80d8-398e9ab02626
 title: CopyButton
-domain: agenticdevelopercookbook://ingredients/copy-button
+domain: agenticdevelopertoolkit://recipes/copy-button
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,7 +22,7 @@ tags:
 - button
 - ui
 depends-on:
-- agenticdevelopercookbook://ingredients/button
+- agenticdevelopertoolkit://recipes/button
 related: []
 references: []
 approved-by: ''

@@ -1,7 +1,7 @@
 ---
 id: c130d5d5-2ac4-4a15-a13a-9127ddad6ca1
 title: Popover Anchor
-domain: agenticdevelopercookbook://ingredients/popover-anchor
+domain: agenticdevelopertoolkit://recipes/popover-anchor
 type: ingredient
 version: 1.0.0
 status: review

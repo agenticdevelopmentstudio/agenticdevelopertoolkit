@@ -1,7 +1,7 @@
 ---
 id: 33aaba17-874f-43aa-8d70-4a5dab2081a1
 title: Batch Select
-domain: agenticdevelopercookbook://ingredients/batch-select
+domain: agenticdevelopertoolkit://recipes/batch-select
 type: ingredient
 version: 1.0.0
 status: review

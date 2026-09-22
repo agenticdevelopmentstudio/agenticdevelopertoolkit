@@ -1,7 +1,7 @@
 ---
 id: 7f84a93a-013e-452f-a963-7ffb4808dd5c
 title: TextBubble
-domain: agenticdevelopercookbook://ingredients/text-bubble
+domain: agenticdevelopertoolkit://recipes/text-bubble
 type: ingredient
 version: 1.1.0
 status: review

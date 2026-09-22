@@ -1,7 +1,7 @@
 ---
 id: 550f00f7-bfb2-415e-9b15-bd5dce015500
 title: "Alert & Dialog System"
-domain: agenticdeveloperhub://recipes/alert-and-dialog
+domain: agenticdevelopertoolkit://recipes/alert-and-dialog
 type: recipe
 version: 1.1.0
 status: draft
@@ -21,8 +21,8 @@ tags:
   - confirm
   - overlay
 ingredients:
-  - agenticdeveloperhub://recipes/dialog
-  - agenticdeveloperhub://recipes/button
+  - agenticdevelopertoolkit://recipes/dialog
+  - agenticdevelopertoolkit://recipes/button
 depends-on: []
 related: []
 references: []
@@ -52,8 +52,8 @@ rules are exposed for composed dialogs so everything looks uniform.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Dialog | agenticdeveloperhub://recipes/dialog | Base overlay / focus-trap / portal that the system is built on | yes | reused unchanged |
-| Button | agenticdeveloperhub://recipes/button | Footer action + cancel buttons | yes | `variant="default"` (gold action), `variant="ghost"`/`outline` (cancel), red for destructive |
+| Dialog | agenticdevelopertoolkit://recipes/dialog | Base overlay / focus-trap / portal that the system is built on | yes | reused unchanged |
+| Button | agenticdevelopertoolkit://recipes/button | Footer action + cancel buttons | yes | `variant="default"` (gold action), `variant="ghost"`/`outline` (cancel), red for destructive |
 
 ## Integration Requirements
 

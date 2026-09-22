@@ -1,7 +1,7 @@
 ---
 id: c21473ee-a075-4800-96db-ff3de0888515
 title: "ResizableSplit"
-domain: agenticdevelopercookbook://recipes/resizable-split
+domain: agenticdevelopertoolkit://recipes/resizable-split
 type: ingredient
 version: 2.1.0
 status: review

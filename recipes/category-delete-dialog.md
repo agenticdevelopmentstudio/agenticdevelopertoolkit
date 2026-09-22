@@ -1,7 +1,7 @@
 ---
 id: 0d85c3a1-c754-4d8b-8aab-6565dfee6100
 title: Category Delete Dialog
-domain: agenticdevelopercookbook://ingredients/category-delete-dialog
+domain: agenticdevelopertoolkit://recipes/category-delete-dialog
 type: ingredient
 version: 1.0.0
 status: review

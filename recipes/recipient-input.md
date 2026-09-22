@@ -1,7 +1,7 @@
 ---
 id: d9ad192e-a642-46a2-8b25-b8aac9d9f441
 title: RecipientInput
-domain: agenticdevelopercookbook://ingredients/recipient-input
+domain: agenticdevelopertoolkit://recipes/recipient-input
 type: ingredient
 version: 1.2.0
 status: review

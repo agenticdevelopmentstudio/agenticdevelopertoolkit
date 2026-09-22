@@ -1,7 +1,7 @@
 ---
 id: 86b4d53c-8122-480c-9a33-43e08b063469
 title: TopicSelectHint
-domain: agenticdevelopercookbook://ingredients/topic-select-hint
+domain: agenticdevelopertoolkit://recipes/topic-select-hint
 type: ingredient
 version: 1.0.0
 status: review

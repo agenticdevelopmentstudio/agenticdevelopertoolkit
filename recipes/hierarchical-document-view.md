@@ -1,7 +1,7 @@
 ---
 id: b7a4e24c-3dfe-4a33-b5bc-88736e520d90
 title: Hierarchical Document View
-domain: agenticdeveloperhub://recipes/hierarchical-document-view
+domain: agenticdevelopertoolkit://recipes/hierarchical-document-view
 type: ingredient
 version: 1.6.0
 status: review
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/hierarchical-topic-detail
-- agenticdeveloperhub://recipes/disclosure
+- agenticdevelopertoolkit://recipes/hierarchical-topic-detail
+- agenticdevelopertoolkit://recipes/disclosure
 references: []
 approved-by: ''
 approved-date: ''

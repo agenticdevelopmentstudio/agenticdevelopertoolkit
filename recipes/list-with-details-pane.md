@@ -1,7 +1,7 @@
 ---
 id: 6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73
 title: "ListWithDetailsPane"
-domain: agenticdevelopercookbook://recipes/list-with-details-pane
+domain: agenticdevelopertoolkit://recipes/list-with-details-pane
 type: recipe
 version: 2.1.0
 status: review
@@ -21,10 +21,10 @@ tags:
   - layout
   - selection
 ingredients:
-  - agenticdevelopercookbook://recipes/list-header
-  - agenticdevelopercookbook://recipes/data-table
-  - agenticdevelopercookbook://recipes/resizable-split
-  - agenticdevelopercookbook://recipes/alert-and-dialog
+  - agenticdevelopertoolkit://recipes/list-header
+  - agenticdevelopertoolkit://recipes/data-table
+  - agenticdevelopertoolkit://recipes/resizable-split
+  - agenticdevelopertoolkit://recipes/alert-and-dialog
 depends-on: []
 related: []
 references: []
@@ -53,10 +53,10 @@ parameter for deep-linking (when `paramKey` is provided).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| DataTable | agenticdevelopercookbook://recipes/data-table | Renders filtered, multi-select rows | yes | `columns`, `rows`, `getRowId`, selection, `loading`, `emptyLabel`, `autoSizeColumns`, `columnWidthsKey`, `reorder` |
-| ListHeader | agenticdevelopercookbook://recipes/list-header | The filter + actions bar above the table | yes | `search` from `filterText`/`onFilterTextChange`; `actions` from `actions` + Delete |
-| ResizableSplit | agenticdevelopercookbook://recipes/resizable-split | Top/bottom split: table on top, details below its header-bar divider (`header={detailsLabel}`) | yes | `storageKey` forwarded from props; persists split bar position |
-| AlertAndDialog | agenticdevelopercookbook://recipes/alert-and-dialog | Destructive confirm shown before delete | yes | `destructive` tone; copy from `deleteConfirm` |
+| DataTable | agenticdevelopertoolkit://recipes/data-table | Renders filtered, multi-select rows | yes | `columns`, `rows`, `getRowId`, selection, `loading`, `emptyLabel`, `autoSizeColumns`, `columnWidthsKey`, `reorder` |
+| ListHeader | agenticdevelopertoolkit://recipes/list-header | The filter + actions bar above the table | yes | `search` from `filterText`/`onFilterTextChange`; `actions` from `actions` + Delete |
+| ResizableSplit | agenticdevelopertoolkit://recipes/resizable-split | Top/bottom split: table on top, details below its header-bar divider (`header={detailsLabel}`) | yes | `storageKey` forwarded from props; persists split bar position |
+| AlertAndDialog | agenticdevelopertoolkit://recipes/alert-and-dialog | Destructive confirm shown before delete | yes | `destructive` tone; copy from `deleteConfirm` |
 
 Composed shared primitives without their own recipe domains: `Button` (toolbar
 actions + Delete), `Input` (filter box), and `Separator` (`dividerBefore`).

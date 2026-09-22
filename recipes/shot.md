@@ -1,7 +1,7 @@
 ---
 id: 53a37583-e86d-41ca-8dd2-8394ba530091
 title: Shot
-domain: agenticdevelopercookbook://ingredients/shot
+domain: agenticdevelopertoolkit://recipes/shot
 type: ingredient
 version: 1.0.0
 status: review

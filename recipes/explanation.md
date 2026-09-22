@@ -1,7 +1,7 @@
 ---
 id: eeb45f5b-e482-4bea-8827-74f80a1fd21b
 title: Explanation
-domain: agenticdevelopercookbook://ingredients/explanation
+domain: agenticdevelopertoolkit://recipes/explanation
 type: ingredient
 version: 1.0.0
 status: review

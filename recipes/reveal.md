@@ -1,7 +1,7 @@
 ---
 id: b5b27bc2-99b2-469e-9dd4-e446b0157444
 title: Reveal
-domain: agenticdevelopercookbook://ingredients/reveal
+domain: agenticdevelopertoolkit://recipes/reveal
 type: ingredient
 version: 1.0.0
 status: review

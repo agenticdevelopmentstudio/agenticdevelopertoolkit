@@ -1,7 +1,7 @@
 ---
 id: 3562bffe-c137-4f4e-91da-f9ef27a5b712
 title: Markdown Theme Switcher
-domain: agenticdevelopercookbook://ingredients/markdown-theme-switcher
+domain: agenticdevelopertoolkit://recipes/markdown-theme-switcher
 type: ingredient
 version: 1.0.0
 status: review

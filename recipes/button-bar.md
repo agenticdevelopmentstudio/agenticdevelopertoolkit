@@ -1,7 +1,7 @@
 ---
 id: 81db83fc-b30c-4ba3-b4d5-572dc8b4e335
 title: Button Bar
-domain: agenticdevelopercookbook://ingredients/button-bar
+domain: agenticdevelopertoolkit://recipes/button-bar
 type: ingredient
 version: 1.0.0
 status: review

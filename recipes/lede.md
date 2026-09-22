@@ -1,7 +1,7 @@
 ---
 id: 811cc18f-e33a-42bb-bd2d-dfc3dc21bc77
 title: Lede
-domain: agenticdevelopercookbook://ingredients/lede
+domain: agenticdevelopertoolkit://recipes/lede
 type: ingredient
 version: 1.0.0
 status: review

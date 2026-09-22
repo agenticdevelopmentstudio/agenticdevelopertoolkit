@@ -1,7 +1,7 @@
 ---
 id: c5703986-6d14-4341-8719-b89e44f2ab80
 title: Label
-domain: agenticdevelopercookbook://ingredients/label
+domain: agenticdevelopertoolkit://recipes/label
 type: ingredient
 version: 1.0.0
 status: review

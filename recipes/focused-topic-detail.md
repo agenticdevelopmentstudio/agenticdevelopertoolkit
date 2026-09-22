@@ -1,7 +1,7 @@
 ---
 id: c044fa91-11c6-46e9-b64a-bd890535acae
 title: Focused Topic Detail
-domain: agenticdevelopercookbook://ingredients/focused-topic-detail
+domain: agenticdevelopertoolkit://recipes/focused-topic-detail
 type: ingredient
 version: 1.0.0
 status: review

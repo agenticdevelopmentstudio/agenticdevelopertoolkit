@@ -1,7 +1,7 @@
 ---
 id: f483dfb7-d60e-4b12-8b17-2eb150b550db
 title: PressableButton
-domain: agenticdevelopercookbook://recipes/button-pressable
+domain: agenticdevelopertoolkit://recipes/button-pressable
 type: ingredient
 version: 1.0.0
 status: review
@@ -25,7 +25,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://recipes/button
+- agenticdevelopertoolkit://recipes/button
 references: []
 approved-by: ''
 approved-date: ''
@@ -45,7 +45,7 @@ composes with any pointer handlers the caller supplies rather than replacing
 them. It lives in its own module, separate from the plain `button.tsx` module
 that computes the visual variant classes, so that module can stay free of a
 `"use client"` directive and remain callable from server components. See
-[Button](agenticdevelopercookbook://recipes/button) for the composed component,
+[Button](agenticdevelopertoolkit://recipes/button) for the composed component,
 its visual variants, and its accessibility surface.
 
 ## Behavioral Requirements
@@ -208,8 +208,8 @@ forwarded pointer handler, not in this file.
 - **No `setPointerCapture`.** The source comment states this explicitly: capture would re-target subsequent pointer events to the button and defeat the leave/re-enter detection that the `pointerleave`/`pointerenter` handlers depend on.
 - **Keyboard activation is deliberately unaffected.** The source comment states the pressed visual is "intentionally pointer-only" — Space/Enter activation is left to the underlying primitive and never touches `pressed`.
 - **Consumer handlers are composed, never replaced.** `compose()` always calls the caller's handler before the component's own logic, so passing e.g. `onPointerUp` does not silently disable this component's press tracking, and the component does not silently disable a caller's handler.
-- **Larger requirement count than the sibling `Button` recipe is expected, not a completeness gap.** [Button](agenticdevelopercookbook://recipes/button) states several of this component's transitions as single compound requirements (e.g. "ends the held state" covering both `held` and `pressed`, and both the `pointerup`/`pointercancel` cases). This recipe decomposes each into its own atomic, independently testable requirement per the behavioral-requirements guideline's prohibition on compound statements, which accounts for the higher count (24 here vs. 12 there) despite both recipes describing the same underlying source file.
-- **`platforms: [web]`, not `[typescript, web]` like sibling recipes.** [Button](agenticdevelopercookbook://recipes/button) and `copy-button` list both `typescript` and `web`. This recipe was generated from a single specified source-platform set of `web` only, so `platforms` reflects exactly that input rather than inferring `typescript` from the source file's extension.
+- **Larger requirement count than the sibling `Button` recipe is expected, not a completeness gap.** [Button](agenticdevelopertoolkit://recipes/button) states several of this component's transitions as single compound requirements (e.g. "ends the held state" covering both `held` and `pressed`, and both the `pointerup`/`pointercancel` cases). This recipe decomposes each into its own atomic, independently testable requirement per the behavioral-requirements guideline's prohibition on compound statements, which accounts for the higher count (24 here vs. 12 there) despite both recipes describing the same underlying source file.
+- **`platforms: [web]`, not `[typescript, web]` like sibling recipes.** [Button](agenticdevelopertoolkit://recipes/button) and `copy-button` list both `typescript` and `web`. This recipe was generated from a single specified source-platform set of `web` only, so `platforms` reflects exactly that input rather than inferring `typescript` from the source file's extension.
 - **New tags `pointer-events` and `pressable`.** The established family vocabulary (`component`, `button`, `ui`) is kept, and two new tags are added because this recipe's scope — the interaction layer alone, apart from `Button`'s visual variants — is not covered by any existing tag in the family.
 - **Appearance, Accessibility, States (Disabled/Focused/Loading), Deep Linking, Localization, Accessibility Options, Feature Flags, and Analytics are not applicable, not incomplete.** `button-pressable.tsx` is purely a pointer-tracking behavior layer; it owns no styling, no ARIA semantics, no routing, no strings, no flags, and no telemetry. Those concerns belong to `button.tsx` (styling) and the Base UI `Button` primitive (semantics), neither of which was provided as source for this recipe.
 

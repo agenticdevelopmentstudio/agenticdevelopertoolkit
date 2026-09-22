@@ -1,7 +1,7 @@
 ---
 id: d9b07d1e-b53c-4efa-86f1-82a31ad9f02f
 title: Progress Modal
-domain: agenticdevelopercookbook://ingredients/progress-modal
+domain: agenticdevelopertoolkit://recipes/progress-modal
 type: ingredient
 version: 1.1.0
 status: review

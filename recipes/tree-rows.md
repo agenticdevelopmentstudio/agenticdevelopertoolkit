@@ -1,7 +1,7 @@
 ---
 id: f1c3b5e7-9d2a-4f8c-a3c1-7e2f5b9c6d4a
 title: Tree Rows
-domain: agenticdevelopercookbook://ingredients/tree-rows
+domain: agenticdevelopertoolkit://recipes/tree-rows
 type: ingredient
 version: 1.1.0
 status: review

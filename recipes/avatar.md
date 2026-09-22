@@ -1,7 +1,7 @@
 ---
 id: e3a2394d-d0d0-4495-bde4-59197f9d7866
 title: Avatar
-domain: agenticdevelopercookbook://ingredients/avatar
+domain: agenticdevelopertoolkit://recipes/avatar
 type: ingredient
 version: 1.1.0
 status: review

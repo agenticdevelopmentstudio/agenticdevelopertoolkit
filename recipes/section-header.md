@@ -1,7 +1,7 @@
 ---
 id: 5e401b96-7157-4c5b-a623-b90dde372231
 title: Section Header
-domain: agenticdevelopercookbook://ingredients/section-header
+domain: agenticdevelopertoolkit://recipes/section-header
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: 86aedf2f-b353-4770-a6dd-9e29b3d9b76a
 title: Selection Actions
-domain: agenticdevelopercookbook://ingredients/selection-actions
+domain: agenticdevelopertoolkit://recipes/selection-actions
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: b341dd02-fbcb-4da8-b2b6-897807b4ebbc
 title: Glow
-domain: agenticdevelopercookbook://ingredients/glow
+domain: agenticdevelopertoolkit://recipes/glow
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: Select
-domain: agenticdevelopercookbook://ingredients/select
+domain: agenticdevelopertoolkit://recipes/select
 type: ingredient
 version: 1.2.0
 status: review

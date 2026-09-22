@@ -1,7 +1,7 @@
 ---
 id: 8c5e2f9b-7d3a-4a1c-b8e4-9f2d1c5a7b3e
 title: Contact
-domain: agenticdevelopercookbook://ingredients/contact
+domain: agenticdevelopertoolkit://recipes/contact
 type: ingredient
 version: 1.0.0
 status: review

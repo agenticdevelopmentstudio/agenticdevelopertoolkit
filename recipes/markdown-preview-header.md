@@ -1,7 +1,7 @@
 ---
 id: afb50b48-af7a-4bc1-a13c-ae36759268c8
 title: Markdown Preview Header
-domain: agenticdevelopercookbook://ingredients/markdown-preview-header
+domain: agenticdevelopertoolkit://recipes/markdown-preview-header
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: ba2377b1-f831-4ef8-bf2c-d8393e5eb2c1
 title: Status Pill
-domain: agenticdevelopercookbook://ingredients/status-pill
+domain: agenticdevelopertoolkit://recipes/status-pill
 type: ingredient
 version: 1.0.0
 status: review

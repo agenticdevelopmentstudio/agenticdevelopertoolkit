@@ -1,7 +1,7 @@
 ---
 id: 4d0e04ff-39eb-472c-93a0-8070f1b64a6a
 title: "OptionMenu"
-domain: agenticdevelopercookbook://ingredients/option-menu
+domain: agenticdevelopertoolkit://recipes/option-menu
 type: ingredient
 version: 1.0.1
 status: review

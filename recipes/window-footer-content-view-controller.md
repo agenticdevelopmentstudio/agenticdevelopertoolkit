@@ -1,7 +1,7 @@
 ---
 id: 44544cfb-39e5-419d-81b9-8e1c504c6e64
 title: WindowFooterContentViewController
-domain: agenticdevelopercookbook://recipes/macos/window-footer-content-view-controller
+domain: agenticdevelopertoolkit://recipes/window-footer-content-view-controller
 type: ingredient
 version: 1.0.0
 status: review

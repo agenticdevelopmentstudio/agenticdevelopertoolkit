@@ -1,7 +1,7 @@
 ---
 id: 6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a
 title: Split View Control
-domain: agenticdevelopercookbook://ingredients/split-view-control
+domain: agenticdevelopertoolkit://recipes/split-view-control
 type: ingredient
 version: 1.0.0
 status: review

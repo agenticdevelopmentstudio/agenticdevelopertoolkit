@@ -1,7 +1,7 @@
 ---
 id: 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 title: Dialog
-domain: agenticdevelopercookbook://recipes/dialog
+domain: agenticdevelopertoolkit://recipes/dialog
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - base-ui
 depends-on: []
 related:
-  - agenticdevelopercookbook://recipes/alert-and-dialog
+  - agenticdevelopertoolkit://recipes/alert-and-dialog
 references: []
 approved-by: ''
 approved-date: ''

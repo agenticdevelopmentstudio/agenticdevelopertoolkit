@@ -1,7 +1,7 @@
 ---
 id: 88d69611-4a12-4777-9509-8af6c0626dc7
 title: CategoryPickerDialog
-domain: agenticdeveloperhub://recipes/category-picker-dialog
+domain: agenticdevelopertoolkit://recipes/category-picker-dialog
 type: ingredient
 version: 1.1.1
 status: review
@@ -24,11 +24,11 @@ tags:
 - chooser
 - ui
 depends-on:
-- agenticdeveloperhub://recipes/dialog
-- agenticdeveloperhub://recipes/dialog-actions
+- agenticdevelopertoolkit://recipes/dialog
+- agenticdevelopertoolkit://recipes/dialog-actions
 related:
-- agenticdeveloperhub://recipes/list-chooser
-- agenticdeveloperhub://recipes/entity-chooser
+- agenticdevelopertoolkit://recipes/list-chooser
+- agenticdevelopertoolkit://recipes/entity-chooser
 references: []
 approved-by: ''
 approved-date: ''

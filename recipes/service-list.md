@@ -1,7 +1,7 @@
 ---
 id: fe09968a-6575-40d0-b0b8-af6ce52d8efd
 title: Service List
-domain: agenticdevelopercookbook://ingredients/service-list
+domain: agenticdevelopertoolkit://recipes/service-list
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: 4c3c4287-95bd-47f5-9a07-2382e0db523b
 title: PanelStack
-domain: agenticdevelopercookbook://ingredients/panel-stack
+domain: agenticdevelopertoolkit://recipes/panel-stack
 type: ingredient
 version: 1.0.0
 status: review

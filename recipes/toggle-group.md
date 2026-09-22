@@ -1,7 +1,7 @@
 ---
 id: dffc1431-7386-4acf-94bc-6043c5c7eebc
 title: ToggleGroup
-domain: agenticdevelopercookbook://recipes/toggle-group
+domain: agenticdevelopertoolkit://recipes/toggle-group
 type: ingredient
 version: 1.1.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: bf49f12b-61cd-4e34-b395-0b6e5fe715a2
 title: Popup Menu
-domain: agenticdevelopercookbook://ingredients/popup-menu
+domain: agenticdevelopertoolkit://recipes/popup-menu
 type: ingredient
 version: 1.0.1
 status: review

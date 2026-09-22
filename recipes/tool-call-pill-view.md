@@ -1,7 +1,7 @@
 ---
 id: e5165b31-6a06-4d79-8fb8-98ba491623b1
 title: Tool Call Pill View
-domain: agenticdevelopercookbook://ingredients/tool-call-pill-view
+domain: agenticdevelopertoolkit://recipes/tool-call-pill-view
 type: ingredient
 version: 1.0.0
 status: review

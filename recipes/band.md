@@ -1,7 +1,7 @@
 ---
 id: e0b59d60-0a56-4bf4-85cb-fb0e58170f8e
 title: Band
-domain: agenticdevelopercookbook://ingredients/band
+domain: agenticdevelopertoolkit://recipes/band
 type: ingredient
 version: 1.0.0
 status: review

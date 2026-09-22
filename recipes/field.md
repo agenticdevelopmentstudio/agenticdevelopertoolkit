@@ -1,7 +1,7 @@
 ---
 id: 0c199036-81c3-47c3-9e79-e4b8187ca69a
 title: Field
-domain: agenticdevelopercookbook://ingredients/field
+domain: agenticdevelopertoolkit://recipes/field
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://recipes/field-group
+- agenticdevelopertoolkit://recipes/field-group
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,7 +1,7 @@
 ---
 id: 46e0a509-8eac-460a-b24a-d39a8b71b02c
 title: Message Bubble
-domain: agenticdevelopercookbook://ingredients/message-bubble
+domain: agenticdevelopertoolkit://recipes/message-bubble
 type: ingredient
 version: 1.0.0
 status: review

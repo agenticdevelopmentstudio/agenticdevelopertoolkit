@@ -1,7 +1,7 @@
 ---
 id: c61a220c-b63e-4dcd-a12b-715de20f7b5d
 title: Popover
-domain: agenticdevelopercookbook://ingredients/popover
+domain: agenticdevelopertoolkit://recipes/popover
 type: ingredient
 version: 1.0.1
 status: review

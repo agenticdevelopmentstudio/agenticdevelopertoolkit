@@ -1,7 +1,7 @@
 ---
 id: c9bdfe9a-6c8f-44c4-957e-757ecfa2e658
 title: Group
-domain: agenticdevelopercookbook://ingredients/group
+domain: agenticdevelopertoolkit://recipes/group
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: bd17a89e-aac9-475d-adcd-98b61d24f941
 title: Content Overlay
-domain: agenticdevelopercookbook://ingredients/content-overlay
+domain: agenticdevelopertoolkit://recipes/content-overlay
 type: ingredient
 version: 1.1.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: 00f63479-58b8-47e3-9ac7-7f1b944a5007
 title: Permission Toggles
-domain: agenticdevelopercookbook://ingredients/permission-toggles
+domain: agenticdevelopertoolkit://recipes/permission-toggles
 type: ingredient
 version: 1.0.1
 status: review

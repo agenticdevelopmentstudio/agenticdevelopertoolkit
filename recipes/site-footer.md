@@ -1,7 +1,7 @@
 ---
 id: d80699f9-1020-4f8a-85ce-f6406e765631
 title: Site Footer
-domain: agenticdevelopercookbook://recipes/site-footer
+domain: agenticdevelopertoolkit://recipes/site-footer
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: d7a2af70-0812-4360-afa7-02be1a44e7b8
 title: Resource Card
-domain: agenticdevelopercookbook://ingredients/resource-card
+domain: agenticdevelopertoolkit://recipes/resource-card
 type: ingredient
 version: 1.0.0
 status: review

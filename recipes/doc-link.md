@@ -1,7 +1,7 @@
 ---
 id: 0fe9833b-2a5c-47d5-a455-87e00d3797cf
 title: DocLink
-domain: agenticdevelopercookbook://ingredients/doc-link
+domain: agenticdevelopertoolkit://recipes/doc-link
 type: ingredient
 version: 1.0.0
 status: review

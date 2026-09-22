@@ -1,7 +1,7 @@
 ---
 id: db6178e1-c613-4358-a0b4-8c6f5bfaaff9
 title: UserCard
-domain: agenticdevelopercookbook://recipes/user-card
+domain: agenticdevelopertoolkit://recipes/user-card
 type: ingredient
 version: 1.2.0
 status: review

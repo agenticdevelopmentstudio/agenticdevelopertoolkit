@@ -1,7 +1,7 @@
 ---
 id: 5182f5ec-186b-4605-8c40-ea70a49262c2
 title: Checklist
-domain: agenticdevelopercookbook://ingredients/checklist
+domain: agenticdevelopertoolkit://recipes/checklist
 type: ingredient
 version: 1.0.0
 status: review

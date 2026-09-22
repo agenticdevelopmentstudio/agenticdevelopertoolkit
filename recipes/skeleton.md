@@ -1,7 +1,7 @@
 ---
 id: 4a3761c5-5809-43c9-9a45-6f91fe82ae97
 title: Skeleton
-domain: agenticdevelopercookbook://ingredients/skeleton
+domain: agenticdevelopertoolkit://recipes/skeleton
 type: ingredient
 version: 1.0.1
 status: review

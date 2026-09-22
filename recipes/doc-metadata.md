@@ -1,7 +1,7 @@
 ---
 id: 26c4eb3c-9af9-4092-9546-bb5c5532b59c
 title: DocMetadata
-domain: agenticdevelopercookbook://ingredients/doc-metadata
+domain: agenticdevelopertoolkit://recipes/doc-metadata
 type: ingredient
 version: 1.0.0
 status: review

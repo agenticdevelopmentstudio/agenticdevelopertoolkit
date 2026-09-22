@@ -1,7 +1,7 @@
 ---
 id: 01947259-4883-44e1-a047-6b4e463cb422
 title: Landing Card
-domain: agenticdevelopercookbook://ingredients/landing-card
+domain: agenticdevelopertoolkit://recipes/landing-card
 type: ingredient
 version: 1.0.0
 status: review

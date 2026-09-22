@@ -1,7 +1,7 @@
 ---
 id: e6c9f895-888f-4984-8fe1-ba86cc855613
 title: Rich Content
-domain: agenticdevelopercookbook://ingredients/rich-content
+domain: agenticdevelopertoolkit://recipes/rich-content
 type: ingredient
 version: 1.0.0
 status: review

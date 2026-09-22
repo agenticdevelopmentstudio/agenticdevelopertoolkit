@@ -1,7 +1,7 @@
 ---
 id: 1d701cc5-5822-4465-8ad5-413e6b0c31fc
 title: Tour Strip
-domain: agenticdevelopercookbook://ingredients/tour-strip
+domain: agenticdevelopertoolkit://recipes/tour-strip
 type: ingredient
 version: 1.0.0
 status: review

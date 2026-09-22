@@ -1,7 +1,7 @@
 ---
 id: 05930e64-fa82-49ef-b50d-22d87fa7d182
 title: Deck
-domain: agenticdevelopercookbook://ingredients/deck
+domain: agenticdevelopertoolkit://recipes/deck
 type: ingredient
 version: 1.0.0
 status: review

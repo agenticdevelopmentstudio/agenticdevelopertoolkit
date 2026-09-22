@@ -1,7 +1,7 @@
 ---
 id: 6579e030-0455-453c-81cf-177dae3dd82e
 title: Field Value
-domain: agenticdevelopercookbook://ingredients/field-value
+domain: agenticdevelopertoolkit://recipes/field-value
 type: ingredient
 version: 1.0.0
 status: review

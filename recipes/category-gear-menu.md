@@ -1,7 +1,7 @@
 ---
 id: 76eee228-2fd5-4524-a84e-d221c2e4c8ad
 title: Category Gear Menu
-domain: agenticdevelopercookbook://ingredients/category-gear-menu
+domain: agenticdevelopertoolkit://recipes/category-gear-menu
 type: ingredient
 version: 1.0.0
 status: review

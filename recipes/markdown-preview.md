@@ -1,7 +1,7 @@
 ---
 id: 6ea605aa-9248-46d4-9532-82185388749b
 title: Markdown Preview
-domain: agenticdevelopercookbook://ingredients/markdown-preview
+domain: agenticdevelopertoolkit://recipes/markdown-preview
 type: ingredient
 version: 1.0.0
 status: review

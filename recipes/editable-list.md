@@ -1,7 +1,7 @@
 ---
 id: fcd5062f-05c2-4877-adfb-9b77c75c6076
 title: Editable List
-domain: agenticdevelopercookbook://ingredients/editable-list
+domain: agenticdevelopertoolkit://recipes/editable-list
 type: ingredient
 version: 1.0.0
 status: review

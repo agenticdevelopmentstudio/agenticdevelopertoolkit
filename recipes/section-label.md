@@ -1,7 +1,7 @@
 ---
 id: fce1333d-7f42-49f8-86da-508159701043
 title: SectionLabel
-domain: agenticdevelopercookbook://ingredients/section-label
+domain: agenticdevelopertoolkit://recipes/section-label
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,8 +22,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://ingredients/user-card
-- agenticdevelopercookbook://ingredients/field
+- agenticdevelopertoolkit://recipes/user-card
+- agenticdevelopertoolkit://recipes/field
 references: []
 approved-by: ''
 approved-date: ''

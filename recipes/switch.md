@@ -1,7 +1,7 @@
 ---
 id: 951b86ac-cf75-46ec-9746-d15fcb4618b4
 title: Switch
-domain: agenticdevelopercookbook://ingredients/switch
+domain: agenticdevelopertoolkit://recipes/switch
 type: ingredient
 version: 1.1.0
 status: review

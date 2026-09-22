@@ -1,7 +1,7 @@
 ---
 id: 316aed50-a6cb-4ece-977c-8d6dacb2186b
 title: Markdown Renderer
-domain: agenticdevelopercookbook://ingredients/markdown-renderer
+domain: agenticdevelopertoolkit://recipes/markdown-renderer
 type: ingredient
 version: 1.1.0
 status: review

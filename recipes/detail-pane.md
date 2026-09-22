@@ -1,7 +1,7 @@
 ---
 id: 292f17e2-1df8-4126-a26c-4160e8e88708
 title: Detail Pane
-domain: agenticdevelopercookbook://ingredients/detail-pane
+domain: agenticdevelopertoolkit://recipes/detail-pane
 type: ingredient
 version: 1.0.0
 status: review

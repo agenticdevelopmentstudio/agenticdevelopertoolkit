@@ -1,7 +1,7 @@
 ---
 id: 31a21ecf-cf6a-42d8-bae5-3b482f8d554d
 title: Window Drawer
-domain: agenticdevelopercookbook://ingredients/window-drawer
+domain: agenticdevelopertoolkit://recipes/window-drawer
 type: ingredient
 version: 1.0.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: ff445185-2322-4c94-ad9d-3ad27a50677d
 title: App Tabs
-domain: agenticdevelopercookbook://ingredients/app-tabs
+domain: agenticdevelopertoolkit://recipes/app-tabs
 type: ingredient
 version: 1.0.0
 status: review

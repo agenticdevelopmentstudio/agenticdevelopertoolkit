@@ -1,7 +1,7 @@
 ---
 id: 8ce108f2-b64b-4e01-8dbb-94ef3397b46a
 title: Hierarchical Detail View
-domain: agenticdevelopercookbook://ingredients/hierarchical-detail-view
+domain: agenticdevelopertoolkit://recipes/hierarchical-detail-view
 type: ingredient
 version: 1.0.0
 status: review

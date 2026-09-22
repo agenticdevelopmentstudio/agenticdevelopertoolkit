@@ -1,7 +1,7 @@
 ---
 id: 85ce8c4b-5233-48af-9268-30cddd4747f9
 title: Accordion
-domain: agenticdevelopercookbook://ingredients/accordion
+domain: agenticdevelopertoolkit://recipes/accordion
 type: ingredient
 version: 1.1.0
 status: review

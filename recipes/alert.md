@@ -1,7 +1,7 @@
 ---
 id: a56695f3-0205-4c9b-b724-53be608de2f0
 title: Alert
-domain: agenticdevelopercookbook://ingredients/alert
+domain: agenticdevelopertoolkit://recipes/alert
 type: ingredient
 version: 1.0.0
 status: review

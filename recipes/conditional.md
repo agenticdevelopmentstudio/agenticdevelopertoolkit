@@ -1,7 +1,7 @@
 ---
 id: f361ebe1-69b9-4089-8079-94f4b26a37d3
 title: Conditional
-domain: agenticdevelopercookbook://ingredients/conditional
+domain: agenticdevelopertoolkit://recipes/conditional
 type: ingredient
 version: 1.0.0
 status: review

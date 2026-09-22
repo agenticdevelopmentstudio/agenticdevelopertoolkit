@@ -1,7 +1,7 @@
 ---
 id: 56388aa3-bc75-4d0a-830b-222f39750a9d
 title: Options Dialog View Controller
-domain: agenticdevelopercookbook://ingredients/options-dialog-view-controller
+domain: agenticdevelopertoolkit://recipes/options-dialog-view-controller
 type: ingredient
 version: 1.0.0
 status: review

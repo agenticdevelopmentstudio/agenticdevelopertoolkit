@@ -1,7 +1,7 @@
 ---
 id: 25816370-14ff-454a-83d4-ebd588a2ff01
 title: Slider
-domain: agenticdevelopercookbook://ingredients/slider
+domain: agenticdevelopertoolkit://recipes/slider
 type: ingredient
 version: 1.1.0
 status: review

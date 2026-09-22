@@ -1,7 +1,7 @@
 ---
 id: 960a1577-bf48-4d56-a93f-aa690853f64f
 title: ViewportShell
-domain: agenticdevelopercookbook://ingredients/viewport-shell
+domain: agenticdevelopertoolkit://recipes/viewport-shell
 type: ingredient
 version: 1.0.0
 status: review

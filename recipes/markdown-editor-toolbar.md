@@ -1,7 +1,7 @@
 ---
 id: 3600088a-a9f6-42ca-81db-43f0eb6ddd79
 title: Markdown Editor Toolbar
-domain: agenticdevelopercookbook://recipes/ui/markdown-editor-toolbar
+domain: agenticdevelopertoolkit://recipes/markdown-editor-toolbar
 type: ingredient
 version: 1.1.0
 status: review

@@ -1,7 +1,7 @@
 ---
 id: e5b8e26f-2869-4a09-8d8e-0bb68ece805d
 title: Connector Registry
-domain: agenticdevelopercookbook://ingredients/connector-registry
+domain: agenticdevelopertoolkit://recipes/connector-registry
 type: ingredient
 version: 1.0.0
 status: review

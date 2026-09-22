@@ -1,7 +1,7 @@
 ---
 id: 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
 title: Persona Chat
-domain: agenticdevelopercookbook://ingredients/persona-chat
+domain: agenticdevelopertoolkit://recipes/persona-chat
 type: ingredient
 version: 1.0.0
 status: review

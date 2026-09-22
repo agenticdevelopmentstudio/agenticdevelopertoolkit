@@ -1,7 +1,7 @@
 ---
 id: 40827b84-406e-4091-951b-9498b2f78253
 title: ListChooser
-domain: agenticdevelopercookbook://recipes/list-chooser
+domain: agenticdevelopertoolkit://recipes/list-chooser
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - ui
   - form-control
 depends-on:
-  - agenticdevelopercookbook://recipes/option-menu
+  - agenticdevelopertoolkit://recipes/option-menu
 related:
-  - agenticdevelopercookbook://recipes/combobox
-  - agenticdevelopercookbook://recipes/option-menu
+  - agenticdevelopertoolkit://recipes/combobox
+  - agenticdevelopertoolkit://recipes/option-menu
 references: []
 approved-by: ''
 approved-date: ''

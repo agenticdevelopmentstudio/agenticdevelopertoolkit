@@ -1,7 +1,7 @@
 ---
 id: 0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8
 title: Hierarchical Topic / Detail View
-domain: agenticdeveloperhub://recipes/hierarchical-topic-detail
+domain: agenticdevelopertoolkit://recipes/hierarchical-topic-detail
 type: recipe
 version: 1.20.0
 status: review
@@ -25,13 +25,13 @@ tags:
 - deep-linking
 - layout
 ingredients:
-- agenticdeveloperhub://recipes/topic-detail
-- agenticdeveloperhub://recipes/resizable-split
-- agenticdeveloperhub://recipes/disclosure
-- agenticdeveloperhub://recipes/alert-and-dialog
+- agenticdevelopertoolkit://recipes/topic-detail
+- agenticdevelopertoolkit://recipes/resizable-split
+- agenticdevelopertoolkit://recipes/disclosure
+- agenticdevelopertoolkit://recipes/alert-and-dialog
 depends-on: []
 related:
-- agenticdeveloperhub://recipes/topic-detail
+- agenticdevelopertoolkit://recipes/topic-detail
 references: []
 approved-by: ''
 approved-date: ''
@@ -468,10 +468,10 @@ and the stack oscillates between the two states (React's max-update-depth crash)
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Topic Detail | agenticdeveloperhub://recipes/topic-detail | One rail per hierarchy level (icon+name rows, optional left-aligned `title`, controllable collapse/cover, header `+` create affordance, `selectionStyle` bar/marker, whole-branch hover reveal when covered, full-width pane in narrow mode). | yes | `title`, `items`, `selectedId`, `onSelect`, `onNew`/`newLabel`/`newActive`, `collapsed`/`onCollapsedChange`, `covered`, `isRoot`, `selectionStyle`, `panePadding={false}`. |
-| Resizable Split | agenticdeveloperhub://recipes/resizable-split | Drag-to-resize the boundary between a topic list and the rest, with snap-to-undisclose / snap-to-full. | yes | Per-rail draggable divider; min/max + snap thresholds. |
-| Disclosure | agenticdeveloperhub://recipes/disclosure | The animated disclosure (collapse/expand) of a topic list to/from its icon strip. | yes | Upper-right toggle; animated unless reduced-motion. |
-| Alert & Dialog | agenticdeveloperhub://recipes/alert-and-dialog | The modal opened by a list's "new topic" button to create an item, AND the 3-action Save/Discard/Cancel unsaved-work prompt the package raises before a drill-down Back / breadcrumb-up discards a dirty leaf. | yes | New-item modal (returns the created id); the package's `UnsavedChangesModal` (driven by `exitGuard`). |
+| Topic Detail | agenticdevelopertoolkit://recipes/topic-detail | One rail per hierarchy level (icon+name rows, optional left-aligned `title`, controllable collapse/cover, header `+` create affordance, `selectionStyle` bar/marker, whole-branch hover reveal when covered, full-width pane in narrow mode). | yes | `title`, `items`, `selectedId`, `onSelect`, `onNew`/`newLabel`/`newActive`, `collapsed`/`onCollapsedChange`, `covered`, `isRoot`, `selectionStyle`, `panePadding={false}`. |
+| Resizable Split | agenticdevelopertoolkit://recipes/resizable-split | Drag-to-resize the boundary between a topic list and the rest, with snap-to-undisclose / snap-to-full. | yes | Per-rail draggable divider; min/max + snap thresholds. |
+| Disclosure | agenticdevelopertoolkit://recipes/disclosure | The animated disclosure (collapse/expand) of a topic list to/from its icon strip. | yes | Upper-right toggle; animated unless reduced-motion. |
+| Alert & Dialog | agenticdevelopertoolkit://recipes/alert-and-dialog | The modal opened by a list's "new topic" button to create an item, AND the 3-action Save/Discard/Cancel unsaved-work prompt the package raises before a drill-down Back / breadcrumb-up discards a dirty leaf. | yes | New-item modal (returns the created id); the package's `UnsavedChangesModal` (driven by `exitGuard`). |
 
 ## Integration Requirements
 

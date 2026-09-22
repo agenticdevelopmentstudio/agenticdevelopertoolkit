@@ -1,7 +1,7 @@
 ---
 id: 07c437af-a291-4356-bd83-c896bd4facde
 title: Screen
-domain: agenticdevelopercookbook://ingredients/screen
+domain: agenticdevelopertoolkit://recipes/screen
 type: ingredient
 version: 1.0.0
 status: review

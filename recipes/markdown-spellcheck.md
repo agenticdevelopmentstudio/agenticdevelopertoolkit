@@ -1,7 +1,7 @@
 ---
 id: 81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094
 title: Markdown Spell Check
-domain: agenticdevelopercookbook://recipes/markdown-spellcheck
+domain: agenticdevelopertoolkit://recipes/markdown-spellcheck
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,11 +23,11 @@ tags:
   - editor
   - toolbar
 depends-on:
-  - agenticdevelopercookbook://recipes/button
-  - agenticdevelopercookbook://recipes/markdown-editor
+  - agenticdevelopertoolkit://recipes/button
+  - agenticdevelopertoolkit://recipes/markdown-editor
 related:
-  - agenticdevelopercookbook://recipes/markdown-editor
-  - agenticdevelopercookbook://recipes/markdown-quick-reference
+  - agenticdevelopertoolkit://recipes/markdown-editor
+  - agenticdevelopertoolkit://recipes/markdown-quick-reference
 references:
   - https://writewithharper.com
 approved-by: ''

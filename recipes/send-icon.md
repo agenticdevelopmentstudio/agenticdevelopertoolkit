@@ -1,7 +1,7 @@
 ---
 id: 4a2dcdee-4d2a-4f3f-a3a5-d243ec2b799b
 title: SendIcon
-domain: agenticdevelopercookbook://ingredients/send-icon
+domain: agenticdevelopertoolkit://recipes/send-icon
 type: ingredient
 version: 1.0.0
 status: review

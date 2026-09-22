@@ -1,7 +1,7 @@
 ---
 id: c9c48e65-6905-4035-b8e1-e053219599f1
 title: DocBreadcrumbs
-domain: agenticdevelopercookbook://ingredients/doc-breadcrumbs
+domain: agenticdevelopertoolkit://recipes/doc-breadcrumbs
 type: ingredient
 version: 1.2.0
 status: review

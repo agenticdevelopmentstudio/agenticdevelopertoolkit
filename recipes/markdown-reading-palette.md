@@ -1,7 +1,7 @@
 ---
 id: ee901ea5-cf3e-4276-8367-0693911bc02e
 title: Markdown Reading Palette
-domain: agenticdevelopercookbook://ingredients/markdown-reading-palette
+domain: agenticdevelopertoolkit://recipes/markdown-reading-palette
 type: ingredient
 version: 1.0.0
 status: review

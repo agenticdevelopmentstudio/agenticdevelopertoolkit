@@ -1,7 +1,7 @@
 ---
 id: 3ec6618a-03a4-4740-9655-e6e47c05cf2b
 title: WindowFooterBar
-domain: agenticdevelopercookbook://ingredients/window-footer-bar
+domain: agenticdevelopertoolkit://recipes/window-footer-bar
 type: ingredient
 version: 1.0.0
 status: review

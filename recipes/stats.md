@@ -1,7 +1,7 @@
 ---
 id: a63de97e-d75c-4733-a875-bad20e001fcb
 title: Stats
-domain: agenticdevelopercookbook://ingredients/stats
+domain: agenticdevelopertoolkit://recipes/stats
 type: ingredient
 version: 1.0.0
 status: review

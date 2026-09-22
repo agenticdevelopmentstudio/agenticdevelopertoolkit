@@ -1,7 +1,7 @@
 ---
 id: 0ae70642-28e7-436a-b934-0b445652ac09
 title: Chat Input
-domain: agenticdevelopercookbook://ingredients/chat-input
+domain: agenticdevelopertoolkit://recipes/chat-input
 type: ingredient
 version: 1.0.0
 status: review

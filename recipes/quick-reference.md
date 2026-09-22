@@ -1,7 +1,7 @@
 ---
 id: 40a6b717-cbdb-4d49-9f98-b318668b396c
 title: Syntax Quick Reference
-domain: agenticdevelopercookbook://ingredients/quick-reference
+domain: agenticdevelopertoolkit://recipes/quick-reference
 type: ingredient
 version: 1.0.0
 status: review

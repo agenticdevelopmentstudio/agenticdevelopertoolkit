@@ -1,7 +1,7 @@
 ---
 id: c10a6fd9-470a-45a1-a025-3c75554c2a41
 title: ViewportComposer
-domain: agenticdevelopercookbook://ingredients/viewport-composer
+domain: agenticdevelopertoolkit://recipes/viewport-composer
 type: ingredient
 version: 1.0.0
 status: review

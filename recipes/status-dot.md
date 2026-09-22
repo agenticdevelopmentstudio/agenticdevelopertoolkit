@@ -1,7 +1,7 @@
 ---
 id: 1a044d34-d585-46b4-b703-dea3fb9b9642
 title: StatusDot
-domain: agenticdevelopercookbook://ingredients/status-dot
+domain: agenticdevelopertoolkit://recipes/status-dot
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,7 +22,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://ingredients/stat-card
+- agenticdevelopertoolkit://recipes/stat-card
 references: []
 approved-by: ''
 approved-date: ''

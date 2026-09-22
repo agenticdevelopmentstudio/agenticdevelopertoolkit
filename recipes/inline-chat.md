@@ -1,7 +1,7 @@
 ---
 id: 1794948f-2bb2-4f25-b9b5-72b1e6306ea1
 title: Inline Chat
-domain: agenticdevelopercookbook://recipes/ui/inline-chat
+domain: agenticdevelopertoolkit://recipes/inline-chat
 type: ingredient
 version: 1.0.0
 status: review

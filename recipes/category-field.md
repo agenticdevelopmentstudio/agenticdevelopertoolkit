@@ -1,7 +1,7 @@
 ---
 id: 1be6e1bd-ee8c-4247-9020-c0d84356eb10
 title: CategoryField
-domain: agenticdevelopercookbook://ingredients/category-field
+domain: agenticdevelopertoolkit://recipes/category-field
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
 - tree-navigation
 depends-on: []
 related:
-- agenticdevelopercookbook://ingredients/tag-set-field
+- agenticdevelopertoolkit://recipes/tag-set-field
 references: []
 approved-by: ''
 approved-date: ''

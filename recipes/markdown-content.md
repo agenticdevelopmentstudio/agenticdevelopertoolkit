@@ -1,7 +1,7 @@
 ---
 id: 2d18fdbd-b2c5-46c0-8e6f-ceb7467fafa6
 title: Markdown Content
-domain: agenticdevelopercookbook://ingredients/markdown-content
+domain: agenticdevelopertoolkit://recipes/markdown-content
 type: ingredient
 version: 1.0.0
 status: review

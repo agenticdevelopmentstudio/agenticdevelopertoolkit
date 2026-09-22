@@ -1,7 +1,7 @@
 ---
 id: 968f66df-4c2d-47ba-92cf-ff1e34f5deb2
 title: Paper Search View
-domain: agenticdevelopercookbook://ingredients/paper-search-view
+domain: agenticdevelopertoolkit://recipes/paper-search-view
 type: ingredient
 version: 1.0.0
 status: review

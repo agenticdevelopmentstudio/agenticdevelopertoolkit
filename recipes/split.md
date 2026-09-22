@@ -1,7 +1,7 @@
 ---
 id: 8F4C2B7A-9D3E-4C5F-B2E8-7F6A3C1D5E9B
 title: Split
-domain: agenticdevelopercookbook://ingredients/split
+domain: agenticdevelopertoolkit://recipes/split
 type: ingredient
 version: 1.0.0
 status: review

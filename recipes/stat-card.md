@@ -1,7 +1,7 @@
 ---
 id: b7a4a259-620f-42a3-8bc2-9e5c07c1819d
 title: StatCard
-domain: agenticdevelopercookbook://recipes/stat-card
+domain: agenticdevelopertoolkit://recipes/stat-card
 type: recipe
 version: 1.3.0
 status: review
@@ -22,9 +22,9 @@ tags:
 - dashboard
 - ui
 ingredients:
-- agenticdevelopercookbook://recipes/info-panel
-- agenticdevelopercookbook://recipes/stat
-- agenticdevelopercookbook://recipes/external-link
+- agenticdevelopertoolkit://recipes/info-panel
+- agenticdevelopertoolkit://recipes/stat
+- agenticdevelopertoolkit://recipes/external-link
 depends-on: []
 related: []
 references: []
@@ -57,9 +57,9 @@ It was extracted from a status site's Traffic/Errors telemetry cards, so every s
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| InfoPanel | agenticdevelopercookbook://recipes/info-panel | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
-| StatRow | agenticdevelopercookbook://recipes/stat | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
-| ExternalLink | agenticdevelopercookbook://recipes/external-link | The "{label} ↗" deep link into the source tool, placed in the InfoPanel actions slot | no (only when `link` given) | `href` = `link.href`, children = `link.label`; opens a new tab (noopener) |
+| InfoPanel | agenticdevelopertoolkit://recipes/info-panel | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
+| StatRow | agenticdevelopertoolkit://recipes/stat | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
+| ExternalLink | agenticdevelopertoolkit://recipes/external-link | The "{label} ↗" deep link into the source tool, placed in the InfoPanel actions slot | no (only when `link` given) | `href` = `link.href`, children = `link.label`; opens a new tab (noopener) |
 
 The body-stack container, the footnote treatment, and the `stats[]`→rows mapping are
 the only things this block owns; `StatCardStat` (`{ label, value, tone }`) is exported

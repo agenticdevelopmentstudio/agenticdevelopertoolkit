@@ -1,7 +1,7 @@
 ---
 id: 9e36a0ef-67ef-485d-8ace-68886add841c
 title: Unsaved Changes Alert
-domain: agenticdevelopercookbook://recipes/ui/unsaved-changes-alert
+domain: agenticdevelopertoolkit://recipes/unsaved-changes-alert
 type: ingredient
 version: 1.0.0
 status: review

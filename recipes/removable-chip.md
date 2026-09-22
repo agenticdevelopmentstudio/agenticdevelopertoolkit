@@ -1,7 +1,7 @@
 ---
 id: 9191eade-c18a-4899-b802-f000a1905c80
 title: RemovableChip
-domain: agenticdevelopercookbook://ingredients/removable-chip
+domain: agenticdevelopertoolkit://recipes/removable-chip
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://ingredients/badge
+- agenticdevelopertoolkit://recipes/badge
 references: []
 approved-by: ''
 approved-date: ''

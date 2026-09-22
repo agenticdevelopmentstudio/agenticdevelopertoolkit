@@ -1,7 +1,7 @@
 ---
 id: c97bebaf-9e6d-49a7-a4bb-90e8e0ea0181
 title: Spinner
-domain: agenticdevelopercookbook://ingredients/spinner
+domain: agenticdevelopertoolkit://recipes/spinner
 type: ingredient
 version: 1.0.0
 status: review

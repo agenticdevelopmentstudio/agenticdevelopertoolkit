@@ -1,7 +1,7 @@
 ---
 id: f3c25236-d72f-4a7b-839a-b7f335b3acd0
 title: Button
-domain: agenticdevelopercookbook://recipes/ui/button
+domain: agenticdevelopertoolkit://recipes/button
 type: ingredient
 version: 1.3.0
 status: review

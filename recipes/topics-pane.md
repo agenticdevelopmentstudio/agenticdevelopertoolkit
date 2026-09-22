@@ -1,7 +1,7 @@
 ---
 id: dcf1a793-0a47-466b-8b09-0bcf091fd55a
 title: Topics Pane
-domain: agenticdevelopercookbook://ingredients/topics-pane
+domain: agenticdevelopertoolkit://recipes/topics-pane
 type: ingredient
 version: 1.0.0
 status: review

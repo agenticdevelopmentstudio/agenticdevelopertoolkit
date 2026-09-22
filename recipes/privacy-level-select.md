@@ -1,7 +1,7 @@
 ---
 id: d0cf136a-26ed-4a69-a440-4d056795601e
 title: Privacy Level Select
-domain: agenticdevelopercookbook://ingredients/privacy-level-select
+domain: agenticdevelopertoolkit://recipes/privacy-level-select
 type: ingredient
 version: 1.0.0
 status: review

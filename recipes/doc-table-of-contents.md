@@ -1,7 +1,7 @@
 ---
 id: 28436339-4eda-46e9-b45f-f58a26949641
 title: Doc Table of Contents
-domain: agenticdevelopercookbook://ingredients/doc-table-of-contents
+domain: agenticdevelopertoolkit://recipes/doc-table-of-contents
 type: ingredient
 version: 1.0.0
 status: review

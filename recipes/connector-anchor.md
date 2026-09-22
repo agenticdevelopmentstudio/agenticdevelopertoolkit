@@ -1,7 +1,7 @@
 ---
 id: 8d76adce-493b-4e44-9b15-826c4899d3cd
 title: ConnectorAnchor
-domain: agenticdevelopercookbook://ingredients/connector-anchor
+domain: agenticdevelopertoolkit://recipes/connector-anchor
 type: ingredient
 version: 1.0.0
 status: review

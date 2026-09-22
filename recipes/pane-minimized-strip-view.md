@@ -1,7 +1,7 @@
 ---
 id: 5ec45ac4-a02f-4ee7-becb-7894c2893f23
 title: Pane Minimized Strip View
-domain: agenticdevelopercookbook://recipes/ui/pane-minimized-strip-view
+domain: agenticdevelopertoolkit://recipes/pane-minimized-strip-view
 type: ingredient
 version: 1.0.0
 status: review

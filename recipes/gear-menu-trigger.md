@@ -1,7 +1,7 @@
 ---
 id: cebee4d7-3d01-440d-a35e-6220957c1603
 title: Gear Menu Trigger
-domain: agenticdevelopercookbook://ingredients/gear-menu-trigger
+domain: agenticdevelopertoolkit://recipes/gear-menu-trigger
 type: ingredient
 version: 1.0.0
 status: review

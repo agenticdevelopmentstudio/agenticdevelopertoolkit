@@ -1,7 +1,7 @@
 ---
 id: bba42d5f-8a52-487f-88c5-4f988dfa714b
 title: Stat
-domain: agenticdevelopercookbook://recipes/stat
+domain: agenticdevelopertoolkit://recipes/stat
 type: ingredient
 version: 1.0.2
 status: review
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopercookbook://recipes/stat-card
+- agenticdevelopertoolkit://recipes/stat-card
 references: []
 approved-by: ''
 approved-date: ''

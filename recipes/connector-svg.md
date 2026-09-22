@@ -1,7 +1,7 @@
 ---
 id: d7a1229c-cf03-436f-8287-d99b52747510
 title: ConnectorSVG
-domain: agenticdevelopercookbook://recipes/connector-svg
+domain: agenticdevelopertoolkit://recipes/connector-svg
 type: ingredient
 version: 1.0.0
 status: review

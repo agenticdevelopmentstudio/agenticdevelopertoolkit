@@ -1,7 +1,7 @@
 ---
 id: 98e78d31-2c3a-47dc-a156-435a5732a29f
 title: Transcript
-domain: agenticdevelopercookbook://ingredients/transcript
+domain: agenticdevelopertoolkit://recipes/transcript
 type: ingredient
 version: 1.0.0
 status: review

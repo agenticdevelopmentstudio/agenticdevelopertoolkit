@@ -1,7 +1,7 @@
 ---
 id: f6d46f16-65a6-4d19-80c7-1fc8b4d323fd
 title: Mobile Chat
-domain: agenticdevelopercookbook://recipes/mobile-chat
+domain: agenticdevelopertoolkit://recipes/mobile-chat
 type: ingredient
 version: 1.0.0
 status: review

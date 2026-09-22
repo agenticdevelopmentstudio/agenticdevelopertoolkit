@@ -1,7 +1,7 @@
 ---
 id: d9df7837-8e06-460a-a703-60441d74eeed
 title: Categories and Tags
-domain: agenticdevelopercookbook://ingredients/categories-and-tags
+domain: agenticdevelopertoolkit://recipes/categories-and-tags
 type: ingredient
 version: 1.0.0
 status: review

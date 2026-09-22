@@ -1,7 +1,7 @@
 ---
 id: 7d2b41f0-63aa-47d1-94f8-19a06caedc6a
 title: Typing Indicator
-domain: agenticdevelopercookbook://ingredients/typing-indicator
+domain: agenticdevelopertoolkit://recipes/typing-indicator
 type: ingredient
 version: 1.0.0
 status: review

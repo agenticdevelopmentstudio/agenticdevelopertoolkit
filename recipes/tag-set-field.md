@@ -1,7 +1,7 @@
 ---
 id: a3645ff4-19c2-4b30-a828-93a56191f656
 title: TagSetField
-domain: agenticdevelopercookbook://ingredients/tag-set-field
+domain: agenticdevelopertoolkit://recipes/tag-set-field
 type: ingredient
 version: 1.0.0
 status: review
