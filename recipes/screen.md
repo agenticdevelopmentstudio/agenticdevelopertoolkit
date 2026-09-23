@@ -3,11 +3,11 @@ id: 07c437af-a291-4356-bd83-c896bd4facde
 title: Screen
 domain: agenticdevelopertoolkit://recipes/screen
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,8 +20,10 @@ tags:
 - deck
 - layout
 - viewport
-depends-on: []
-related: []
+depends-on:
+- agenticdevelopertoolkit://recipes/glow
+related:
+- agenticdevelopertoolkit://recipes/deck
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/section
 - https://developer.mozilla.org/en-US/docs/Web/CSS/vh
@@ -37,17 +39,18 @@ Screen is a full-viewport-height container component for use in a scrollable or 
 
 ## Behavioral Requirements
 
-- **must-render-children**: Component MUST render its children.
-- **must-render-semantic-element**: Component MUST render as either `<section>` (landmark) or `<div>` (non-landmark) based on the `as` prop.
-- **must-apply-base-class**: Component MUST apply the `lp-screen` class to the root element.
-- **must-center-alignment**: Component MUST apply the `lp-screen--center` class when `align` is set to `'center'`.
-- **must-merge-classname**: Component MUST merge the optional `className` prop with base classes without duplicating or removing the base class.
-- **may-render-glow**: Component MAY render a `<Glow />` component as the first child when `glow` is `true`.
-- **may-accept-id**: Component MAY accept and apply an optional `id` attribute to the root element.
+- **render-children**: Component MUST render its children.
+- **render-semantic-element**: Component MUST render as either `<section>` (landmark) or `<div>` (non-landmark) based on the `as` prop.
+- **apply-base-class**: Component MUST apply the `lp-screen` class to the root element.
+- **center-alignment**: Component MUST apply the `lp-screen--center` class when `align` is set to `'center'`.
+- **merge-classname**: Component MUST merge the optional `className` prop with the base classes (`lp-screen`, and `lp-screen--center` when applicable) by concatenation; it does not deduplicate, so a `className` that repeats a base class produces a class list with that token twice.
+- **render-glow**: Component MUST render a `<Glow />` component as the first child when `glow` is `true`, and MUST NOT render it when `glow` is `false` or omitted.
+- **accept-id**: Component MUST apply the optional `id` prop to the root element when provided.
+- **snap-point-viewport-height**: Component MUST establish itself as a full-viewport-height scroll-snap point via the `lp-screen` class, which sets `min-height: 100vh` and `scroll-snap-align: start` (`css/base.css`).
 
 ## Appearance
 
-Component applies layout and styling through CSS classes (`lp-screen`, `lp-screen--center`). Visual appearance is defined in the CSS layer and depends on host stylesheet. Component itself does not prescribe:
+Component applies layout and styling through CSS classes (`lp-screen`, `lp-screen--center`). The `lp-screen` class also fixes the screen's minimum height and its scroll-snap participation — see **snap-point-viewport-height**. Beyond that contract, visual appearance depends on the host stylesheet. Component itself does not prescribe:
 
 - Corner radius
 - Padding
@@ -55,7 +58,6 @@ Component applies layout and styling through CSS classes (`lp-screen`, `lp-scree
 - Colors
 - Borders
 - Shadows
-- Size constraints
 
 These are all delegated to the host's CSS implementation.
 
@@ -65,33 +67,36 @@ Not applicable: Screen is a static container with no interactive states.
 
 ## Accessibility
 
-- **Semantic role**: When rendered as `<section>`, conveys landmark semantics; when rendered as `<div>`, has no implicit role. Role depends on `as` prop and host stylesheet.
-- **Label requirement**: If rendered as a landmark (`<section>`), host SHOULD provide an accessible label via `aria-label` or `aria-labelledby` prop passed to Screen.
+- **Semantic role**: When rendered as `<section>` (`as: 'section'`), the element only becomes a `region` landmark once it has an accessible name; without one, assistive technology exposes it as a generic section, not a landmark. When rendered as `<div>` (`as: 'div'`), there is no implicit role. Role depends solely on the `as` prop — CSS classes and stylesheets have no effect on ARIA semantics.
+- **Label requirement**: Screen accepts no `aria-label`, `aria-labelledby`, or other pass-through attribute on its root element beyond `id`, `align`, `as`, `className`, and `glow`. Consequently, a `<section>` rendered by Screen has no accessible name through Screen's own props — hosts that need a labelled landmark region MUST provide that name outside Screen's public API.
 - **Content accessibility**: Screen does not define accessibility for its children; child components are responsible for their own accessible implementation.
 
 ## Conformance Test Vectors
 
 | ID | Requirement | Input | Expected |
 |----|-------------|-------|----------|
-| screen-001 | must-render-children | `children: <p>Content</p>` | Element tree includes the `<p>` element |
-| screen-002 | must-render-semantic-element | `as: 'section'` | Root element is `<section>` |
-| screen-003 | must-render-semantic-element | `as: 'div'` or omitted | Root element is `<div>` |
-| screen-004 | must-apply-base-class | Any props | Root element has `lp-screen` in its class list |
-| screen-005 | must-center-alignment | `align: 'center'` | Root element has both `lp-screen` and `lp-screen--center` in class list |
-| screen-006 | must-center-alignment | `align: 'top'` or omitted | Root element has `lp-screen` class but not `lp-screen--center` |
-| screen-007 | must-merge-classname | `className: 'custom-class'` | Root element has `lp-screen` and `custom-class` in class list |
-| screen-008 | may-render-glow | `glow: true` | First child of root element is the Glow component |
-| screen-009 | may-render-glow | `glow: false` or omitted | No Glow component is rendered |
-| screen-010 | may-accept-id | `id: 'slide-1'` | Root element has `id="slide-1"` |
+| screen-001 | render-children | `children: <p>Content</p>` | Element tree includes the `<p>` element |
+| screen-002 | render-semantic-element | `as: 'section'` or omitted | Root element is `<section>` |
+| screen-003 | render-semantic-element | `as: 'div'` | Root element is `<div>` |
+| screen-004 | apply-base-class | Any props | Root element has `lp-screen` in its class list |
+| screen-005 | center-alignment | `align: 'center'` | Root element has both `lp-screen` and `lp-screen--center` in class list |
+| screen-006 | center-alignment | `align: 'top'` or omitted | Root element has `lp-screen` class but not `lp-screen--center` |
+| screen-007 | merge-classname | `className: 'custom-class'` | Root element has `lp-screen` and `custom-class` in class list |
+| screen-008 | merge-classname | `className: 'lp-screen extra'` | Root element's class attribute contains `lp-screen` twice (e.g. `lp-screen lp-screen extra`); a DOM `classList` treats the duplicate token as a no-op |
+| screen-009 | render-glow | `glow: true` | First child of root element is the Glow component |
+| screen-010 | render-glow | `glow: false` or omitted | No Glow component is rendered |
+| screen-011 | render-glow | `glow: true, children: null` | First child of root element is still the Glow component; Glow's presence does not depend on `children` |
+| screen-012 | accept-id | `id: 'slide-1'` | Root element has `id="slide-1"` |
+| screen-013 | snap-point-viewport-height | Any props | The `lp-screen` class's computed style resolves to `min-height: 100vh` and `scroll-snap-align: start` |
+| screen-014 | render-children | `children: null` or `children: undefined` | Root element renders with no additional content beyond any Glow output |
+| screen-015 | render-children | `children: []` (empty array) | Root element renders with no additional content, same as `null` or `undefined` |
 
 ## Edge Cases
 
-- **Null or undefined children**: Component MUST NOT render if `children` is null or undefined. This is consistent with React semantics; the component renders children as-is.
-- **Empty children array**: Component MUST render an empty container when `children` is an empty array.
-- **Invalid align value**: If `align` is set to a value other than `'top'` or `'center'`, the component defaults to `'top'` behavior (no `lp-screen--center` class applied).
-- **Invalid as value**: If `as` is set to a value other than `'section'` or `'div'`, the component defaults to `'section'`.
-- **Glow with no children**: Component MUST render Glow component even if children are empty or null, provided `glow: true`.
-- **Multiple class collisions**: If `className` prop contains `lp-screen` or `lp-screen--center`, the component's merge logic concatenates all classes; host stylesheet SHOULD use CSS cascade to manage conflicts.
+- **Null or undefined children**: The root element always renders regardless of `children`; there is no case where the component itself does not render. React renders `null`/`undefined` children as nothing, so the rendered output is the root element plus, if `glow: true`, the Glow component. See screen-014.
+- **Empty children array**: An empty array renders the same as `null` or `undefined` — nothing — so the root element renders with no additional content. See screen-015.
+- **Glow with no children**: Component MUST render Glow when `glow: true`, independent of whether `children` is null, undefined, or empty; Glow's presence depends only on the `glow` prop. See screen-011.
+- **Multiple class collisions**: If `className` contains `lp-screen` or `lp-screen--center`, the merge logic (see **merge-classname**) concatenates all classes without deduplication, producing a class list with duplicate tokens; a DOM `classList` treats duplicate tokens as a no-op, and host stylesheet SHOULD rely on CSS cascade to manage any remaining style conflicts. See screen-008.
 
 ## Configuration
 
@@ -136,26 +141,39 @@ Not applicable: Screen does not implement logging.
 
 - **React/Web** (source): Screen is a functional component that conditionally renders a semantic element (`<section>` or `<div>`) based on the `as` prop. It applies BEM-style classes (`lp-screen`, `lp-screen--center`) for styling and optionally renders the Glow component as the first child. Layout and visual appearance are entirely CSS-driven, defined in a separate stylesheet (`css/base.css` per the source comment).
 
-- **SwiftUI**: Use a `ZStack` or `VStack` with `.ignoresSafeArea()` and a frame matching the viewport height. Conditionally prepend a background glow view (using `.background()` modifier or a custom shape) when the glow property is true. Apply conditional padding or alignment modifiers to implement the center vs. top alignment behavior.
+- **SwiftUI**: Inside a `ScrollView` with `.scrollTargetBehavior(.paging)`, size each screen with `.containerRelativeFrame(.vertical)` so it occupies exactly one viewport height and acts as a paging/snap point. Conditionally overlay a background glow view (via `.background()` or a custom shape) when the glow property is true. Apply conditional padding or alignment modifiers to implement the center vs. top alignment behavior.
 
-- **Compose**: Use a `Box` composable with `Modifier.fillMaxHeight()` and optional `Modifier.fillMaxWidth()`. Conditionally render a canvas-based glow in the background using `drawBehind { }`. Use `contentAlignment` parameter to position children at the top or center of the box.
+- **Compose**: Inside a `LazyColumn`, size each screen item with `Modifier.fillParentMaxHeight()` — `fillMaxHeight()` has no bounded height to fill inside a scrolling container — so each screen is exactly one viewport tall, or use a `VerticalPager` page directly. Conditionally render a canvas-based glow in the background using `drawBehind { }`. Use `contentAlignment` to position children at the top or center of the box.
 
-- **AppKit / UIKit**: Subclass `NSView` (AppKit) or `UIView` (UIKit) with `translatesAutoresizingMaskIntoConstraints: false`. Set constraints to fill the view controller's view. Optionally add a background glow CALayer or custom drawing. Use auto layout constraints or `UIStackView` to position child views according to the alignment property.
+- **AppKit / UIKit**: Use a container view (or view controller) that holds the glow layer and the content as subviews, rather than subclassing `NSView`/`UIView`. Configure it with `translatesAutoresizingMaskIntoConstraints = false`, constrained to fill the parent view's bounds, with an optional background glow `CALayer` or subview placed behind the content. Use Auto Layout constraints or a `UIStackView`/`NSStackView` to position child views according to the alignment property.
 
-- **WinUI 3**: Use a `Grid` control with `Height="*"` (star sizing) to fill available vertical space. Optionally render a canvas or rectangle with a glow effect (`BlurEffect` or custom XAML storyboard animation) behind the content. Use `VerticalAlignment` property to position child elements at the top (`Top`) or center (`Center`).
+- **WinUI 3**: Size each screen to the height of the enclosing `ScrollViewer`'s viewport (e.g. bind `Height` to `ScrollViewer.ViewportHeight` or a converted `ActualHeight`) rather than `Height="*"` on a bare `Grid`, since star sizing only applies inside `RowDefinition`/`ColumnDefinition`. Build the glow with a Composition radial gradient brush (`CompositionRadialGradientBrush`) or a XAML `RadialGradientBrush`, not `BlurEffect`, which is a WPF-only API with no WinUI 3 equivalent. Use `VerticalAlignment` to position child elements at the top (`Top`) or center (`Center`).
 
 ## Design Decisions
 
-- **CSS-driven styling**: Visual appearance is deliberately delegated to a separate stylesheet. This keeps the component logic minimal and allows host applications to customize styling without modifying the component code.
-- **Glow as optional prop**: The glow prop exists so component ordering is automatic; the host does not need to worry about placing a Glow component before or after Screen. Default is `false` because a deck where every screen glows is a host-level design decision, not a component default.
-- **Semantic element choice**: The `as` prop allows Screen to act either as a landmark (`<section>`) or as a generic container (`<div>`), giving the host control over information architecture without requiring wrapper elements.
+**Decision**: Visual appearance is delegated entirely to CSS (base classes `lp-screen` and `lp-screen--center`) rather than exposed through component props.
+**Rationale**: Keeps component logic minimal and lets host applications customize styling without modifying the component code.
+**Approved**: pending
+
+**Decision**: `glow` is an optional boolean prop (default `false`) rather than leaving ordering to the host.
+**Rationale**: Placing a `<Glow />` before or after Screen's other children is order-sensitive; making `glow` a prop lets Screen guarantee the correct order automatically. The default is `false` because lighting every screen in a deck is a host-level design decision, not a component default.
+**Approved**: pending
+
+**Decision**: The `as` prop lets Screen render as either a landmark (`<section>`) or a generic container (`<div>`).
+**Rationale**: Gives the host control over information architecture without requiring an extra wrapper element around Screen.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: No specific compliance checks are defined in the source.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+
+Partial because Screen correctly switches between `<section>` and `<div>` based on the `as` prop (`Screen.tsx`), but exposes no `aria-label`/`aria-labelledby` prop and forwards no other attributes to its root, so a host using `as: 'section'` as a landmark cannot give that element an accessible name through Screen's own API.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and elevated render-glow/accept-id to MUST, added glow as a dependency and deck as related, unquoted the modified date, added a snap-point-viewport-height requirement and test vector for the min-height/scroll-snap-align CSS contract, resolved the as-default and null/empty-children contradictions and dropped the untestable invalid-align/invalid-as edge cases, corrected merge-classname to describe concatenation without deduplication and added a class-collision test vector, corrected the section-landmark wording in Accessibility and added a Compliance table, reformatted Design Decisions into decision/rationale/approved triples, and fixed the invalid WinUI 3 APIs, vague SwiftUI/Compose guidance, and AppKit/UIKit subclassing note in Platform Notes |
 | 1.0.0 | 2026-09-22 | — | Initial creation |

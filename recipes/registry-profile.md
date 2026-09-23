@@ -3,11 +3,11 @@ id: 6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4
 title: Registry Profile
 domain: agenticdevelopertoolkit://recipes/registry-profile
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,8 +19,12 @@ platforms:
 tags:
 - profile
 - registry
-depends-on: []
-related: []
+depends-on:
+- agenticdevelopertoolkit://recipes/field-value
+- agenticdevelopertoolkit://recipes/service-list
+related:
+- agenticdevelopertoolkit://recipes/field-value
+- agenticdevelopertoolkit://recipes/service-list
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,26 +38,29 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 
 ## Behavioral Requirements
 
-- **must-render-display-name**: Component MUST render the entry's `displayName` as an `<h1>` heading.
-- **must-render-photo-when-available**: Component MUST render the entry's photo if `photoAttachmentId` is present and `resolveImageUrl(photoAttachmentId)` returns a non-null value.
-- **must-render-photo-alt-empty**: Component MUST set the photo `alt` attribute to an empty string (not a description), as the photo is decorative context for sighted users and the name heading provides textual identity.
-- **must-render-summary-when-present**: Component MUST render the entry's `summary` as a paragraph if the summary string is truthy.
-- **must-render-category-when-present**: Component MUST render the entry's `category` as a metadata row if the category string is truthy.
-- **must-render-location-when-present**: Component MUST render the entry's `locationText` as a metadata row if the location string is truthy.
-- **must-render-languages-list**: Component MUST render the entry's `languages` array as a comma-separated string in a metadata row if the array length is greater than zero.
-- **must-render-keywords-list**: Component MUST render the entry's `keywords` array as an unordered list of keyword items if the array length is greater than zero.
-- **must-render-contact-affordance-conditionally**: Component MUST render the `contact` prop inside a contact container only if `entry.contactMode === 'dm'` AND `contact` is not null or undefined.
-- **must-render-all-fields**: Component MUST render every field in `entry.fields` as a description-list item with the field's label and value.
-- **must-render-field-visibility-marker**: Component MUST render a visibility marker span inside the field label if the field's visibility is not `public`. The marker text MUST be "Signed-in members only" for `authenticated` visibility and "Private" for `private` visibility.
-- **must-not-render-invisible-marker-for-public**: Component MUST NOT render a visibility marker for fields with `public` visibility.
-- **must-render-service-list**: Component MUST render a `ServiceList` component with the entry's `services` array.
-- **must-render-links-section**: Component MUST render a navigation section with `aria-label="Elsewhere"` containing an unordered list of links if `entry.links` array length is greater than zero.
-- **must-render-links-with-fallback-label**: Component MUST render each link with the link's `label` as display text if the label is truthy, otherwise use the `url` as display text.
-- **must-set-link-security-attributes**: Component MUST set `rel="noopener noreferrer nofollow"` and `target="_blank"` on all links.
-- **must-use-resolver-for-image-urls**: Component MUST use the `resolveImageUrl` prop to resolve all image attachment IDs to URLs. If `resolveImageUrl` is not provided, Component MUST default to looking up the ID in `entry.imageUrls`.
-- **must-resolve-to-null-for-missing-images**: Component MUST return `null` from the resolver when an image attachment ID has no corresponding URL.
-- **must-accept-null-from-resolver**: Component MUST treat a `null` return value from `resolveImageUrl` as "no image" and render the profile without that image.
-- **must-render-as-article**: Component MUST render the profile root as an `<article>` element.
+- **render-display-name**: Component MUST render the entry's `displayName` as an `<h1>` heading.
+- **render-full-display-name-untruncated**: Component MUST render the full `displayName` string with no truncation; whether the name wraps or overflows is determined by CSS.
+- **render-photo-when-available**: Component MUST render the entry's photo if `photoAttachmentId` is present and `resolveImageUrl(photoAttachmentId)` returns a non-null value.
+- **render-photo-alt-empty**: Component MUST set the photo `alt` attribute to an empty string (not a description), as the photo is decorative context for sighted users and the name heading provides textual identity.
+- **render-summary-when-present**: Component MUST render the entry's `summary` as a paragraph if the summary string is truthy.
+- **render-category-when-present**: Component MUST render the entry's `category` as a metadata row if the category string is truthy.
+- **render-location-when-present**: Component MUST render the entry's `locationText` as a metadata row if the location string is truthy.
+- **render-languages-list**: Component MUST render the entry's `languages` array as a comma-separated string in a metadata row if the array length is greater than zero.
+- **render-metadata-list-unconditionally**: Component MUST render the `<dl class="rp__meta">` metadata list container even when category, location, and languages are all falsy or empty. Only the individual metadata rows are conditional; the container itself is not.
+- **render-keywords-list**: Component MUST render the entry's `keywords` array as an unordered list of keyword items if the array length is greater than zero.
+- **render-contact-affordance-conditionally**: Component MUST render the `contact` prop inside a contact container only if `entry.contactMode === 'dm'` AND `contact` is not null or undefined.
+- **render-all-fields**: Component MUST render every field in `entry.fields` as a description-list item with the field's label and value.
+- **omit-fields-section-when-empty**: Component MUST render the profile without a `rp__fields` section when `entry.fields.length === 0`.
+- **render-field-visibility-marker**: Component MUST render a visibility marker span inside the field label if the field's visibility is not `public`. The marker text MUST be "Signed-in members only" for `authenticated` visibility and "Private" for `private` visibility.
+- **omit-marker-for-public-fields**: Component MUST NOT render a visibility marker for fields with `public` visibility.
+- **render-service-list**: Component MUST render a `ServiceList` component with the entry's `services` array. When `services` is empty, whether anything is shown is entirely delegated to `ServiceList`, which itself renders nothing for an empty array (see agenticdevelopertoolkit://recipes/service-list).
+- **render-links-section**: Component MUST render a navigation section with `aria-label="Elsewhere"` containing an unordered list of links if `entry.links` array length is greater than zero.
+- **render-links-with-fallback-label**: Component MUST render each link with the link's `label` as display text if the label is truthy, otherwise use the `url` as display text.
+- **set-link-security-attributes**: Component MUST set `rel="noopener noreferrer nofollow"` and `target="_blank"` on all links.
+- **use-resolver-for-image-urls**: Component MUST use the `resolveImageUrl` prop to resolve all image attachment IDs to URLs. If `resolveImageUrl` is not provided, Component MUST default to looking up the ID in `entry.imageUrls`.
+- **default-resolver-null-for-unmapped-id**: When `resolveImageUrl` is not provided, the default resolver MUST return `null` when `entry.imageUrls` has no key for the given attachment ID.
+- **accept-null-from-resolver**: Component MUST treat a `null` return value from `resolveImageUrl` as "no image" and render the profile without that image.
+- **render-as-article**: Component MUST render the profile root as an `<article>` element.
 
 ## Appearance
 
@@ -86,6 +93,7 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 | With summary | `summary` is truthy | Summary paragraph displayed |
 | Without summary | `summary` is falsy | No summary element rendered |
 | With metadata | Category, location, or languages present | Metadata rows displayed in definition list |
+| Metadata list container | any input | `<dl class="rp__meta">` renders unconditionally, even when it contains no rows |
 | With keywords | `keywords.length > 0` | Keywords rendered as list items |
 | Without keywords | `keywords.length === 0` | No keywords section rendered |
 | Contact available | `contactMode === 'dm'` AND `contact` prop provided | Contact affordance container rendered |
@@ -105,49 +113,59 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 - **Links section**: The links navigation has `aria-label="Elsewhere"` to describe the section purpose to assistive technology users.
 - **Field labels**: Each field is rendered with a `<dt>` label paired with a `<dd>` value in a definition list, providing semantic structure.
 - **Visibility markers**: Visibility markers are inline in the field label, ensuring users encounter the visibility restriction immediately when they reach the field.
-- **Field values**: `FieldValue` renders each value by type: `url` as an `<a>` with `rel="noopener noreferrer nofollow"` and `target="_blank"`, `image` as an `<img>` whose `alt` is the field label, and every other type (text, textarea, markdown, date, select, multi_select, boolean, address, email, phone) as text content. The `<dt>` label supplies the accessible name for each `<dd>` value. See the `field-value` recipe.
-- **Services**: `ServiceList` is a static section headed by an `<h2>` ("Services") with one `<h3>` per service, continuing the heading hierarchy under the profile's `<h1>`. It has no interactive elements, so there is nothing to reach by keyboard. See the `service-list` recipe.
+- **Field values**: `FieldValue` renders each value by type: `url` as an `<a>` with `rel="noopener noreferrer nofollow"` and `target="_blank"`, `image` as an `<img>` whose `alt` is the field label, and every other type (text, textarea, markdown, date, select, multi_select, boolean, address, email, phone) as text content. The `<dt>` label supplies the accessible name for each `<dd>` value. See agenticdevelopertoolkit://recipes/field-value.
+- **Services**: `ServiceList` is a static section headed by an `<h2>` ("Services") with one `<h3>` per service, continuing the heading hierarchy under the profile's `<h1>`. It has no interactive elements, so there is nothing to reach by keyboard. See agenticdevelopertoolkit://recipes/service-list.
 - **Touch targets**: The only interactive elements are inline text links (the "Elsewhere" links and `url` field values). Inline links within text are exempt from the WCAG 2.5.8 minimum target size; the profile adds no buttons or controls.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| profile-001 | must-render-display-name | `entry.displayName = "Alice"` | Output contains `<h1 class="rp__name">Alice</h1>` |
-| profile-002 | must-render-photo-when-available | `entry.photoAttachmentId = "photo-123"`, `resolveImageUrl("photo-123") = "https://cdn.example.com/photo.jpg"` | Output contains `<img class="rp__photo" src="https://cdn.example.com/photo.jpg" alt="" />` |
-| profile-003 | must-render-photo-alt-empty | `entry.photoAttachmentId = "photo-123"`, `resolveImageUrl` returns URL | Photo element has `alt=""` (empty string) |
-| profile-004 | must-render-summary-when-present | `entry.summary = "Software engineer"` | Output contains `<p class="rp__summary">Software engineer</p>` |
-| profile-005 | must-render-summary-when-present | `entry.summary = ""` (empty string) | Output does not contain `rp__summary` element |
-| profile-006 | must-render-category-when-present | `entry.category = "Engineering"` | Output contains metadata row with label "Category" and value "Engineering" |
-| profile-007 | must-render-category-when-present | `entry.category = null` | Output does not contain category metadata row |
-| profile-008 | must-render-location-when-present | `entry.locationText = "San Francisco"` | Output contains metadata row with label "Location" and value "San Francisco" |
-| profile-009 | must-render-languages-list | `entry.languages = ["English", "Spanish"]` | Output contains metadata row with label "Languages" and value "English, Spanish" |
-| profile-010 | must-render-languages-list | `entry.languages = []` | Output does not contain languages metadata row |
-| profile-011 | must-render-keywords-list | `entry.keywords = ["react", "typescript"]` | Output contains `<li class="rp__keyword">react</li>` and `<li class="rp__keyword">typescript</li>` |
-| profile-012 | must-render-keywords-list | `entry.keywords = []` | Output does not contain `rp__keywords` element |
-| profile-013 | must-render-contact-affordance-conditionally | `entry.contactMode = "dm"`, `contact = <ContactButton />` | Contact container rendered with ContactButton inside |
-| profile-014 | must-render-contact-affordance-conditionally | `entry.contactMode = "email"`, `contact = <ContactButton />` | Contact container is not rendered |
-| profile-015 | must-render-contact-affordance-conditionally | `entry.contactMode = "dm"`, `contact = null` | Contact container is not rendered |
-| profile-016 | must-render-all-fields | `entry.fields = [{key: "email", label: "Email", value: "alice@example.com", visibility: "public"}]` | Output contains field container with data-field-key="email" |
-| profile-017 | must-render-field-visibility-marker | `field.visibility = "authenticated"` | Field label contains span with text "Signed-in members only" |
-| profile-018 | must-render-field-visibility-marker | `field.visibility = "private"` | Field label contains span with text "Private" |
-| profile-019 | must-not-render-invisible-marker-for-public | `field.visibility = "public"` | Field label does not contain visibility marker span |
-| profile-020 | must-use-resolver-for-image-urls | `resolveImageUrl` provided | All image URLs are resolved via the provided function, not `entry.imageUrls` |
-| profile-021 | must-use-resolver-for-image-urls | `resolveImageUrl` not provided | Component falls back to `entry.imageUrls[id]` |
-| profile-022 | must-render-as-article | any input | Root element is `<article class="rp">` |
-| profile-023 | must-render-links-section | `entry.links = [{url: "https://example.com", label: "Portfolio"}]` | Output contains `<nav class="rp__links" aria-label="Elsewhere">` with link |
-| profile-024 | must-render-links-with-fallback-label | `entry.links = [{url: "https://example.com", label: ""}]` | Link displays the URL as text, not the empty label |
-| profile-025 | must-set-link-security-attributes | `entry.links = [{url: "https://example.com", label: "Site"}]` | Link has `rel="noopener noreferrer nofollow" target="_blank"` |
+| profile-001 | render-display-name | `entry.displayName = "Alice"` | Output contains `<h1 class="rp__name">Alice</h1>` |
+| profile-002 | render-photo-when-available | `entry.photoAttachmentId = "photo-123"`, `resolveImageUrl("photo-123") = "https://cdn.example.com/photo.jpg"` | Output contains `<img class="rp__photo" src="https://cdn.example.com/photo.jpg" alt="" />` |
+| profile-003 | render-photo-alt-empty | `entry.photoAttachmentId = "photo-123"`, `resolveImageUrl` returns URL | Photo element has `alt=""` (empty string) |
+| profile-004 | render-summary-when-present | `entry.summary = "Software engineer"` | Output contains `<p class="rp__summary">Software engineer</p>` |
+| profile-005 | render-summary-when-present | `entry.summary = ""` (empty string) | Output does not contain `rp__summary` element |
+| profile-006 | render-category-when-present | `entry.category = "Engineering"` | Output contains metadata row with label "Category" and value "Engineering" |
+| profile-007 | render-category-when-present | `entry.category = null` | Output does not contain category metadata row |
+| profile-008 | render-location-when-present | `entry.locationText = "San Francisco"` | Output contains metadata row with label "Location" and value "San Francisco" |
+| profile-009 | render-languages-list | `entry.languages = ["English", "Spanish"]` | Output contains metadata row with label "Languages" and value "English, Spanish" |
+| profile-010 | render-languages-list | `entry.languages = []` | Output does not contain languages metadata row |
+| profile-011 | render-keywords-list | `entry.keywords = ["react", "typescript"]` | Output contains `<li class="rp__keyword">react</li>` and `<li class="rp__keyword">typescript</li>` |
+| profile-012 | render-keywords-list | `entry.keywords = []` | Output does not contain `rp__keywords` element |
+| profile-013 | render-contact-affordance-conditionally | `entry.contactMode = "dm"`, `contact = <ContactButton />` | Contact container rendered with ContactButton inside |
+| profile-014 | render-contact-affordance-conditionally | `entry.contactMode = "email"`, `contact = <ContactButton />` | Contact container is not rendered |
+| profile-015 | render-contact-affordance-conditionally | `entry.contactMode = "dm"`, `contact = null` | Contact container is not rendered |
+| profile-016 | render-all-fields | `entry.fields = [{key: "email", label: "Email", value: "alice@example.com", visibility: "public"}]` | Output contains field container with data-field-key="email" |
+| profile-017 | render-field-visibility-marker | `field.visibility = "authenticated"` | Field label contains span with text "Signed-in members only" |
+| profile-018 | render-field-visibility-marker | `field.visibility = "private"` | Field label contains span with text "Private" |
+| profile-019 | omit-marker-for-public-fields | `field.visibility = "public"` | Field label does not contain visibility marker span |
+| profile-020 | use-resolver-for-image-urls | `resolveImageUrl = (id) => (id === "photo-123" ? "https://cdn.example.com/custom.jpg" : null)`, `entry.imageUrls = { "photo-123": "https://cdn.example.com/from-map.jpg" }`, `entry.photoAttachmentId = "photo-123"` | Output contains `src="https://cdn.example.com/custom.jpg"` (the provided resolver's value), never the `entry.imageUrls` value |
+| profile-021 | use-resolver-for-image-urls | `resolveImageUrl` not provided | Component falls back to `entry.imageUrls[id]` |
+| profile-022 | render-as-article | any input | Root element is `<article class="rp">` |
+| profile-023 | render-links-section | `entry.links = [{url: "https://example.com", label: "Portfolio"}]` | Output contains `<nav class="rp__links" aria-label="Elsewhere">` with link |
+| profile-024 | render-links-with-fallback-label | `entry.links = [{url: "https://example.com", label: ""}]` | Link displays the URL as text, not the empty label |
+| profile-025 | set-link-security-attributes | `entry.links = [{url: "https://example.com", label: "Site"}]` | Link has `rel="noopener noreferrer nofollow" target="_blank"` |
+| profile-026 | render-service-list | `entry.services = [{title: "Consulting", description: "Advice", pricingModel: "hourly", priceMin: 100, priceMax: 100, currency: "USD", unit: "hour", deliveryMode: "virtual"}]` | Output contains a `ServiceList` section listing "Consulting" |
+| profile-027 | render-service-list | `entry.services = []` | Output does not contain `rp-services` (ServiceList renders nothing for an empty array) |
+| profile-028 | default-resolver-null-for-unmapped-id | `resolveImageUrl` not provided, `entry.photoAttachmentId = "missing-id"`, `entry.imageUrls = {}` | No photo element rendered; contrast with profile-021, where the ID is present in the map |
+| profile-029 | accept-null-from-resolver | `resolveImageUrl = () => null`, `entry.photoAttachmentId = "photo-123"` | No photo element rendered; component does not throw or render a broken-image placeholder; contrast with profile-002, where the resolver returns a URL |
+| profile-030 | render-location-when-present | `entry.locationText = ""` (empty string) | Output does not contain location metadata row |
+| profile-031 | render-links-section | `entry.links = []` | Output does not contain `rp__links` element |
+| profile-032 | omit-fields-section-when-empty | `entry.fields = []` | Output does not contain `rp__fields` element; contrast with profile-016, where one field is present |
+| profile-033 | render-full-display-name-untruncated | `entry.displayName = "A".repeat(300)` | Output contains the full 300-character string inside `<h1 class="rp__name">`, with no truncation or ellipsis |
+| profile-034 | render-metadata-list-unconditionally | `entry.category = ""`, `entry.locationText = ""`, `entry.languages = []` | Output still contains `<dl class="rp__meta">`, with no `rp__meta-row` children inside it |
 
 ## Edge Cases
 
 - **Null or undefined entry**: Not applicable. The component requires a `PublicEntry` and will error if `entry` is null. The host is responsible for ensuring a valid entry is provided.
-- **Empty entry.fields array**: Component MUST render the profile without a fields section if `fields.length === 0`.
-- **photoAttachmentId without URL resolution**: If `photoAttachmentId` is present but `resolveImageUrl` returns `null`, Component MUST render the profile without a photo. This is distinguishable from the photo not existing in the entry.
-- **All metadata fields falsy**: If category, locationText, languages are all falsy or empty, Component MUST not render the metadata list.
+- **Empty entry.fields array**: See **omit-fields-section-when-empty**.
+- **photoAttachmentId without URL resolution**: If `photoAttachmentId` is present but `resolveImageUrl` returns `null`, Component MUST render the profile without a photo (see **accept-null-from-resolver**).
+- **All metadata fields falsy**: See **render-metadata-list-unconditionally**. The `<dl class="rp__meta">` container is still rendered; only the category, location, and languages rows inside it are omitted.
+- **Link URL scheme is not restricted**: `entry.links[*].url` is rendered directly as the link's `href` with no scheme allow-list in this component; a `javascript:` or `data:` URL would render as a live, clickable link. `rel="noopener noreferrer nofollow"` and `target="_blank"` are the only safety attributes this component applies. Restricting or validating the URL scheme is the responsibility of the server that populates `entry.links`, not this presentation component.
 - **Field with empty label**: Not applicable. The source assumes field labels are provided by the server; empty labels are a server data quality issue.
 - **Resolver throws an error**: Not applicable. The component assumes the resolver does not throw and returns a string or null. Error handling is the host's responsibility.
-- **Very long display name**: Component MUST render the full display name without truncation. CSS styling determines whether the name wraps or overflows.
+- **Very long display name**: See **render-full-display-name-untruncated**.
 - **Very long field values**: Component delegates to `FieldValue` component. Edge case handling is FieldValue's responsibility.
 - **Concurrent updates to entry prop**: Not applicable. The component is a functional React component and does not maintain mutable state. Behavior when `entry` prop changes is React's re-render lifecycle, not a component-defined edge case.
 - **contact prop changes between render cycles**: Component MUST render the new contact prop value on the next render.
@@ -170,6 +188,8 @@ Not applicable: RegistryProfile does not define any deep linking behavior. The h
 | metadata.location | "Location" | Label for the location metadata row |
 | metadata.languages | "Languages" | Label for the languages metadata row |
 | nav.elsewhere | "Elsewhere" | aria-label for the links navigation section |
+
+These keys describe intent, not an implemented lookup: the TypeScript source hardcodes each string as an English literal (the `AUDIENCE_NOTE` record, and the `"Category"`/`"Location"`/`"Languages"`/`"Elsewhere"` literals inline in `RegistryProfile.tsx`). There is no resource file, i18n library call, or override prop. A host that needs another language must fork the component or wrap it; the component itself provides no localization mechanism.
 
 ## Accessibility Options
 
@@ -202,26 +222,60 @@ Not applicable: RegistryProfile does not emit logging. The host application is r
 ## Platform Notes
 
 - **TypeScript/React Web**: Source is a React functional component in TypeScript at `packages/web/packages/registry-profile/src/RegistryProfile.tsx`. Key implementation details: the component uses conditional rendering (`? :`) for optional sections, a resolver pattern for image URLs with a nullish coalescing fallback to `entry.imageUrls`, and an exhaustive `Record<FieldVisibility, string | null>` to ensure visibility markers are defined for every audience type. The component does not fetch data; all content is provided via props.
-- **SwiftUI**: Translate the component as a View that renders a scrollable VStack. The header is an HStack with the photo (Image, if available) and a VStack for identity details. Use SwiftUI's @State for conditional rendering of optional sections. Map `FieldVisibility` to a conditional modifier that renders a Text label. Delegate field value rendering to a FieldValue View and link list rendering to a ServiceList View. Use `navigationLink(destination:)` for external links with `openURL` environment action.
-- **Compose**: Implement as a Composable function that renders a Column (scrollable) with a Row header containing the photo (Image) and identity content. Use conditional composition (`if` or `when`) for optional sections. Create a metadata state holder mapping category, location, languages to visual rows. Render field items in a LazyColumn with a custom row Composable. Delegate to FieldValue and ServiceList Composables. Use `navController.openUrl()` or `openUri()` for external links.
-- **AppKit / UIKit**: Implement as a UIViewController (or SwiftUI View in UIKit integration). The view hierarchy is a scroll view containing a stack view (horizontal or vertical) for the header (image view, vertical stack for identity), followed by nested table/stack views for metadata, keywords, contact, fields, and links. Use UILabel for display name and summary. Use UITableView or UIStackView for fields and metadata rows. Delegate field rendering to a FieldValue view controller. Implement deep links via custom URL schemes or universal links if the host supports them. Apply visibility markers as UILabel overlays on field rows.
-- **WinUI 3**: Implement as a XAML UserControl or Page. Use Grid and StackPanel for layout: a StackPanel header contains an Image for the photo and a StackPanel for identity (TextBlock for name, TextBlock for summary). Use ItemsControl or DataGrid for the metadata definition list, rendering each row as a Grid with two TextBlocks. Use ItemsControl for keywords, styling each as a Border with a TextBlock. Conditionally include a ContentPresenter for the contact affordance. Use ItemsControl or DataGrid for fields, with a custom DataTemplate that includes a TextBlock for the label, a conditional TextBlock for the visibility marker, and a custom FieldValue control for the value. Render links as a ListView or ItemsControl with HyperlinkButton controls. Set `rel="noopener noreferrer nofollow"` behavior via URI scheme handlers or by opening links in a new window without passing the current window reference.
+- **SwiftUI**: Translate the component as a View that renders a scrollable VStack. The header is an HStack with the photo (Image, if available) and a VStack for identity details. The component has no internal state — every section is driven entirely by its inputs — so gate each optional section with a plain `if` on the input values (`entry.summary`, `entry.category`, and so on), not `@State`. Map `FieldVisibility` to a conditional `Text` rendered inline with the field's label. Delegate field value rendering to a FieldValue View and service rendering to a ServiceList View (see agenticdevelopertoolkit://recipes/field-value and agenticdevelopertoolkit://recipes/service-list). Links (the "Elsewhere" list and any `url`-typed field) are external destinations, not in-app routes, so open them with `Link` or the `@Environment(\.openURL)` action; `navigationLink(destination:)` pushes an in-app SwiftUI view and does not open an external URL.
+- **Compose**: Implement as a Composable function that renders a Column (scrollable) with a Row header containing the photo (Image) and identity content. Use conditional composition (`if`) for optional sections, driven entirely by the incoming parameters. Render metadata rows and field items as plain rows inside that same scrollable Column rather than nesting a `LazyColumn` inside it — a scrollable `LazyColumn` inside a scrollable `Column` throws at runtime; use a single `LazyColumn` for the whole screen instead if the field list needs lazy loading. Delegate to FieldValue and ServiceList Composables. Open external links (the "Elsewhere" list, `url`-typed fields) with `LocalUriHandler.current.openUri(url)`; there is no `navController.openUrl()` API.
+- **AppKit / UIKit**: On UIKit, implement as a `UIViewController` with a scroll view containing a stack view (horizontal or vertical) for the header (image view, vertical stack for identity), followed by nested stack views for metadata, keywords, contact, fields, and links; use `UILabel` for display name and summary, and `UIStackView` for fields and metadata rows. On AppKit, use an `NSScrollView` with an `NSStackView` hierarchy of the same shape, `NSTextField` (non-editable, bezel-less) in place of `UILabel`, and `NSImageView` for the photo. Delegate field rendering to a FieldValue view (see agenticdevelopertoolkit://recipes/field-value). This component defines no deep linking (see Deep Linking above); do not add custom URL scheme or universal link handling here. Render the visibility marker inline within the field label's text/stack item, not as an overlay on the field row, matching the inline-in-label design decision.
+- **WinUI 3**: Implement as a XAML UserControl or Page. Use Grid and StackPanel for layout: a StackPanel header contains an Image for the photo and a StackPanel for identity (TextBlock for name, TextBlock for summary). Use `ItemsControl`/`ItemsRepeater` for the metadata definition list, rendering each row as a Grid with two TextBlocks, and the same for fields, with a custom `DataTemplate` that includes a TextBlock for the label, a conditional TextBlock for the visibility marker, and a custom FieldValue control for the value — WinUI 3 has no `DataGrid` control. Use `ItemsControl` for keywords, styling each as a Border with a TextBlock. Conditionally include a ContentPresenter for the contact affordance. Render links as a ListView or ItemsControl with HyperlinkButton controls, opening each with `Launcher.LaunchUriAsync(uri)`; WinUI 3 opens external URIs out-of-process, so there is no `rel="noopener"` equivalent to set.
 
 ## Design Decisions
 
-- **Image resolution via resolver pattern**: The component accepts an optional `resolveImageUrl` function rather than fetching images directly. This allows the host to control image delivery (CDN, proxy, storybook fixtures) without the component knowing which is in use. The fallback to `entry.imageUrls` map supports the common case where the backend already resolved all URLs. This design keeps the component decoupled from the host's infrastructure.
-- **Visibility markers inline in field labels**: Visibility markers are rendered inside the `<dt>` field label, not floated beside the field value. This ensures a reader who encounters the marker has not already read a value they believed was public. The marker placement is a compromise between making the visibility constraint immediately visible and avoiding layout reflow.
-- **Exhaustive visibility enum**: The `AUDIENCE_NOTE` Record is exhaustive on `FieldVisibility`, meaning adding a new visibility type to the enum will cause a TypeScript error at build time if the marker is not defined. This prevents silent rendering of unmarked fields, which is the failure mode that matters most (an unmarked field reads as public).
-- **Private fields stripped server-side**: The component assumes the server has already filtered out fields the viewer is not authorized to see. Rendering only the fields in `entry.fields` is safe because the server removes inaccessible ones. The component does not hide fields in CSS or conditionally skip rendering, which would leave values in the markup where view-source tools could find them.
-- **Conditional contact affordance slot**: The `contact` prop is a slot (a React node), not a callback function. This gives the host full control over what contact experience is rendered (the hub messaging composer on an ADH site, no contact on an embedder's site). The slot pattern decouples the component from knowing which contact implementation is in use.
-- **No field label localization in component**: Field labels come from `entry.fields[*].label`, which the server provides. The component does not localize these labels; the server is responsible for providing labels in the viewer's language. This keeps localization out of the presentation layer.
+- **Decision**: The component accepts an optional `resolveImageUrl` function rather than fetching images directly, falling back to the `entry.imageUrls` map when no resolver is supplied.
+  **Rationale**: This allows the host to control image delivery (CDN, proxy, storybook fixtures) without the component knowing which is in use. The fallback to `entry.imageUrls` supports the common case where the backend already resolved all URLs. This design keeps the component decoupled from the host's infrastructure.
+  **Approved**: pending
+
+- **Decision**: Visibility markers are rendered inside the `<dt>` field label, not floated beside the field value.
+  **Rationale**: This ensures a reader who encounters the marker has not already read a value they believed was public. The marker placement is a compromise between making the visibility constraint immediately visible and avoiding layout reflow.
+  **Approved**: pending
+
+- **Decision**: The `AUDIENCE_NOTE` Record is exhaustive on `FieldVisibility`, so adding a new visibility type to the enum without defining its marker text is a TypeScript compile error rather than a silently unmarked field.
+  **Rationale**: This prevents silent rendering of unmarked fields, which is the failure mode that matters most (an unmarked field reads as public).
+  **Approved**: pending
+
+- **Decision**: The component assumes the server has already filtered out fields the viewer is not authorized to see, and renders every field in `entry.fields` with no additional client-side hiding.
+  **Rationale**: Rendering only the fields in `entry.fields` is safe because the server removes inaccessible ones. The component does not hide fields in CSS or conditionally skip rendering, which would leave values in the markup where view-source tools could find them.
+  **Approved**: pending
+
+- **Decision**: The `contact` prop is a slot (a React node), not a callback function.
+  **Rationale**: This gives the host full control over what contact experience is rendered (the hub messaging composer on an ADH site, no contact on an embedder's site). The slot pattern decouples the component from knowing which contact implementation is in use.
+  **Approved**: pending
+
+- **Decision**: Field labels come from `entry.fields[*].label`, which the server provides; the component does not localize these labels itself.
+  **Rationale**: The server is responsible for providing labels in the viewer's language. This keeps localization out of the presentation layer.
+  **Approved**: pending
+
+- **Decision**: The display name always renders as an `<h1>`, with no prop to change the heading level.
+  **Rationale**: The component assumes it is rendered as the top-level content of the page or view presenting the entry, matching how it is used today. A host that embeds it inside a page with its own `<h1>` accepts a duplicate top-level heading; the component does not currently offer a way to renumber it.
+  **Approved**: pending
 
 ## Compliance
 
-Not applicable: This component is a presentational ingredient and does not define compliance requirements. The host application is responsible for ensuring data privacy, security, and accessibility compliance at the application level.
+| Check | Status | Category |
+|-------|--------|----------|
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+
+These statuses rest on `RegistryProfile.tsx`: it sets `href` on every link from `entry.links[*].url` with `rel="noopener noreferrer nofollow"` and `target="_blank"` but no scheme check (input-sanitization partial, see **Link URL scheme is not restricted** above); it renders semantic `<article>`, `<header>`, `<dl>`/`<dt>`/`<dd>`, and `<nav aria-label="Elsewhere">` elements with a decorative empty `alt` on the photo and text-or-fallback labels on every link (screen-reader-support, keyboard-navigable, semantic-markup all passed); it applies no inline color or font size of its own, leaving contrast and dynamic type up to CSS classes this file does not define (both partial); and it hardcodes "Category", "Location", "Languages", "Elsewhere", and the `AUDIENCE_NOTE` marker strings as English literals rather than reading them from a resource file (string-externalization and no-hardcoded-strings both failed), while every other string the component displays (`displayName`, `summary`, `category`, `locationText`, `languages`, `keywords`) is passed through untouched (unicode-support passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case (dropped `must-`/`must-not-` prefixes) and fixed the backwards `omit-marker-for-public-fields` wording; restated the default-resolver requirement to describe the `entry.imageUrls` fallback rather than a resolver return contract; clarified that empty `services` rendering is delegated to `ServiceList`; corrected the false "metadata list omitted when empty" claim (the `<dl>` container always renders) and promoted it, plus the fields-empty and no-truncation edge cases, to named requirements; removed the incorrect claim that a missing photo and an unresolvable photo render distinguishably; documented the unrestricted link URL scheme as an edge case; added a Design Decision for the fixed `<h1>` heading level; added `depends-on`/`related` links to the field-value and service-list recipes and linked them inline; unquoted `modified` to match `created`; replaced the "Not applicable" Compliance section with a real Check/Status/Category table; reformatted Design Decisions into Decision/Rationale/Approved triplets; added missing test vectors (service-list, default-resolver, accept-null-from-resolver, links-empty, location-absent, fields-empty, no-truncation, metadata-list-unconditional) and sharpened profile-020 into a concrete assertion; fixed the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes to reference real APIs and added AppKit-specific guidance; and corrected Localization to state the strings are hardcoded literals, not read from a resource system. |

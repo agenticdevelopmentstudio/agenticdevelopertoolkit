@@ -3,7 +3,7 @@ id: d80699f9-1020-4f8a-85ce-f6406e765631
 title: Site Footer
 domain: agenticdevelopertoolkit://recipes/site-footer
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,9 +16,15 @@ summary: A semantic footer landmark that wraps page footer content in a constrai
 platforms:
 - typescript
 - web
-tags: []
-depends-on: []
-related: []
+tags:
+- footer
+- landmark
+- layout
+- landing
+depends-on:
+- agenticdevelopertoolkit://recipes/wrap
+related:
+- agenticdevelopertoolkit://recipes/band
 references: []
 approved-by: ''
 approved-date: ''
@@ -28,27 +34,30 @@ approved-date: ''
 
 ## Overview
 
-The Site Footer is a structural footer component that renders a semantic HTML `<footer>` landmark element containing page footer content. It applies a fixed CSS class and optional custom classes, and wraps its content in a layout column (Wrap) to constrain width and maintain consistency with other page sections. The component reserves space for the dock clearance like other band components and is positioned as the last element beneath the dock.
+The Site Footer is a structural footer component that renders a semantic HTML `<footer>` landmark element containing page footer content. It applies a fixed CSS class and optional custom classes, and wraps its content in a layout column (Wrap) to constrain width and maintain consistency with other page sections. Unlike Band and Wrap, the footer owns its own visual chrome directly — background, text color, font size, and a top hairline border all live on `.lp-site-foot` itself. It reserves space for the dock clearance like other band components and is positioned as the last element beneath the dock.
 
 ## Behavioral Requirements
 
-- **must-render-footer-landmark**: Component MUST render an HTML `<footer>` element.
-- **must-apply-lp-site-foot-class**: Component MUST apply the CSS class `lp-site-foot` to the footer element.
-- **must-accept-children**: Component MUST accept and render ReactNode children.
-- **must-wrap-children-in-layout-column**: Component MUST wrap children in a Wrap component to provide constrained layout.
-- **may-accept-custom-class**: Component MAY accept an optional `className` prop to apply additional CSS classes.
-- **must-merge-classes**: When a custom `className` is provided, component MUST apply both `lp-site-foot` and the custom class name to the footer element, separated by space, and MUST filter out falsy values.
+- **render-footer-landmark**: Component MUST render an HTML `<footer>` element.
+- **apply-lp-site-foot-class**: Component MUST apply the CSS class `lp-site-foot` to the footer element.
+- **accept-children**: Component MUST accept and render ReactNode children.
+- **wrap-children-in-layout-column**: Component MUST wrap children in a Wrap component to provide constrained layout.
+- **accept-custom-class**: Component MAY accept an optional `className` prop to apply additional CSS classes.
+- **merge-classes**: When a custom `className` is provided, component MUST apply both `lp-site-foot` and the custom class name to the footer element, separated by a space, and MUST filter out falsy values (`className={undefined}`, `className={false}`, or `className=""`); it does not trim whitespace-only strings and performs no de-duplication.
+- **apply-footer-chrome**: Component's stylesheet (`.lp-site-foot`) MUST set its own vertical padding (`clamp(3rem, 6vw, 5rem)` top; the same value plus `var(--lp-dock-clear, 0px)` on the bottom), a `1px` top hairline border, a `var(--lp-ground)` background, `var(--lp-ink-dim)` text color, and a `0.86rem` font size — none of this is inherited from `Wrap` or from descendants.
+- **style-descendant-links**: Component's stylesheet MUST style descendant `<a>` elements (`.lp-site-foot a`) with a non-default link color (`var(--lp-ink)`), no text-decoration underline, and a hairline bottom border, plus a hover state that swaps the border color to `var(--lp-accent)`, so a host's footer links never fall back to the browser's default blue underline against the dark ground.
+- **style-credit-sub-lines**: Component's stylesheet MUST style descendant `<small>` elements (`.lp-site-foot small`) with a reduced font size (`0.72rem`) and letter-spacing (`0.04em`), for copyright or attribution sub-lines within a credit line.
 
 ## Appearance
 
 - **Corner radius**: None
-- **Padding**: Inherited from layout constraints (dock clearance reservation)
-- **Font**: Inherited from descendants
-- **Background**: Inherited from descendants (component applies no default background)
-- **Foreground/Text**: Inherited from descendants
-- **Border**: None applied by component
+- **Padding**: `clamp(3rem, 6vw, 5rem)` top; the same clamp value plus `var(--lp-dock-clear, 0px)` on the bottom. Set directly by `.lp-site-foot` in `flow.css` — not inherited from `Wrap` or from descendants (see **apply-footer-chrome**).
+- **Font**: `0.86rem`, set by `.lp-site-foot` itself; not inherited.
+- **Background**: `var(--lp-ground, #101010)`, set by `.lp-site-foot` itself — the component does not leave background to its children.
+- **Foreground/Text**: `var(--lp-ink-dim, #a0a0a0)`, set by `.lp-site-foot` itself. Descendant links override to `var(--lp-ink, #ededed)` via `.lp-site-foot a` (see **style-descendant-links**).
+- **Border**: `1px solid var(--lp-hairline, rgba(255, 255, 255, 0.1))` top hairline, set by `.lp-site-foot` itself.
 - **Shadow**: None applied by component
-- **Min/Max size**: Full width; constrained content width via Wrap component
+- **Min/Max size**: Full width; constrained content width via the `Wrap` component, which handles horizontal centering and max measure only — it does not contribute the padding, background, border, color, or font described above.
 
 ## States
 
@@ -56,28 +65,33 @@ Not applicable: component is stateless and does not render interactive or state-
 
 ## Accessibility
 
-- **Role**: Landmark (`<footer>` semantic element)
-- **Label requirements**: No explicit ARIA labeling required; the semantic `<footer>` element identifies the landmark to assistive technologies
-- **Keyboard navigation**: Not applicable; component is not interactive
-- **Touch target size**: Not applicable; component is a container, not an interactive control
+- **Role**: Landmark (`<footer>` renders the implicit `contentinfo` role)
+- **Landmark exposure**: The `<footer>` element only exposes the `contentinfo` landmark role when it is NOT nested inside `article`, `section`, `main`, `aside`, or `nav`. A host MUST render `SiteFooter` as a direct, page-level child (a sibling of the page's bands, not nested within one) for the landmark to reach assistive technology; the component itself renders only the element and does not enforce where it is mounted.
+- **Label requirements**: No explicit ARIA labeling required; a page normally has one `<footer>` landmark, so no accessible name is needed to disambiguate it.
+- **Keyboard navigation**: Not applicable; the component itself renders no interactive elements — see **style-descendant-links** for the descendant links it styles but does not create.
+- **Touch target size**: Not applicable; component is a container, not an interactive control.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| site-footer-001 | must-render-footer-landmark | Render component with no props | Output contains `<footer>` element |
-| site-footer-002 | must-apply-lp-site-foot-class | Render component with no props | Footer element has `class` attribute containing `lp-site-foot` |
-| site-footer-003 | must-accept-children | Render with `children="Footer content"` | Footer element contains text "Footer content" |
-| site-footer-004 | must-wrap-children-in-layout-column | Render with children | Children are wrapped by Wrap component (verify Wrap component presence in DOM) |
-| site-footer-005 | may-accept-custom-class | Render with `className="custom-footer"` | Footer element class attribute contains both `lp-site-foot` and `custom-footer` |
-| site-footer-006 | must-merge-classes | Render with `className="custom-footer"` | Class string is `lp-site-foot custom-footer` (no duplicate or falsy values) |
-| site-footer-007 | must-merge-classes | Render with `className={undefined}` | Footer element class is exactly `lp-site-foot` (undefined falsy value filtered out) |
+| site-footer-001 | render-footer-landmark | Render component with no props | Output contains a `<footer>` element |
+| site-footer-002 | apply-lp-site-foot-class | Render component with no props | Footer element's `class` attribute contains `lp-site-foot` |
+| site-footer-003 | accept-children | Render with `children="Footer content"` | Footer element contains text "Footer content" |
+| site-footer-004 | wrap-children-in-layout-column | Render with children | Footer's direct child is a `<div>` with class `lp-wrap`, and that `div` contains the children |
+| site-footer-005 | merge-classes | Render with `className="custom-footer"` | Footer element's `class` attribute is exactly `lp-site-foot custom-footer` |
+| site-footer-006 | merge-classes | Render with `className={undefined}` | Footer element's `class` attribute is exactly `lp-site-foot` |
+| site-footer-007 | merge-classes | Render with `className=""` | Footer element's `class` attribute is exactly `lp-site-foot` (empty string is falsy and filtered) |
+| site-footer-008 | apply-footer-chrome | Render component | Footer element's computed style has a `1px` top border, `background-color` equal to the `--lp-ground` token, `color` equal to the `--lp-ink-dim` token, and `font-size: 0.86rem` |
+| site-footer-009 | apply-footer-chrome | Render component with `--lp-dock-clear` set to a non-zero value on an ancestor | Footer element's computed `padding-bottom` equals `clamp(3rem, 6vw, 5rem)` plus the `--lp-dock-clear` value |
+| site-footer-010 | style-descendant-links | Render with `children={<a href="#">Credit</a>}` | Descendant `<a>` element's computed style has no underline text-decoration, a `1px` bottom border, and `color` equal to the `--lp-ink` token |
+| site-footer-011 | style-credit-sub-lines | Render with `children={<small>© 2026</small>}` | Descendant `<small>` element's computed `font-size` is `0.72rem` |
 
 ## Edge Cases
 
-- **Empty children**: Component MUST render a valid `<footer>` element even when children are empty or null
-- **Null className**: When `className` prop is `undefined` or not provided, component MUST apply only `lp-site-foot` class; filtering out the undefined value is required
-- **Whitespace-only className**: If `className` is an empty string or whitespace, filtering MUST remove it from the class list
+- **Empty children**: Component MUST render a valid `<footer>` element even when children are empty or null.
+- **Null className**: When `className` is `undefined` or not provided, component MUST apply only the `lp-site-foot` class; the `undefined` value is filtered out because it is falsy.
+- **Whitespace-only className**: An empty string (`''`) is falsy, so it is filtered out, leaving only `lp-site-foot`. A whitespace-only string (e.g. `' '`) is truthy in JavaScript, so it is NOT filtered — it is joined into the class list as-is. The component only filters falsy values; it does not trim or validate whitespace, and performs no de-duplication.
 
 ## Configuration
 
@@ -113,26 +127,46 @@ Not applicable: component has no internal operations, async behavior, or error s
 
 ## Platform Notes
 
-- **Source (TypeScript/React)**: Implemented in `packages/web/packages/landing/src/flow/SiteFooter.tsx`. Accepts `children` (ReactNode, required) and `className` (string, optional). Returns JSX rendering an HTML `<footer>` element with merged class names and Wrap-wrapped children. The `lp-site-foot` class is the fixed style hook; custom classes are composed via string join filtering falsy values.
+- **Source (TypeScript/React)**: Implemented in `packages/web/packages/landing/src/flow/SiteFooter.tsx`. Accepts `children` (ReactNode, required) and `className` (string, optional). Returns JSX rendering an HTML `<footer>` element with merged class names and Wrap-wrapped children. The `lp-site-foot` class is the fixed style hook; custom classes are composed via `['lp-site-foot', className].filter(Boolean).join(' ')`. All visual chrome (padding, dock clearance, background, border, color, font size, and the descendant link/small styling) lives in `flow.css` on `.lp-site-foot` and its descendant selectors, not in the component itself.
 
-- **SwiftUI**: On Apple platforms, implement a footer as a View that conforms to the standard layout rhythm. Use a `VStack` or equivalent container, apply a footer-specific modifier (e.g., `.modifier(SiteFooterStyle())`) to constrain width and apply dock clearance, and use View composition to accept arbitrary content. The semantic equivalent is a View marked with the `.footer` trait or a dedicated footer-layout builder.
+- **SwiftUI**: Implement as a `View` that renders a full-width container with an inner content stack constrained to the same max-width measure used by the `Wrap` port, and apply the container's own background, foreground color, font, and top hairline divider directly (mirroring `.lp-site-foot`, not delegating them to the content column). Add bottom padding equal to the host's dock-clearance inset (an environment value or parameter the host supplies). There is no `.footer` accessibility trait or built-in `SiteFooterStyle` modifier to reach for; use a plain container View and rely on the platform mapping a suitably placed container to the "content info" accessibility landmark, or a dedicated accessibility container element if the platform version supports one.
 
-- **Compose**: On Android, implement a footer as a Composable that uses `Box` or `Column` with `Modifier.fillMaxWidth()` to span the full width and internal padding to reserve dock clearance. Apply a style via `Modifier` composition (theming, colors, spacing). The content parameter accepts a `@Composable` lambda to render arbitrary children with constrained layout.
+- **Compose**: On Android, implement a footer as a Composable that uses `Box` or `Column` with `Modifier.fillMaxWidth()` to span the full width, its own background/content color/typography applied directly (not inherited), and internal padding — including a bottom inset bound to the dock-clearance value — to reserve dock clearance. The content parameter accepts a `@Composable` lambda to render arbitrary children within a max-width content column matching `Wrap`.
 
-- **AppKit / UIKit**: On macOS and iOS, implement a footer as a UIView (iOS) or NSView (macOS) subclass or a SwiftUI wrapper. Add an internal NSStackView or UIStackView to constrain content width and apply edge insets for dock clearance. Use Auto Layout constraints to pin the footer to the safe area bottom and reserve space. The footer container should accept a `UIView` or hosting controller for arbitrary child content.
+- **AppKit / UIKit**: Implement the footer as the LAST arranged subview of the scrolling content (an arranged subview at the end of a `UIStackView`/`NSStackView` inside the scroll view), not as a view pinned to the screen's safe area — pinning it there would make it fixed, but the source footer scrolls with the page and is simply the final thing in it. Give the footer's own layer/background, text color, font, and top hairline border directly, and add bottom spacing equal to the dock clearance so a fixed dock never permanently covers it. Constrain an inner content view to the same max width as the `Wrap` port.
 
-- **WinUI 3**: On Windows, implement a footer as a `StackPanel` with `Orientation="Vertical"` and `HorizontalAlignment="Stretch"` to span full width. Wrap content in a `Grid` or nested `StackPanel` with a fixed or max width column to constrain layout. Apply a `CornerRadius` resource or `BorderThickness` if a visual treatment is needed. Attach the footer to the bottom of the main window chrome using a `Grid` row assignment or a `DockPanel.Dock="Bottom"` arrangement to reserve dock clearance.
+- **WinUI 3**: Implement as a `Grid` row (or `StackPanel`) spanning the full width of the page's root layout, with its own `Background`, `Foreground`, `FontSize`, and a `BorderThickness`/`BorderBrush` top hairline set directly on that row — not inherited from the content column. Wrap content in an inner `Grid`/`Border` with `MaxWidth` bound to the same measure token used by the `Wrap` port. Bind the row's bottom `Padding` to a dock-clearance resource (the WinUI equivalent of `--lp-dock-clear`) so content is not covered by a docked control at the bottom of the window. Apply no `CornerRadius`, matching Appearance's "Corner radius: None".
 
 ## Design Decisions
 
-The component is purely structural and presentational. It delegates all visual styling to the `lp-site-foot` CSS class and to the Wrap component, which handles layout constraints and dock clearance. The optional `className` prop allows host applications to compose additional styling without modifying the component's core contract. Falsy value filtering in class composition ensures the class string is clean and valid regardless of whether a custom class is provided.
+**Decision**: `.lp-site-foot` sets its own background, foreground color, font size, top border, and padding — including dock clearance — directly, rather than delegating any of it to `Wrap` or inheriting it from descendants.
+**Rationale**: `Wrap` only constrains content width (see `wrap.md`); the footer needs a full-width band of chrome (ground color, hairline, dimmed ink) independent of that content column, matching the visual treatment of the rest of the page's bands.
+**Approved**: pending
+
+**Decision**: Dock clearance (`var(--lp-dock-clear)`) is added to `.lp-site-foot`'s own bottom padding, not to `.lp-band:last-child`'s, on a page that has a footer.
+**Rationale**: `flow.css`'s comment above `.lp-band:last-child` explains that only the last thing in the document — the one thing a fixed host dock can permanently cover, since everything before it can still be scrolled past — needs the clearance. On a host with a footer, the footer is that last thing, not the band before it; paying the clearance on both would double the wasted scroll space.
+**Approved**: pending
+
+**Decision**: The component composes `Wrap` non-configurably to constrain content width, the same pattern `Band` uses.
+**Rationale**: Keeps horizontal measure consistent with the rest of the page's structural blocks without giving a caller a way to opt out per instance.
+**Approved**: pending
+
+**Decision**: `className` merging filters only falsy values (`Boolean` truthiness) and performs no trimming or de-duplication.
+**Rationale**: `['lp-site-foot', className].filter(Boolean).join(' ')` is the entire implementation; documenting exactly that behavior — including the whitespace-only string case it does not handle — keeps the contract honest rather than promising validation the source does not do.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: component is a simple layout container with no security, data handling, or complex interaction concerns.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+
+`semantic-markup` passes because the component always renders a real `<footer>` element, which carries the correct implicit `contentinfo` landmark role when placed as a direct page-level child (see **Accessibility**). `contrast-ratio` is partial because `flow.css` pairs `--lp-ground`/`--lp-ink-dim` for the footer body and `--lp-ink`/`--lp-ground` for its links (see **Appearance**), but the actual rendered contrast depends on whichever values a host supplies for those custom properties, which the source neither computes nor verifies.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; rewrote Appearance and Design Decisions from `flow.css` to correct the padding/background/border/font/dock-clearance claims and cite the source; added requirements and test vectors for the descendant link and small styling and for the footer's own chrome and dock clearance; narrowed the whitespace-only className edge case and merge-classes requirement to falsy-value filtering only; folded the untested duplicate-class claim out of the test vectors and added vectors for the Wrap child, className="", and dock-clearance padding; added a landmark-exposure note requiring direct page-level placement; reformatted Design Decisions into Decision/Rationale/Approved records; corrected the WinUI 3, SwiftUI, and AppKit/UIKit platform notes; rebuilt Compliance as a linked passed/partial table; added tags, depends-on, and related |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |

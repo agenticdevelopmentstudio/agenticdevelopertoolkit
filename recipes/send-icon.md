@@ -3,7 +3,7 @@ id: 4a2dcdee-4d2a-4f3f-a3a5-d243ec2b799b
 title: SendIcon
 domain: agenticdevelopertoolkit://recipes/send-icon
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -20,7 +20,8 @@ tags:
 - icon
 - ui
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/chat-input
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,10 +35,10 @@ SendIcon is a static, presentation-only SVG icon component that renders a diagon
 
 ## Behavioral Requirements
 
-- **must-render-svg**: Component MUST render as an SVG element with a `<line>` and `<polygon>` path forming a send arrow pointing from lower-left to upper-right.
-- **must-use-current-color**: Component MUST use `currentColor` for the stroke color, allowing the icon to inherit text color from its parent context.
-- **must-maintain-aspect-ratio**: Component MUST maintain a square aspect ratio and MUST NOT distort the arrow shape when scaled.
-- **must-be-static**: Component MUST NOT respond to user interaction, state changes, or dynamic updates; it is a static presentation.
+- **render-svg-arrow**: Component MUST render as an SVG element with a `<line>` and a `<polygon>` forming a paper-plane-outline send arrow pointing from lower-left to upper-right (see #appearance/geometry).
+- **use-current-color**: Component MUST use `currentColor` for the stroke color, allowing the icon to inherit text color from its parent context.
+- **maintain-aspect-ratio**: Component MUST render at a fixed 20×20 size, with the SVG's `width`/`height` attributes matching its viewBox, keeping the arrow square and undistorted. The icon does not grow or shrink when its parent container is resized.
+- **remain-static**: Component MUST NOT respond to user interaction, state changes, or dynamic updates; it is a static presentation with no event handlers.
 
 ## Appearance
 
@@ -47,7 +48,7 @@ SendIcon is a static, presentation-only SVG icon component that renders a diagon
 - **Stroke linejoin**: round
 - **Fill**: none (stroke only)
 - **Stroke color**: currentColor (inherits from parent text color)
-- **Geometry**: line from (22, 2) to (11, 13); polygon with points (22, 2), (15, 22), (11, 13), (2, 9), forming a triangular arrowhead
+- **Geometry**: line from (22, 2) to (11, 13); polygon with points (22, 2), (15, 22), (11, 13), (2, 9), tracing a paper-plane outline (four points, not a filled triangular arrowhead)
 
 ## States
 
@@ -63,17 +64,15 @@ Not applicable: SendIcon is a static presentation component with no interactive 
 
 | ID | Requirements | Input | Expected |
 |-----|-------------|-------|----------|
-| send-icon-001 | must-render-svg | Render component with no props | SVG renders with `<line>` and `<polygon>` elements visible |
-| send-icon-002 | must-use-current-color | Render in context with `color: red` | Icon stroke appears red (inherits currentColor) |
-| send-icon-003 | must-maintain-aspect-ratio | Scale container from 20px to 40px | Icon remains square and proportionally scaled |
-| send-icon-004 | must-be-static | Render component | No event listeners, no state updates, no response to clicks or focus |
+| send-icon-001 | render-svg-arrow | Render component with no props | SVG renders with `<line>` and `<polygon>` elements visible |
+| send-icon-002 | use-current-color | Render in context with `color: red` | Icon stroke appears red (inherits currentColor) |
+| send-icon-003 | maintain-aspect-ratio | Render inside a container sized differently than 20×20 (e.g., 40×40) | Icon stays fixed at 20×20 pixels; it does not resize to fill the container, because `width`/`height` are hardcoded on the `<svg>` |
+| send-icon-004 | remain-static | Inspect the rendered `<svg>` | No `on*` event-handler attributes are present, no `tabindex` attribute is set, and `pointer-events` is not overridden |
 
 ## Edge Cases
 
 - **Empty or null rendering**: Not applicable. SendIcon is a functional component that always renders; it has no inputs to be null or empty.
-- **Container scaling**: When the parent container is sized differently than 20×20, the component MUST scale proportionally. Aspect ratio preservation is a MUST.
-- **Color inheritance failure**: If `currentColor` is not supported by the rendering context, the stroke MUST fall back to black or a reasonable default; this is platform-dependent.
-- **Accessibility in non-interactive context**: If SendIcon is rendered standalone without a wrapping interactive control, it SHOULD include a comment or documentation note that a label must be provided by the parent context.
+- **Container scaling**: When the parent container is sized differently than 20×20, the icon does not resize — it stays fixed at 20×20 because `width` and `height` are hardcoded on the `<svg>` element (see **maintain-aspect-ratio**). A caller needing a different size overrides those attributes directly, or wraps the icon and applies a CSS transform.
 
 ## Configuration
 
@@ -109,27 +108,38 @@ Not applicable: SendIcon performs no logging.
 
 ## Platform Notes
 
-- **React/Web**: `SendIcon.tsx` in `packages/web/packages/chat/src/components/` renders a 20×20 SVG with `fill="none"`, `stroke="currentColor"`, and `strokeWidth="2"`. The `<line>` (22,2)→(11,13) and `<polygon>` (22,2), (15,22), (11,13), (2,9) define the send arrow pointing upper-right. No props or state management.
+- **React/Web**: `SendIcon.tsx` in `packages/web/packages/chat/src/components/` renders a 20×20 SVG with `fill="none"`, `stroke="currentColor"`, and `strokeWidth="2"`. The `<line>` and `<polygon>` geometry follows `#appearance/geometry`. No props or state management.
 
-- **SwiftUI**: Implement using `Image(systemName:)` with SF Symbols (e.g., `"arrow.up.right.circle"` or `"paperplane.fill"`) for consistency with platform conventions. Alternatively, create a custom `Shape` or use `.foregroundColor(.primary)` to inherit text color like `currentColor` behavior. Size using `.font(.system(size: 20))` or explicit frame.
+- **SwiftUI**: Implement using `Image(systemName: "paperplane")` — the outline variant, matching the stroke-only design, not `paperplane.fill`. Size it with `.font(.system(size: 20))` or an explicit `.frame(width: 20, height: 20)`, and tint it with `.foregroundStyle(.primary)` (not the deprecated `.foregroundColor`) to inherit the surrounding text color like `currentColor`.
 
-- **Compose**: Create a `@Composable` function that draws the path using `Canvas` or `Modifier`. Use `drawLine()` and `drawPath()` with `Color.currentColor` analog (e.g., `LocalContentColor.current`). Render at 20dp × 20dp to match web dimensions. Consider wrapping in a `Box(modifier = Modifier.size(20.dp))` to enforce aspect ratio.
+- **Compose**: Draw the geometry from `#appearance/geometry` inside a `Canvas` composable using `drawPath`, styled with `Stroke(width = 2.dp, cap = StrokeCap.Round, join = StrokeJoin.Round)`. Use `LocalContentColor.current` directly as the stroke color — there is no `Color.currentColor` analog — so the icon inherits the surrounding content color. Wrap it in `Box(modifier = Modifier.size(20.dp))` to fix the icon's size to match the web dimensions.
 
-- **AppKit / UIKit**: Implement as a custom `UIView` subclass or `NSView` that draws the path using `UIBezierPath` / `NSBezierPath`. Use `tintColor` or `UIColor.label` to inherit the parent's text color. Create a `20×20` image and scale as needed. Alternatively, use system SF Symbols if available on target OS versions.
+- **AppKit / UIKit**: Implement as a custom `UIView` subclass (`NSView` on AppKit) that draws the `#appearance/geometry` path with `UIBezierPath` / `NSBezierPath`. On UIKit, set the stroke color from `tintColor` so the icon inherits the surrounding tint; on AppKit, set it explicitly from `contentTintColor` (`UIColor.label` / its AppKit equivalents do not pick up the parent's tint). Render at a fixed 20×20 point size to match the web dimensions.
 
-- **WinUI 3**: Implement as a `Canvas` control in XAML or a custom `UserControl` with `<Path>` elements using `Stroke="{StaticResource SystemBaseHighBrush}"` (or data binding to foreground color). Define the `<Line>` and `<Polygon>` geometry in `<Path.Data>`. Set `Width="20"` and `Height="20"` with `Stretch="Uniform"` to preserve aspect ratio and inherit color from parent `Foreground` property.
+- **WinUI 3**: Implement as a single `<Path>` in XAML with path-markup `Data="M22,2 L11,13 M22,2 L15,22 L11,13 L2,9 Z"` (`<Line>`/`<Polygon>` elements are not valid inside `<Path.Data>`), `StrokeThickness="2"`, `StrokeStartLineCap="Round"`, `StrokeEndLineCap="Round"`, and `StrokeLineJoin="Round"`. Bind `Stroke="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"` instead of a hard-coded brush like `SystemBaseHighBrush`, so the icon inherits the parent's `Foreground`. Set `Width="20"` and `Height="20"` with `Stretch="Uniform"` to preserve the aspect ratio.
 
 ## Design Decisions
 
-The component uses `stroke` and `fill="none"` rather than a filled shape because a hollow arrow is more versatile: it remains visible at small sizes, scales cleanly, and works well on both light and dark backgrounds when using `currentColor` for inheritance. The round line caps and joins soften the visual appearance and make the arrow more friendly and less geometric.
+**Decision**: Render the arrow using `stroke` with `fill="none"`, round line caps, and round line joins, rather than a filled shape.
+**Rationale**: A hollow, stroked arrow stays visible at small sizes, scales cleanly, and works on both light and dark backgrounds via `currentColor` inheritance; the round caps and joins soften the shape and make it feel less geometric.
+**Approved**: pending
 
-The fixed 20×20 size (matching common icon conventions in web UI) is preserved through the SVG viewBox and can be scaled by the parent container. This avoids requiring size props while remaining flexible.
+**Decision**: Fix the icon at 20×20 pixels via explicit `width`/`height` attributes on the `<svg>` (viewBox `0 0 24 24`), rather than exposing a size prop.
+**Rationale**: A fixed size matches common icon conventions in web UI and avoids the API surface of a size prop. The tradeoff is that the icon does not automatically grow or shrink with its parent container — a caller needing a different size overrides `width`/`height` directly.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: No compliance checks specified for this icon component.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | failed | Accessibility |
+
+`screen-reader-support` is partial because SendIcon itself supplies no label and relies on a wrapping control to provide one — the reference usage in `ChatInput.tsx` does this correctly with `aria-label="Send"` on its `<button>`. `semantic-markup` fails because the `<svg>` in `SendIcon.tsx` sets no `aria-hidden` or `focusable` attribute, so nothing tells assistive technology to skip this purely decorative graphic.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; resolved the fixed-size vs. scaling contradiction in favor of the source's fixed dimensions; corrected the geometry description and the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; de-duplicated geometry into Appearance; reformatted Design Decisions; added a real Compliance table; linked the related chat-input recipe; removed the untestable color-fallback and dead comment-only accessibility edge cases |
