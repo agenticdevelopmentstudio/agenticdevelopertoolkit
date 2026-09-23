@@ -236,3 +236,35 @@ html.dark .adh-color-mode-toggle__sun {
 html[data-color-mode="auto"] .adh-color-mode-toggle > .adh-color-mode-toggle__badge {
   display: block;
 }
+
+/* ── Touch rows ──────────────────────────────────────────────────────────────
+ * On a touch screen every tappable row is 30% taller than its pointer height, so a
+ * fingertip lands on the row it aims at (Mike, 2026-09: rows were hard to hit on the
+ * iPhone). `pointer: coarse` rather than a width breakpoint: a narrow desktop window
+ * keeps its dense rows, and an iPad at full width still gets the tall ones.
+ *
+ * The growth is PADDING, split evenly above and below, computed from each row shape's
+ * natural single-line height. min-height would have been simpler, but it only lifts
+ * rows that are shorter than the target — a row carrying a preview is already taller,
+ * so it would gain nothing and the list would read unevenly. One factor, here; every
+ * row rule in the fleet (including adh's site menu, and the Tailwind rows in
+ * option-menu / list-chooser via `pointer-coarse:`) reads it, so retuning is one edit. */
+:root {
+  --adh-touch-row-grow: 0.3;
+}
+
+@media (pointer: coarse) {
+  /* Base dropdown / menu item: 0.6rem padding × 2 + 0.9rem × 1.2 line = 2.28rem. */
+  .adh-dropdown-menu__item {
+    padding-top: calc(0.6rem + 2.28rem * var(--adh-touch-row-grow) / 2);
+    padding-bottom: calc(0.6rem + 2.28rem * var(--adh-touch-row-grow) / 2);
+  }
+
+  /* TopicRail row (topic-detail.tsx). Unlayered, so it beats the row's own `pt-1 pb-0.5`
+   * utilities, which Tailwind emits inside @layer utilities. Natural height: 0.25rem +
+   * 0.125rem padding + 0.8rem text at the body's 1.7 line = 1.735rem. */
+  [data-htd-row] {
+    padding-top: calc(0.25rem + 1.735rem * var(--adh-touch-row-grow) / 2);
+    padding-bottom: calc(0.125rem + 1.735rem * var(--adh-touch-row-grow) / 2);
+  }
+}
