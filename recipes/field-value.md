@@ -3,11 +3,11 @@ id: 6579e030-0455-453c-81cf-177dae3dd82e
 title: Field Value
 domain: agenticdevelopertoolkit://recipes/field-value
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +21,9 @@ tags:
 - field-rendering
 - data-presentation
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/registry-profile
+- agenticdevelopertoolkit://recipes/service-list
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,31 +37,32 @@ FieldValue is a presentational component that renders a field's value in the app
 
 ## Behavioral Requirements
 
-- **must-render-based-on-type**: Component MUST render different markup for each supported field type: text, date, select, email, phone, url, boolean, multi_select, image, address, markdown, textarea.
-- **must-return-null-for-empty-text**: Component MUST return nothing (null) when type is text, date, select, or default case and value converts to an empty string.
-- **must-return-null-for-empty-multi-select**: Component MUST return nothing when type is multi_select and array is empty or not an array.
-- **must-return-null-for-empty-address**: Component MUST return nothing when type is address and all address parts (line1, line2, city, region, postalCode, country) are empty or falsy.
-- **must-render-url-as-link**: Component MUST render type url as an `<a>` element with href set to the string value, with class rp-field__link.
-- **must-strip-protocol-from-url**: Component MUST display the URL text with the leading protocol (http:// or https://) removed.
-- **must-use-security-attributes-for-url**: Component MUST set rel="noopener noreferrer nofollow" and target="_blank" on URL links.
-- **must-render-email-as-text**: Component MUST render type email as plain text in a span with class rp-field__text, NOT as a mailto link, regardless of value visibility settings.
-- **must-render-phone-as-text**: Component MUST render type phone as plain text in a span with class rp-field__text, NOT as a tel link.
-- **must-render-boolean-as-yes-no**: Component MUST render type boolean as "Yes" when value is truthy, "No" when falsy, in a span with class rp-field__text.
-- **must-render-multi-select-as-list**: Component MUST render type multi_select as an unordered list with class rp-field__tags containing list items with class rp-field__tag.
-- **must-convert-multi-select-items-to-string**: Component MUST convert each multi_select item to a string before rendering.
-- **must-use-image-resolver**: Component MUST use resolveImageUrl prop to convert image attachment IDs to URLs when provided.
-- **must-render-nothing-for-unresolvable-image**: Component MUST render nothing (not a broken-image placeholder) when image ID is empty or resolveImageUrl returns null.
-- **must-render-image-with-alt-text**: Component MUST render type image as an img element with src from resolveImageUrl and alt set to field.label.
-- **must-render-image-with-class**: Component MUST render image with class rp-field__image.
-- **must-render-address-as-comma-separated**: Component MUST render type address by joining all non-empty address parts (line1, line2, city, region, postalCode, country) with ", ".
-- **must-handle-address-as-object**: Component MUST accept address value as an object with keys line1, line2, city, region, postalCode, country, defaulting to empty object if value is not an object.
-- **must-render-markdown-as-text**: Component MUST render type markdown as pre-wrapped text in a paragraph with class rp-field__prose, NOT as HTML.
-- **must-render-textarea-as-text**: Component MUST render type textarea as pre-wrapped text in a paragraph with class rp-field__prose, NOT as HTML.
-- **must-support-delivery-label-lookup**: Component MUST apply DELIVERY_LABEL mapping (in_person → "In person", virtual → "Virtual", hybrid → "In person or virtual") to text, date, select, and default types before rendering.
-- **must-render-unmapped-values-as-is**: Component MUST render the original string value if it is not found in DELIVERY_LABEL mapping.
-- **must-use-rp-field-text-class**: Component MUST use class rp-field__text for text, email, phone, boolean, and address field types.
-- **must-convert-value-to-string**: Component MUST convert all non-address values to strings using String() coercion.
-- **must-handle-null-undefined-values**: Component MUST treat null and undefined values as empty strings using the nullish coalescing operator.
+- **render-by-type**: Component MUST render different markup for each supported field type: text, date, select, email, phone, url, boolean, multi_select, image, address, markdown, textarea.
+- **empty-text-renders-nothing**: Component MUST render nothing when type is text, date, select, or the default case and the value is empty (after converting to a display string).
+- **empty-multi-select-renders-nothing**: Component MUST render nothing when type is multi_select and the value is not a non-empty list.
+- **empty-address-renders-nothing**: Component MUST render nothing when type is address and all address parts (line1, line2, city, region, postalCode, country) are empty or absent.
+- **url-as-link**: Component MUST render type url as an `<a>` element with href set to the value, with class rp-field__link.
+- **url-protocol-stripped**: Component MUST display the URL text with the leading protocol (http:// or https://) removed.
+- **url-security-attributes**: Component MUST set rel="noopener noreferrer nofollow" and target="_blank" on URL links.
+- **email-as-text**: Component MUST render type email as plain text in a span with class rp-field__text, never as a mailto link, regardless of value visibility settings.
+- **phone-as-text**: Component MUST render type phone as plain text in a span with class rp-field__text, never as a tel link.
+- **empty-email-or-phone-renders-empty-span**: Component MUST render an empty span with class rp-field__text (not nothing) when type is email or phone and the value is empty — unlike text/date/select/default, which render nothing for an empty value.
+- **boolean-as-yes-no**: Component MUST render type boolean as "Yes" when the value is truthy and "No" when it is falsy (including an absent value), in a span with class rp-field__text. This is a truthiness test, not a strict boolean check: a truthy non-boolean value such as the string "false" still renders "Yes".
+- **multi-select-as-list**: Component MUST render type multi_select as an unordered list with class rp-field__tags containing list items with class rp-field__tag.
+- **multi-select-items-stringified**: Component MUST convert each multi_select item to a display string before rendering.
+- **image-resolver-used**: Component MUST use the resolveImageUrl prop, when provided, to convert an image attachment ID into a URL.
+- **unresolvable-image-renders-nothing**: Component MUST render nothing (not a broken-image placeholder) when the image ID is empty, resolveImageUrl is absent, or resolveImageUrl returns null.
+- **image-alt-text**: Component MUST render type image as an img element with src from resolveImageUrl and alt set to field.label.
+- **image-class**: Component MUST render the image with class rp-field__image.
+- **address-comma-separated**: Component MUST render type address by joining all non-empty address parts (line1, line2, city, region, postalCode, country) with ", ".
+- **address-value-as-object**: Component MUST accept the address value as an object with keys line1, line2, city, region, postalCode, country, treating a non-object value as an empty object.
+- **markdown-as-text**: Component MUST render type markdown as pre-wrapped text in a paragraph with class rp-field__prose, never as HTML.
+- **textarea-as-text**: Component MUST render type textarea as pre-wrapped text in a paragraph with class rp-field__prose, never as HTML.
+- **delivery-label-lookup**: Component MUST apply the DELIVERY_LABEL mapping (in_person → "In person", virtual → "Virtual", hybrid → "In person or virtual") to text, date, select, and default types before rendering.
+- **unmapped-values-as-is**: Component MUST render the original value as display text if it is not found in the DELIVERY_LABEL mapping.
+- **rp-field-text-class**: Component MUST use class rp-field__text for text, email, phone, boolean, and address field types.
+- **value-stringified**: Component MUST convert all non-address values to a display string before rendering.
+- **nullish-values-as-empty-string**: Component MUST treat an absent (null or undefined) value as an empty string wherever a display string is produced (text, date, select, default, email, phone, url, image, markdown, textarea); boolean and multi_select have their own absent-value handling (see **boolean-as-yes-no** and **empty-multi-select-renders-nothing**).
 
 ## Appearance
 
@@ -80,7 +83,7 @@ FieldValue is a presentational component that renders a field's value in the app
 
 ## Accessibility
 
-- Role/trait: Component is a display element, not interactive. Links for URLs are keyboard-accessible and indicate external navigation (target="_blank", rel="noopener").
+- Role/trait: Component is a display element, not interactive. Links for URLs are standard, keyboard-accessible `<a>` elements; opening in a new tab via target="_blank" is not itself announced to screen readers (see **url-security-attributes**).
 - Label requirements: Image elements use field.label as alt text for screen reader context.
 - Text content: All text content is available to assistive technologies; HTML markup in markdown/textarea is rendered as plain text to prevent content injection.
 - No interactive controls: Component contains no buttons, form inputs, or keyboard-navigable elements in the default case (URL links are standard navigable elements).
@@ -89,34 +92,50 @@ FieldValue is a presentational component that renders a field's value in the app
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| field-value-001 | must-render-url-as-link, must-strip-protocol-from-url, must-use-security-attributes-for-url | `{ type: 'url', value: 'https://example.com', label: 'Website' }` | `<a class="rp-field__link" href="https://example.com" rel="noopener noreferrer nofollow" target="_blank">example.com</a>` |
-| field-value-002 | must-return-null-for-empty-text | `{ type: 'text', value: '', label: 'Name' }` | `null` |
-| field-value-003 | must-render-email-as-text | `{ type: 'email', value: 'user@example.com', label: 'Email' }` | `<span class="rp-field__text">user@example.com</span>` |
-| field-value-004 | must-render-phone-as-text | `{ type: 'phone', value: '+1-555-1234', label: 'Phone' }` | `<span class="rp-field__text">+1-555-1234</span>` |
-| field-value-005 | must-render-boolean-as-yes-no | `{ type: 'boolean', value: true, label: 'Active' }` | `<span class="rp-field__text">Yes</span>` |
-| field-value-006 | must-render-boolean-as-yes-no | `{ type: 'boolean', value: false, label: 'Active' }` | `<span class="rp-field__text">No</span>` |
-| field-value-007 | must-render-multi-select-as-list, must-convert-multi-select-items-to-string | `{ type: 'multi_select', value: ['Option A', 'Option B'], label: 'Tags' }` | `<ul class="rp-field__tags"><li class="rp-field__tag" key="Option A">Option A</li><li class="rp-field__tag" key="Option B">Option B</li></ul>` |
-| field-value-008 | must-return-null-for-empty-multi-select | `{ type: 'multi_select', value: [], label: 'Tags' }` | `null` |
-| field-value-009 | must-use-image-resolver, must-render-image-with-alt-text, must-render-image-with-class | `{ type: 'image', value: 'attachment-123', label: 'Profile Photo' }`, resolveImageUrl returns 'https://cdn.example.com/img/attachment-123.jpg' | `<img class="rp-field__image" src="https://cdn.example.com/img/attachment-123.jpg" alt="Profile Photo" />` |
-| field-value-010 | must-render-nothing-for-unresolvable-image | `{ type: 'image', value: 'missing-id', label: 'Photo' }`, resolveImageUrl returns null | `null` |
-| field-value-011 | must-render-address-as-comma-separated, must-handle-address-as-object | `{ type: 'address', value: { line1: '123 Main St', city: 'Springfield', country: 'USA' }, label: 'Address' }` | `<span class="rp-field__text">123 Main St, Springfield, USA</span>` |
-| field-value-012 | must-return-null-for-empty-address | `{ type: 'address', value: { line1: '', line2: '', city: '', region: '', postalCode: '', country: '' }, label: 'Address' }` | `null` |
-| field-value-013 | must-render-markdown-as-text | `{ type: 'markdown', value: '# Hello\nWorld', label: 'Bio' }` | `<p class="rp-field__prose"># Hello\nWorld</p>` |
-| field-value-014 | must-render-textarea-as-text | `{ type: 'textarea', value: 'Line 1\nLine 2', label: 'Notes' }` | `<p class="rp-field__prose">Line 1\nLine 2</p>` |
-| field-value-015 | must-support-delivery-label-lookup | `{ type: 'text', value: 'in_person', label: 'Delivery' }` | `<span class="rp-field__text">In person</span>` |
-| field-value-016 | must-support-delivery-label-lookup, must-render-unmapped-values-as-is | `{ type: 'text', value: 'custom-value', label: 'Delivery' }` | `<span class="rp-field__text">custom-value</span>` |
-| field-value-017 | must-handle-null-undefined-values | `{ type: 'text', value: null, label: 'Optional' }` | `null` |
-| field-value-018 | must-handle-null-undefined-values | `{ type: 'text', value: undefined, label: 'Optional' }` | `null` |
+| field-value-001 | url-as-link, url-protocol-stripped, url-security-attributes | `{ type: 'url', value: 'https://example.com', label: 'Website' }` | `<a class="rp-field__link" href="https://example.com" rel="noopener noreferrer nofollow" target="_blank">example.com</a>` |
+| field-value-002 | empty-text-renders-nothing | `{ type: 'text', value: '', label: 'Name' }` | `null` |
+| field-value-003 | email-as-text | `{ type: 'email', value: 'user@example.com', label: 'Email' }` | `<span class="rp-field__text">user@example.com</span>` |
+| field-value-004 | phone-as-text | `{ type: 'phone', value: '+1-555-1234', label: 'Phone' }` | `<span class="rp-field__text">+1-555-1234</span>` |
+| field-value-005 | boolean-as-yes-no | `{ type: 'boolean', value: true, label: 'Active' }` | `<span class="rp-field__text">Yes</span>` |
+| field-value-006 | boolean-as-yes-no | `{ type: 'boolean', value: false, label: 'Active' }` | `<span class="rp-field__text">No</span>` |
+| field-value-007 | multi-select-as-list, multi-select-items-stringified | `{ type: 'multi_select', value: ['Option A', 'Option B'], label: 'Tags' }` | `<ul class="rp-field__tags"><li class="rp-field__tag">Option A</li><li class="rp-field__tag">Option B</li></ul>` |
+| field-value-008 | empty-multi-select-renders-nothing | `{ type: 'multi_select', value: [], label: 'Tags' }` | `null` |
+| field-value-009 | image-resolver-used, image-alt-text, image-class | `{ type: 'image', value: 'attachment-123', label: 'Profile Photo' }`, resolveImageUrl returns 'https://cdn.example.com/img/attachment-123.jpg' | `<img class="rp-field__image" src="https://cdn.example.com/img/attachment-123.jpg" alt="Profile Photo" />` |
+| field-value-010 | unresolvable-image-renders-nothing | `{ type: 'image', value: 'missing-id', label: 'Photo' }`, resolveImageUrl returns null | `null` |
+| field-value-011 | address-comma-separated, address-value-as-object | `{ type: 'address', value: { line1: '123 Main St', city: 'Springfield', country: 'USA' }, label: 'Address' }` | `<span class="rp-field__text">123 Main St, Springfield, USA</span>` |
+| field-value-012 | empty-address-renders-nothing | `{ type: 'address', value: { line1: '', line2: '', city: '', region: '', postalCode: '', country: '' }, label: 'Address' }` | `null` |
+| field-value-013 | markdown-as-text | `{ type: 'markdown', value: '# Hello\nWorld', label: 'Bio' }` | `<p class="rp-field__prose"># Hello\nWorld</p>` |
+| field-value-014 | textarea-as-text | `{ type: 'textarea', value: 'Line 1\nLine 2', label: 'Notes' }` | `<p class="rp-field__prose">Line 1\nLine 2</p>` |
+| field-value-015 | delivery-label-lookup | `{ type: 'text', value: 'in_person', label: 'Delivery' }` | `<span class="rp-field__text">In person</span>` |
+| field-value-016 | delivery-label-lookup, unmapped-values-as-is | `{ type: 'text', value: 'custom-value', label: 'Delivery' }` | `<span class="rp-field__text">custom-value</span>` |
+| field-value-017 | nullish-values-as-empty-string | `{ type: 'text', value: null, label: 'Optional' }` | `null` |
+| field-value-018 | nullish-values-as-empty-string | `{ type: 'text', value: undefined, label: 'Optional' }` | `null` |
+| field-value-019 | render-by-type, unmapped-values-as-is | `{ type: 'date', value: '2026-01-15', label: 'Start Date' }` | `<span class="rp-field__text">2026-01-15</span>` |
+| field-value-020 | render-by-type, unmapped-values-as-is | `{ type: 'select', value: 'option-a', label: 'Status' }` | `<span class="rp-field__text">option-a</span>` |
+| field-value-021 | url-protocol-stripped | `{ type: 'url', value: 'http://example.com', label: 'Website' }` | `<a class="rp-field__link" href="http://example.com" rel="noopener noreferrer nofollow" target="_blank">example.com</a>` |
+| field-value-022 | url-as-link | `{ type: 'url', value: 'example.com/path', label: 'Website' }` | `<a class="rp-field__link" href="example.com/path" rel="noopener noreferrer nofollow" target="_blank">example.com/path</a>` |
+| field-value-023 | image-resolver-used, unresolvable-image-renders-nothing | `{ type: 'image', value: 'attachment-1', label: 'Photo' }`, resolveImageUrl not provided | `null` |
+| field-value-024 | address-comma-separated | `{ type: 'address', value: { line1: '123 Main St', region: 'CA', postalCode: '90210' }, label: 'Address' }` | `<span class="rp-field__text">123 Main St, CA, 90210</span>` |
+| field-value-025 | empty-email-or-phone-renders-empty-span | `{ type: 'email', value: '', label: 'Email' }` | `<span class="rp-field__text"></span>` |
+| field-value-026 | empty-email-or-phone-renders-empty-span | `{ type: 'phone', value: null, label: 'Phone' }` | `<span class="rp-field__text"></span>` |
+| field-value-027 | markdown-as-text | `{ type: 'markdown', value: '<script>alert(1)</script>', label: 'Bio' }` | `<p class="rp-field__prose">&lt;script&gt;alert(1)&lt;/script&gt;</p>` |
+| field-value-028 | boolean-as-yes-no | `{ type: 'boolean', value: 'false', label: 'Active' }` | `<span class="rp-field__text">Yes</span>` |
+| field-value-029 | boolean-as-yes-no | `{ type: 'boolean', value: null, label: 'Active' }` | `<span class="rp-field__text">No</span>` |
+| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | `<a class="rp-field__link" href="javascript:alert(1)" rel="noopener noreferrer nofollow" target="_blank">javascript:alert(1)</a>` |
 
 ## Edge Cases
 
-- **Empty value for any type**: When value is empty string, null, or undefined, the component returns nothing unless the type specifically requires string coercion (email, phone render empty strings as `<span class="rp-field__text"></span>`).
+- **Empty value for any type**: When value is empty string, null, or undefined, the component returns nothing for text, date, select, multi_select, address, and the default case; email and phone are the exception, rendering an empty `<span class="rp-field__text"></span>` instead (see **empty-email-or-phone-renders-empty-span**).
 - **Non-array value for multi_select**: If value is not an array, it is coerced to an empty array, resulting in null render.
 - **Invalid image resolver result**: When resolveImageUrl is provided but returns null, the component renders nothing rather than a broken image.
 - **Address as non-object**: If address value is not an object or is null, it defaults to an empty object, resulting in null render.
 - **Null resolveImageUrl prop**: When resolveImageUrl prop is not provided, unresolvable IDs are handled using optional chaining (`resolveImageUrl?.(id) ?? null`), resulting in null render.
 - **URL with no protocol**: When URL value has no http:// or https:// prefix, the full URL is displayed as-is.
 - **Whitespace in multi_select items**: Array items are converted to strings but not trimmed; leading/trailing whitespace is preserved.
+- **Non-boolean truthy value for boolean type**: A truthy non-boolean value (for example, the string "false") renders "Yes" because the component performs a truthiness check, not a strict boolean comparison; see **boolean-as-yes-no**.
+- **Null or undefined boolean value**: Renders "No" because null and undefined are falsy in the truthiness check.
+- **Markdown or textarea containing HTML or script markup**: Rendered as literal, escaped text and never executed, because the component places the string as JSX text content rather than parsing or injecting it as HTML; see **markdown-as-text** and **textarea-as-text**.
+- **URL value with a non-http(s) scheme**: The href is set directly from the value with no scheme check, so a value such as `javascript:alert(1)` renders as a clickable link identically to any other URL, with its protocol prefix untouched by the http(s) stripping in **url-protocol-stripped**; the component does not validate or restrict the URL scheme.
 
 ## Configuration
 
@@ -161,32 +180,54 @@ Not applicable: FieldValue performs no logging.
 
 ## Platform Notes
 
-- **TypeScript/Web**: Source file is `packages/web/packages/registry-profile/src/FieldValue.tsx`. Uses React with className binding for CSS styling. CSS classes (rp-field__link, rp-field__text, rp-field__tags, rp-field__tag, rp-field__image, rp-field__prose) are applied based on field type. The `resolveImageUrl` prop accepts optional resolver; URL security is enforced with standard rel/target attributes.
+- **React/Web**: Source file is `packages/web/packages/registry-profile/src/FieldValue.tsx`. Uses React with className binding for CSS styling; CSS classes (rp-field__link, rp-field__text, rp-field__tags, rp-field__tag, rp-field__image, rp-field__prose) are applied based on field type. Implements the "empty" and "unresolvable" checks in **empty-text-renders-nothing**, **empty-email-or-phone-renders-empty-span**, and **unresolvable-image-renders-nothing** with JavaScript's nullish coalescing (`??`) and optional chaining (`?.`) operators, and produces display strings with `String()`. The `resolveImageUrl` prop accepts an optional resolver; URL security is enforced with the `rel`/`target` attributes named in **url-security-attributes**.
 
-- **SwiftUI**: Implement as a container view that accepts a `PublicField` and optional image URL resolver. Use a Switch statement or conditional logic to branch on field.type and render appropriate SwiftUI views (Text, Link, List, Image, etc.). For URLs, use Link with security attributes. For images, load asynchronously via the resolver and apply placeholder/error handling. Use SwiftUI's native text styling for text types, font sizes for prose blocks, and layout containers for lists.
+- **SwiftUI**: Implement as a container view that accepts a `PublicField` and optional image URL resolver. Use a switch statement on `field.type` to render the corresponding SwiftUI view (Text, Link, List, AsyncImage, etc.). For URLs, use `Link(destination:)`; SwiftUI has no direct equivalent to the `rel`/`target` attributes in **url-security-attributes**, since the system's default URL handler owns new-window/tab behavior. For images, load asynchronously via the resolver and render nothing when it returns nil, matching **unresolvable-image-renders-nothing**. Use SwiftUI's native text styling for text types, and layout containers such as `VStack`/`HStack` for address and multi_select lists.
 
-- **Compose**: Implement as a composable function accepting field and resolveImageUrl lambda. Use when-expression to branch on field type. Render text types as Text composable with appropriate text styling. URLs as ClickableText with external link icon. Images as AsyncImage with coil loading library and alt text. Address and multi_select as Column/Row layouts. Markdown and textarea as selectable Text to prevent unwanted formatting.
+- **Compose**: Implement as a composable function accepting field and a resolveImageUrl lambda. Use a when-expression to branch on field type. Render text types as `Text`. Render URLs as `Text` with a `LinkAnnotation.Url` annotation (`ClickableText` is deprecated) so the link opens the system browser. Render images with `AsyncImage` (Coil) and set the content description from field.label. Render address and multi_select as `Column`/`Row` layouts. Render markdown and textarea as selectable `Text` to avoid unwanted formatting.
 
-- **AppKit / UIKit**: Implement as a view controller or view subclass that configures NSTextView/UITextView, NSButton/UIButton, or NSImageView/UIImageView based on field type. For URLs, use NSAttributedString/NSAttributedString with link attributes and open in default browser. For images, load asynchronously via provided resolver callback. Use Auto Layout for flexible sizing. Handle null/empty values by hiding or removing views. Set accessibility labels and traits (link, image, button) appropriate to each field type.
+- **AppKit / UIKit**: Implement as a view (a display-only component needs no view controller) that configures `NSTextField`/`UILabel`, or `NSImageView`/`UIImageView`, based on field type. For URLs, use an `NSAttributedString`/`NSMutableAttributedString` with a `.link` attribute (`NSAttributedString.Key.link`) and open it via the default browser. For images, load asynchronously via the provided resolver callback. Use Auto Layout for flexible sizing. Handle empty or unresolvable values by hiding or removing the view, matching **empty-text-renders-nothing** and **unresolvable-image-renders-nothing**. Set accessibility labels and traits (link, image) appropriate to each field type.
 
-- **WinUI 3**: Implement as a user control or data template that branches on field.type using xaml data template selectors or code-behind switch logic. Use TextBlock for text types with TextTrimming for long content. Use Hyperlink for URLs with NavigationTransportedEventArgs to open externally. Use Image control with async image source converter for images. Use ItemsRepeater or ListView for multi_select. Use RichTextBlock for markdown/textarea to display pre-wrapped plain text without HTML parsing. Bind alt text and link attributes to appropriate control properties.
+- **WinUI 3**: Implement as a user control or data template that branches on field.type using XAML data-template selectors or code-behind switch logic. Use `TextBlock` with `TextWrapping="Wrap"` for text types, never `TextTrimming`, which would cut off longer values. Use `Hyperlink.NavigateUri`, or call `Launcher.LaunchUriAsync` from code-behind, to open URLs externally. Use an `Image` control with an async image-source converter for images. Use `ItemsRepeater` or `ListView` for multi_select. Use a plain `TextBlock` with `TextWrapping="Wrap"` for markdown/textarea to display pre-wrapped plain text without HTML parsing — a `RichTextBlock` is unnecessary since no rich formatting is ever rendered. Bind alt text and link attributes to the appropriate control properties.
 
 ## Design Decisions
 
-The component returns null (renders nothing) rather than empty containers for empty values because an empty profile with missing pictures and unfilled fields reads better than one with visible placeholder UI. This follows the principle that absence of data is cleaner than attempting to gracefully degrade rendering.
+**Decision**: Return null (render nothing) rather than an empty container when a value is empty, for every type except email and phone (see **empty-email-or-phone-renders-empty-span**).
+**Rationale**: An empty profile with missing pictures and unfilled fields reads better than one with visible placeholder UI. Absence of data is cleaner than attempting to gracefully degrade rendering.
+**Approved**: pending
 
-Email and phone are rendered as plain text (not `mailto:` or `tel:` links) because visibility of these fields is server-controlled; they only reach the client when published, and the client's responsibility is merely display, not augmentation. Linkifying would create a new attack surface for scraper tools targeting contact information by CSS selector.
+**Decision**: Render email and phone as plain text, never as `mailto:`/`tel:` links (see **email-as-text**, **phone-as-text**).
+**Rationale**: Whether the value reaches the client at all is a visibility decision made server-side — these types start private, so publishing one is a choice. What a published value becomes in the markup is a separate, client-side question, and the answer is plain text: a linkified address is the one a scraper finds by selector rather than by parsing prose.
+**Approved**: pending
 
-Markdown and textarea are rendered as pre-wrapped plain text (not HTML) because the component runs on untrusted sites the registry does not control. Safe markdown-to-HTML conversion cannot be guaranteed in this context, so the conservative choice is to render all markup as literal text.
+**Decision**: Render markdown and textarea as pre-wrapped plain text, never as HTML (see **markdown-as-text**, **textarea-as-text**).
+**Rationale**: The component runs on untrusted sites the registry does not control, and safe markdown-to-HTML conversion cannot be guaranteed in that context, so the conservative choice is to render all markup as literal text.
+**Approved**: pending
 
-The DELIVERY_LABEL mapping is hardcoded rather than externalized as it is a fixed enumeration tied to the specific registry field type "delivery mode" and is not a localization concern — it is a semantic transformation of field values specific to this component's domain.
+**Decision**: Hardcode the DELIVERY_LABEL mapping in the component rather than accepting it as a prop (see **delivery-label-lookup**).
+**Rationale**: It is a fixed enumeration tied to one registry field's semantics ("delivery mode"), not a generic labeling mechanism — a semantic transformation specific to this component's domain rather than a configuration point. The strings it produces ("In person", "Virtual", "In person or virtual") are still user-facing text, so they are catalogued in the Localization table like any other user-facing string this component renders.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: FieldValue has no platform-specific compliance requirements and contains no authentication, data persistence, or external service integration.
+| Check | Status | Category |
+|-------|--------|----------|
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+
+These statuses rest on `FieldValue.tsx`: it sets `href` directly from the value with no scheme check (input-sanitization partial, see **url-as-link**); it renders semantic `<a>`, `<ul>`/`<li>`, and `<img>` elements with `alt` text from `field.label` (screen-reader-support, keyboard-navigable, semantic-markup), but applies no inline color or font size of its own, leaving contrast and dynamic type up to CSS classes this file does not define (both partial); and it hardcodes the `DELIVERY_LABEL` strings and "Yes"/"No" in source rather than reading them from a resource file, while the `date` type is displayed through raw `String()` coercion with no locale-aware formatting (string-externalization, no-hardcoded-strings, and locale-aware-formatting all failed), with Unicode text otherwise passed through untouched by any of the component's `String()` conversions (unicode-support passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added a new empty-email-or-phone requirement and boolean-truthiness clarification, linked related registry-profile and service-list recipes, reformatted Design Decisions to the three-line form and resolved the DELIVERY_LABEL/localization contradiction, filled in the Compliance table, corrected Platform Notes APIs (SwiftUI, Compose, AppKit/UIKit, WinUI 3) and renamed the Web bullet to React/Web, moved JavaScript-specific mechanics out of Behavioral Requirements and into the React/Web note, fixed the field-value-007 test vector's rendered `key` attribute, and added test vectors and edge cases for date/select, protocol stripping and scheme handling, an unset image resolver, additional address parts, empty email/phone, markdown script content, and boolean truthiness |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
