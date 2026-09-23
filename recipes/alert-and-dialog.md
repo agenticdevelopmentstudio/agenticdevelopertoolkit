@@ -3,7 +3,7 @@ id: 550f00f7-bfb2-415e-9b15-bd5dce015500
 title: "Alert & Dialog System"
 domain: agenticdevelopertoolkit://recipes/alert-and-dialog
 type: recipe
-version: 1.1.0
+version: 1.2.0
 status: draft
 language: en
 created: 2026-06-26
@@ -57,16 +57,16 @@ rules are exposed for composed dialogs so everything looks uniform.
 
 ## Integration Requirements
 
-- **must-full-width-single-action**: With one button, the action button MUST be full width of the content area and gold (`Button variant="default"`).
-- **must-equal-width-when-narrow**: With two buttons and content width `≤ 2 × Wmax`, the row MUST split into two equal-width (`flex-1`) buttons `[ Cancel ][ OK ]`, Cancel `ghost`/`outline` and OK gold.
-- **must-natural-width-when-wide**: With two buttons and content width `> 2 × Wmax`, the buttons MUST keep natural width and right-justify (`justify-end`), Cancel then OK.
-- **must-order-cancel-then-action**: The order MUST always be Cancel (left) then the action (right).
-- **must-keyboard-default**: Under `keyboard:"default"`, Escape MUST dismiss via cancel if a cancel button exists (else via the single action), and Enter MUST activate the action.
-- **must-keyboard-none**: Under `keyboard:"none"`, the modal MUST honor no keyboard shortcuts and be dismissable only by clicking a button (or the close affordance if shown).
-- **must-keyboard-explicit-map**: Under an explicit key→action map, only listed keys MUST act, mapped to the named button; a key mapped to a button that is not present MUST be ignored.
-- **must-destructive-forces-none**: When `destructive` is true, the action button MUST render red (`apt-red`) and the keyboard policy MUST be forced to `"none"` regardless of `keyboard`.
-- **must-block-dismissal-when-busy**: When `busy` is true, the component MUST block dismissal and replace the buttons with a spinner.
-- **must-be-accessible-dialog**: The surface MUST be `role="dialog"` with `aria-modal`, labelled by the title and described by the body; initial focus MUST be the action button under `"default"` (the first field for composed form dialogs); focus MUST be trapped while open and restored to the opener on close.
+- **full-width-single-action**: With one button, the action button MUST be full width of the content area and gold (`Button variant="default"`).
+- **equal-width-when-narrow**: With two buttons and content width `≤ 2 × Wmax`, the row MUST split into two equal-width (`flex-1`) buttons `[ Cancel ][ OK ]`, Cancel `ghost`/`outline` and OK gold.
+- **natural-width-when-wide**: With two buttons and content width `> 2 × Wmax`, the buttons MUST keep natural width and right-justify (`justify-end`), Cancel then OK.
+- **order-cancel-then-action**: The order MUST always be Cancel (left) then the action (right).
+- **keyboard-default**: Under `keyboard:"default"`, Escape MUST dismiss via cancel if a cancel button exists (else via the single action), and Enter MUST activate the action.
+- **keyboard-none**: Under `keyboard:"none"`, the modal MUST honor no keyboard shortcuts and be dismissable only by clicking a button (or the close affordance if shown).
+- **keyboard-explicit-map**: Under an explicit key→action map, only listed keys MUST act, mapped to the named button; a key mapped to a button that is not present MUST be ignored.
+- **destructive-forces-none**: When `destructive` is true, the action button MUST render red (`apt-red`) and the keyboard policy MUST be forced to `"none"` regardless of `keyboard`.
+- **block-dismissal-when-busy**: When `busy` is true, the component MUST block dismissal and replace the buttons with a spinner.
+- **be-accessible-dialog**: The surface MUST be `role="dialog"` with `aria-modal`, labelled by the title and described by the body; initial focus MUST be the action button under `"default"` (the first field for composed form dialogs); focus MUST be trapped while open and restored to the opener on close.
 
 ## Layout
 
@@ -118,14 +118,14 @@ Wide dialog (content wider than 2× the max button width → buttons keep natura
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | must-full-width-single-action | one-button alert | action button full width, gold |
-| T2 | must-equal-width-when-narrow | two buttons, narrow content | equal-width `[ Cancel ][ OK ]` |
-| T3 | must-natural-width-when-wide | two buttons, wide content | natural-width, right-justified |
-| T4 | must-keyboard-default | `keyboard:"default"`, Enter then Escape | Enter→confirm; Escape→cancel (or OK if no cancel) |
-| T5 | must-keyboard-none | `keyboard:"none"`, press keys | keys ignored |
-| T6 | must-keyboard-explicit-map | `{ Enter: "confirm" }` | only Enter acts → confirm; unlisted keys ignored |
-| T7 | must-destructive-forces-none | `destructive: true` | action red; no keyboard shortcuts |
-| T8 | must-block-dismissal-when-busy | `busy: true` | dismissal blocked; spinner replaces buttons |
+| T1 | full-width-single-action | one-button alert | action button full width, gold |
+| T2 | equal-width-when-narrow | two buttons, narrow content | equal-width `[ Cancel ][ OK ]` |
+| T3 | natural-width-when-wide | two buttons, wide content | natural-width, right-justified |
+| T4 | keyboard-default | `keyboard:"default"`, Enter then Escape | Enter→confirm; Escape→cancel (or OK if no cancel) |
+| T5 | keyboard-none | `keyboard:"none"`, press keys | keys ignored |
+| T6 | keyboard-explicit-map | `{ Enter: "confirm" }` | only Enter acts → confirm; unlisted keys ignored |
+| T7 | destructive-forces-none | `destructive: true` | action red; no keyboard shortcuts |
+| T8 | block-dismissal-when-busy | `busy: true` | dismissal blocked; spinner replaces buttons |
 
 ## Edge Cases
 
@@ -173,3 +173,4 @@ interface AlertModalKeyboardAdds {
 |---|---|---|---|
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Rename the `tone` union member `danger`→`error` to match `AlertModalTone` in `alert-modal.tsx`. |
+| 1.2.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |

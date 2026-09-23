@@ -3,11 +3,11 @@ id: 0ae70642-28e7-436a-b934-0b445652ac09
 title: Chat Input
 domain: agenticdevelopertoolkit://recipes/chat-input
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,9 @@ tags:
 - input
 - form
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/chat-window-controller
+- agenticdevelopertoolkit://recipes/button
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,32 +38,39 @@ A single-line text input field designed for composing and sending chat messages.
 
 ## Behavioral Requirements
 
-- **must-render-input-field**: The component MUST render a text input field that accepts character input from the user.
-- **must-accept-placeholder**: The component MUST accept and display a placeholder string when the input is empty. The default placeholder MUST be "Type a message...".
-- **must-accept-custom-placeholder**: The component MUST allow the placeholder text to be customized via a configuration option.
-- **must-disable-on-empty**: The send button MUST be disabled when the input contains only whitespace or is empty.
-- **must-enable-on-text**: The send button MUST be enabled when the input contains at least one non-whitespace character.
-- **must-send-on-enter**: The component MUST send the message when the user presses Enter (without Shift), and MUST NOT send when Shift+Enter is pressed.
-- **must-trim-whitespace**: The component MUST trim leading and trailing whitespace from the message text before sending.
-- **must-clear-on-send**: The component MUST clear the input field after a message is sent.
-- **must-invoke-callback**: The component MUST invoke the `onSend` callback with the trimmed message text when a send action occurs.
-- **must-reject-empty-send**: The component MUST NOT invoke `onSend` if the trimmed message text is empty.
-- **must-support-disabled-state**: The component MUST support a disabled state that prevents typing and sending.
-- **must-show-send-button**: The component MUST render a send button that is visually associated with the input field.
-- **must-receive-autofocus**: The component MUST support an autoFocus option to automatically focus the input field on mount.
-- **must-opt-out-password-manager**: The component MUST set autofill opt-out attributes to prevent password managers from injecting autofill metadata into the input field and form.
-- **must-opt-out-ios-autofill**: The component MUST use a form container with no name or autocomplete attributes, and MUST set `data-form-type="other"`, to prevent iOS from offering contact autofill.
-- **must-provide-aria-label**: The component MUST provide an accessible label for the input field via `aria-label="Message"` or equivalent platform mechanism.
-- **must-support-external-ref**: The component MUST allow the caller to provide an external ref to access the input element directly.
+- **render-input-field**: The component MUST render a text input field that accepts character input from the user.
+- **accept-placeholder**: The component MUST accept and display a placeholder string when the input is empty. The default placeholder MUST be "Type a message...".
+- **accept-custom-placeholder**: The component MUST allow the placeholder text to be customized via a configuration option.
+- **disable-on-empty**: The send button MUST be disabled when the input contains only whitespace or is empty.
+- **enable-on-text**: The send button MUST be enabled when the input contains at least one non-whitespace character.
+- **send-on-enter**: The component MUST send the message when the user presses Enter (without Shift). This is a single-line field with no multi-line mode, so Shift+Enter MUST NOT send and MUST NOT change the text in any way — it is a no-op, not a "new line" fallback.
+- **trim-whitespace**: The component MUST trim leading and trailing whitespace from the message text before sending.
+- **clear-on-send**: The component MUST clear the input field after a message is sent.
+- **invoke-callback**: The component MUST invoke the `onSend` callback with the trimmed message text when a send action occurs.
+- **reject-empty-send**: The component MUST NOT invoke `onSend` if the trimmed message text is empty.
+- **support-disabled-state**: The component MUST support a disabled state that prevents typing and sending.
+- **show-send-button**: The component MUST render a send button that is visually associated with the input field.
+- **receive-autofocus**: The component MUST support an autoFocus option to automatically focus the input field on mount.
+- **opt-out-password-manager**: On web, the component MUST set autofill opt-out attributes to prevent password managers from injecting autofill metadata into the input field and form. This is a web-only requirement: native platforms (AppKit, UIKit, WinUI 3) render no DOM for a password manager to scan, so it does not apply there.
+- **opt-out-ios-autofill**: On web, the component MUST use a form container with no `name` or `autocomplete` attributes, and MUST set `data-form-type="other"`, to prevent iOS Safari from offering contact autofill. This is a web-only requirement, specific to the DOM-based Safari contact-autofill heuristic described in the React/Web platform note; it does not apply to native AppKit, UIKit, or WinUI 3 controls.
+- **provide-accessible-label**: The component MUST provide an accessible label for the input field. The current source hardcodes this label as "Message" (`aria-label="Message"` on web, an equivalent AppKit mechanism on macOS); it is not yet caller-configurable. See **provide-send-button-label** for the send button's own label.
+- **provide-send-button-label**: The send button MUST provide an accessible label ("Send") via `aria-label` (web) or the equivalent native mechanism.
+- **provide-input-name**: On web, the input element MUST carry `name="message"` for form submission context; this is separate from — and not one of — the autocomplete/name opt-outs the surrounding `<form>` itself applies under **opt-out-ios-autofill**.
+- **support-external-ref**: The component MUST allow the caller to provide an external ref to access the input element directly.
+- **retain-text-on-blur**: The component MUST retain the text a user has typed when the input loses focus without a send; nothing in the input clears the field except a completed send.
+- **update-theme-while-focused**: On macOS, when the active theme palette changes while the field is focused, the component MUST push the new text color, font, and insertion point color to the live field editor immediately, not only on the next focus change.
+- **clamp-block-caret-to-bounds**: On macOS, when `usesBlockCaret` is enabled and the text overflows the field, the block caret MUST stay within the field's clipping bounds rather than being drawn outside it.
 
 ## Appearance
 
-- **Corner radius**: 6px on standard themes; 0px (squared off) on terminal/retro themes
+The values below are the defaults a themed host applies through the AppKit-only Configuration options (`cornerRadius`, `showsBorder`, `usesBlockCaret`, `caretBlinks`) documented under Configuration. The component itself does not read the active theme for those four properties — whatever constructs the field passes them in; see Platform Notes for how AppKit and web each keep this in sync with the current theme.
+
+- **Corner radius**: 6pt on standard themes; 0pt (squared off) on terminal/retro themes
 - **Padding**: 5pt vertical × 8pt horizontal (inset)
 - **Font**: Body font from theme palette (size and weight determined by theme; defaults to platform system body)
 - **Background**: `chatInputBackground` semantic color (theme-driven; falls back to platform default surface color)
 - **Foreground/Text**: `userText` semantic color (theme-driven; typically a light gray on dark theme)
-- **Border**: 1px solid, color is `chatInputBorder` by default; `chatInputFocus` when focused (theme-driven; hidden on terminal themes)
+- **Border**: 1pt solid, color is `chatInputBorder` by default; `chatInputFocus` when focused (theme-driven; hidden on terminal themes)
 - **Shadow**: None
 - **Placeholder color**: `timestampText` semantic color (theme-driven; typically a dimmer gray than user text)
 - **Min/Max size**: Single-line height determined by font metrics; width expands to fill container; no maximum width constraint
@@ -80,9 +89,9 @@ A single-line text input field designed for composing and sending chat messages.
 ## Accessibility
 
 - **Role**: Text input field (semantic role)
-- **Label**: MUST have an accessible label "Message" via `aria-label` (web) or equivalent native mechanism (AppKit/UIKit)
+- **Label**: MUST have an accessible label ("Message", hardcoded in source today) via `aria-label` (web) or equivalent native mechanism (AppKit/UIKit) — see **provide-accessible-label**
 - **Keyboard navigation**: Input MUST be focusable via Tab key. Send button MUST be keyboard-accessible (Enter triggers send on focused input, or Tab+Space on the button)
-- **Announce state changes**: When input transitions to empty → disabled or disabled → enabled, the disabled state of the send button SHOULD be announced to screen readers
+- **Announce state changes**: When input transitions to empty → disabled or disabled → enabled, the disabled state of the send button SHOULD be announced to screen readers. Source has no `aria-live` region or equivalent to drive this today; the change is only as announceable as the native `disabled` attribute is when the button itself receives focus.
 - **Touch/Click target**: Minimum 44×44pt on iOS; 48×48dp on Android. Send button MUST meet this minimum
 - **Color contrast**: Text MUST have sufficient contrast against background per WCAG AA (minimum 4.5:1 for normal text)
 - **Don't rely on color alone**: State changes (focused, disabled) MUST use both color and other visual properties (border, opacity) per "Differentiate Without Color" accessibility guidelines
@@ -91,49 +100,62 @@ A single-line text input field designed for composing and sending chat messages.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| chat-input-001 | must-render-input-field | Component mounts | Input element is rendered and visible |
-| chat-input-002 | must-accept-placeholder | No custom placeholder provided | Input shows default "Type a message..." |
-| chat-input-003 | must-accept-custom-placeholder | Placeholder prop set to "Ask me anything" | Input displays "Ask me anything" when empty |
-| chat-input-004 | must-disable-on-empty | Input is empty | Send button is disabled |
-| chat-input-005 | must-enable-on-text | User types "Hello" | Send button is enabled |
-| chat-input-006 | must-enable-on-text | User types "   " (spaces only) | Send button is disabled |
-| chat-input-007 | must-send-on-enter | User types "Test" and presses Enter | onSend is called with "Test", input is cleared |
-| chat-input-008 | must-send-on-enter | User types "Test", presses Shift+Enter | onSend is NOT called, message remains in input |
-| chat-input-009 | must-trim-whitespace | User types "  Hello  " and presses Enter | onSend is called with "Hello" (trimmed) |
-| chat-input-010 | must-clear-on-send | Message is sent | Input field is empty, send button is disabled |
-| chat-input-011 | must-reject-empty-send | User types "   " and presses Enter | onSend is NOT called, input is NOT cleared |
-| chat-input-012 | must-support-disabled-state | disabled prop is true | Input cannot be focused or edited, send button is disabled |
-| chat-input-013 | must-show-send-button | Component mounts | Send button is rendered adjacent to input |
-| chat-input-014 | must-receive-autofocus | autoFocus prop is true | Input is focused on mount |
-| chat-input-015 | must-receive-autofocus | autoFocus prop is false (default) | Input is not focused on mount |
-| chat-input-016 | must-opt-out-password-manager | Component renders (web) | Form has `data-form-type="other"`, input has `autocomplete="off"` and password-manager opt-out data attributes |
-| chat-input-017 | must-opt-out-ios-autofill | Component renders on iOS (web) | Form has no name attribute, input has no semantic autocomplete hints; iOS does not offer contact autofill |
-| chat-input-018 | must-provide-aria-label | Component renders (web) or mounts (AppKit) | Input has `aria-label="Message"` (web) or equivalent accessible label (AppKit) |
-| chat-input-019 | must-support-external-ref | inputRef prop provided to component | External ref can access and interact with input element |
+| chat-input-001 | render-input-field | Component mounts | Input element is rendered and visible |
+| chat-input-002 | accept-placeholder | No custom placeholder provided | Input shows default "Type a message..." |
+| chat-input-003 | accept-custom-placeholder | Placeholder prop set to "Ask me anything" | Input displays "Ask me anything" when empty |
+| chat-input-004 | disable-on-empty | Input is empty | Send button is disabled |
+| chat-input-005 | enable-on-text | User types "Hello" | Send button is enabled |
+| chat-input-006 | disable-on-empty | User types "   " (spaces only) | Send button is disabled |
+| chat-input-007 | send-on-enter | User types "Test" and presses Enter | onSend is called with "Test", input is cleared |
+| chat-input-008 | send-on-enter | User types "Test", presses Shift+Enter | onSend is NOT called; the text remains exactly "Test" — Shift+Enter is a no-op on this single-line field, it does not insert a newline |
+| chat-input-009 | trim-whitespace | User types "  Hello  " and presses Enter | onSend is called with "Hello" (trimmed) |
+| chat-input-010 | clear-on-send | Message is sent | Input field is empty, send button is disabled |
+| chat-input-011 | reject-empty-send | User types "   " and presses Enter | onSend is NOT called, input is NOT cleared |
+| chat-input-012 | support-disabled-state | disabled prop is true | Input cannot be focused or edited, send button is disabled |
+| chat-input-013 | show-send-button | Component mounts | Send button is rendered adjacent to input |
+| chat-input-014 | receive-autofocus | autoFocus prop is true | Input is focused on mount |
+| chat-input-015 | receive-autofocus | autoFocus prop is false (default) | Input is not focused on mount |
+| chat-input-016 | opt-out-password-manager | Component renders (web) | Form has `data-form-type="other"`, input has `autocomplete="off"` and password-manager opt-out data attributes |
+| chat-input-017 | opt-out-ios-autofill | Component renders on iOS (web) | Form has no `name` attribute, input has no semantic autocomplete hints; iOS does not offer contact autofill |
+| chat-input-018 | provide-accessible-label | Component renders (web) or mounts (AppKit) | Input has `aria-label="Message"` (web) or equivalent accessible label (AppKit) |
+| chat-input-019 | support-external-ref | inputRef prop provided to component | External ref can access and interact with input element |
+| chat-input-020 | support-external-ref | Caller sets `inputRef.current.value = 'Hi'` directly, without dispatching any event | The DOM value updates, but the component's own state does not: `onChange` never runs, `hasText` stays false, and the send button's enabled state is unchanged |
+| chat-input-021 | support-external-ref | Caller sets `inputRef.current.value = 'Hi'` then dispatches a native `input` event on the element | `onChange` fires; `hasText` becomes true; the send button becomes enabled, reflecting the programmatic change |
+| chat-input-022 | invoke-callback, clear-on-send | User sends "First", then immediately types "Second" and sends again | onSend is called with "First" and separately with "Second"; the input is cleared after each send and the two messages are never conflated |
+| chat-input-023 | retain-text-on-blur | User types "Draft" then clicks outside the input without sending | Input still contains "Draft"; the send button's enabled state is unchanged |
+| chat-input-024 | support-disabled-state | disabled prop becomes true while the user has unsent text in the field | Input becomes read-only, the typed text is still present, send button is disabled |
+| chat-input-025 | update-theme-while-focused | Field is focused (macOS) and the active palette changes | Text color, font, and insertion point color update immediately on the live field editor, without requiring focus to leave and return |
+| chat-input-026 | clamp-block-caret-to-bounds | `usesBlockCaret` is true (macOS), text overflows the field width, caret is at the end of the text | The caret layer's frame stays within the field's inset bounds; it is never positioned past the right edge |
+| chat-input-027 | provide-send-button-label | Component mounts | Send button has `aria-label="Send"` |
+| chat-input-028 | provide-input-name | Component renders (web) | Input has `name="message"` |
+| chat-input-029 | invoke-callback | User types "Hi" and presses Enter | Debug log `ChatInput: send initiated, text length = 2` is emitted |
+| chat-input-030 | reject-empty-send | User presses Enter with only whitespace in the field | Debug log `ChatInput: send rejected, input is empty after trim` is emitted |
+| chat-input-031 | clear-on-send | Message is sent | Debug log `ChatInput: input cleared after send` is emitted |
+| chat-input-032 | render-input-field | User types a message much longer than the field's visible width | Text scrolls horizontally within the input; caret follows the text; no characters are dropped from the underlying value |
 
 ## Edge Cases
 
-- **Empty input with whitespace-only entry**: User enters spaces, tabs, or newlines and presses Enter. Expected: onSend is NOT called, input is NOT cleared, send button remains disabled. Behavior: MUST.
-- **Rapid successive sends**: User sends a message, input clears, user immediately types and sends again. Expected: Each send is independent, messages are not conflated. Behavior: MUST.
-- **Focus loss during typing**: User types a message, then clicks elsewhere without sending. Expected: Message text is retained in the field (not lost on blur), can be resumed. Behavior: MUST.
-- **Disabled state toggle**: Component is disabled while user is typing. Expected: Input becomes read-only, pending text is not lost, send button is disabled. Behavior: MUST.
-- **External ref access**: Caller obtains ref to input element and directly modifies `.value` property. Expected: Component state updates reflect the direct modification (onChange fires, send button state updates). Behavior: MUST.
-- **Shift+Enter on different platforms**: Behavior may vary by platform (some may interpret as "new line" in a multi-line field). Expected: On single-line fields, Shift+Enter MUST NOT send. Behavior: MUST.
-- **Password manager attribute injection**: Password manager (Dashlane, 1Password, Bitwarden, Proton Pass) scans the DOM before React hydration. Expected: opt-out attributes prevent injection of autofill metadata. Behavior: MUST.
-- **Very long message text**: User enters a message much longer than field width. Expected: Text scrolls horizontally within the input; caret follows the text; no character loss. Behavior: MUST.
-- **Theme change during focus**: Theme palette changes (dark → light, or theme swap) while input is focused. Expected: Focus state is retained, border and text colors update immediately, caret appearance updates. Behavior: MUST.
-- **Block caret with truncated text** (macOS only): Text overflows and is truncated by field width; block caret is visible. Expected: Caret stays within field bounds, does not render outside clipping region. Behavior: MUST.
+- **Empty input with whitespace-only entry**: User enters spaces, tabs, or newlines and presses Enter. Expected: onSend is NOT called, input is NOT cleared, send button remains disabled. Behavior: MUST (see **reject-empty-send**; chat-input-011).
+- **Rapid successive sends**: User sends a message, input clears, user immediately types and sends again. Expected: Each send is independent, messages are not conflated. Behavior: MUST (see **invoke-callback**, **clear-on-send**; chat-input-022).
+- **Focus loss during typing**: User types a message, then clicks elsewhere without sending. Expected: Message text is retained in the field (not lost on blur), can be resumed. Behavior: MUST (see **retain-text-on-blur**; chat-input-023).
+- **Disabled state toggle**: Component is disabled while user is typing. Expected: Input becomes read-only, pending text is not lost, send button is disabled. Behavior: MUST (see **support-disabled-state**; chat-input-024).
+- **External ref access**: Caller obtains a ref to the input element and sets `.value` directly. Expected: The DOM value updates, but setting `.value` from code does not fire a native `input`/`change` event, so React's `onChange` never runs — the component's `hasText` state and the send button's enabled state do NOT reflect the direct modification. A caller that needs the component to notice a programmatic value change MUST also dispatch a native `input` event on the element after setting `.value`, at which point `onChange` runs normally. Behavior: MUST (see **support-external-ref**; chat-input-020, chat-input-021).
+- **Shift+Enter on different platforms**: This is a single-line field with no multi-line mode, so there is no "insert a newline" fallback to consider. Expected: Shift+Enter MUST NOT send and MUST NOT change the text in any way — it is a no-op. Behavior: MUST (see **send-on-enter**; chat-input-008).
+- **Password manager attribute injection**: Password manager (Dashlane, 1Password, Bitwarden, Proton Pass) scans the DOM before React hydration. Expected: opt-out attributes prevent injection of autofill metadata. Behavior: MUST (see **opt-out-password-manager**; chat-input-016).
+- **Very long message text**: User enters a message much longer than field width. Expected: Text scrolls horizontally within the input; caret follows the text; no character loss. Behavior: MUST (see **render-input-field**; chat-input-032).
+- **Theme change during focus**: Theme palette changes (dark → light, or theme swap) while input is focused. Expected: Focus state is retained, border and text colors update immediately, caret appearance updates. Behavior: MUST (see **update-theme-while-focused**; chat-input-025).
+- **Block caret with truncated text** (macOS only): Text overflows and is truncated by field width; block caret is visible. Expected: Caret stays within field bounds, does not render outside clipping region. Behavior: MUST (see **clamp-block-caret-to-bounds**; chat-input-026).
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| onSend | (text: string) => void | (required) | Callback invoked when a message is sent; receives trimmed message text |
+| onSend | function(text) | (required) | Callback invoked when a message is sent; receives trimmed message text |
 | placeholder | string | "Type a message..." | Text displayed in input when empty |
 | autoFocus | boolean | false | Whether to automatically focus the input on mount |
-| inputRef | RefObject\<HTMLInputElement \| null\> | undefined | External ref to access the underlying input element (web) or NSTextField (AppKit) |
+| inputRef | platform ref type | undefined | External ref to access the underlying input element; see Platform Notes for the concrete type per platform (web: `RefObject<HTMLInputElement \| null>`; AppKit: a direct reference to the `NSTextField`/`ChatInputField` instance) |
 | disabled | boolean | false | Whether the input is disabled and send is blocked |
-| cornerRadius | CGFloat | 6 | (macOS AppKit only) Corner radius of input field in points; 0 for terminal themes |
+| cornerRadius | number (points) | 6 | (macOS AppKit only) Corner radius of input field; 0 for terminal themes |
 | showsBorder | boolean | true | (macOS AppKit only) Whether to draw the one-pixel border; false for terminal themes |
 | usesBlockCaret | boolean | false | (macOS AppKit only) Whether to use a block caret (terminal style) instead of blinking bar |
 | caretBlinks | boolean | true | (macOS AppKit only) Whether the caret (block or bar) blinks or remains solid |
@@ -144,19 +166,19 @@ Not applicable: Chat Input is a form control, not a navigable view. It does not 
 
 ## Localization
 
-The placeholder text is user-facing and MUST be localizable. All other text ("Message" label, send button label) SHOULD be provided by the caller or through a localization framework.
+Only the placeholder is caller-configurable today, via the `placeholder` option — it MUST be localizable by the caller (or a localization framework upstream of this component). The "Message" and "Send" accessible labels are presently hardcoded English string literals in source with no override option (`aria-label="Message"`, `aria-label="Send"`); see **provide-accessible-label** and **provide-send-button-label**. The table below documents the intended default value and context for each string for a future localization layer or extraction tool; it does not reflect a runtime lookup by key in the current source.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | chat_input_placeholder | "Type a message..." | Placeholder text shown in empty input |
-| aria_label_message_input | "Message" | Accessible label for input field |
-| aria_label_send_button | "Send" | Accessible label for send button |
+| aria_label_message_input | "Message" | Accessible label for input field (source hardcodes the English literal; not yet keyed) |
+| aria_label_send_button | "Send" | Accessible label for send button (source hardcodes the English literal; not yet keyed) |
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | (iOS/macOS/web) Block caret should blink less frequently or not at all when Reduce Motion is enabled; standard bar caret is not animated |
+| Reduce Motion | (iOS/macOS/web) Block caret SHOULD blink less frequently or not at all when Reduce Motion is enabled; standard bar caret is not animated. Not yet implemented in source — `ChatInputField`'s blink timer runs unconditionally, with no check of the system's reduced-motion preference; the `reduced-motion` compliance check below is marked failed for this gap. |
 | Increase Contrast | (iOS/macOS/web) Focus border and interactive state colors SHOULD be more saturated; text contrast ratio SHOULD exceed 7:1 |
 | Differentiate Without Color | (iOS/macOS/web) Focus state MUST be indicated by border thickness or pattern change in addition to color; disabled state MUST use opacity or pattern, not color alone |
 
@@ -187,46 +209,61 @@ Subsystem: `agenticdevelopertoolkit` | Category: `ChatInput`
 
 ## Platform Notes
 
-- **SwiftUI**: Start from `TextField` with a custom `_ViewModifier` to apply semantic colors (background, focus border) from the theme palette. SwiftUI's TextField does not expose the insertion point caret for customization, so a block caret requires wrapping an `NSViewRepresentable` containing the AppKit `ChatInputField` class below. For macOS apps prioritizing terminal aesthetics, the `NSViewRepresentable` route is necessary.
+- **SwiftUI**: Start from `TextField` with a custom `ViewModifier` to apply semantic colors (background, focus border) from the theme palette, and `.onSubmit` as the send hook (fires on Return). SwiftUI's TextField does not expose the insertion point caret for customization, so a block caret requires wrapping an `NSViewRepresentable` containing the AppKit `ChatInputField` class below. For macOS apps prioritizing terminal aesthetics, the `NSViewRepresentable` route is necessary.
 - **Compose**: Start from `BasicTextField` (Compose Foundation) or Material's `OutlinedTextField` with a custom `focusedBorderColor` that maps to the theme palette. Compose's text input does not support a block caret natively; if a terminal theme requires one, implement a custom caret overlay using a `Modifier` and `Brush` drawing. For standard themes, the platform's blinking bar caret is sufficient.
-- **React/Web**: Start from an HTML `<input type="text">` element. The component MUST use a form container (not a plain div) to scope autofill classifiers in Safari/iOS. Password manager opt-out is handled via data attributes (`data-form-type="other"`, `data-1p-ignore`, `data-lpignore`, `data-bwignore`, `data-protonpass-ignore`) and the `autocomplete="off"` attribute. The send button is a form submit button (`type="submit"`) so that Enter and the button both trigger the same code path.
+- **React/Web**: Start from an HTML `<input type="text">` element. The component MUST use a form container (not a plain div) to scope autofill classifiers in Safari/iOS. Password manager opt-out is handled via data attributes (`data-form-type="other"`, `data-1p-ignore`, `data-lpignore`, `data-bwignore`, `data-protonpass-ignore`) and the `autocomplete="off"` attribute. The input also carries `name="message"` for form submission context (see **provide-input-name**), independent of those autofill opt-outs. The send button is a form submit button (`type="submit"`) so that Enter and the button both trigger the same code path.
 - **AppKit / UIKit**: AppKit uses `NSTextField` with custom `NSTextFieldCell` padding (8pt horizontal, 5pt vertical inset) and a custom block caret layer (`CALayer`) that is positioned and animated independently. UIKit (iOS) uses `UITextField` with a standard keyboard and send button; the block caret feature is macOS-specific and not used on iOS. Both platforms apply theme-driven colors via a `Themeable` protocol observer.
-- **WinUI 3**: Start from `TextBox` (for single-line input) with a custom `ControlTemplate` that applies the theme colors to the background, border, and text. The `CharacterReceived` event is used to intercept Enter (avoid sending on Shift+Enter). A `Button` with `PrimaryCommandBar` styling serves as the send button. The block caret is not part of WinUI 3's standard TextBox and would require custom drawing in an inherited control, so use the platform's default blinking bar caret. The `IsEnabled` property controls the disabled state for both TextBox and Button.
+- **WinUI 3**: Start from `TextBox` (for single-line input) with a custom `ControlTemplate` that applies the theme colors to the background, border, and text. Handle `KeyDown`/`PreviewKeyDown` and check for `VirtualKey.Enter` to intercept Enter and avoid sending on Shift+Enter — `CharacterReceived` fires for character input, not the Enter key, and is the wrong event for this. A `Button` styled with the built-in `AccentButtonStyle` serves as the send button. WinUI 3's `TextBox` has no block-caret support; rather than subclassing `TextBox` to draw one, compose an overlay (e.g., a small `Border` positioned on top of the `TextBox` inside a `Grid`) the way the AppKit and web implementations already draw their carets as a layer/element on top of the field, and fall back to the platform's default blinking bar caret when that overlay is absent. The `IsEnabled` property controls the disabled state for both TextBox and Button.
 
 ## Design Decisions
 
-1. **Form wrapper for autofill scoping**: The web component wraps the input in a `<form>` element to prevent iOS Safari from classifying a lone input field against the entire document for autofill purposes. This was necessary because a bare input without a form is scoped globally and can trigger contact autofill if the page contains other contact-related content.
+**Decision**: The web component wraps the input in a `<form>` element to prevent iOS Safari from classifying a lone input field against the entire document for autofill purposes.
+**Rationale**: A bare input without a form is scoped globally and can trigger contact autofill if the page contains other contact-related content; a form of its own gives the classifier a one-field form that asks for nothing.
+**Approved**: pending
 
-2. **Single send path via form submit**: The Enter key handler and the send button both trigger form submission, ensuring one code path for send logic. This prevents divergence between keyboard and button sends.
+**Decision**: The Enter key handler and the send button both trigger form submission, giving keyboard and pointer sends one code path.
+**Rationale**: Two independent send paths — an Enter handler calling send logic directly, and a button `onClick` calling it again — could diverge over time; routing both through the same `<form>` submit prevents that.
+**Approved**: pending
 
-3. **Trimming before send, not display**: Whitespace is trimmed only at the point of send, not as the user types. The input field shows exactly what the user typed, including leading/trailing spaces, so the user can see what they are about to send.
+**Decision**: Whitespace is trimmed only at the point of send, not as the user types.
+**Rationale**: The input field shows exactly what the user typed, including leading/trailing spaces, so the user can see what they are about to send; trimming happens once, right before the message leaves the component.
+**Approved**: pending
 
-4. **Password manager opt-out attributes**: Multiple opt-out attributes are set (`data-1p-ignore`, `data-lpignore`, `data-bwignore`, `data-protonpass-ignore`) because each password manager reads its own ignore signal and ignores others. This ensures broad compatibility without relying on a single standard.
+**Decision**: Multiple password-manager opt-out attributes are set (`data-1p-ignore`, `data-lpignore`, `data-bwignore`, `data-protonpass-ignore`), alongside Dashlane's `data-form-type="other"`.
+**Rationale**: Each password manager reads its own ignore signal and ignores the others'; broad compatibility requires setting all of them rather than relying on a single standard.
+**Approved**: pending
 
-5. **Block caret as macOS-specific affordance**: The terminal themes (old-school-terminal, etc.) use a block caret to match CRT aesthetics. This is implemented on AppKit (macOS) via a custom `CALayer` drawn on top of the text field. Other platforms use their native carets.
+**Decision**: The block caret is implemented as a macOS-specific affordance, drawn by a custom `CALayer` on top of `ChatInputField` (AppKit).
+**Rationale**: Terminal themes (old-school-terminal, etc.) want a block caret to match CRT aesthetics; AppKit's field editor does not expose insertion-point-shape customization (`drawInsertionPoint(in:color:turnedOn:)` is not called for a field editor on current macOS), so the caret has to be drawn as the field's own layer instead. Other platforms use their native carets.
+**Approved**: pending
 
-6. **Placeholder as weak label, name + aria-label for strong label**: The placeholder is not a substitute for an accessible label on web. The input has both a `name` attribute (for form submission context) and an `aria-label` (for screen readers). This ensures the field is always properly labeled.
+**Decision**: On web, the input carries both a `name="message"` attribute and an `aria-label="Message"`; the placeholder is not treated as a substitute for either.
+**Rationale**: `name` gives the input identity within its `<form>` for submission context and is unrelated to the DOM-based autofill opt-outs the form's own attributes provide (see **opt-out-ios-autofill**); `aria-label` gives screen readers a stable label that does not depend on the field being empty, unlike a placeholder.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Keyboard navigation | passed | Accessibility |
-| ARIA labels present | passed | Accessibility |
-| Touch target size (iOS) | passed | Accessibility |
-| Touch target size (Android) | passed | Accessibility |
-| Focus visible | passed | Accessibility |
-| Color contrast (WCAG AA) | passed | Accessibility |
-| Placeholder is not label | passed | Accessibility |
-| Empty send blocked | passed | Correctness |
-| Shift+Enter does not send | passed | Correctness |
-| Trimming applied | passed | Correctness |
-| Password manager opt-out | passed | Privacy |
-| iOS autofill avoidance | passed | Privacy |
-| Theme-driven colors | passed | Theming |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+
+`passed` rows rest on the source directly: `aria-label` set on both the input and the button, native focusable `<input>`/`<button>` elements plus the Enter-key handler, correct ARIA/HTML usage in `ChatInput.tsx`, log messages that carry only a text length and never message content, and a component that only ever holds the in-progress message text in memory. `partial` rows reflect what these two files alone can't settle — actual rendered contrast, touch-target sizing, and Dynamic Type behavior all depend on the CSS/theme layer that sits outside `ChatInput.tsx` and `ChatInputField.swift`; the placeholder is caller-localizable while the two `aria-label` strings are still hardcoded English literals; and the component validates (trims, rejects empty) without doing any broader input sanitization, which is left to whatever renders the sent text. `reduced-motion` is `failed` because `ChatInputField`'s block-caret blink timer runs unconditionally, with no check of the system's reduced-motion preference.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped `must-` prefixes from requirement names and their citations; reformatted Design Decisions into Decision/Rationale/Approved entries and rebuilt Compliance as a linked, source-verified table; added test vectors for previously-untested edge cases and Logging events; corrected the external-ref/`onChange` edge case, the SwiftUI note (`ViewModifier`, `.onSubmit`), and the WinUI 3 note (`KeyDown`/`VirtualKey.Enter`, `AccentButtonStyle`, a composed overlay caret instead of a `TextBox` subclass); scoped the autofill opt-out requirements to web; added `name`/send-button-label requirements and vectors; unified Appearance units to pt; clarified that theme-driven Appearance values are applied through the AppKit Configuration options rather than read internally; and populated `related` with sibling recipes |

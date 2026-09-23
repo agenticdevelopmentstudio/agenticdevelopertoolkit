@@ -3,7 +3,7 @@ id: 7b54db6e-755d-4665-a091-d34cfcaac146
 title: Color Mode Toggle
 domain: agenticdevelopertoolkit://recipes/color-mode-toggle
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: '2026-09-22'
@@ -40,18 +40,18 @@ Not to be confused with `agenticdevelopertoolkit://recipes/appearance-mode-toggl
 
 ## Behavioral Requirements
 
-- **must-render-button**: Component MUST render as a `<button>` element with `type="button"`.
-- **must-render-three-icons**: Component MUST render three SVG icons (Sun, Moon, and RefreshCw refresh) simultaneously, with CSS controlling visibility based on mode.
-- **must-accept-mode-prop**: Component MUST accept a `mode` prop with value "auto", "dark", or "light".
-- **must-accept-onChange-callback**: Component MUST accept an `onChange` callback prop that receives the next mode in the cycle when the button is pressed.
-- **must-cycle-modes**: Component MUST cycle modes in order: auto → dark → light → auto when clicked.
-- **must-support-className**: Component MUST accept an optional `className` prop to apply custom styling (e.g., host button identity).
-- **must-read-system-dark-preference**: When `mode` is "auto", component MUST query `window.matchMedia("(prefers-color-scheme: dark)")` to determine the effective mode.
-- **must-listen-to-system-changes**: Component MUST subscribe to changes in the system dark mode preference and update the displayed effective mode without requiring props to change.
-- **must-provide-aria-label**: Component MUST set an `aria-label` attribute that includes the current mode and the next mode in cycle, provided after client hydration.
-- **must-provide-title-attribute**: Component MUST set a `title` attribute (tooltip) that describes the current mode and how to switch, provided after client hydration.
-- **must-defer-label-until-mounted**: Component MUST NOT populate the real `aria-label`/`title` text on server-side rendering. `aria-label` MUST render the placeholder `"Theme"` during SSR and the client's first render; `title` MUST be omitted (`undefined`) until the component mounts. Both populate with their full text on the next render after mount.
-- **must-handle-missing-matchMedia**: When `window.matchMedia` is unavailable (server-side rendering or older browsers), component MUST treat system dark mode as false.
+- **render-button**: Component MUST render as a `<button>` element with `type="button"`.
+- **render-three-icons**: Component MUST render three SVG icons (Sun, Moon, and RefreshCw refresh) simultaneously, with CSS controlling visibility based on mode.
+- **accept-mode-prop**: Component MUST accept a `mode` prop with value "auto", "dark", or "light".
+- **accept-onChange-callback**: Component MUST accept an `onChange` callback prop that receives the next mode in the cycle when the button is pressed.
+- **cycle-modes**: Component MUST cycle modes in order: auto → dark → light → auto when clicked.
+- **support-className**: Component MUST accept an optional `className` prop to apply custom styling (e.g., host button identity).
+- **read-system-dark-preference**: When `mode` is "auto", component MUST query `window.matchMedia("(prefers-color-scheme: dark)")` to determine the effective mode.
+- **listen-to-system-changes**: Component MUST subscribe to changes in the system dark mode preference and update the displayed effective mode without requiring props to change.
+- **provide-aria-label**: Component MUST set an `aria-label` attribute that includes the current mode and the next mode in cycle, provided after client hydration.
+- **provide-title-attribute**: Component MUST set a `title` attribute (tooltip) that describes the current mode and how to switch, provided after client hydration.
+- **defer-label-until-mounted**: Component MUST NOT populate the real `aria-label`/`title` text on server-side rendering. `aria-label` MUST render the placeholder `"Theme"` during SSR and the client's first render; `title` MUST be omitted (`undefined`) until the component mounts. Both populate with their full text on the next render after mount.
+- **handle-missing-matchMedia**: When `window.matchMedia` is unavailable (server-side rendering or older browsers), component MUST treat system dark mode as false.
 - **host-html-attribute-sync**: The host application MUST keep `data-color-mode` (`"auto"` | `"dark"` | `"light"`) and the `dark` class on `<html>` synchronized with `mode` and the resolved effective mode. The component's own CSS (`.adh-color-mode-toggle__*`) reads only those host-controlled attributes to decide which icon and the auto-mode badge are visible — it does not read the `mode` prop for that purpose.
 
 ## Appearance
@@ -91,26 +91,26 @@ Not to be confused with `agenticdevelopertoolkit://recipes/appearance-mode-toggl
 
 | ID | Requirements | Input | Expected | Notes |
 |----|-------------|-------|----------|-------|
-| cmt-001 | must-render-button | Render component with mode="light" | HTML contains `<button type="button">` element | |
-| cmt-002 | must-render-three-icons | Render component | Three SVG icons present in DOM (Moon, Sun, RefreshCw) | CSS controls which is visible |
-| cmt-003 | must-accept-mode-prop | mode="auto" | Component accepts and does not throw | |
-| cmt-004 | must-accept-mode-prop | mode="dark" | Component accepts and does not throw | |
-| cmt-005 | must-accept-mode-prop | mode="light" | Component accepts and does not throw | |
-| cmt-006 | must-cycle-modes | mode="auto" clicked once | onChange called with "dark" | |
-| cmt-007 | must-cycle-modes | mode="dark" clicked once | onChange called with "light" | |
-| cmt-008 | must-cycle-modes | mode="light" clicked once | onChange called with "auto" | |
-| cmt-009 | must-support-className | className="my-custom-class" passed | Element has class "my-custom-class" applied | |
-| cmt-010 | must-read-system-dark-preference | mode="auto" and system prefers dark | Effective mode is "dark" | Via matchMedia query |
-| cmt-011 | must-read-system-dark-preference | mode="auto" and system prefers light | Effective mode is "light" | Via matchMedia query |
-| cmt-012 | must-listen-to-system-changes | mode="auto" and system changes from light to dark | aria-label updates to reflect new effective mode | Should reflect change without prop change |
-| cmt-013 | must-provide-aria-label | After client mount with mode="light" | aria-label is exactly "Theme: light. Click to switch to auto." | |
-| cmt-014 | must-provide-aria-label | After client mount with mode="auto" | aria-label is exactly "Theme: Auto (currently light). Click to switch to dark." (system prefers light) or "Theme: Auto (currently dark). Click to switch to dark." (system prefers dark) | Next mode from auto is always "dark" |
-| cmt-015 | must-provide-title-attribute | After client mount with mode="light" | title contains "Light mode — click for auto" | Tooltip text |
-| cmt-016 | must-provide-title-attribute | After client mount with mode="dark" | title contains "Dark mode — click for light" | Tooltip text |
-| cmt-017 | must-provide-title-attribute | After client mount with mode="auto" | title contains "Following system (light)" or "Following system (dark)" | Based on system preference |
-| cmt-018 | must-defer-label-until-mounted | Server-side render mode="light" | aria-label is "Theme" only | No specific mode in SSR HTML |
-| cmt-019 | must-defer-label-until-mounted | After hydration mode="light" | aria-label becomes "Theme: light. Click to switch to auto." | Updated after mount |
-| cmt-020 | must-handle-missing-matchMedia | mode="auto" in environment without matchMedia | Component does not throw; treats system as light mode | |
+| cmt-001 | render-button | Render component with mode="light" | HTML contains `<button type="button">` element | |
+| cmt-002 | render-three-icons | Render component | Three SVG icons present in DOM (Moon, Sun, RefreshCw) | CSS controls which is visible |
+| cmt-003 | accept-mode-prop | mode="auto" | Component accepts and does not throw | |
+| cmt-004 | accept-mode-prop | mode="dark" | Component accepts and does not throw | |
+| cmt-005 | accept-mode-prop | mode="light" | Component accepts and does not throw | |
+| cmt-006 | cycle-modes | mode="auto" clicked once | onChange called with "dark" | |
+| cmt-007 | cycle-modes | mode="dark" clicked once | onChange called with "light" | |
+| cmt-008 | cycle-modes | mode="light" clicked once | onChange called with "auto" | |
+| cmt-009 | support-className | className="my-custom-class" passed | Element has class "my-custom-class" applied | |
+| cmt-010 | read-system-dark-preference | mode="auto" and system prefers dark | Effective mode is "dark" | Via matchMedia query |
+| cmt-011 | read-system-dark-preference | mode="auto" and system prefers light | Effective mode is "light" | Via matchMedia query |
+| cmt-012 | listen-to-system-changes | mode="auto" and system changes from light to dark | aria-label updates to reflect new effective mode | Should reflect change without prop change |
+| cmt-013 | provide-aria-label | After client mount with mode="light" | aria-label is exactly "Theme: light. Click to switch to auto." | |
+| cmt-014 | provide-aria-label | After client mount with mode="auto" | aria-label is exactly "Theme: Auto (currently light). Click to switch to dark." (system prefers light) or "Theme: Auto (currently dark). Click to switch to dark." (system prefers dark) | Next mode from auto is always "dark" |
+| cmt-015 | provide-title-attribute | After client mount with mode="light" | title contains "Light mode — click for auto" | Tooltip text |
+| cmt-016 | provide-title-attribute | After client mount with mode="dark" | title contains "Dark mode — click for light" | Tooltip text |
+| cmt-017 | provide-title-attribute | After client mount with mode="auto" | title contains "Following system (light)" or "Following system (dark)" | Based on system preference |
+| cmt-018 | defer-label-until-mounted | Server-side render mode="light" | aria-label is "Theme" only | No specific mode in SSR HTML |
+| cmt-019 | defer-label-until-mounted | After hydration mode="light" | aria-label becomes "Theme: light. Click to switch to auto." | Updated after mount |
+| cmt-020 | handle-missing-matchMedia | mode="auto" in environment without matchMedia | Component does not throw; treats system as light mode | |
 | cmt-021 | host-html-attribute-sync | Render with mode="light" while host sets `data-color-mode="dark"` and `.dark` on `<html>` | Moon icon visible, Sun icon hidden, badge hidden — icon selection follows the host's `<html>` attributes, not the `mode` prop | Demonstrates the coupling the requirement makes explicit |
 
 ## Edge Cases
@@ -224,6 +224,7 @@ The source renders a native `<button>` with an always-present, mount-aware `aria
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: distinguished this component from Appearance Mode Toggle in Design Decisions and `related`; added a host `<html>` attribute-sync requirement and test vector; corrected the SSR label/title, appearance sizing, and legacy-fallback design decisions; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with a check table; fixed aria-label/title test-vector consistency; corrected the SwiftUI, Compose, and AppKit/UIKit platform notes |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise Accessibility Options: convert to table format; clarify Reduce Motion as not applicable (no transitions applied); add guidance on Increase Contrast and Differentiate Without Color |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source code |

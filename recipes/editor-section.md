@@ -206,8 +206,8 @@ Composed shared primitives without their own recipe domains: `Badge`
 - The rail is always collapsible (a core `TopicDetail` behavior); collapsing hides
   the `listHeader` (see **collapse-list-header-when-collapsed**) and each row's
   warn badge/label, leaving the icon strip — that collapse-time hiding is
-  `TopicDetail`'s own behavior (`must-support-trailing-accessory`,
-  `must-hide-label-when-collapsed`; see
+  `TopicDetail`'s own behavior (`support-trailing-accessory`,
+  `hide-label-when-collapsed`; see
   agenticdevelopertoolkit://recipes/topic-detail#behavioral-requirements), not
   something EditorSection adds.
 

@@ -3,11 +3,11 @@ id: 91114bf5-ad41-4cbd-b91b-c49bba9625d5
 title: ChatWindowController
 domain: agenticdevelopertoolkit://recipes/chat-window-controller
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +21,8 @@ tags:
 - window
 - macos
 - appkit
-depends-on: []
+depends-on:
+- agenticdevelopertoolkit://recipes/inline-chat
 related: []
 references: []
 approved-by: ''
@@ -36,35 +37,36 @@ ChatWindowController is an AppKit window controller that presents a chat interfa
 
 ## Behavioral Requirements
 
-- **must-own-chat-view**: The controller MUST own and display an `InlineChatView` instance, accessible via the `chatView` property.
-- **must-own-appearance-controller**: The controller MUST own a `ChatWindowAppearanceController` instance, accessible via the `appearance` property.
-- **must-configure-from-struct**: The controller MUST be initialized with a `ChatWindowConfiguration` struct that supplies title, defaults namespace, appearance title, initial content size, chrome style, and backdrop toggle label.
-- **must-accept-view-model**: The controller MUST accept an `ObservableChatViewModel` instance and a local participant ID string during initialization.
-- **must-accept-optional-backdrop**: The controller MUST accept an optional `NSView` backdrop that is passed to the `InlineChatView`.
-- **must-hide-title-bar**: The window MUST have `titleVisibility` set to `.hidden` and `titlebarAppearsTransparent` set to `true`, removing all title-bar furniture (close, miniaturize, zoom buttons).
-- **must-be-movable-by-background**: The window MUST set `isMovableByWindowBackground` to `true` so the chat surface itself serves as the drag handle.
-- **must-be-translucent**: The window MUST set `isOpaque` to `false` and `backgroundColor` to `.clear`, allowing the theme's alpha values in the view to be visible.
-- **must-use-full-size-content-view**: The window MUST include `.fullSizeContentView` in its style mask, extending content to the top edge.
-- **must-size-window-correctly**: The window MUST open at the size specified in `ChatWindowConfiguration.contentSize`, not shrink-wrap to the view's minimum width. The `ChatContentViewController` MUST set the content view controller's `preferredContentSize`.
-- **must-disable-autoresizing-mask**: The window's content view MUST have an empty autoresizing mask (`[]`) to prevent the layout engine from treating it as a flexible mask and shrinking the window.
-- **must-set-window-title**: The window MUST set its title from `ChatWindowConfiguration.title`. The title is hidden from the title bar but used by the Window menu, Mission Control, and the accessibility tree.
-- **must-restore-frame**: The controller MUST restore the saved window frame using `setFrameUsingName(_:)` with a namespaced frame name constructed from `ChatWindowConfiguration.defaultsNamespace`. If no frame is saved, the window MUST center on screen.
-- **must-autosave-frame**: The controller MUST set `windowFrameAutosaveName` to enable AppKit's automatic frame persistence on every move and resize.
-- **must-use-content-view-controller**: The `InlineChatView` MUST be contained within a `ChatContentViewController` (not assigned directly to `contentView`) to ensure the window correctly sizes the chat view to the requested size rather than shrink-wrapping it.
-- **must-install-appearance**: The controller MUST call `appearance.install()` during initialization to activate the appearance controller.
-- **must-focus-input-on-show**: When `showWindow(_:)` is called, the controller MUST call `focusInput()` to place focus in the composer field.
-- **must-focus-input-on-key**: The controller MUST observe `NSWindow.didBecomeKeyNotification` and call `focusInput()` only if the window's first responder is still the window itself. This ensures the composer is ready for typing without overriding an existing selection in the transcript.
-- **must-find-first-editable-field**: The `focusInput()` method MUST walk the view hierarchy to locate the first editable `NSTextField` (the composer) and make it the first responder.
-- **must-prohibit-nib-init**: The controller MUST prohibit initialization from a nib by implementing `required init?(coder:)` with `fatalError`.
-- **must-be-main-actor**: All public API and view-related logic MUST be annotated with `@MainActor`.
-- **must-allow-subclassing**: The class MUST be declared `open` to allow subclasses to add host-specific behavior.
+- **own-chat-view**: The controller MUST own and display an `InlineChatView` instance, accessible via the `chatView` property.
+- **own-appearance-controller**: The controller MUST own a `ChatWindowAppearanceController` instance, accessible via the `appearance` property; installing it (see **install-appearance**) places the gear in the window's trailing (right-side) titlebar accessory.
+- **configure-from-struct**: The controller MUST be initialized with a `ChatWindowConfiguration` struct that supplies title, defaults namespace, appearance title, initial content size, chrome style, and backdrop toggle label.
+- **accept-view-model**: The controller MUST accept an `ObservableChatViewModel` instance and a local participant ID string during initialization; the ID is passed to `InlineChatView` to distinguish the local participant's own messages from other participants' messages in the transcript.
+- **accept-optional-backdrop**: The controller MUST accept an optional `NSView` backdrop that is passed to the `InlineChatView`.
+- **hide-title-bar**: The window MUST have `titleVisibility` set to `.hidden` and `titlebarAppearsTransparent` set to `true`, and MUST explicitly hide the close, miniaturize, and zoom buttons via `standardWindowButton(_:)?.isHidden = true` for each — `titleVisibility`/`titlebarAppearsTransparent` alone remove the bar's material and text but not its buttons.
+- **movable-by-background**: The window MUST set `isMovableByWindowBackground` to `true` so the chat surface itself serves as the drag handle.
+- **translucent**: The window MUST set `isOpaque` to `false` and `backgroundColor` to `.clear`, allowing the theme's alpha values in the view to be visible.
+- **use-full-size-content-view**: The window MUST include `.fullSizeContentView` in its style mask, extending content to the top edge.
+- **size-window-correctly**: The window MUST open at the size specified in `ChatWindowConfiguration.contentSize`, not shrink-wrap to the view's minimum width. The controller MUST set `ChatContentViewController.preferredContentSize = contentSize` when constructing the content view controller wrapper.
+- **disable-autoresizing-mask**: The window's content view MUST have an empty autoresizing mask (`[]`) to prevent the layout engine from treating it as a flexible mask and shrinking the window.
+- **set-window-title**: The window MUST set its title from `ChatWindowConfiguration.title`. The title is hidden from the title bar but used by the Window menu, Mission Control, and the accessibility tree.
+- **restore-frame**: The controller MUST call `setFrameUsingName(_:)` with the namespaced frame name (see **autosave-frame**) to restore the saved window frame. If it returns `false` (no frame saved yet), the window MUST center on screen.
+- **autosave-frame**: The controller MUST set `windowFrameAutosaveName` to a namespaced frame name of the exact form `"<defaultsNamespace>.chatWindowFrame"`, and MUST do so after calling `super.init(window:)` — adopting a window clears any autosave name set beforehand. This enables AppKit's automatic frame persistence on every move and resize; **restore-frame** performs the one-time read of the saved frame at launch, so the two requirements act in this order: adopt the window, set the autosave name, then restore (or center).
+- **use-content-view-controller**: The `InlineChatView` MUST be contained within a `ChatContentViewController` (not assigned directly to `contentView`) to ensure the window correctly sizes the chat view to the requested size rather than shrink-wrapping it.
+- **install-appearance**: The controller MUST call `appearance.install()` during initialization to activate the appearance controller, which places the gear in the window's trailing titlebar accessory.
+- **focus-input-on-show**: When `showWindow(_:)` is called, the controller MUST call `focusInput()` to place focus in the composer field.
+- **focus-input-on-key**: The controller MUST observe `NSWindow.didBecomeKeyNotification` and call `focusInput()` only if the window's first responder is still the window itself. This ensures the composer is ready for typing without overriding an existing selection in the transcript.
+- **find-first-editable-field**: The `focusInput()` method MUST walk the view hierarchy to locate the first editable `NSTextField` (the composer) and make it the first responder.
+- **prohibit-nib-init**: The controller MUST prohibit initialization from a nib by implementing `required init?(coder:)` with `fatalError`.
+- **remove-observer-on-deinit**: The controller MUST remove itself from `NotificationCenter` in `deinit` to avoid dangling observer references.
+- **main-actor**: The class itself MUST be annotated `@MainActor`, making all public API and view-related logic isolated to the main actor.
+- **allow-subclassing**: The class MUST be declared `open` to allow subclasses to add host-specific behavior. Only the class and `showWindow(_:)` are declared `open`; `chatView`, `appearance`, and `focusInput()` are `public` (not `open`), so subclasses may call them but not override them — new behavior is added via a subclass's own initializer (which calls `super.init`), new stored properties, or an override of `showWindow(_:)`.
 
 ## Appearance
 
 - **Title bar**: Hidden (`.titleVisibility = .hidden`, `titlebarAppearsTransparent = true`)
 - **Background**: Transparent (`.isOpaque = false`, `backgroundColor = .clear`)
 - **Drag handle**: Window background (movable by window background; `.isMovableByWindowBackground = true`)
-- **Default window size**: 460 points wide × 620 points tall (from `ChatWindowConfiguration.contentSize` default)
+- **Default window size**: See `contentSize` under **Configuration** below (`ChatWindowConfiguration`'s default)
 - **Gear/appearance control**: Trailing edge, managed by `ChatWindowAppearanceController`
 - **Chat view**: Fills window content area, respects theme alpha and styling
 
@@ -75,7 +77,6 @@ ChatWindowController is an AppKit window controller that presents a chat interfa
 | Default | Window centered on screen, chat ready for input |
 | Restored | Window positioned and sized at last saved frame |
 | Key (active) | First responder set to composer field for immediate typing |
-| Not key | Window remains visible; input focus retained until switched away |
 
 ## Accessibility
 
@@ -88,19 +89,27 @@ ChatWindowController is an AppKit window controller that presents a chat interfa
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| cwc-001 | must-own-chat-view | Initialize with valid view model | `controller.chatView` returns non-nil `InlineChatView` |
-| cwc-002 | must-own-appearance-controller | Initialize with valid configuration | `controller.appearance` returns non-nil `ChatWindowAppearanceController` |
-| cwc-003 | must-configure-from-struct | Create `ChatWindowConfiguration` and pass to init | Controller stores all configuration values and passes them to window and appearance controller |
-| cwc-004 | must-hide-title-bar | Initialize and inspect window | Window's `titleVisibility` is `.hidden`, `titlebarAppearsTransparent` is `true`, and close/miniaturize/zoom buttons are hidden |
-| cwc-005 | must-be-translucent | Initialize and inspect window | Window's `isOpaque` is `false`, `backgroundColor` is `.clear` |
-| cwc-006 | must-size-window-correctly | Initialize with `contentSize = NSSize(width: 500, height: 700)` | Window opens at approximately 500×700 (exact dimensions account for frame decorations) |
-| cwc-007 | must-restore-frame | Initialize, move/resize window, call `setFrameUsingName`, deinit, reinitialize with same namespace | Window restores to saved position and size on second initialization |
-| cwc-008 | must-autosave-frame | Initialize, move window, wait for autosave | Window's subsequent position is saved and restored on reopen |
-| cwc-009 | must-focus-input-on-show | Call `showWindow(nil)` | Composer field receives first responder focus |
-| cwc-010 | must-focus-input-on-key | Window with text selection, click away, click back to window | Selection is preserved; `focusInput()` is not called because first responder is not the window |
-| cwc-011 | must-find-first-editable-field | Call `focusInput()` with hierarchy containing multiple text fields (only one editable) | First editable `NSTextField` is located and made first responder |
-| cwc-012 | must-prohibit-nib-init | Attempt to initialize from nib (e.g., via `NSKeyedUnarchiver`) | `init(coder:)` raises `fatalError` |
-| cwc-013 | must-be-movable-by-background | Initialize and inspect window | Window's `isMovableByWindowBackground` is `true`; user can drag window by clicking anywhere on chat surface |
+| cwc-001 | own-chat-view | Initialize with valid view model | `controller.chatView` returns non-nil `InlineChatView` |
+| cwc-002 | own-appearance-controller | Initialize with valid configuration | `controller.appearance` returns non-nil `ChatWindowAppearanceController` |
+| cwc-003 | configure-from-struct | Create `ChatWindowConfiguration` and pass to init | Controller stores all configuration values and passes them to window and appearance controller |
+| cwc-004 | hide-title-bar | Initialize and inspect window | Window's `titleVisibility` is `.hidden`, `titlebarAppearsTransparent` is `true`, and `standardWindowButton(_:)?.isHidden` is `true` for `.closeButton`, `.miniaturizeButton`, and `.zoomButton` |
+| cwc-005 | translucent | Initialize and inspect window | Window's `isOpaque` is `false`, `backgroundColor` is `.clear` |
+| cwc-006 | size-window-correctly | Initialize with `contentSize = NSSize(width: 500, height: 700)` | Window's `contentView.frame.size` is exactly `NSSize(width: 500, height: 700)` |
+| cwc-007 | restore-frame | Initialize with namespace `N`, move and resize the window (AppKit records the new frame per **autosave-frame**), deinit the controller, then initialize a new controller with the same namespace `N` | The new window's frame matches the previously recorded position and size exactly, restored via `setFrameUsingName(_:)` during init |
+| cwc-008 | autosave-frame | Initialize with namespace `N`, move or resize the window once | The frame is written to `UserDefaults.standard` under the AppKit-managed key `"NSWindow Frame N.chatWindowFrame"` without an explicit save call |
+| cwc-009 | focus-input-on-show | Call `showWindow(nil)` | Composer field receives first responder focus |
+| cwc-010 | focus-input-on-key | Programmatically make another view (e.g. the transcript's text view) the window's first responder, then post `NSWindow.didBecomeKeyNotification` for the window | The other view's first-responder status is preserved; `focusInput()` is not called because the window's first responder was not the window itself |
+| cwc-011 | find-first-editable-field | Call `focusInput()` with hierarchy containing multiple text fields (only one editable) | First editable `NSTextField` is located and made first responder |
+| cwc-012 | prohibit-nib-init | Code inspection (not executed — invoking it would crash the test process) | `init?(coder:)` is `required`, marked `@available(*, unavailable)`, and its body calls `fatalError`, so nib/storyboard instantiation is a compile-time error |
+| cwc-013 | movable-by-background | Initialize and inspect window | Window's `isMovableByWindowBackground` is `true`; user can drag window by clicking anywhere on chat surface |
+| cwc-014 | accept-optional-backdrop | Initialize once with `backdrop: nil` and once with a real `NSView` | When non-nil, `chatView.backdrop` is the same instance passed in; when `nil`, `chatView.backdrop` is `nil` |
+| cwc-015 | use-full-size-content-view | Initialize and inspect window | `window.styleMask.contains(.fullSizeContentView)` is `true` |
+| cwc-016 | disable-autoresizing-mask | Initialize and inspect window | `window.contentView?.autoresizingMask` is `[]` |
+| cwc-017 | set-window-title | Initialize with `configuration.title = "Test Chat"` | `window.title` is `"Test Chat"` (the title bar itself remains hidden per **hide-title-bar**) |
+| cwc-018 | use-content-view-controller | Initialize and inspect window | `window.contentViewController` is a `ChatContentViewController` wrapping `chatView`; `window.contentView` is not `chatView` directly |
+| cwc-019 | install-appearance | Initialize and inspect window | `window.titlebarAccessoryViewControllers` contains the accessory installed by `appearance.install()` at the trailing edge |
+| cwc-020 | allow-subclassing | Declare a subclass that overrides `showWindow(_:)` and adds a new stored property | Subclass compiles; its `showWindow(_:)` override runs; `chatView` and `appearance` remain accessible but cannot be overridden |
+| cwc-021 | remove-observer-on-deinit | Initialize a controller, then deinit it | Its `NSWindow.didBecomeKeyNotification` observer is removed; posting that notification afterward has no effect (no crash, no callback) |
 
 ## Edge Cases
 
@@ -110,7 +119,7 @@ ChatWindowController is an AppKit window controller that presents a chat interfa
 - **Frame restoration failure**: If `setFrameUsingName(_:)` returns `false` (no saved frame), the window centers on screen; subsequent moves and resizes update the saved frame.
 - **Window becoming key during text selection**: The `windowBecameKey` observer checks if the current first responder is the window itself before calling `focusInput()`. If a transcript selection or other view holds first responder, `focusInput()` is not called, preserving the selection.
 - **Multiple ChatWindowController instances**: Each controller with a different `defaultsNamespace` maintains separate frame and appearance settings. Controllers with the same namespace share settings.
-- **Window close/deinit**: The controller removes itself from `NotificationCenter` in `deinit` to avoid dangling observer references.
+- **Window close/deinit**: The controller removes itself from `NotificationCenter` in `deinit` to avoid dangling observer references (see **remove-observer-on-deinit**).
 
 ## Configuration
 
@@ -131,7 +140,8 @@ Not applicable: ChatWindowController is a window container, not a user-navigable
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| Not applicable | — | The controller uses no user-facing strings; `appearanceTitle` and `backdropToggleTitle` are supplied by the host via `ChatWindowConfiguration` |
+| `appearanceTitle` | *(required, no default)* | Caption at the top of the gear's panel, supplied by the host via `ChatWindowConfiguration`; the host is responsible for localizing it. |
+| `backdropToggleTitle` | "Background animation" | Label for the backdrop toggle in the appearance panel. `ChatWindowConfiguration.init` bakes this English literal in as the default when a host does not override it — a host that relies on the default rather than supplying its own value MUST still localize it upstream (e.g. give it a strings-catalog key); it is not an invariant, non-user-facing string. |
 
 ## Accessibility Options
 
@@ -147,14 +157,14 @@ Not applicable: The controller does not directly render text or interactive elem
 
 | Event | Properties | When |
 |-------|-----------|------|
-| Not applicable | — | Event tracking is handled by `ChatWindowAppearanceController` and `InlineChatView`, not the controller itself |
+| Not applicable | — | `ChatWindowController` emits no analytics events itself. |
 
 ## Privacy
 
-- **Data collected**: ChatWindowController collects no user data. Frame position and size are persisted to `NSUserDefaults` under the namespace supplied in `ChatWindowConfiguration.defaultsNamespace`.
-- **Storage**: Window frame and appearance settings are stored in `NSUserDefaults` (per the `WindowAppearanceDefaults` key namespace); these are local to the device.
+- **Data collected**: ChatWindowController collects no personal user data. It persists two kinds of local preference state — window frame geometry and appearance settings (text size, transparency, backdrop visibility, floating, caret blink) — both scoped to the `defaultsNamespace` supplied in `ChatWindowConfiguration`.
+- **Storage**: Frame geometry is stored by AppKit itself under the key `"NSWindow Frame <namespace>.chatWindowFrame"` in `UserDefaults.standard`, via `windowFrameAutosaveName` (see **autosave-frame**). Appearance settings are stored by `WindowAppearanceDefaults` in `UserDefaults.standard` under `<namespace>.textScale`, `<namespace>.transparencyPercent`, `<namespace>.backdrop.off`, `<namespace>.floating`, and `<namespace>.blinkCaret.off`. All of this is local to the device.
 - **Transmission**: No data transmission occurs.
-- **Retention**: Frame and settings are retained indefinitely until the host application or user deletes them or clears user defaults.
+- **Retention**: Frame and appearance settings are retained indefinitely until the host application, the user, or `WindowAppearanceDefaults.resetWindowAppearance()` clears them.
 
 ## Logging
 
@@ -166,31 +176,60 @@ Subsystem: Determined by host application | Category: ChatWindowController
 
 ## Platform Notes
 
-- **Apple (source)**: `ChatWindowController` in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/ChatWindowController.swift`. An AppKit `NSWindowController` subclass that manages a window with no title bar, transparent background, and frame persistence. Uses `ChatWindowConfiguration` as a value type to support multiple windows with independent settings. Delegates chat display to `InlineChatView` and appearance controls to `ChatWindowAppearanceController`. The `ChatContentViewController` wrapper ensures the content view scales to the requested size rather than shrink-wrapping.
-- **SwiftUI**: SwiftUI does not provide a direct equivalent to AppKit's `NSWindowController` and `NSWindow`. To present a chat window in SwiftUI on macOS, wrap `ChatWindowController` in an `NSViewControllerRepresentable` or use it as the window delegate in a custom `@main` app entry point. SwiftUI's `@Environment(\.openWindow)` can trigger the window's display.
+- **Apple (source)**: `ChatWindowController` in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/ChatWindowController.swift`. An AppKit `NSWindowController` subclass that manages a window with no title bar, transparent background, and frame persistence. Uses `ChatWindowConfiguration` as a value type to support multiple windows with independent settings. Delegates chat display to `InlineChatView` and appearance controls to `ChatWindowAppearanceController`. The `ChatContentViewController` wrapper ensures the content view scales to the requested size rather than shrink-wrapping it.
+- **SwiftUI**: SwiftUI does not provide a direct equivalent to AppKit's `NSWindowController`. `NSViewControllerRepresentable` wraps view controllers, not window controllers, so it cannot host `ChatWindowController` directly; `@Environment(\.openWindow)` opens a SwiftUI `Window` scene, not an arbitrary `NSWindowController`. The closer equivalent is a `Window` scene styled with `.windowStyle(.hiddenTitleBar)` and `.containerBackground(.clear, for: .window)` to approximate the hidden title bar and translucency, built from SwiftUI views; or, when the AppKit implementation itself must be reused, keep `ChatWindowController` as a plain AppKit controller instantiated and shown from the SwiftUI app's `@main` entry point rather than trying to wrap it as a scene.
 - **Compose**: Android does not have a single-window model; Chat UI is typically displayed full-screen or in a modal dialog. Equivalent behavior would be a modal `Dialog` or `ModalBottomSheet` with a `TopAppBar` containing appearance controls and a text input field for the composer.
-- **AppKit / UIKit**: On iOS, present a chat interface in a modal `UIViewController` or navigate to a dedicated chat screen in a navigation stack. iOS does not support hidden title bars or transparent window backgrounds in the same way; use `navigationBarTitleDisplayMode(.inline)` or custom header views to achieve a minimal title presentation. Frame restoration is handled by `UIApplication.supportsMultipleScenes` and `SceneDelegate` state persistence.
-- **WinUI 3**: On Windows, create a chat window using `Microsoft.UI.Xaml.Window` with a minimal title bar (hide standard chrome using `ExtendsContentIntoTitleBar`). Use `Grid` with two columns: one for `InlineChatView` (or its WinUI equivalent) and one for the appearance gear button. Store window position and size in `ApplicationData.Current.LocalSettings`. Bind the `IsMovableByWindowBackground` behavior to a `Canvas` or background rectangle with a pointer-entered handler. Set `RequestedTheme` to `ElementTheme.Dark` or data-bind to a theme setting for transparency support.
+- **AppKit / UIKit**: The actual implementation is AppKit: an `NSWindowController` subclass managing an `NSWindow` with `titleVisibility = .hidden`, `titlebarAppearsTransparent = true`, explicit `standardWindowButton(_:)?.isHidden = true` for each title-bar button, `isOpaque = false`/`backgroundColor = .clear` for translucency, `isMovableByWindowBackground = true`, and `windowFrameAutosaveName` for frame persistence (see **hide-title-bar**, **translucent**, **movable-by-background**, **autosave-frame**). None of this applies directly on iOS — UIKit has no window chrome to hide and no window-frame autosave API. Present a chat interface in a modal `UIViewController` or a dedicated screen in a navigation stack instead, using `navigationBarTitleDisplayMode(.inline)` or a custom header view for a minimal title presentation, and `UIApplication.supportsMultipleScenes`/`SceneDelegate` state restoration in place of frame autosave.
+- **WinUI 3**: On Windows, create a chat window using `Microsoft.UI.Xaml.Window` with `ExtendsContentIntoTitleBar = true` to remove the standard chrome, and call `SetTitleBar` (or `InputNonClientPointerSource.SetRegionRects` with `NonClientRegionKind.Caption`) over the chat surface so the window remains draggable without a visible title bar — a `Canvas` with a pointer-entered handler alone does not make a window movable. Use a `SystemBackdrop` (e.g. `MicaBackdrop` or `DesktopAcrylicBackdrop`) for translucency; `RequestedTheme` only switches light/dark colors and does not make the window transparent. Persist window position, size, and appearance settings to a local file (e.g. JSON under `ApplicationData.Current.LocalFolder`) rather than `ApplicationData.Current.LocalSettings`, which throws in unpackaged (non-MSIX) apps.
 
 ## Design Decisions
 
-- **No title bar with title retained**: The window title is hidden from the title bar but retained because it appears in the Window menu, Mission Control, and the accessibility tree. This balances visual minimalism with platform discoverability.
-- **Transparent background**: The window is translucent (`isOpaque = false`, `backgroundColor = .clear`) so that the theme's alpha values in the view layer are visible. An opaque window would composite its background first, obscuring theme transparency.
-- **Content view controller wrapper**: The `InlineChatView` is not assigned directly to `contentView` but wrapped in a `ChatContentViewController`. AppKit sizes a direct content view to its minimum unless explicitly constrained; the wrapper ensures the window's `preferredContentSize` determines the initial size.
-- **Empty autoresizing mask**: The content view's autoresizing mask is set to `[]` to break the default flexible mask that would cause the window to shrink-wrap the view's width. A fixed mask causes AppKit to derive `width == frame.width`, keeping the window resizable without shrinking.
-- **Conditional input focus on key**: The `windowBecameKey` observer calls `focusInput()` only if the first responder is the window itself. This prevents clobbering an active text selection in the transcript when the window is re-fronted via a status bar item or ⌘\` switcher.
-- **Namespaced frame persistence**: The frame autosave name is prefixed with the `defaultsNamespace` from `ChatWindowConfiguration`, allowing multiple chat windows to maintain independent positions and sizes. Each window remembers where it was left.
-- **Public chat view and appearance controller**: Both `chatView` and `appearance` are public properties so that host applications can drive the view directly (e.g., display a placeholder during connection) and access appearance state if needed.
-- **Subclassing for host behavior**: The class is declared `open` and the initializer is not marked final, allowing hosts to subclass and add connection rituals, status item management, or other application-specific behavior without forking the controller.
+**Decision**: Hide the title bar (`titleVisibility = .hidden`, `titlebarAppearsTransparent = true`, all three standard buttons hidden) while keeping the window's `title` set.
+**Rationale**: The title is retained because it is what the Window menu, Mission Control, and the accessibility tree read; hiding only the bar's furniture balances visual minimalism with platform discoverability.
+**Approved**: pending
+
+**Decision**: The window is translucent (`isOpaque = false`, `backgroundColor = .clear`).
+**Rationale**: So the theme's own alpha values in the view layer are visible; an opaque window would composite its background first, obscuring theme transparency.
+**Approved**: pending
+
+**Decision**: `InlineChatView` is wrapped in a `ChatContentViewController` rather than assigned directly to `contentView`.
+**Rationale**: AppKit sizes a direct content view to its minimum unless explicitly constrained; the wrapper's `preferredContentSize` determines the window's initial size instead.
+**Approved**: pending
+
+**Decision**: The content view's autoresizing mask is set to `[]` (no flexibility flags — a fixed mask), not left at `NSWindow`'s default flexible mask.
+**Rationale**: A flexible mask against `NSThemeFrame` (which auto layout does not manage) leaves the content view's width an unconstrained free variable, so the layout engine settles it at the view's minimum and shrink-wraps the window. A fixed (`[]`) mask makes AppKit derive `width == frame.width` and re-derive it every time the window sets the content frame, so the window still resizes — it just stops shrink-wrapping on the way up.
+**Approved**: pending
+
+**Decision**: The `windowBecameKey` observer calls `focusInput()` only when the window's first responder is still the window itself.
+**Rationale**: Taking focus unconditionally would clobber an active text selection in the transcript when the window is re-fronted (a status-bar item, ⌘\`, or clicking back from another app).
+**Approved**: pending
+
+**Decision**: The frame autosave name is `"<defaultsNamespace>.chatWindowFrame"`, prefixed with the `defaultsNamespace` from `ChatWindowConfiguration`.
+**Rationale**: Allows multiple chat windows to maintain independent positions and sizes; each window remembers where it was left without colliding with another window's saved frame.
+**Approved**: pending
+
+**Decision**: Both `chatView` and `appearance` are `public` (not `open`) properties.
+**Rationale**: Host applications can drive the view directly (e.g., display a placeholder during connection) and access appearance state, without being able to override them from a subclass — see **allow-subclassing**.
+**Approved**: pending
+
+**Decision**: The class is declared `open`, and only `showWindow(_:)` is declared `open override`-able.
+**Rationale**: This lets hosts subclass to add connection rituals, status-item management, or other application-specific behavior — via a subclass's own initializer that calls `super.init`, new stored properties, or an override of `showWindow(_:)` — without forking the controller or requiring every member to be overridable.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Not applicable | — | Cookbook compliance checks are handled by upstream components (`InlineChatView`, `ChatWindowAppearanceController`) and the host application |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+
+`keyboard-navigable` and `focus-management` rest on the `windowBecameKey`/`focusInput()` first-responder handling that puts the composer in the key chain without requiring a pointer; `state-recovery` rests on `setFrameUsingName(_:)` restoring the saved frame and centering as a fallback; `string-externalization` is `partial` because `ChatWindowConfiguration.backdropToggleTitle` defaults to the hardcoded English literal `"Background animation"` (see Localization) even though every other user-facing string is host-supplied.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added remove-observer-on-deinit requirement and 8 missing test vectors; fixed non-deterministic and self-referential test vectors; corrected the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes; rewrote the Compliance table with real accessibility, reliability, and internationalization checks; corrected the Privacy section's storage keys and API name; added a Localization entry for the hardcoded backdrop-toggle default; removed unsupported Analytics attribution and the false "initializer not marked final" claim; clarified subclassing surface, frame-autosave order and naming, and the autoresizing-mask mechanism; removed the unobservable "Not key" state row and duplicate default window size |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
