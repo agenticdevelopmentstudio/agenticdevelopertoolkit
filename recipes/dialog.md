@@ -3,7 +3,7 @@ id: 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 title: Dialog
 domain: agenticdevelopertoolkit://recipes/dialog
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: '2026-06-26'
@@ -40,12 +40,12 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 
 ## Behavioral Requirements
 
-- **must-center-modal**: `DialogContent` MUST render a centered, portalled popup over a dimmed, blurred backdrop.
-- **must-not-dismiss-on-backdrop**: By default the dialog MUST NOT close on a backdrop or outside click (`disablePointerDismissal`); a caller MAY re-enable it with `disablePointerDismissal={false}`.
-- **must-close-on-escape**: Escape MUST close the dialog, unless a composing component's keyboard policy overrides it.
-- **must-render-close-affordance**: `DialogContent` MUST render a labelled `×` close button by default; `showClose={false}` MUST hide it.
-- **must-trap-focus**: While open, focus MUST be trapped within the dialog and restored to the opener on close.
-- **must-label-dialog**: The dialog MUST be labelled by `DialogTitle` and described by `DialogDescription` for assistive technology.
+- **centered-modal**: `DialogContent` MUST render a centered, portalled popup over a dimmed, blurred backdrop.
+- **backdrop-dismissal-disabled**: By default the dialog MUST NOT close on a backdrop or outside click (`disablePointerDismissal`); a caller MAY re-enable it with `disablePointerDismissal={false}`.
+- **escape-closes**: Escape MUST close the dialog, unless a composing component overrides it via its own `onOpenChange` handler.
+- **close-affordance**: `DialogContent` MUST render a labelled `×` close button by default; `showClose={false}` MUST hide it.
+- **focus-trap**: While open, focus MUST be trapped within the dialog and restored to the opener on close.
+- **dialog-labelling**: Every composing dialog MUST render a `DialogTitle` so the dialog is labelled for assistive technology; `DialogDescription` MUST be rendered when descriptive text is needed.
 
 ## Appearance
 
@@ -56,6 +56,7 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 - **DialogFooter**: Flex layout with `items-center justify-end`, horizontal gap `gap-3` (12px).
 - **DialogTitle**: Font size `text-base` (16px), weight `font-semibold` (600), text color `text-apt-text`.
 - **DialogDescription**: Font size `text-sm` (14px), text color `text-apt-text-muted`.
+- **Stacking**: Backdrop and popup both use `z-50`; within the same `Portal` the popup renders after the backdrop (see `dialog.tsx`), so DOM order — not the z-index value — is what keeps the popup above the backdrop.
 - **Constraint**: No raw hex color values; no `!important` declarations.
 
 ## States
@@ -69,32 +70,35 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 
 ## Accessibility
 
-- **Role and properties**: `role="dialog"` with `aria-modal="true"` (set by Base UI); dialog is labelled by `DialogTitle` (via `aria-labelledby`) and described by `DialogDescription` (via `aria-describedby`).
+- **Role and properties**: `role="dialog"` with `aria-modal="true"` (set by Base UI); dialog is labelled by `DialogTitle` (via `aria-labelledby`) and described by `DialogDescription` (via `aria-describedby`) when they are rendered — see **dialog-labelling**.
 - **Focus management**: Focus is trapped within the dialog while open and restored to the triggering element on close (Base UI handles this).
-- **Keyboard**: Escape closes the dialog; Tab and Shift+Tab cycle focus within trapped set.
-- **Close affordance**: The close button (`×`) carries `aria-label="Close"` to announce its purpose.
-- **Target size**: Close button minimum touch target is 16px × 16px (icon) + padding, meeting 44×44pt platform guidance when padded by surrounding space.
+- **Keyboard**: Escape closes the dialog by default; Tab and Shift+Tab cycle focus within the trapped set. See **escape-closes** for how a composing component overrides this.
+- **Close affordance**: The close button (`×`) carries `aria-label="Close"` to announce its purpose; this string is hardcoded directly in `dialog.tsx`'s `DialogContent`, not supplied by Base UI (see Localization).
+- **Target size**: The close button's hit area is limited to its `size-4` (16×16px) icon — no padding class enlarges the clickable region — so it does not meet 44×44pt/48×48dp guidance. See Compliance's `touch-target-size` status.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | must-center-modal | Open the dialog with `<DialogTrigger>` | Popup appears centered on screen with dimmed, blurred backdrop behind it |
-| T2 | must-not-dismiss-on-backdrop | Click the backdrop area while dialog is open | Dialog remains open |
-| T3 | must-close-on-escape | Press Escape key while dialog is open and focused | Dialog closes |
-| T4 | must-render-close-affordance (default) | Render `<DialogContent>` without `showClose` prop | Close button (×) is rendered in top-right corner |
-| T5 | must-render-close-affordance (hidden) | Render `<DialogContent showClose={false}>` | Close button is not rendered |
-| T6 | must-trap-focus | Tab through dialog, close it | Focus stays within dialog; on close, focus returns to the trigger element |
-| T7 | must-label-dialog | Render with `<DialogTitle>` and `<DialogDescription>` | Assistive technology announces title and description |
-| T8 | must-not-dismiss-on-backdrop (opt-in) | Set `disablePointerDismissal={false}` and click backdrop | Dialog closes on backdrop click |
+| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup appears centered on screen with dimmed, blurred backdrop behind it |
+| T2 | backdrop-dismissal-disabled (default) | Click the backdrop area while dialog is open | Dialog remains open |
+| T3 | escape-closes (default) | Press Escape key while dialog is open and focused | Dialog closes |
+| T4 | close-affordance (default) | Render `<DialogContent>` without `showClose` prop | Close button (×) is rendered in top-right corner |
+| T5 | close-affordance (hidden) | Render `<DialogContent showClose={false}>` | Close button is not rendered |
+| T6 | focus-trap | Tab through dialog, close it | Focus stays within dialog; on close, focus returns to the trigger element |
+| T7 | dialog-labelling | Render with `<DialogTitle>` and `<DialogDescription>` | Assistive technology announces title and description |
+| T8 | backdrop-dismissal-disabled (opt-in) | Set `disablePointerDismissal={false}` and click backdrop | Dialog closes on backdrop click |
+| T9 | escape-closes (override) | Composing component passes its own `onOpenChange`, calling `event.preventDefault()` when the dismissal reason is Escape, then Escape is pressed while the dialog is open and focused | Dialog remains open — the composing component's override suppresses the default Escape-to-close behavior |
+| T10 | dialog-labelling (missing title) | Render `<DialogContent>` with no `<DialogTitle>` child | Popup renders without an `aria-labelledby` attribute; assistive technology announces the dialog with no accessible name |
 
 ## Edge Cases
 
-- **Backdrop dismissal is off by default** for modals/alerts — users opt back in with `disablePointerDismissal={false}`.
+- **Backdrop dismissal is off by default** (see **backdrop-dismissal-disabled**) for modals/alerts — users opt back in with `disablePointerDismissal={false}`.
 - **Content width**: Dialog caps at `max-w-md` (448px); composing dialogs widen it via className override (e.g., `sm:max-w-2xl`).
-- **Close button hide**: `showClose={false}` hides the affordance for dialogs whose footer buttons are the only dismissal path (e.g., a busy/loading state that blocks Escape and other dismissals).
+- **Close button hide**: `showClose={false}` hides the affordance for dialogs whose footer buttons are the only dismissal path (e.g., a busy/loading state that also overrides **escape-closes** so Escape is blocked while busy).
 - **Responsive behavior**: `w-[calc(100%-2rem)]` preserves 16px side margins on small screens; margins prevent edge-touching on mobile.
-- **Escape override**: A composing component's keyboard policy may override Escape-to-close (e.g., for a search input within the dialog that captures Escape for its own purposes).
+- **Escape override**: A composing component overrides **escape-closes** by passing its own `onOpenChange` (forwarded via `{...props}` on the `Dialog` root) and checking the dismissal reason before calling `event.preventDefault()` — e.g., a search input within the dialog that wants to capture Escape for its own purposes.
+- **Missing title**: A `<DialogContent>` rendered without `<DialogTitle>` has no `aria-labelledby` and is announced to assistive technology with no accessible name; composing components MUST always render `DialogTitle` (see **dialog-labelling**), hiding it visually with CSS if a visible title isn't wanted.
 
 ## Configuration
 
@@ -114,11 +118,14 @@ Not applicable: Dialog is a primitive component without its own navigation path.
 
 ## Localization
 
-Not applicable: Dialog contains no user-facing strings except the built-in close button aria-label (`"Close"`), which Base UI provides in English. Composing components add their own translatable titles and descriptions via `DialogTitle` and `DialogDescription`.
+Dialog renders one user-facing string: the close button's `aria-label="Close"`. That string is a literal hardcoded directly in `dialog.tsx`'s `DialogContent` — it is not supplied by Base UI — and it is not currently externalized or overridable via a prop. Composing components add their own translatable titles and descriptions via `DialogTitle` and `DialogDescription`.
 
 ## Accessibility Options
 
-Not applicable: Dialog has no animations to reduce (Reduce Motion), does not use color alone to convey information (Differentiate Without Color), and inherits text color contrast from the `apt-*` token family (Increase Contrast).
+- **Reduce Motion**: Not applicable — `dialog.tsx` applies no open/close transition or animation classes to the backdrop or the popup; the only `transition-colors` class is on the close button's hover text color, which is not motion.
+- **Differentiate Without Color**: Not applicable — no state is conveyed by color alone.
+- **Increase Contrast**: Inherits text color contrast from the `apt-*` token family; the actual contrast values live outside this file (see Compliance's `contrast-ratio` status).
+- **Reduce Transparency**: Not addressed by the current implementation — the backdrop always renders at `bg-black/30` with `backdrop-blur-sm` regardless of this system preference.
 
 ## Feature Flags
 
@@ -134,33 +141,54 @@ Not applicable: Dialog collects no data.
 
 ## Logging
 
-None — a presentational primitive. Callers own open/close analytics.
+None — a presentational primitive that emits no logs of its own.
 
 ## Platform Notes
 
-- **React / Web (TypeScript)**: Implemented in `packages/web/packages/ui/src/components/dialog.tsx`. Built on `@base-ui/react/dialog`. Marked `"use client"` for Next.js. Responsive behavior verified via Playwright (ui-showcase) at 375px, 768px, and 1440px viewport widths.
-- **SwiftUI**: Not applicable — web-only shared component. A SwiftUI-native equivalent would use `sheet` or custom overlay modifiers.
-- **Kotlin Compose**: Not applicable — web-only shared component. A Compose equivalent would use `Dialog` composable from Material Design 3.
-- **AppKit / UIKit**: Not applicable — web-only shared component. iOS native equivalent uses `UIAlertController` with `preferredStyle: .alert` or a custom `UIViewController` modal presentation.
-- **WinUI 3**: A WinUI equivalent would use `ContentDialog` control with `IsPrimaryButtonEnabled`, `IsSecondaryButtonEnabled` for actions. Set `CloseButtonVisibility="Visible"` to show a close button. Apply theme colors via `Application.Current.Resources` for dark/light mode token equivalents. Backdrop is handled via `AcrylicBrush` with `TintOpacity: 0.3` to approximate the `bg-black/30` effect.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/components/dialog.tsx`. Built on `@base-ui/react/dialog`. Marked `"use client"` for Next.js. Responsive behavior verified via Playwright (ui-showcase) at 375px, 768px, and 1440px viewport widths.
+- **SwiftUI**: Web-only shared component; no SwiftUI implementation exists in `packages/apple` yet. A SwiftUI-native equivalent would present via `.sheet(isPresented:)` (or `.fullScreenCover`), pairing `interactiveDismissDisabled()` with the backdrop-dismissal-disabled default.
+- **Compose**: Web-only shared component; no Compose implementation exists yet. A Compose equivalent would use the `Dialog` composable from Material Design 3.
+- **AppKit / UIKit**: Web-only shared component. A native equivalent would use `NSWindow.beginSheet(_:completionHandler:)` on AppKit or `UIModalPresentationStyle.formSheet` on UIKit for arbitrary content — not `UIAlertController`, which is scoped to alert/action-sheet styles. `packages/apple`'s existing dialogs (e.g. `WindowOptionsDialog` in `AgenticDeveloperToolkit/SourcesUI/macOS/Chrome`) are bespoke `NSWindow` presentations built for a different purpose, not a shared counterpart to this primitive.
+- **WinUI 3**: A WinUI equivalent would use the `ContentDialog` control with `PrimaryButtonText`, `SecondaryButtonText`, and `CloseButtonText` for its action buttons. Apply theme colors via `Application.Current.Resources` for dark/light mode token equivalents. The backdrop is handled by `ContentDialog`'s built-in smoke layer (`SmokeLayerBackground`), which approximates the `bg-black/30` dimming effect.
 
 ## Design Decisions
 
-- **Backdrop dismissal disabled by default.** Modals and alerts dismiss only via a button (per [[alert-and-dialog]] §6), preventing accidental data loss and clarifying intent. Pointer dismissal is opt-in for advanced use cases.
-- **Built on Base UI.** Inherits focus trapping, portalling, and assistive technology support rather than hand-rolling them, reducing maintenance burden and ensuring standards compliance.
-- **30% backdrop opacity.** A 30% black overlay with blur keeps the underlying page legible and subordinate while preserving context, unlike the harder 60% opacity that obscures the page entirely.
-- **apt-* tokens.** All colors and spacing use the design system token family, ensuring consistent theming across the product without raw hex values or !important overrides.
+**Decision**: Backdrop dismissal is disabled by default for modals and alerts.
+**Rationale**: Prevents accidental data loss and clarifies intent, per `agenticdevelopertoolkit://recipes/alert-and-dialog#requirements/backdrop-dismissal-disabled`; pointer dismissal is opt-in for advanced use cases.
+**Approved**: pending
+
+**Decision**: Built on Base UI (`@base-ui/react/dialog`) rather than a hand-rolled implementation.
+**Rationale**: Inherits focus trapping, portalling, and assistive technology support, reducing maintenance burden and ensuring standards compliance.
+**Approved**: pending
+
+**Decision**: Backdrop opacity is 30% black (`bg-black/30`), not 60%.
+**Rationale**: Keeps the underlying page legible and subordinate while preserving context; the harder 60% opacity obscured the page entirely.
+**Approved**: pending
+
+**Decision**: All colors and spacing use the `apt-*` design-token family.
+**Rationale**: Ensures consistent theming across the product without raw hex values or `!important` overrides.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| Artifact formatting (ingredient) | passed | artifact-formatting |
-| UI guidelines — `apt-*` tokens, no raw hex, no `!important` | passed | adh-ui-guidelines |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+Statuses rest on `dialog.tsx`: the explicit `aria-label="Close"` plus Base UI's documented role/focus-trap/portal contract support the passed accessibility rows; the `apt-*` token contrast values and whether the `rem`-based `text-base`/`text-sm` classes track system font scaling aren't verifiable from this file, hence partial; the close button's `size-4` icon has no padding class enlarging its hit area, so it plainly fails the 44×44 target; and the hardcoded, non-overridable `"Close"` string in `DialogContent` fails both internationalization checks.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; corrected the WinUI 3 and AppKit/UIKit Platform Notes bullets to real APIs and verified against `packages/apple`; relabeled Platform Notes bullets to the standard names; rebuilt Compliance as canonical linked accessibility/internationalization checks with a supporting sentence; reformatted Design Decisions into Decision/Rationale/Approved blocks and cited the alert-and-dialog requirement by fragment instead of a wiki-link and section number; corrected the Localization and Target size claims against `dialog.tsx`; narrowed Logging to stop repeating Analytics; documented the escape-override mechanism and the no-title edge case with new test vectors; noted the backdrop/popup z-order dependency and the unaddressed Reduce Transparency gap |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Correct backdrop opacity from bg-black/60 to bg-black/30 per source; structure Appearance section; fix domain URI from hub to cookbook; expand Accessibility, Edge Cases, and Platform Notes; upgrade status from draft to review |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial draft |

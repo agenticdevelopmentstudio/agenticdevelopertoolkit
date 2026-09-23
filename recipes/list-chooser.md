@@ -3,7 +3,7 @@ id: 40827b84-406e-4091-951b-9498b2f78253
 title: ListChooser
 domain: agenticdevelopertoolkit://recipes/list-chooser
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-06-26
@@ -26,7 +26,10 @@ depends-on:
 related:
   - agenticdevelopertoolkit://recipes/combobox
   - agenticdevelopertoolkit://recipes/option-menu
-references: []
+references:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
+  - https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html
+  - https://www.w3.org/WAI/WCAG21/Understanding/target-size.html
 approved-by: ''
 approved-date: ''
 ---
@@ -44,10 +47,10 @@ It is the keyboard-and-mouse foundation for "choose or create" pickers (first us
 - **trigger-opens-surface**: Activating the trigger (click, Enter, or Space) MUST open the popover.
 - **opens-with-field-focused**: On open, the filter/add field MUST receive focus so the user can type immediately.
 - **type-narrows-list**: Typing in the field MUST narrow the list to items whose label contains the typed text as a case-insensitive substring.
-- **arrow-roves-highlight**: ArrowDown / ArrowUp MUST move a roving highlight through the filtered list (and the create row when present), clamped at the ends with no wrap.
+- **arrow-roves-highlight**: ArrowDown / ArrowUp MUST move a roving highlight through the filtered list (and the create row when present). From no highlight, ArrowDown enters at the first row and ArrowUp enters at the last row; once a row is highlighted, ArrowUp at the first row and ArrowDown at the last row hold in place — no wrap between rows.
 - **highlight-syncs-into-field**: While a list item is highlighted, the field MUST display that item's label (the highlight is previewed in the field); typing again replaces the preview with the typed text and clears the highlight.
 - **enter-accepts-highlighted-item**: When a list item is highlighted, Enter MUST accept it via `onChange` with `isNew:false`, then close.
-- **enter-accepts-typed-entry**: When nothing is highlighted, the trimmed text is non-empty and matches no item, and `allowCreate` is set, Enter MUST accept the trimmed text via `onChange` with `isNew:true`, then close.
+- **enter-accepts-typed-entry**: When nothing is highlighted, the trimmed text is non-empty and has no exact case-insensitive label match, and `allowCreate` is set, Enter MUST accept the trimmed text via `onChange` with `isNew:true`, then close.
 - **typed-text-resolves-to-exact-item**: When nothing is highlighted and the trimmed text equals an item label (case-insensitive), accept MUST resolve to that item with `isNew:false`, never a new entry.
 - **create-unavailable-when-disabled**: When `allowCreate` is false, text matching no item MUST NOT be acceptable — no create row, OK disabled, Enter a no-op.
 - **escape-cancels**: Esc MUST close the surface without firing `onChange`.
@@ -57,7 +60,7 @@ It is the keyboard-and-mouse foundation for "choose or create" pickers (first us
 - **focus-returns-on-close**: On any close, focus MUST return to the trigger.
 - **empty-message-when-no-match**: When no item matches and creation is unavailable, the list MUST show the empty message.
 - **shift-enter-dismiss-in-keep-open-mode**: When `keepOpenOnCommit` is true, Shift+Enter MUST close the popover; plain Enter still accepts and keeps the popup open.
-- **focused-state-styling**: The trigger MUST show a distinct visual style when focused (per Apple HIG, Material Design 3, Fluent 2, or WCAG 2.1 AA focus-visible semantics).
+- **focused-state-styling**: The trigger MUST show a visible focus indicator meeting WCAG 2.4.7 (Focus Visible) — a 2px focus ring distinct from the unfocused border — in addition to the platform-native focus ring where the host platform provides one.
 
 ## Appearance
 
@@ -76,7 +79,10 @@ Open:
 │ [ sv|                     ]  │   ← filter/add field — focused on open
 ├─────────────────────────────┤
 │   SvelteKit                 │   ← filtered list (narrowed by the field text)
-│ + Add "sv"                  │   ← create row, shown when text matches no item
+│ + Add "sv"                  │   ← create row: shown whenever the trimmed text is non-empty
+│                              │     and has no exact case-insensitive label match — here "sv"
+│                              │     substring-matches "SvelteKit" but isn't an exact match, so
+│                              │     the create row appears alongside the filtered item
 ├─────────────────────────────┤
 │              Cancel    OK   │   ← button bar; OK disabled until something is acceptable
 └─────────────────────────────┘
@@ -101,7 +107,7 @@ Open:
 | Open, no highlight | Field shows the typed text; no row highlighted |
 | Open, item highlighted | `bg-apt-highlight/15` on the roving row; field previews its label; `aria-activedescendant` points to that option |
 | Open, committed row visible | ✓ (Check) icon shown in `apt-gold` on the committed item's row; `aria-selected="true"` on that option |
-| Filter matches nothing, `allowCreate` | Only the create row shows; OK is enabled if text is non-empty after trim |
+| No exact case-insensitive label match (trimmed text non-empty), `allowCreate` | Create row shows in addition to any items the filter still matches (e.g. typing "sv" leaves "SvelteKit" in the list and still shows "+ Add \"sv\""); OK enabled |
 | Filter matches nothing, no create | Empty message ("No matches") shown; OK disabled |
 | Nothing acceptable | OK button disabled, Cancel always enabled |
 | Listbox max height exceeded | Vertical scroll enabled on list container |
@@ -114,45 +120,63 @@ The control is synchronous over the in-memory `items` prop, so it has no intrins
 - **Filter/Add field**: `<input>` with `role="combobox"` (completes WAI-ARIA combobox pattern). Labeled by `aria-label={inputLabel ?? ariaLabel}`. Has `aria-controls={listId}` pointing to the list container, `aria-autocomplete="list"`, and `aria-activedescendant` pointing to the currently highlighted option (or undefined if no highlight).
 - **List container**: `<div role="listbox">` with `aria-label={ariaLabel}`. Scrollable area with `max-height` constraint.
 - **List rows**: Each row is a `<button role="option">`. Has `aria-selected="true"` on the committed row (when its value matches), `aria-selected="false"` on all others. The roving highlight is not expressed via `aria-selected`, only via `aria-activedescendant` on the combobox field. Create row is also `role="option"` with `aria-selected="false"`.
-- **Focus management**: Focus moves to the field on open (via `requestAnimationFrame`). On close, focus returns to the trigger via `Popover`'s base focus management.
-- **Minimum touch target**: Rows and buttons MUST have a minimum 44×44pt target size (20×20 units or 10×10 units + padding). Current implementation achieves 36px height on trigger and 36px (approx) on rows with padding.
+- **Focus management**: Focus moves to the field when the popover opens. On close, focus returns to the trigger.
+- **Touch target size**: Rows and buttons SHOULD aim for a 44×44pt target size (11×11 units at the 4px scale) per WCAG 2.5.5 and platform HIG guidance. The current implementation is smaller than that: the trigger is a fixed 36px (`h-9`, 9 units) and list rows are `py-1.5 px-2` (6px vertical padding around 14px text, roughly 26–30px tall).
 - **Keyboard paths**: All interactions (open, filter, navigate, accept, dismiss) are fully keyboard-accessible without requiring a mouse.
 - **Icon labeling**: Decorative icons (chevrons, check, plus) have `aria-hidden="true"`.
 
 ## Conformance Test Vectors
 
+Fixture `items` used by every vector below:
+
+| value | label |
+|---|---|
+| `sveltekit` | `SvelteKit` |
+| `react` | `React` |
+| `vuejs` | `Vue.js` |
+| `angularjs` | `AngularJS` |
+| `solidjs` | `SolidJS` |
+
+`navCount` for this fixture with no filter is 5 (or 6 when the create row is also showing).
+
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | type-narrows-list | open, type "sv" | only "SvelteKit" remains; others removed from visible list |
+| T1 | type-narrows-list | open, type "sv" | filtered list narrows to `SvelteKit` only; the other four items are removed from the visible list |
 | T2 | empty-message-when-no-match | `allowCreate=false`, type "zzz" | no options; empty message ("No matches") shown |
-| T3 | arrow-roves-highlight, highlight-syncs-into-field | open, ArrowDown ×2, ArrowUp ×1 | `aria-activedescendant` tracks the highlighted option; field shows the highlighted item's label |
-| T4 | enter-accepts-highlighted-item | open, ArrowDown ×1, Enter | `onChange(itemValue, { isNew:false })` fired; popover closes |
+| T3 | arrow-roves-highlight, highlight-syncs-into-field | open (no filter), ArrowDown ×2, ArrowUp ×1 | highlight moves index 0 (`SvelteKit`) → 1 (`React`) → 0 (`SvelteKit`); `aria-activedescendant` tracks the highlighted option at each step; field shows the highlighted item's label at each step |
+| T4 | enter-accepts-highlighted-item | open, ArrowDown ×1 (highlights `SvelteKit`), Enter | `onChange("sveltekit", { isNew:false })` fired; popover closes |
 | T5 | escape-cancels | open, type "test", Esc | no `onChange` fired; listbox closes |
-| T6 | enter-accepts-typed-entry | open, type "  Angular  ", Enter | `onChange("Angular", { isNew:true })` fired (text trimmed); popover closes |
-| T7 | pointer-click-commits | open, type "Solid", click create row | `onChange("Solid", { isNew:true })` fired; popover closes |
-| T8 | typed-text-resolves-to-exact-item | open, type "react" (exact match exists), Enter | `onChange("react", { isNew:false })` fired (resolves to item, not new) |
+| T6 | enter-accepts-typed-entry | open, type "  Angular  ", Enter | `onChange("Angular", { isNew:true })` fired (text trimmed; "Angular" has no exact case-insensitive match — `AngularJS` is a substring match only); popover closes |
+| T7 | pointer-click-commits | open, type "Solid", click create row | `onChange("Solid", { isNew:true })` fired ("Solid" has no exact match — `SolidJS` is a substring match only); popover closes |
+| T8 | typed-text-resolves-to-exact-item | open, type "react" (exact case-insensitive match to the `react`/`React` item), Enter | `onChange("react", { isNew:false })` fired — resolves to the item's `value`, not the typed string |
 | T9 | create-unavailable-when-disabled | `allowCreate=false`, type "Nope", Enter | no `onChange` fired; nothing happens |
-| T10 | ok-mirrors-enter | open, type "Vue", click OK | `onChange("Vue", { isNew:true })` fired; popover closes |
+| T10 | ok-mirrors-enter | open, type "Vue", click OK | `onChange("Vue", { isNew:true })` fired ("Vue" has no exact match — the fixture's label is `Vue.js`, not `Vue`); popover closes |
 | T11 | cancel-mirrors-escape | open, type "test", click Cancel | no `onChange` fired; popover closes |
 | T12 | trigger-opens-surface | click trigger | popover opens |
 | T13 | opens-with-field-focused | click trigger | field receives focus (can type immediately) |
-| T14 | focused-state-styling | trigger has focus | focus-visible ring visible (`apt-gold/25` ring) |
-| T15 | shift-enter-dismiss-in-keep-open-mode | `keepOpenOnCommit=true`, ArrowDown, Enter, then Shift+Enter | first Enter accepts and keeps popover open; field resets; Shift+Enter closes popover |
-| T16 | ok-mirrors-enter, ok-disabled-when-nothing-acceptable | open, no filter, no item highlighted | OK button is disabled (no acceptable value yet) |
+| T14 | focused-state-styling | trigger has focus | 2px focus-visible ring visible on the trigger (WCAG 2.4.7) |
+| T15 | shift-enter-dismiss-in-keep-open-mode | `keepOpenOnCommit=true`, open, ArrowDown ×1 (highlights `SvelteKit`), Enter, then Shift+Enter | first Enter fires `onChange("sveltekit", { isNew:false })` and popover stays open, with query and highlight reset to their initial (opened) state; Shift+Enter then closes the popover without firing `onChange` |
+| T16 | ok-mirrors-enter | open, no filter, no item highlighted | OK button is disabled — trimmed text is empty, so nothing is acceptable yet |
+| T17 | focus-returns-on-close | click trigger to open, then Esc | focus returns to the trigger button |
+| T18 | (see edge case: Disabling the component) | `disabled=true`, attempt to click/activate the trigger | popover does not open; `aria-expanded` stays `false` |
+| T19 | escape-cancels, cancel-mirrors-escape | `keepOpenOnCommit=true`, open, Esc (and, separately, click Cancel) | popover closes without firing `onChange`, same as when `keepOpenOnCommit` is false |
+| T20 | arrow-roves-highlight | open (no filter, `navCount=5`), ArrowUp ×1 (from no highlight) | highlight jumps to index 4 (`SolidJS`, the last row); a further ArrowDown ×1 holds at index 4 (no wrap to index 0 or to no-highlight) |
+| T21 | highlight-syncs-into-field, type-narrows-list | open, ArrowDown ×1 (highlights `SvelteKit`, field previews "SvelteKit"), then type "x" | highlight clears to no-highlight; field shows the typed text "x"; list re-filters by "x" |
+| T22 | pointer-click-commits | open (no filter), click the `React` row | `onChange("react", { isNew:false })` fired; popover closes |
 
 ## Edge Cases
 
 - **Highlight preview vs. filter**: Filtering uses the typed text, not the previewed highlight, so arrow-navigating a single match does not collapse the list; typing again replaces the preview and re-filters. Changing the query resets highlight to -1.
-- **Value resolution on the trigger**: If `value` equals an `items[i].value`, the trigger shows that item's label. Else if `allowCreate` and `value` is non-null string, the trigger shows the free text. Else it shows `triggerPlaceholder`. Falsy values (empty string, null) are treated as "no committed value", showing the placeholder.
+- **Value resolution on the trigger**: If `value` equals an `items[i].value`, the trigger shows that item's label. Else if `allowCreate` is true and `value` is not `null`, the trigger shows `value` verbatim as free text — this includes an empty string or a whitespace-only string, since `value` is never trimmed for this comparison. Otherwise (`value` is `null`, or `allowCreate` is false with no item match) the trigger shows `triggerPlaceholder`. Only `null` counts as "nothing chosen"; an empty string is treated as a committed (if unusual) free-text value whenever `allowCreate` is true.
 - **Whitespace handling**: The typed text is trimmed before matching (`text.trim().toLowerCase()`) and before being accepted as a new entry. Whitespace-only text (e.g., "   ") is not acceptable for new entries.
 - **Empty `items` array**: With no items and an empty filter, the empty message shows (if `allowCreate` is false) or only the create row shows (if `allowCreate` is true). Typing surfaces the create row when `allowCreate` and text is non-empty after trim.
-- **Clamping at list boundaries**: ArrowUp at the top (highlight = -1) moves to index 0 on next ArrowDown. ArrowDown at the bottom (highlight = `navCount - 1`) holds position. No wrapping.
-- **Case-insensitive substring matching**: The filter compares `query.trim().toLowerCase()` against `item.label.toLowerCase().includes(...)`. A query "Ve" matches "Vue", "Svelte", "Vector", etc.
+- **Clamping at list boundaries**: exact transitions, given `navCount` rows (items + create row when shown): from no highlight (`highlight = -1`), ArrowDown moves to index 0 (first row) and ArrowUp moves to index `navCount - 1` (last row) — entering from either direction lands at that direction's natural end. Once a row is highlighted, ArrowUp at index 0 holds at index 0 (no wrap to -1 or to `navCount - 1`), and ArrowDown at index `navCount - 1` holds at `navCount - 1` (no wrap to 0 or to -1). No wrapping occurs once a row is highlighted.
+- **Case-insensitive substring matching**: The filter compares `query.trim().toLowerCase()` against `item.label.toLowerCase().includes(...)`. For example, against the fixture in Conformance Test Vectors, a query "e" matches `SvelteKit`, `React`, and `Vue.js` (all contain "e" case-insensitively).
 - **Exact-match resolution**: When the user types text that exactly matches (case-insensitive) an item's label, pressing Enter accepts that item with `isNew:false`, not a new entry. Matching is done on the trimmed, lowercased text.
-- **Committed value with allowCreate**: When `allowCreate` is true and `value` is a non-null string that does not match any item value, the trigger shows the free text and `isCommittedNew` is true. The `value` is still committed, allowing the parent to track new entries across renders.
-- **Creating when a filter is active**: When `allowCreate` is true and the filter matches no items, the create row appears with the `createLabel(text)` label (using the current trimmed, non-filtered text). Clicking or accepting it commits the typed text.
-- **keepOpenOnCommit mode**: When `keepOpenOnCommit` is true, an accept (Enter, OK, or row click) does not close the popover; instead, it calls `onChange`, resets the query and highlight to their initial state (as if the popover just opened), and keeps focus in the field. Shift+Enter is the only keyboard way to dismiss; Esc and Cancel still close as usual. The parent is responsible for removing the committed item from `items` if desired.
-- **Disabling the component**: When `disabled` is true, the trigger button is non-interactive, `aria-expanded` is not managed (stays false), and `handleOpenChange` returns early without opening.
+- **Committed value with allowCreate**: When `allowCreate` is true and `value` is a non-null string that does not match any item value, the trigger shows the free text, and this "committed but not a known item" state is preserved across renders so the parent can track new entries.
+- **Creating when a filter is active**: When `allowCreate` is true and the trimmed text has no exact case-insensitive label match, the create row appears with the `createLabel(text)` label (using the current trimmed text) alongside any items the filter still matches — it is not limited to the case where the filter matches nothing. Clicking or accepting it commits the typed text.
+- **keepOpenOnCommit mode**: One rule covers dismissal in every mode: Esc, Cancel, and — only when `keepOpenOnCommit` is true — Shift+Enter all close the popover without committing. When `keepOpenOnCommit` is true, a plain accept (Enter, OK, or row click) does not close the popover; instead it calls `onChange`, resets the query and highlight to their initial state (as if the popover just opened), and keeps focus in the field — Shift+Enter is the keyboard way to signal "I'm done" without reaching for Escape or the mouse. When `keepOpenOnCommit` is false, Shift+Enter behaves exactly like plain Enter: it accepts (if something is acceptable) and closes, the same as any other accept in that mode. The parent is responsible for removing the committed item from `items` if desired.
+- **Disabling the component**: When `disabled` is true, the trigger button is non-interactive, `aria-expanded` is not managed (stays false), and the open-change handler returns early without opening the popover.
 - **Focus return behavior**: When the popover closes (via Esc, Cancel, or an accept when `keepOpenOnCommit` is false), the `Popover` component (Base UI) automatically returns focus to the trigger button.
 
 ## Configuration
@@ -181,7 +205,9 @@ Not applicable: ListChooser is a form control component without inherent URL sem
 
 ## Localization
 
-Not applicable: All text strings (labels, placeholders, messages) are passed as props, allowing the parent to provide localized strings for any language. The component does not embed any fixed text.
+All labels, placeholders, and messages (`placeholder`, `triggerPlaceholder`, `okLabel`, `cancelLabel`, `createLabel`, `emptyLabel`, `ariaLabel`, `inputLabel`) are accepted as props, so the parent can supply localized strings for any language. Each prop's default value (`"Filter or add…"`, `"Select…"`, `"OK"`, `"Cancel"`, `` `Add "${text}"` ``, `"No matches"`) is English text baked into the component signature — a caller targeting another locale MUST override every default it uses rather than rely on it.
+
+Filtering and exact-match resolution lowercase both the query and item labels (`.toLowerCase()`) for case-insensitive comparison. Casing is a locale-sensitive transform (e.g. Turkish dotless-ı), so this comparison may not behave as expected for every locale. Callers with locale-specific casing needs should pre-normalize `items` labels rather than relying on JavaScript's default, locale-unaware `toLowerCase()`.
 
 ## Accessibility Options
 
@@ -205,35 +231,65 @@ No structured logging. ListChooser is a presentational form control; it emits no
 
 ## Platform Notes
 
-- **React/Web (`packages/web/packages/ui/src/components/list-chooser.tsx`)**: A React hook-based component using `Popover`, `Input`, and `Button` primitives from the same package. The roving selection is hand-managed via state (`highlight` index). Uses `aria-activedescendant` to express the highlighted option. The field has `role="combobox"` per WAI-ARIA combobox pattern. Base UI `Popover` handles focus management on open/close. Filtering is synchronous substring matching over the in-memory `items` array; no async behavior.
+- **React/Web (`packages/web/packages/ui/src/components/list-chooser.tsx`)**: A React hook-based component using `Popover`, `Input`, and `Button` primitives from the same package. The roving selection is hand-managed via state (`highlight` index). Uses `aria-activedescendant` to express the highlighted option. The field has `role="combobox"` per WAI-ARIA combobox pattern. Focus enters the field on open via `requestAnimationFrame` (deferring until after the popover's own mount/layout); on close, focus returns to the trigger via the base `Popover` component's own focus management. Filtering is synchronous substring matching over the in-memory `items` array; no async behavior.
 
-- **SwiftUI (iOS/macOS)**: Start from `Menu` + `TextField` for the trigger and dropdown surface. Use a `@State` for the roving highlight (similar to web), a `List` (or `VStack` with scroll view) for the filtered items, and separate `Button` views for OK/Cancel. The field should be focused on open via `focused()` or `@FocusState`. For the combobox pattern, a custom `AccessibilityElement` with `rolesAndAdjustedCharacteristics` may be needed to replicate the WAI-ARIA `role="combobox"` and `aria-activedescendant` semantics. Keyboard navigation (arrow keys, Enter, Escape) is handled via `onKeyDown` on the field or via `UIKeyboardType` + custom gesture handling. Filter case-insensitive substrings using `String.localizedCaseInsensitiveContains()`. The create row is a separate conditional button or row in the list.
+- **SwiftUI (iOS/macOS)**: Use a `Button` trigger with `.popover(isPresented:)` for the disclosed surface. Use `@FocusState` to focus the filter `TextField` on open, and `.onKeyPress(.upArrow)` / `.onKeyPress(.downArrow)` / `.onKeyPress(.return)` / `.onKeyPress(.escape)` on the field to drive the roving highlight and commit/cancel. A `List` (or `ScrollView` + `LazyVStack`) renders the filtered rows, with separate `Button` views for OK/Cancel. Filter case-insensitive substrings using `String.localizedCaseInsensitiveContains()`. The create row is a separate conditional row in the list.
 
-- **Kotlin/Jetpack Compose (Android)**: Start from `OutlinedTextField` (trigger when closed) + `Popup` or `DropdownMenu` (surface). Use a `LazyColumn` for the filtered items. State management mirrors web: `highlightedIndex`, `query`, `isOpen`. Use `MutableState` or `ViewModel` for state. `ArrowUp` / `ArrowDown` key handling via `KeyEvent` in the field's `onKeyEvent` callback. The roving highlight can be expressed via `Modifier.semantics` with a custom semantic property or via Compose's testing semantics. Focus the field on open with `.focusRequester().requestFocus()`. The create row is a separate `DropdownMenuItem` or composable button. Filter strings using `contains(ignoreCase = true)`. Button bar uses `Row` with `Button` composables for OK/Cancel.
+- **Kotlin/Jetpack Compose (Android)**: Start from `OutlinedTextField` (trigger when closed) + `Popup` or `DropdownMenu` (surface). Use a `LazyColumn` for the filtered items. State management mirrors web: `highlightedIndex`, `query`, `isOpen` as `MutableState`. `ArrowUp` / `ArrowDown` key handling via `KeyEvent` in the field's `onKeyEvent` callback. Focus the field on open with a `FocusRequester`, calling `.requestFocus()` inside a `LaunchedEffect(Unit)` (or an open-triggered callback) rather than during composition. The create row is a separate `DropdownMenuItem` or composable button. Filter strings using `contains(ignoreCase = true)`. Button bar uses `Row` with `Button` composables for OK/Cancel.
 
-- **WinUI 3 / C# (.NET)**: Start from `ComboBox` control, but customize heavily since standard `ComboBox` does not support the "choose or create" dual-mode filtering. Build with `TextBox` (the filter/add field), `ListView` or `ItemsControl` (the list), and `StackPanel` with `Button` controls (OK/Cancel) in a `ContentDialog` or custom `Popup`. State management uses `INotifyPropertyChanged` or `ObservableCollection`. Bind the `Items` collection to a `CollectionViewSource` with a `Filter` predicate that implements case-insensitive substring matching (use `StringComparison.OrdinalIgnoreCase` or `CultureInfo.CurrentCulture.CompareInfo.IndexOf`). Arrow-key navigation and roving highlight are handled by a custom `SelectionModel` or via `ListViewItem` focus management (`Focus()`, `FocusManager`). The `TextBox` should auto-focus when the popup opens (`Popup.IsOpen = true`). Create row is conditionally shown in the list based on `AllowCreate && text != ""`. The `ComboBox` pattern in WinUI does not map directly; instead, build this as a custom composite control or a page-level pattern with a `TextBox`, `ListView`, and button bar in a `Popup`.
+- **AppKit / UIKit**: AppKit — an `NSPopover` anchored to an `NSButton` trigger, containing an `NSTextField` (filter/add field), an `NSTableView` (filtered rows), and a bottom `NSStackView` of `NSButton`s for OK/Cancel; the roving highlight is a manually tracked selected-row index, with arrow keys handled by overriding `keyDown(with:)` on the field or table. UIKit — a `UIPopoverPresentationController` presenting a view controller with a `UITextField`, `UITableView`, and a button bar; arrow-key support requires a hardware keyboard and explicit `UIKeyCommand` registration (e.g. `UIKeyCommand(input: UIKeyCommand.inputUpArrow, ...)`).
+
+- **WinUI 3**: Start from a `Flyout` (not `Popup`) anchored to the trigger `Button`, containing a `TextBox` (the filter/add field), a `ListView` (the filtered rows), and a `StackPanel` of `Button` controls (OK/Cancel). Filter with an `AdvancedCollectionView` (from the Windows Community Toolkit) — or a hand-filtered `ObservableCollection` — using a predicate built on `string.Contains(..., StringComparison.OrdinalIgnoreCase)`; WinUI's `ComboBox` has no `Filter` property (that is WPF's `CollectionViewSource.Filter`), so this filtering must be custom. A `Flyout` does not auto-focus its content on open, so explicitly call `filterTextBox.Focus(FocusState.Programmatic)` in the `Flyout.Opened` handler. Arrow-key roving highlight and Enter/Escape handling go in the `TextBox`'s `PreviewKeyDown` handler. Create row is conditionally shown based on `AllowCreate` and whether the trimmed text has no exact match.
 
 ## Design Decisions
 
-- **Compose `OptionMenu`'s primitives, don't fork it.** The roving selection, `aria-activedescendant`, and Popover-with-trigger shape are shared, but the single field that both filters and creates is a distinct interaction. Subclassing `OptionMenu` (fixed list + bottom "Other" row) would have entangled two models; composing the same primitives keeps each control single-responsibility.
+**Decision**: Compose `OptionMenu`'s primitives (`Popover`, `Input`, `Button`), don't fork it.
+**Rationale**: The roving selection, `aria-activedescendant`, and Popover-with-trigger shape are shared with `OptionMenu`, but the single field that both filters and creates is a distinct interaction. Subclassing `OptionMenu` (fixed list + bottom "Other" row) would have entangled two models; composing the same primitives keeps each control single-responsibility.
+**Approved**: pending
 
-- **Filter on typed text, preview the highlight.** Keeping the filter query separate from the previewed highlight label means arrow-navigation never re-filters the list out from under the user. Users can arrow through matches without the list collapsing, and typing again replaces the preview and re-filters.
+**Decision**: Filter on typed text; preview the highlight separately.
+**Rationale**: Keeping the filter query separate from the previewed highlight label means arrow-navigation never re-filters the list out from under the user. Users can arrow through matches without the list collapsing, and typing again replaces the preview and re-filters.
+**Approved**: pending
 
-- **Selection vs. commit are distinct.** Moving the highlight never fires `onChange`; only an accept (Enter, OK, or row click) commits. This allows users to explore the list without side effects, matching standard form control behavior.
+**Decision**: Selection and commit are distinct actions.
+**Rationale**: Moving the highlight never fires `onChange`; only an accept (Enter, OK, or row click) commits. This allows users to explore the list without side effects, matching standard form control behavior.
+**Approved**: pending
 
-- **No built-in async state.** `items` is a controlled in-memory prop, so loading/error belong to the caller — consistent with sibling form controls like `OptionMenu` and `RecipientInput`. This keeps the component presentational and predictable.
+**Decision**: No built-in async state.
+**Rationale**: `items` is a controlled in-memory prop, so loading/error belong to the caller — consistent with sibling form controls like `OptionMenu` and `RecipientInput`. This keeps the component presentational and predictable.
+**Approved**: pending
 
-- **Shift+Enter for dismiss in keep-open mode.** In multi-select ("collect a set") mode, users can press Enter to add another entry without closing. Shift+Enter is the keyboard way to signal "I'm done"; it mirrors the Escape key and Cancel button, completing the keyboard accessibility matrix.
+**Decision**: Esc, Cancel, and — in keep-open mode — Shift+Enter are the three ways to dismiss; plain Enter never dismisses in keep-open mode.
+**Rationale**: In multi-select ("collect a set") mode, plain Enter adds another entry without closing, so a separate keyboard signal for "I'm done" is needed alongside Esc and Cancel. Shift+Enter fills that role, completing the keyboard accessibility matrix without adding a new modal state. Outside keep-open mode, every accept already closes the popover, so Shift+Enter there is indistinguishable from plain Enter — it still accepts and closes.
+**Approved**: pending
 
-- **Exact-match text resolution.** If the trimmed, lowercased user input exactly matches an item's label, it resolves to that item with `isNew:false`, not a new free-text entry. This prevents accidental duplication when a user types an existing item's full name.
+**Decision**: Exact-match text resolution.
+**Rationale**: If the trimmed, lowercased user input exactly matches an item's label, it resolves to that item with `isNew:false`, not a new free-text entry. This prevents accidental duplication when a user types an existing item's full name.
+**Approved**: pending
 
 ## Compliance
 
-No additional compliance categories apply to this presentational control beyond the accessibility and keyboard navigation requirements stated in the Accessibility section, which align with WCAG 2.1 AA and platform design guidelines (Apple HIG, Material Design 3, Fluent 2).
+| Check | Status | Category |
+|---|---|---|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
+
+Statuses rest on the source (`list-chooser.tsx`): its ARIA roles/attributes and keyboard handlers (`role="combobox"`/`listbox`/`option`, `aria-activedescendant`, `aria-selected`, `aria-hidden` on icons, `onInputKeyDown`) support screen-reader and keyboard checks; its fixed `h-9` trigger and `py-1.5 px-2` rows fall short of the 44×44pt touch-target check; its color-token classes (`apt-gold`, `apt-text`, etc.) can't be verified for contrast or Dynamic-Type scaling from this file alone; all strings are props but the defaults are hardcoded English; and `truncate` on labels clips rather than accommodates expanded translated text, with no explicit `dir`-aware handling for RTL.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: resolve the keep-open dismissal contradiction (Esc/Cancel/Shift+Enter all close; Shift+Enter equals plain Enter when not in keep-open mode); define create-row visibility as "trimmed text non-empty with no exact case-insensitive label match" and apply it in the callout, States table, and edge cases; spell out exact ArrowUp/ArrowDown transitions at no-highlight, first, and last rows; add external references (APG combobox pattern, WCAG 2.4.7, 2.5.5); correct wrong/nonexistent SwiftUI, Compose, and WinUI 3 APIs and add the missing AppKit/UIKit platform note; convert Compliance to the required linked-check table; reformat Design Decisions into Decision/Rationale/Approved entries; narrow T16's citation to `ok-mirrors-enter`; add an `items` fixture table and rewrite the test vectors for consistency with it, plus new vectors for focus-returns-on-close, the disabled trigger, Esc/Cancel in keep-open mode, boundary clamping, preview-clearing on typing, and clicking an existing row; fix the 44×44pt touch-target unit math and downgrade it to SHOULD to match the actual 36px implementation; correct the Localization section's "no fixed text" claim and note the locale-sensitivity of the `toLowerCase()` casing transform; make focused-state-styling testable against a single WCAG 2.4.7 criterion; resolve the trigger value-resolution contradiction using the source's actual null-only placeholder rule; and move internal names (`handleOpenChange`, `isCommittedNew`, `requestAnimationFrame`) out of the cross-platform Accessibility/Edge Cases text. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Expand platform notes with guidance for Swift, Kotlin, and WinUI 3 implementations; add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); clarify appearance specs with specific measurements and color tokens; add focused-state-styling requirement and T14, T15, T16 test vectors; document Shift+Enter behavior in keep-open mode. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + recipe. |

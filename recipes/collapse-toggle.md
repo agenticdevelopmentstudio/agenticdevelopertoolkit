@@ -3,7 +3,7 @@ id: f09feb7c-6778-445a-8a68-863c5d60b5cc
 title: CollapseToggle
 domain: agenticdevelopertoolkit://recipes/collapse-toggle
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -35,22 +35,22 @@ A minimal toggle control that switches between expanded and collapsed states of 
 
 ## Behavioral Requirements
 
-- **must-toggle-state-on-click**: Clicking the button MUST invoke the `onToggle` callback with the click event.
-- **must-forward-event**: The `onToggle` callback MUST receive the React `MouseEvent` so the caller can inspect modifier keys (Ctrl/⌘-click).
-- **must-render-glyph-collapsed**: When `collapsed` is `true`, the button MUST display the «»» (right-pointing chevron, U+00BB) glyph.
-- **must-render-glyph-expanded**: When `collapsed` is `false`, the button MUST display the ««» (left-pointing chevron, U+00AB) glyph.
-- **must-set-aria-label**: The button's `aria-label` MUST be set to "Collapse {label}" when `collapsed` is `false`, and "Expand {label}" when `collapsed` is `true`, where `{label}` is the value of the `label` prop.
-- **must-set-aria-expanded**: The button's `aria-expanded` attribute MUST be set to `true` when `collapsed` is `false`, and `false` when `collapsed` is `true`.
-- **must-set-title-attribute**: The button's `title` attribute MUST match the `aria-label` value to provide tooltip text.
-- **must-be-button-type**: The button element MUST have `type="button"` to prevent form submission.
-- **should-set-aria-controls**: If the `controls` prop is provided, the button's `aria-controls` attribute SHOULD be set to that value to indicate the region being toggled.
-- **must-accept-className**: The component MUST accept an optional `className` prop and apply it to the button element via a class-merging utility.
+- **click-invokes-on-toggle**: Clicking the button MUST invoke the `onToggle` callback with the click event.
+- **forwarded-click-event**: The `onToggle` callback MUST receive the React `MouseEvent` so the caller can inspect modifier keys (Ctrl/⌘-click).
+- **glyph-when-collapsed**: When `collapsed` is `true`, the button MUST display the `»` (RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK, U+00BB) glyph.
+- **glyph-when-expanded**: When `collapsed` is `false`, the button MUST display the `«` (LEFT-POINTING DOUBLE ANGLE QUOTATION MARK, U+00AB) glyph.
+- **aria-label-text**: The button's `aria-label` MUST be set to "Collapse {label}" when `collapsed` is `false`, and "Expand {label}" when `collapsed` is `true`, where `{label}` is the value of the `label` prop.
+- **aria-expanded-state**: The button's `aria-expanded` attribute MUST be set to `true` when `collapsed` is `false`, and `false` when `collapsed` is `true`.
+- **title-attribute-text**: The button's `title` attribute MUST match the `aria-label` value to provide tooltip text.
+- **button-type**: The button element MUST have `type="button"` to prevent form submission.
+- **aria-controls-optional**: If the `controls` prop is provided, the button's `aria-controls` attribute SHOULD be set to that value to indicate the region being toggled.
+- **classname-merge**: The component MUST accept an optional `className` prop and apply it to the button element; when a caller class conflicts with one of the component's default classes for the same CSS property, the caller's class MUST override the default.
 
 ## Appearance
 
-- **Corner radius**: Rounded corners (`rounded` in Tailwind, approximately 0.375rem or 6px)
+- **Corner radius**: Rounded corners (`rounded` in Tailwind, 0.25rem or 4px)
 - **Padding**: `px-1` (0.25rem horizontal, no explicit vertical padding)
-- **Font**: Monospace weight, proportional size (inherits from parent; uses `font-mono`)
+- **Font**: Font family monospace (`font-mono`); weight and size are inherited from the parent, not set by the component
 - **Background**: Transparent (no background color specified)
 - **Foreground/Text**: Muted text color by default (`text-apt-text-muted`), changes to primary text color on hover (`hover:text-apt-text`)
 - **Border**: None specified
@@ -63,9 +63,9 @@ A minimal toggle control that switches between expanded and collapsed states of 
 |-------|------------------|
 | Default | Muted text color, no outline |
 | Hover | Text color changes to primary (`text-apt-text`) |
-| Focus-visible | Blue ring outline (`focus-visible:ring-2 focus-visible:ring-apt-gold/40`) with 40% opacity gold color |
-| Collapsed | Displays «»» glyph |
-| Expanded | Displays ««» glyph |
+| Focus-visible | Gold ring outline (`focus-visible:ring-2 focus-visible:ring-apt-gold/40`) at 40% opacity |
+| Collapsed | Displays `»` glyph |
+| Expanded | Displays `«` glyph |
 
 ## Accessibility
 
@@ -80,25 +80,26 @@ A minimal toggle control that switches between expanded and collapsed states of 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| collapse-toggle-001 | must-render-glyph-collapsed | `collapsed={true}, label="Topic List"` | Button displays «»» glyph |
-| collapse-toggle-002 | must-render-glyph-expanded | `collapsed={false}, label="Topic List"` | Button displays ««» glyph |
-| collapse-toggle-003 | must-set-aria-label-collapsed | `collapsed={true}, label="Topic List"` | `aria-label="Expand Topic List"` |
-| collapse-toggle-004 | must-set-aria-label-expanded | `collapsed={false}, label="Topic List"` | `aria-label="Collapse Topic List"` |
-| collapse-toggle-005 | must-set-aria-expanded-collapsed | `collapsed={true}` | `aria-expanded="false"` |
-| collapse-toggle-006 | must-set-aria-expanded-expanded | `collapsed={false}` | `aria-expanded="true"` |
-| collapse-toggle-007 | must-set-title-attribute | `collapsed={true}, label="Items"` | `title="Expand Items"` |
-| collapse-toggle-008 | must-be-button-type | Any props | `type="button"` on element |
-| collapse-toggle-009 | must-toggle-state-on-click | User clicks button | `onToggle` callback invoked with click event |
-| collapse-toggle-010 | must-forward-event | User Ctrl+clicks button | `onToggle` callback receives event with `ctrlKey=true` |
-| collapse-toggle-011 | should-set-aria-controls | `controls="item-list"` | `aria-controls="item-list"` |
-| collapse-toggle-012 | should-set-aria-controls-optional | `controls` not provided | `aria-controls` attribute absent or empty |
-| collapse-toggle-013 | must-accept-className | `className="custom-class"` | Custom class appears in rendered button className |
+| collapse-toggle-001 | glyph-when-collapsed | `collapsed={true}, label="Topic List"` | Button displays `»` glyph |
+| collapse-toggle-002 | glyph-when-expanded | `collapsed={false}, label="Topic List"` | Button displays `«` glyph |
+| collapse-toggle-003 | aria-label-text | `collapsed={true}, label="Topic List"` | `aria-label="Expand Topic List"` |
+| collapse-toggle-004 | aria-label-text | `collapsed={false}, label="Topic List"` | `aria-label="Collapse Topic List"` |
+| collapse-toggle-005 | aria-expanded-state | `collapsed={true}` | `aria-expanded="false"` |
+| collapse-toggle-006 | aria-expanded-state | `collapsed={false}` | `aria-expanded="true"` |
+| collapse-toggle-007 | title-attribute-text | `collapsed={true}, label="Items"` | `title="Expand Items"` |
+| collapse-toggle-008 | button-type | Any props | `type="button"` on element |
+| collapse-toggle-009 | click-invokes-on-toggle | User clicks button | `onToggle` callback invoked with click event |
+| collapse-toggle-010 | forwarded-click-event | User Ctrl+clicks button | `onToggle` callback receives event with `ctrlKey=true` |
+| collapse-toggle-011 | aria-controls-optional | `controls="item-list"` | `aria-controls="item-list"` |
+| collapse-toggle-012 | aria-controls-optional | `controls` not provided | `aria-controls` attribute is absent |
+| collapse-toggle-013 | classname-merge | `className="custom-class"` | Custom class appears in rendered button className |
+| collapse-toggle-014 | click-invokes-on-toggle | User focuses the button and presses Enter or Space | `onToggle` callback invoked with the resulting click event (native `<button>` key-activation behavior) |
+| collapse-toggle-015 | forwarded-click-event | User ⌘-clicks the button | `onToggle` callback receives the event with `metaKey=true` |
 
 ## Edge Cases
 
-- **Label contains special characters**: The label is used directly in the aria-label; special characters (quotes, symbols) MUST be handled safely by the framework's label rendering. Behavior: label is rendered as-is into aria-label.
-- **Empty or null label**: The source interpolates `label` straight into `${collapsed ? "Expand" : "Collapse"} ${label}` with no guard, trim, or fallback. An empty string therefore produces the verb followed by a trailing space — `aria-label="Expand "` and the same value in `title` — and the button still renders its glyph and still fires `onToggle`. `label` is typed as a required `string`, so `null` or `undefined` is a compile-time error; if one reaches the component at runtime it is interpolated as the literal text `"null"` or `"undefined"`. Implementations MUST reproduce this pass-through behavior and MUST NOT substitute a default region name.
-- **Missing `label` prop**: The component requires `label` as a non-optional prop; if not provided, TypeScript will enforce a compile-time error. Runtime behavior: undefined label results in aria-label like "Expand undefined".
+- **Empty, null, or missing label**: `label` is typed as a required `string`, so omitting it is a compile-time error. At runtime the source interpolates `label` straight into `${collapsed ? "Expand" : "Collapse"} ${label}` with no guard, trim, or fallback: an empty string produces the verb followed by a trailing space — `aria-label="Expand "` and the same value in `title` — and the button still renders its glyph and still fires `onToggle`. If `null`/`undefined` reaches the component at runtime anyway (bypassing the type system), it is interpolated as the literal text `"null"` or `"undefined"` (e.g. `aria-label="Expand undefined"`). Implementations MUST reproduce this pass-through behavior and MUST NOT substitute a default region name.
+- **Label contains special characters**: The label is interpolated verbatim into the template literal that builds `aria-label` and `title`, with no escaping, trimming, or HTML-interpretation step. Behavior: whatever string is passed (quotes, symbols, markup-looking text) is rendered as-is into the accessible name and tooltip, and is never HTML-interpreted.
 - **Multiple rapid clicks**: Each click triggers `onToggle`. The caller is responsible for debouncing or state management; the component renders only the current `collapsed` state.
 - **`controls` prop targets non-existent element**: If `aria-controls` points to an element that does not exist, no runtime error occurs; the attribute is still set. Assistive technology behavior is undefined.
 - **Dynamic className changes**: If `className` is updated while the button is rendered, the new class is applied immediately via the class-merging utility.
@@ -155,37 +156,76 @@ Not applicable: The component has no built-in logging or diagnostic output.
 ## Platform Notes
 
 - **React/Web (source)**: The component is defined in `packages/web/packages/ui/src/components/collapse-toggle.tsx`. It uses React hooks conventions (functional component), standard HTML button element with ARIA attributes, and Tailwind CSS for styling via a `cn()` utility function. The click handler is a React `MouseEvent<HTMLButtonElement>`.
-- **SwiftUI**: No direct equivalent in SwiftUI's component library. A developer would build a custom `Button` with a conditional image (SF Symbols `chevron.right` / `chevron.left`) and apply `accessibilityLabel()` and `accessibilityAddTraits()` to replicate the behavior.
-- **Compose (Android/Kotlin)**: Use `Button` or `IconButton` with a conditional `Icon` (Material Icons chevron left/right). Apply `contentDescription` with dynamic text matching the React component's aria-label pattern. Use `modifier.semantics { expandedState = ... }` for accessibility.
-- **AppKit / UIKit**: On macOS, use `NSButton` with `setButtonType(.momentaryChange)` and toggle images. On iOS, use `UIButton` with `configurationUpdateHandler` to swap images. Set `accessibilityLabel` and `accessibilityHint` to match the ARIA pattern. Assign `accessibilityTraits = .button`.
-- **WinUI 3**: Use a `Button` control with a `TextBlock` displaying the «»» or ««» character (U+00BB, U+00AB). Set `AutomationProperties.Name` to the state-dependent label ("Expand {label}" / "Collapse {label}"). Use a `VisualStateManager` state group to apply hover and focus styles. The `Click` event handler receives the click source; detect modifier keys via `CoreWindow.GetForCurrentThread().GetKeyState()` or `InputKeyboardSource` if modifier inspection is needed.
+- **SwiftUI**: No direct equivalent in SwiftUI's component library. Build a custom `Button` with a conditional glyph — SF Symbols `chevron.right`/`chevron.left` (the platform substitution recorded in Design Decisions), or the literal `»`/`«` characters in a `Text` view for exact visual parity. Apply `.accessibilityLabel()` for the "Expand/Collapse {label}" text, and `.accessibilityValue()` (e.g. "collapsed"/"expanded") so the state itself is exposed to VoiceOver — the label text alone does not convey state the way `aria-expanded` does.
+- **Compose (Android/Kotlin)**: Use `Button` or `IconButton` with a conditional `Icon` (Material Icons chevron left/right, the same platform substitution). Apply `contentDescription` with dynamic text matching the source's aria-label pattern, and expose the expanded/collapsed state via `Modifier.semantics { stateDescription = if (collapsed) "collapsed" else "expanded" }` or the `expand`/`collapse` semantics actions — Compose has no `expandedState` semantics property.
+- **AppKit / UIKit**: On macOS, use `NSButton` with `setButtonType(.momentaryChange)` and toggle images (or the literal `»`/`«` glyph as the button's title). Expose the expanded/collapsed state through the `NSAccessibilityProtocol` methods `isAccessibilityExpanded()` / `setAccessibilityExpanded()` (`NSAccessibilityExpanded`), not `accessibilityHint`, which does not map to `aria-expanded`. On iOS, use `UIButton` with `configurationUpdateHandler` to swap images; UIKit has no expanded/collapsed accessibility concept, so set `accessibilityValue` to "expanded"/"collapsed" to carry the state, and `accessibilityLabel` for the "Expand/Collapse {label}" text. Assign `accessibilityTraits = .button`.
+- **WinUI 3**: Use a `Button` control with a `TextBlock` displaying the `»` or `«` character (U+00BB, U+00AB). Set `AutomationProperties.Name` to the state-dependent label ("Expand {label}" / "Collapse {label}"), and implement the `IExpandCollapseProvider` automation pattern (`ExpandCollapseState.Expanded` / `.Collapsed`) so assistive technology receives the state the way `aria-expanded` does on web. Use a `VisualStateManager` state group to apply hover and focus styles. The `Click` event handler receives the click source; detect modifier keys via `InputKeyboardSource.GetKeyStateForCurrentThread` if modifier inspection is needed.
 
 ## Design Decisions
 
-1. **Unicode glyphs for state indication**: The component uses «»» (right chevron) for collapsed and ««» (left chevron) for expanded. This is a visual convention for "close" (chevron pointing away) and "open" (chevron pointing inward). This mirrors common UI patterns in mail clients and hierarchical lists. Callers who prefer different glyphs (arrows, +/-, etc.) should fork or extend the component.
+1. **Unicode glyphs for state indication**
+   **Decision**: The component uses `»` (RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK, U+00BB) for collapsed and `«` (LEFT-POINTING DOUBLE ANGLE QUOTATION MARK, U+00AB) for expanded — not chevron icons or an image asset — and the glyph is fixed on purpose; the component does not expose a way to swap in different glyphs (arrows, +/-, etc.).
+   **Rationale**: A single character needs no icon asset and follows the direction convention of "closed" (pointing away) versus "open" (pointing inward).
+   **Approved**: pending
 
-2. **event forwarding in onToggle**: The `onToggle` callback receives the full React `MouseEvent` rather than just a boolean. This enables callers to detect Ctrl/⌘-click for hierarchical toggle behavior (noted in the source comment: "apply this toggle to every list"). This trades callback simplicity for power; callers uninterested in modifiers ignore the event parameter.
+2. **Platform glyph substitution**
+   **Decision**: Native platforms other than WinUI 3 substitute a platform-native chevron icon (SF Symbols `chevron.right`/`chevron.left` on Apple platforms, Material Icons chevron left/right on Compose) for the literal `»`/`«` characters; only the WinUI 3 note renders the same U+00BB/U+00AB characters the web source does.
+   **Rationale**: Apple and Android platform conventions render this kind of iconography through vector icon assets rather than a typographic character in a text control, so requiring the literal character everywhere would fight the platform's own idioms; WinUI 3's `TextBlock`-based button has no equivalent native chevron icon control, so it keeps the literal character.
+   **Approved**: pending
 
-3. **aria-expanded always inverted from collapsed**: The `aria-expanded` attribute is set to `!collapsed` (the opposite of the `collapsed` prop). This ensures the accessible state always reflects the logical expanded state of the controlled region: when `collapsed=true` (user sees the "expand" label and «»» glyph), `aria-expanded=false` signals the region is not yet expanded. This is the correct ARIA mapping.
+3. **Event forwarding in onToggle**
+   **Decision**: The `onToggle` callback receives the full React `MouseEvent` rather than just a boolean.
+   **Rationale**: This enables callers to detect Ctrl/⌘-click for hierarchical toggle behavior (noted in the source comment: "apply this toggle to every list"). This trades callback simplicity for power; callers uninterested in modifiers ignore the event parameter.
+   **Approved**: pending
 
-4. **No size constraints**: The button's size is determined entirely by the inherited font size plus the `px-1` padding; the source sets no width, height, or minimum. This is a deliberate trade for placement flexibility — the same control sits in a narrow rail beside TopicDetail and in the theme-editor's column headers — and it moves responsibility for the hit area onto the caller's layout. The Accessibility section records the open question of what minimum that layout has to guarantee.
+4. **aria-expanded always inverted from collapsed**
+   **Decision**: The `aria-expanded` attribute is set to `!collapsed` (the opposite of the `collapsed` prop).
+   **Rationale**: This ensures the accessible state always reflects the logical expanded state of the controlled region: when `collapsed=true` (user sees the "expand" label and `»` glyph), `aria-expanded=false` signals the region is not yet expanded. This is the correct ARIA mapping.
+   **Approved**: pending
 
-5. **Title attribute mirrors aria-label**: The `title` attribute is set to the same text as `aria-label`. This provides a tooltip for mouse users without duplicating logic; however, it means the tooltip also says "Expand {label}" or "Collapse {label}", which is self-evident to sighted users and potentially redundant.
+5. **No size constraints**
+   **Decision**: The button's size is determined entirely by the inherited font size plus the `px-1` padding; the source sets no width, height, or minimum.
+   **Rationale**: This is a deliberate trade for placement flexibility — the same control sits in a narrow rail beside TopicDetail and in the theme-editor's column headers — and it moves responsibility for the hit area onto the caller's layout. The Accessibility section records the open question of what minimum that layout has to guarantee.
+   **Approved**: pending
+
+6. **Title attribute mirrors aria-label**
+   **Decision**: The `title` attribute is set to the same text as `aria-label`.
+   **Rationale**: This provides a tooltip for mouse users without duplicating logic; however, it means the tooltip also says "Expand {label}" or "Collapse {label}", which is self-evident to sighted users and potentially redundant.
+   **Approved**: pending
+
+7. **Minimum hit area is undecided**
+   **Decision**: Whether the toggle button itself must guarantee a minimum 44×44pt/48×48dp hit area, or whether that responsibility stays with the caller's surrounding row layout, is undecided.
+   **Rationale**: The source sets no width, height, or minimum size — only `px-1` padding — so at typical rail font sizes the rendered hit area falls under the platform minimum tap-target guidelines (see `#accessibility`). Settling this requires measuring the rendered button at its two call sites (TopicDetail rail, theme-editor column list) against the 44×44pt floor.
+   **Approved**: pending
+
+8. **RTL glyph mirroring is undecided**
+   **Decision**: Whether the `»`/`«` glyphs should mirror (swap) for right-to-left locales is undecided.
+   **Rationale**: The source hardcodes the glyphs as literal, unmirrored characters (see `#localization`); a caller in an RTL locale sees the same visual direction as in LTR, which may read backwards for languages where "closed" and "open" reverse convention.
+   **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Touch target minimum size | Not verified | Accessibility |
-| Keyboard navigation support | Passed | Accessibility |
-| ARIA role and attributes | Passed | Accessibility |
-| Localization support | Not implemented | Internationalization |
-| High contrast mode | Not verified | Accessibility |
-| Reduce Motion preference | Not implemented | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+
+The `passed` rows rest on the source's literal ARIA attributes and native `<button>` semantics, its absence of any `transition-*`/`animate-*` class, and `label`'s untouched pass-through of any Unicode input; the `failed` rows rest on the source's own hardcoded English verbs, its unmirrored `»`/`«` glyphs, and its documented under-44×44pt hit area; the `partial` rows reflect that the source inherits font size and theme color/spacing tokens whose actual scaling, contrast, and overflow behavior the source code cannot itself confirm.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case with citations updated throughout; corrected glyph terminology (guillemets, not chevrons) and platform API names (Compose semantics, WinUI keyboard-state API, WinUI ExpandCollapse pattern, AppKit/UIKit state exposure); reformatted Design Decisions and Compliance to the standard form and corrected appearance values (corner radius, font, focus-ring color); added keyboard-activation and ⌘-click test vectors, tightened the aria-controls-absent vector, and merged the duplicate empty/missing-label edge cases; recorded platform-glyph-substitution, minimum-hit-area, and RTL-glyph-mirroring as pending Design Decisions |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Replace unresolved review markers with the source's actual behavior for empty label, localization, and accessibility display options; narrow the open tap-target question to the Accessibility section |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source at packages/web/packages/ui/src/components/collapse-toggle.tsx |

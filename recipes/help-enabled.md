@@ -3,7 +3,7 @@ id: fcb8a0a4-2446-46f9-99bb-49b0317529d4
 title: HelpEnabled
 domain: agenticdevelopertoolkit://recipes/help-enabled
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -11,13 +11,19 @@ modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: Interactive text wrapper that reveals contextual help via a popover on hover
-  or focus.
+summary: Interactive text wrapper that reveals a hover/focus badge and opens contextual
+  help in a popover on click or activation.
 platforms:
 - typescript
 - web
-tags: []
-depends-on: []
+tags:
+- help
+- popover
+- inline-help
+depends-on:
+- agenticdevelopertoolkit://recipes/popover
+- agenticdevelopertoolkit://recipes/help-popover
+- agenticdevelopertoolkit://recipes/help-content
 related: []
 references: []
 approved-by: ''
@@ -28,27 +34,30 @@ approved-date: ''
 
 ## Overview
 
-HelpEnabled wraps text or labels to make them interactive help triggers. When a user hovers over or focuses the element, it reveals a small information badge and opens a popover displaying help content. This component is designed for inline help on headlines, labels, and other text regions where additional context is valuable without blocking the primary content.
+HelpEnabled wraps text or labels to make them interactive help triggers. Hovering over or focusing the element reveals a small information badge; clicking or activating the element opens a popover displaying the help content. This component is designed for inline help on headlines, labels, and other text regions where additional context is valuable without blocking the primary content.
 
 ## Behavioral Requirements
 
-- **must-render-children**: Component MUST render the provided `children` prop as the primary text content.
-- **must-render-badge**: Component MUST render an Info icon badge adjacent to the children.
-- **must-accept-id-prop**: Component MUST accept an `id` prop (string) to look up help content in the help store.
-- **must-open-popover-on-trigger**: Component MUST open a Popover containing help content when the trigger element is clicked or activated.
-- **must-show-popover-content**: Component MUST render a HelpPopoverContent component with the retrieved help entry inside the Popover.
-- **must-accept-fallback**: Component MUST accept an optional `fallback` prop (string) to display when no help entry exists for the given `id`.
-- **must-accept-classname**: Component MUST accept an optional `className` prop and apply it to the root element.
-- **must-render-plain-text-fallback**: When no help entry exists for the `id` and no `fallback` is provided, component MUST render the children as plain text in a span element without opening a popover.
-- **must-mark-plain-text-variant**: Component MUST apply `data-slot="help-enabled-plain"` to the span when rendering the plain text fallback variant.
-- **must-preserve-layout-on-missing-entry**: Component MUST preserve the `className` prop on the plain text fallback to maintain layout and styling applied by the caller.
-- **must-warn-on-missing-entry**: Component MUST emit a console warning once per missing help `id` (throttled by `id`, not per render) indicating the missing help entry.
-- **must-mark-interactive-variant**: Component MUST apply `data-slot="help-enabled"` to the PopoverTrigger element when rendering the interactive variant.
-- **must-hide-badge-by-default**: Component MUST render the Info badge with `opacity-0` by default so it does not reflow the layout.
-- **must-show-badge-on-hover**: Component MUST transition the badge to `opacity-70` when the user hovers over the trigger element.
-- **must-show-badge-on-focus**: Component MUST transition the badge to `opacity-70` when the trigger element receives keyboard focus.
-- **must-show-badge-when-popover-open**: Component MUST transition the badge to `opacity-70` when the popover is open.
-- **must-mark-badge-aria-hidden**: Component MUST apply `aria-hidden="true"` to the Info badge icon.
+- **renders-children**: Component MUST render the provided `children` prop as the primary text content.
+- **renders-badge**: Component MUST render an Info icon badge adjacent to the children.
+- **marks-badge-data-slot**: Component MUST apply `data-slot="help-enabled-badge"` to the Info icon badge.
+- **accepts-id-prop**: Component MUST accept an `id` prop (string) to look up help content in the help store.
+- **opens-popover-on-trigger**: Component MUST open a Popover containing help content when the trigger element is clicked or activated.
+- **shows-popover-content**: Component MUST render a HelpPopoverContent component with the retrieved help entry inside the Popover.
+- **accepts-fallback**: Component MUST accept an optional `fallback` prop (string) to display when no help entry exists for the given `id`.
+- **wraps-fallback-as-info-entry**: When `fallback` is provided and no stored entry exists for `id`, Component MUST wrap the fallback string in a HelpEntry with `flavor: "info"` before rendering it in the popover.
+- **suppresses-warning-when-fallback-given**: Component MUST NOT emit the missing-entry console warning when a `fallback` prop is provided, even though `id` has no stored entry.
+- **accepts-classname**: Component MUST accept an optional `className` prop and apply it to the root element.
+- **renders-plain-text-fallback**: When no help entry exists for the `id` and no `fallback` is provided, component MUST render the children as plain text in a span element without opening a popover.
+- **marks-plain-text-variant**: Component MUST apply `data-slot="help-enabled-plain"` to the span when rendering the plain text fallback variant.
+- **preserves-layout-on-missing-entry**: Component MUST preserve the `className` prop on the plain text fallback to maintain layout and styling applied by the caller.
+- **warns-on-missing-entry**: Component MUST emit a console warning once per missing help `id` (throttled by `id`, not per render) indicating the missing help entry.
+- **marks-interactive-variant**: Component MUST apply `data-slot="help-enabled"` to the PopoverTrigger element when rendering the interactive variant.
+- **badge-hidden-by-default**: Component MUST render the Info badge at 0 opacity by default so it does not reflow the layout.
+- **shows-badge-on-hover**: Component MUST transition the badge to 70% opacity when the user hovers over the trigger element.
+- **shows-badge-on-focus**: Component MUST transition the badge to 70% opacity when the trigger element receives keyboard focus.
+- **shows-badge-when-popover-open**: Component MUST transition the badge to 70% opacity when the popover is open.
+- **marks-badge-aria-hidden**: Component MUST apply `aria-hidden="true"` to the Info badge icon.
 
 ## Appearance
 
@@ -81,6 +90,7 @@ HelpEnabled wraps text or labels to make them interactive help triggers. When a 
 
 - **Role**: The interactive variant (with help entry) acts as a button that opens a popover. The component does not explicitly set role; it relies on Popover and PopoverTrigger to establish the correct semantics.
 - **Label**: The trigger element contains the children text as its accessible label.
+- **Screen reader announcement of the trigger**: HelpEnabled does not itself set `aria-haspopup`/`aria-expanded` or an accessible description beyond the children text; it delegates that to `PopoverTrigger` (Base UI's `Popover.Trigger`), which applies `aria-haspopup` and `aria-expanded` automatically to the element it renders. The accessible name remains only the children text — no additional description such as "Show help" is added.
 - **Badge accessibility**: The Info icon badge is marked `aria-hidden="true"` as it is a visual affordance that duplicates the interactive nature of the parent element.
 - **Focus**: The trigger element is focusable via keyboard (Tab key) and displays a visible focus indicator (gold ring).
 - **Popover context**: The help content is announced by the popover's own accessibility attributes (out of scope for this component).
@@ -90,24 +100,24 @@ HelpEnabled wraps text or labels to make them interactive help triggers. When a 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| help-enabled-001 | must-render-children | `<HelpEnabled id="test-id">Help Text</HelpEnabled>` with valid help entry | "Help Text" appears in the document |
-| help-enabled-002 | must-render-badge | `<HelpEnabled id="test-id">Help Text</HelpEnabled>` with valid help entry | Info icon badge is rendered next to the text with `data-slot="help-enabled-badge"` |
-| help-enabled-003 | must-accept-id-prop | `<HelpEnabled id="unique-id">Text</HelpEnabled>` | Component calls `useHelpEntry` with `id="unique-id"` to retrieve help content |
-| help-enabled-004 | must-open-popover-on-trigger | User clicks the trigger element | Popover opens and displays help content |
-| help-enabled-005 | must-show-popover-content | `<HelpEnabled id="test-id">Text</HelpEnabled>` with valid entry `{ body: "Help", flavor: "info" }` | HelpPopoverContent is rendered inside the Popover with the entry |
-| help-enabled-006 | must-accept-fallback | `<HelpEnabled id="no-entry" fallback="Fallback help">Text</HelpEnabled>` with no stored entry | Popover opens with fallback text in an `info` flavor entry |
-| help-enabled-007 | must-accept-classname | `<HelpEnabled id="test-id" className="custom-class">Text</HelpEnabled>` with valid entry | `custom-class` is applied to the PopoverTrigger root element |
-| help-enabled-008 | must-render-plain-text-fallback | `<HelpEnabled id="no-entry">Text</HelpEnabled>` with no stored entry and no fallback | Renders as plain text in a span; no popover opens |
-| help-enabled-009 | must-mark-plain-text-variant | `<HelpEnabled id="no-entry">Text</HelpEnabled>` with no stored entry and no fallback | span element has `data-slot="help-enabled-plain"` attribute |
-| help-enabled-010 | must-preserve-layout-on-missing-entry | `<HelpEnabled id="no-entry" className="layout-class">Text</HelpEnabled>` with no entry and no fallback | `layout-class` is preserved on the plain text span |
-| help-enabled-011 | must-warn-on-missing-entry | First render of `<HelpEnabled id="unknown">Text</HelpEnabled>` with no entry and no fallback | Console outputs warning: `[HelpEnabled] no help entry for id "unknown" — rendering plain text` |
-| help-enabled-012 | must-warn-on-missing-entry | Second render of `<HelpEnabled id="unknown">Text</HelpEnabled>` in same session | No additional console warning (warning throttled by id) |
-| help-enabled-013 | must-mark-interactive-variant | `<HelpEnabled id="test-id">Text</HelpEnabled>` with valid entry | PopoverTrigger root has `data-slot="help-enabled"` attribute |
-| help-enabled-014 | must-hide-badge-by-default | Component renders with valid entry | Info badge has `opacity-0` class in default state |
-| help-enabled-015 | must-show-badge-on-hover | User hovers over trigger element | Badge transitions to `opacity-70` via `group-hover:opacity-70` |
-| help-enabled-016 | must-show-badge-on-focus | User tabs to trigger element with keyboard | Badge transitions to `opacity-70` via `group-focus-visible:opacity-70` |
-| help-enabled-017 | must-show-badge-on-popover-open | Popover is open | Badge has `opacity-70` via `group-data-[popup-open]:opacity-70` |
-| help-enabled-018 | must-mark-badge-aria-hidden | Component renders badge | Info icon has `aria-hidden="true"` |
+| help-enabled-001 | renders-children | `<HelpEnabled id="test-id">Help Text</HelpEnabled>` with valid help entry | "Help Text" appears in the document |
+| help-enabled-002 | renders-badge, marks-badge-data-slot | `<HelpEnabled id="test-id">Help Text</HelpEnabled>` with valid help entry | Info icon badge is rendered next to the text with `data-slot="help-enabled-badge"` |
+| help-enabled-003 | accepts-id-prop | `<HelpEnabled id="unique-id">Text</HelpEnabled>` with a stored entry `{ body: "Stored help" }` for `"unique-id"` | The popover shows "Stored help" — the entry stored for `unique-id` |
+| help-enabled-004 | opens-popover-on-trigger | User clicks the trigger element | Popover opens and displays help content |
+| help-enabled-005 | shows-popover-content | `<HelpEnabled id="test-id">Text</HelpEnabled>` with valid entry `{ body: "Help", flavor: "info" }` | HelpPopoverContent is rendered inside the Popover with the entry |
+| help-enabled-006 | accepts-fallback, wraps-fallback-as-info-entry, suppresses-warning-when-fallback-given | `<HelpEnabled id="no-entry" fallback="Fallback help">Text</HelpEnabled>` with no stored entry | Popover opens with fallback text in an `info` flavor entry; no console warning is emitted |
+| help-enabled-007 | accepts-classname | `<HelpEnabled id="test-id" className="custom-class">Text</HelpEnabled>` with valid entry | `custom-class` is applied to the PopoverTrigger root element |
+| help-enabled-008 | renders-plain-text-fallback | `<HelpEnabled id="no-entry">Text</HelpEnabled>` with no stored entry and no fallback | Renders as plain text in a span; no popover opens |
+| help-enabled-009 | marks-plain-text-variant | `<HelpEnabled id="no-entry">Text</HelpEnabled>` with no stored entry and no fallback | span element has `data-slot="help-enabled-plain"` attribute |
+| help-enabled-010 | preserves-layout-on-missing-entry | `<HelpEnabled id="no-entry" className="layout-class">Text</HelpEnabled>` with no entry and no fallback | `layout-class` is preserved on the plain text span |
+| help-enabled-011 | warns-on-missing-entry | First render of `<HelpEnabled id="unknown">Text</HelpEnabled>` with no entry and no fallback | Console outputs warning: `[HelpEnabled] no help entry for id "unknown" — rendering plain text` |
+| help-enabled-012 | warns-on-missing-entry | Second render of `<HelpEnabled id="unknown">Text</HelpEnabled>` in same session | No additional console warning (warning throttled by id) |
+| help-enabled-013 | marks-interactive-variant | `<HelpEnabled id="test-id">Text</HelpEnabled>` with valid entry | PopoverTrigger root has `data-slot="help-enabled"` attribute |
+| help-enabled-014 | badge-hidden-by-default | Component renders with valid entry | Badge's computed opacity is 0 |
+| help-enabled-015 | shows-badge-on-hover | User hovers over trigger element | Badge's computed opacity transitions to 0.7 |
+| help-enabled-016 | shows-badge-on-focus | User tabs to trigger element with keyboard | Badge's computed opacity transitions to 0.7 |
+| help-enabled-017 | shows-badge-when-popover-open | Popover is open | Badge's computed opacity is 0.7 |
+| help-enabled-018 | marks-badge-aria-hidden | Component renders badge | Info icon has `aria-hidden="true"` |
 
 ## Edge Cases
 
@@ -117,7 +127,7 @@ HelpEnabled wraps text or labels to make them interactive help triggers. When a 
 - **Very long children text**: Component does not limit text length. Layout depends on caller-provided `className` and page context.
 - **Popover open, element removed from DOM**: Popover state is managed by the Popover component; behavior follows Popover's unmount logic.
 - **Multiple renders with same `id` and no entry**: Warning is throttled by id; only one warning emitted per session even if component mounts/unmounts multiple times.
-- **`fallback` prop without `id`**: Component will use the `id` to look up help first; if not found, fallback is used regardless of `id` value.
+- **Touch devices (no hover)**: The badge's default reveal relies on `hover`, and touch devices have no hover state, so the badge does not become visible from touch input alone. It still reveals on keyboard focus (e.g., assistive technology's virtual cursor) and once the popover is open, and the trigger remains reachable by tapping it even while the badge sits at 0 opacity. This is an accepted limitation of the hover-based affordance, not a bug.
 
 ## Configuration
 
@@ -133,9 +143,9 @@ Not applicable: HelpEnabled does not render hardcoded strings. Help content is r
 
 ## Accessibility Options
 
-- **Reduce Motion**: When "Reduce Motion" is enabled, badge opacity and background transitions SHOULD respect the user's preference (handled by Tailwind's `transition-*` classes and system settings). The component does not explicitly disable transitions; this is delegated to the CSS framework and browser.
-- **Increase Contrast**: Badge color at `opacity-70` may not meet WCAG AA contrast on all backgrounds. This is a Design Decision for the design system to address via color tokens (`apt-surface-2`, `apt-gold/40`).
-- **Differentiate Without Color**: Badge is an icon shape (Info symbol), not solely color-based. Badge opacity changes on focus satisfy this requirement.
+- **Reduce Motion**: The component does not disable or gate its opacity/background transitions when the system's Reduce Motion preference is on. Tailwind's `transition-*` utility classes do not automatically honor `prefers-reduced-motion` — that requires an explicit `motion-reduce:` variant, which this component does not apply. This is a known gap in the current implementation.
+- **Increase Contrast**: Badge color at `opacity-70` may not meet WCAG AA contrast on all backgrounds. See Design Decisions: "Badge contrast not guaranteed".
+- **Differentiate Without Color**: The badge is an icon shape (Info symbol), not solely color- or opacity-based, so its meaning does not depend on a user perceiving color or the opacity change.
 
 ## Feature Flags
 
@@ -151,32 +161,90 @@ Not applicable: HelpEnabled does not collect or transmit user data. The `id` pro
 
 ## Logging
 
-Not applicable: HelpEnabled emits a console warning for missing help entries (as documented in Behavioral Requirements), but does not use structured logging or subsystem/category tags.
+Subsystem: none (browser console) | Category: HelpEnabled
+
+| Event | Level | Message |
+|-------|-------|---------|
+| Missing help entry | warn | `[HelpEnabled] no help entry for id "<id>" — rendering plain text` |
+
+Emitted once per missing `id` per session (see **warns-on-missing-entry**); never emitted when a `fallback` is supplied (see **suppresses-warning-when-fallback-given**).
 
 ## Platform Notes
 
-- **React/Web**: HelpEnabled is a React functional component exported from `packages/web/packages/ui/src/components/help-enabled.tsx`. It uses Tailwind CSS for styling, the `lucide-react` library for the Info icon, and internal Popover and HelpPopoverContent components. The component is marked with the `"use client"` directive for server-side rendering compatibility.
-- **SwiftUI**: Start with a standard button or disclosure group. SwiftUI does not have a direct Popover API equivalent; use a Modifier or conditional overlay. Replicate the hover/focus badge reveal using opacity animations. Use `AccessibilityElement` to mark the badge as hidden from screen readers.
-- **Compose**: Build with a `Box` or `Surface` composable wrapping the text. Use `Modifier.clickable()` to enable the trigger. Implement badge visibility changes via `animateFloatAsState` for opacity. Use `Modifier.semantics { contentDescription = null }` on the icon to hide it from accessibility readers.
-- **AppKit / UIKit**: Use a custom NSButton or UIButton subclass. Overlay the Info badge as a small CALayer or UIImageView. Implement hover detection via `NSTrackingArea` (AppKit) or `UIGestureRecognizer` (UIKit). Use `UIAccessibility.isVoiceOverRunning` to conditionally adjust badge visibility.
-- **WinUI 3**: Use a `Grid` or `StackPanel` (horizontal orientation) as the root, hosting a `TextBlock` for the children and a `Glyph` or `FontIcon` (from Segoe MDL2 Assets) for the badge. Wrap in a `Button` to make it interactive. Bind badge opacity to a VisualState (default, hover, focus) using `VisualStateManager`. The button's `Click` event opens a `Flyout` (WinUI's equivalent to a popover). Use the `AutomationProperties.HelpText` attached property on the button, and set `AutomationProperties.AccessibilityView` to `Raw` on the icon to hide it from automation readers.
+- **React/Web**: HelpEnabled is a React functional component exported from `packages/web/packages/ui/src/components/help-enabled.tsx`. It uses Tailwind CSS for styling, the `lucide-react` library for the Info icon, and internal Popover and HelpPopoverContent components. The file starts with the `"use client"` directive, which marks it as a React Server Components client boundary, not a server-side-rendering compatibility shim. The badge's opacity states are implemented with Tailwind `group` variants: `opacity-0` by default, `group-hover:opacity-70` on hover, `group-focus-visible:opacity-70` on keyboard focus, and `group-data-[popup-open]:opacity-70` while the popover is open, all driven by the plain `transition-opacity` utility with no `motion-reduce:` guard.
+- **SwiftUI**: SwiftUI does have a direct Popover API — use `.popover(isPresented:)` on the trigger to present the help content. Build the trigger from a `Button` (or a `Text` with `.onTapGesture`), and replicate the hover/focus badge reveal by animating the Info image's `.opacity` between 0 and 0.7 driven by `.onHover` (macOS) and `@FocusState` (keyboard). Apply `.accessibilityHidden(true)` to the badge's `Image` to hide it from VoiceOver.
+- **Compose**: Build with a `Row` or `Surface` composable wrapping the text, made clickable via `Modifier.clickable()` to open the popover, and paired with a `remember { MutableInteractionSource() }` plus `Modifier.hoverable(interactionSource)` to detect pointer hover on non-touch input. Implement badge visibility changes via `animateFloatAsState` for opacity. Hide the badge from accessibility services with `Icon(imageVector = ..., contentDescription = null)` — passing `contentDescription = null` to `Icon` is how Compose marks it decorative, not `Modifier.semantics { contentDescription = null }`.
+- **AppKit / UIKit**: Use a custom `NSButton` (AppKit) or `UIButton` subclass (UIKit) as the trigger, overlaying the Info badge as a small `CALayer` or `NSImageView`/`UIImageView`. Present the help content with `NSPopover` on AppKit or a view controller presented via `UIPopoverPresentationController` on UIKit. Implement hover detection via `NSTrackingArea` (AppKit) or a hover-based `UIHoverGestureRecognizer` (UIKit, pointer input only). Hide the badge image from accessibility clients (`isAccessibilityElement = false` / AppKit's `NSAccessibility.isElement = false`), and use `UIAccessibility.isVoiceOverRunning` only to adjust behavior that genuinely differs for VoiceOver users.
+- **WinUI 3**: Use a `Grid` or `StackPanel` (horizontal orientation) as the root, hosting a `TextBlock` for the children and a `FontIcon` (from Segoe MDL2 Assets, its `Glyph` property set to the info glyph) for the badge — `Glyph` is a property of `FontIcon`, not a control on its own. Wrap in a `Button` to make it interactive. Bind badge opacity to a `VisualState` (default, hover, focus) using `VisualStateManager`. The button's `Click` event opens a `Flyout` (WinUI's equivalent to a popover). Use the `AutomationProperties.HelpText` attached property on the button, and set `AutomationProperties.AccessibilityView` to `Raw` on the `FontIcon` to hide it from automation readers.
 
 ## Design Decisions
 
-- **Horizontal inline layout with gap**: The component uses `inline-flex items-center gap-1` to position the badge adjacent to the text without adding extra line height or block layout. This keeps the help affordance compact and preserves the caller's line metrics.
-- **Badge transparency by default**: The Info badge is rendered but fully transparent (`opacity-0`) so that its presence does not reflow the layout when invisible. Revealing it on hover/focus is a smooth transition without layout shift.
-- **Warning throttling by id, not per-render**: Missing help entries emit a warning once per unique `id` per session (not per render), because the component may be rendered multiple times on the same page. Per-render warnings would produce console noise without additional value.
-- **Fallback as HelpEntry, not plain text**: When a fallback string is provided, it is wrapped in a HelpEntry object with flavor `"info"` so that it flows through the same rendering pipeline as stored entries. This keeps the implementation simple and consistent.
-- **Preserve className on plain text variant**: When help is not available and no fallback is provided, the component preserves the caller's `className` on the plain text span. This ensures that caller-specific layout styles (e.g., centering, ellipsis clipping) are not lost due to the missing help entry.
-- **data-slot attributes for variant detection**: The component applies `data-slot="help-enabled"` and `data-slot="help-enabled-plain"` to distinguish interactive and plain text variants in CSS and for testing. This avoids requiring pseudo-class selectors or attribute mutations to detect state.
-- **Focus ring uses gold token**: The focus indicator uses `ring-apt-gold/40` (gold at 40% opacity) for consistency with other interactive controls in the design system (quietControlClass pattern). This token is shared with chevrons, split dividers, dialog close buttons, and collapse toggles.
+**Horizontal inline layout with gap**
+
+**Decision**: The component uses `inline-flex items-center gap-1` to position the badge adjacent to the text without adding extra line height or block layout.
+**Rationale**: This keeps the help affordance compact and preserves the caller's line metrics.
+**Approved**: pending
+
+**Badge transparency by default**
+
+**Decision**: The Info badge is rendered but fully transparent (`opacity-0`) so that its presence does not reflow the layout when invisible; revealing it on hover/focus is a smooth transition without layout shift.
+**Rationale**: A badge that mounts/unmounts on hover would shift surrounding layout; keeping it always mounted and only changing its opacity avoids that.
+**Approved**: pending
+
+**Warning throttling by id, not per-render**
+
+**Decision**: Missing help entries emit a warning once per unique `id` per session (not per render).
+**Rationale**: The component may be rendered multiple times on the same page, and per-render warnings would produce console noise without additional value.
+**Approved**: pending
+
+**Fallback as HelpEntry, not plain text**
+
+**Decision**: When a fallback string is provided, it is wrapped in a HelpEntry object with flavor `"info"` so that it flows through the same rendering pipeline as stored entries.
+**Rationale**: This keeps the implementation simple and consistent — one rendering path for both stored and fallback content.
+**Approved**: pending
+
+**Preserve className on plain text variant**
+
+**Decision**: When help is not available and no fallback is provided, the component preserves the caller's `className` on the plain text span.
+**Rationale**: Caller-specific layout styles (e.g., centering, ellipsis clipping) must not be lost due to the missing help entry.
+**Approved**: pending
+
+**data-slot attributes for variant detection**
+
+**Decision**: The component applies `data-slot="help-enabled"` and `data-slot="help-enabled-plain"` to distinguish interactive and plain text variants in CSS and for testing.
+**Rationale**: This avoids requiring pseudo-class selectors or attribute mutations to detect state.
+**Approved**: pending
+
+**Focus ring uses gold token**
+
+**Decision**: The focus indicator uses `ring-apt-gold/40` (gold at 40% opacity) for consistency with other interactive controls in the design system (the `quietControlClass` pattern).
+**Rationale**: This token is shared with chevrons, split dividers, dialog close buttons, and collapse toggles, so keyboard focus reads the same way across the family.
+**Approved**: pending
+
+**Badge contrast not guaranteed**
+
+**Decision**: The Info badge's hover/focus/open opacity (`opacity-70`) is not verified against every possible caller-supplied background; contrast sufficiency is left to the design system's color tokens (`apt-surface-2`, `apt-gold/40`) rather than guaranteed by this component.
+**Rationale**: HelpEnabled is a layout/behavior wrapper, not a color-token owner; enforcing contrast for arbitrary backgrounds would require knowledge of the surrounding page that this component does not have.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Compliance checks are managed at the design system level. HelpEnabled delegates accessibility and compliance validation to the Popover component, the help store, and the design system's color tokens.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
+| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+
+Statuses rest on the source directly: the trigger's accessible name is children-only text with `aria-haspopup`/`aria-expanded` left to `PopoverTrigger` rather than confirmed here (partial); Tab focus and the visible gold ring are implemented (passed); badge contrast at `opacity-70` is called out in Accessibility Options as unverified against arbitrary backgrounds (partial); no `motion-reduce:` guard exists on any transition (failed); focus/overlay handling is delegated entirely to Popover rather than managed here (partial); the console warning is a static string plus a non-PII `id` lookup key (passed for logging and privacy); and no user-visible string is hardcoded — help copy and fallback text both arrive as props/store data (passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: resolved the hover/focus vs. click trigger contradiction in the summary and Overview; corrected the Reduce Motion, SwiftUI Popover, Compose accessibility, "use client", and WinUI `Glyph` claims; renamed all requirements to subject-only kebab-case and added badge-data-slot, fallback-wrapping, and warning-suppression requirements; moved Tailwind class names out of the badge-visibility requirements and test vectors into the React/Web platform note; added tags and depends-on, converted Design Decisions to the Decision/Rationale/Approved form and added a contrast decision, added the Compliance table, and rewrote Logging; fixed the test 003 implementation-coupled assertion and the test 017 requirement-name mismatch; and replaced the incoherent "fallback without id" edge case with a touch-device edge case |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

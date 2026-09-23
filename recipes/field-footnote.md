@@ -3,7 +3,7 @@ id: e9504a52-046c-4777-9704-20f611cf76f7
 title: FieldFootnote
 domain: agenticdevelopertoolkit://recipes/field-footnote
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,9 +16,17 @@ summary: Display line under a form control showing either a validation error or 
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- forms
+- validation
+- hint
+- accessibility
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/field
+- agenticdevelopertoolkit://recipes/error-text
+- agenticdevelopertoolkit://recipes/checkbox
+- agenticdevelopertoolkit://recipes/label
 references: []
 approved-by: ''
 approved-date: ''
@@ -32,20 +40,20 @@ FieldFootnote is a display component that renders validation feedback or supplem
 
 ## Behavioral Requirements
 
-- **must-show-error-when-present**: When `error` prop is set to a truthy value, the component MUST render that value in the error presentation (red, monospace, small text).
-- **must-prioritize-error-over-hint**: When both `error` and `hint` props are truthy, the component MUST show only the error, not the hint.
-- **must-show-hint-when-no-error**: When `error` prop is not set or is falsy, and `hint` prop is truthy, the component MUST render the hint in the hint presentation (dim text, monospace, small text).
-- **must-return-null-when-empty**: When both `error` and `hint` props are falsy or undefined, the component MUST return null (render nothing).
-- **must-apply-error-id-when-present**: When `errorId` prop is provided, the component MUST apply that value as the `id` attribute on the error span element.
-- **must-apply-error-id-only-to-error**: When `errorId` prop is provided, the `id` attribute MUST be applied only to the error span, never to the hint span.
-- **must-apply-class-name**: When `className` prop is provided, the component MUST merge it with the default classes using the `cn` utility function (Tailwind class merger).
-- **must-support-react-node-content**: The component MUST accept any valid React node (string, number, element, or fragment) in both `hint` and `error` props.
+- **error-shown-when-present**: When `error` prop is set to a truthy value, the component MUST render that value in the error presentation (red, monospace, small text).
+- **error-takes-precedence**: When both `error` and `hint` props are truthy, the component MUST show only the error, not the hint.
+- **hint-shown-without-error**: When `error` prop is not set or is falsy, and `hint` prop is truthy, the component MUST render the hint in the hint presentation (dim text, monospace, small text).
+- **renders-nothing-when-empty**: When both `error` and `hint` props are falsy or undefined, the component MUST return null (render nothing).
+- **error-id-applied**: When `errorId` prop is provided, the component MUST apply that value as the `id` attribute on the error span element.
+- **error-id-only-on-error**: When `errorId` prop is provided, the `id` attribute MUST be applied only to the error span, never to the hint span.
+- **caller-class-name-merged**: When `className` prop is provided, the component MUST append it to the default classes; a caller class MUST override any default class it conflicts with.
+- **supports-react-node-content**: The component MUST accept any node type (string, element, fragment, or number) in both `hint` and `error` props for rendering when present. A falsy value — including the number `0` or an empty string `""` — is treated as absent rather than rendered; see **renders-nothing-when-empty**.
 
 ## Appearance
 
-- **Font**: Monospace (FontFamily.Monospace or platform equivalent), size 0.7rem (5.6 points / ~11 twips)
-- **Error color**: `text-apt-red` (Tailwind token, typically a red hue used for validation errors)
-- **Hint color**: `text-apt-text-dim` (Tailwind token, typically a muted gray used for supporting text)
+- **Font**: Monospace (FontFamily.Monospace or platform equivalent), one logical size of 11.2 (0.7rem on web; 11.2 pt/sp/DIP on every other platform — the same size is used everywhere, see Platform Notes)
+- **Error color**: error-foreground token (`text-apt-red` Tailwind class on web; map to the platform's semantic error/red color)
+- **Hint color**: secondary-foreground token (`text-apt-text-dim` Tailwind class on web; map to the platform's secondary/dim label color)
 - **Line height**: Inherits default; no custom line-height specified
 - **Padding**: No explicit padding; inherits from ancestor or uses browser default inline span padding (typically zero)
 - **Border**: None
@@ -64,30 +72,31 @@ FieldFootnote is a display component that renders validation feedback or supplem
 
 - **Role**: No explicit ARIA role applied. The component is a passive display element and does not interact with the user.
 - **Error identification**: The error span carries an optional `id` attribute (via `errorId` prop) so that a form control can reference it with `aria-describedby`, allowing screen readers to announce the error message when the control is focused.
-- **Hint handling**: Hints are not assigned an `id` and are not referenced via `aria-describedby`; hints belong in the control's accessible name via the `<Label>` component in the standard Field wrapper.
+- **Hint handling**: Hints are not assigned an `id` and are not referenced via `aria-describedby` by this component. A hint is an accessible *description*, not an accessible *name*, so folding it into a control's name is not the right mechanism; associating a hint's text with a control's description is the composing wrapper's responsibility (e.g. `Field`), not something FieldFootnote does on its own — FieldFootnote exposes no hint-side id for that association.
 - **Semantics**: The component uses a generic `<span>` element; no `role="alert"` or `role="status"` is applied. The error line is not automatically announced on appearance; screen readers announce it when the control with `aria-describedby` is focused.
-- **Color dependence**: Both error (red) and hint (dim) are distinguished by color. The component assumes sufficient contrast will be provided by the color tokens; it does not add additional visual markers (e.g., icons) to distinguish error from hint.
+- **Color dependence**: Error (red) and hint (dim) are currently distinguished only by color; no icon, prefix, or other non-color cue is present in the source. See **Accessibility Options** below for how this behaves under Differentiate Without Color.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| field-footnote-001 | must-show-error-when-present | `error="This field is required"`, `hint={undefined}` | Renders `<span id={undefined} class="font-mono text-[0.7rem] text-apt-red">This field is required</span>` |
-| field-footnote-002 | must-prioritize-error-over-hint | `error="Error occurred"`, `hint="Hint text"` | Renders error span only; hint is not rendered |
-| field-footnote-003 | must-show-hint-when-no-error | `error={undefined}`, `hint="Type at least 8 characters"` | Renders `<span class="font-mono text-[0.7rem] text-apt-text-dim">Type at least 8 characters</span>` |
-| field-footnote-004 | must-return-null-when-empty | `error={undefined}`, `hint={undefined}` | Returns null; nothing is rendered |
-| field-footnote-005 | must-apply-error-id-when-present | `error="Error"`, `errorId="email-error"` | Renders error span with `id="email-error"` |
-| field-footnote-006 | must-apply-error-id-only-to-error | `hint="Hint"`, `errorId="some-id"` | Renders hint span without `id` attribute |
-| field-footnote-007 | must-apply-class-name | `error="Error"`, `className="custom-class"` | Renders error span with merged classes including `custom-class` |
-| field-footnote-008 | must-support-react-node-content | `error={<strong>Bold error</strong>}` | Renders error span containing the strong element |
+| field-footnote-001 | error-shown-when-present | `error="This field is required"`, `hint={undefined}` | Renders a single element with the text "This field is required", using the error-foreground color and the monospace caption text size; no `id` attribute is present |
+| field-footnote-002 | error-takes-precedence | `error="Error occurred"`, `hint="Hint text"` | Renders the error text only; the hint text is not present in the output |
+| field-footnote-003 | hint-shown-without-error | `error={undefined}`, `hint="Type at least 8 characters"` | Renders a single element with the text "Type at least 8 characters", using the secondary-foreground color and the monospace caption text size; no `id` attribute is present |
+| field-footnote-004 | renders-nothing-when-empty | `error={undefined}`, `hint={undefined}` | Returns null; nothing is rendered |
+| field-footnote-005 | error-id-applied | `error="Error"`, `errorId="email-error"` | Renders the error element with `id="email-error"` |
+| field-footnote-006 | error-id-only-on-error | `hint="Hint"`, `errorId="some-id"` | Renders the hint element with no `id` attribute present |
+| field-footnote-007 | caller-class-name-merged | `error="Error"`, `className="custom-class"` | Renders the error element with the caller's `custom-class` present alongside the default classes |
+| field-footnote-008 | supports-react-node-content | `error={<strong>Bold error</strong>}` | Renders the error element containing the bold element as a child |
 
 ## Edge Cases
 
 - **Empty string error**: `error=""` (falsy) is treated as no error; hint is shown if present. Empty strings are falsy in JavaScript.
 - **Empty string hint**: `hint=""` (falsy) is treated as no hint; nothing is rendered if error is also absent.
-- **Zero or false**: `error={0}` or `error={false}` are falsy and treated as no error; same for hint.
+- **Zero or false**: `error={0}` or `error={false}` are falsy and treated as no error; same for hint. See **supports-react-node-content**.
 - **Null/undefined**: Both are falsy and result in no error or hint being shown.
-- **className merging collision**: If `className` contains a utility class that conflicts with default classes (e.g., `text-apt-red` when default is `text-apt-red`), the `cn` utility deduplicates and the later class takes precedence per Tailwind's specificity rules.
+- **className merging collision**: If `className` contains a utility class that conflicts with a default class in the same category (e.g., a caller passing `text-blue-500` when the default is `text-apt-red`), the merge utility resolves the conflict by last-wins — the caller's class is applied after the defaults and therefore takes effect — not by CSS specificity.
+- **errorId set but hint renders**: If `errorId` is provided while `error` is falsy, the hint renders instead and carries no `id` (see **error-id-only-on-error**, vector field-footnote-006). A consumer that unconditionally wires a control's `aria-describedby` to `errorId` will then point at an id that does not exist in the DOM whenever only the hint is showing; consumers should apply `aria-describedby={errorId}` only while `error` is actually present.
 
 ## Configuration
 
@@ -103,7 +112,11 @@ Not applicable: The component does not define or localize any strings of its own
 
 ## Accessibility Options
 
-Not applicable: FieldFootnote does not respond to accessibility display preferences (Reduce Motion, Increase Contrast, Differentiate Without Color) and does not expose configurable accessibility options.
+| Option | Behavior |
+|--------|----------|
+| Reduce Motion | Not applicable; the component has no animation. |
+| Increase Contrast | Not applicable; the component defines no custom contrast handling and relies on the platform's default rendering of its color tokens. |
+| Differentiate Without Color | Not handled: error and hint are currently distinguished only by color (see **Accessibility**, Color dependence); no icon, prefix, or other non-color cue is added under this setting. |
 
 ## Feature Flags
 
@@ -123,28 +136,40 @@ Not applicable: The component does not emit debug logs or instrumentation.
 
 ## Platform Notes
 
-- **React/Web**: Implemented using React functional component with `ReactNode` type for content props. Uses the `cn` utility (Tailwind classname merger from `lib/utils`) to safely merge custom classes with default utilities. Text size is `text-[0.7rem]` (arbitrary Tailwind value equivalent to 0.7rem or ~11px). Error and hint colors reference Tailwind design tokens `text-apt-red` and `text-apt-text-dim`.
-- **SwiftUI**: Implement using `Text` view with `.font(.system(size: 9.8, weight: .regular, design: .monospaced))` for error and hint. Use `Color` tokens equivalent to the web red and dim gray. Render conditionally: show error if present, else show hint if present, else return `EmptyView()`.
-- **Compose**: Implement using `Text` composable with `fontSize = 5.6.sp`, `fontFamily = FontFamily.Monospace`, and `fontWeight = FontWeight.Normal`. Apply color tokens for error (red) and hint (dim). Render conditionally: if error is not null show it in red, else if hint is not null show it in dim color, else render nothing.
-- **AppKit/UIKit**: On macOS, use `NSTextField` or `NSTextView` (read-only) with `.monospacedSystemFont(ofSize: 9.8, weight: .regular)`. On iOS, use `UILabel` with `.monospacedSystemFont(ofSize: 9.8, weight: .regular)`. Apply `UIColor` tokens for red and dim text. Render conditionally; update layout when error/hint changes.
-- **WinUI 3**: Implement using `TextBlock` with `FontFamily="Courier New"`, `FontSize="9.8"`, and `FontWeight="Normal"`. Bind `Foreground` to a color brush that switches between error red and hint dim gray based on whether error or hint is present. Render conditionally using `Visibility` property: `Visible` if content exists, `Collapsed` otherwise.
+- **React/Web**: Implemented using a React functional component with `ReactNode` type for content props. Uses the `cn` utility (Tailwind classname merger from `lib/utils`) to append custom classes to the defaults, with a caller class taking effect over any default it conflicts with (last-wins). Text size is `text-[0.7rem]` — the same logical 11.2 size used on every platform. Error and hint colors reference the error-foreground and secondary-foreground tokens, exposed on web as the Tailwind classes `text-apt-red` and `text-apt-text-dim`.
+- **SwiftUI**: Implement using a `Text` view with `.font(.system(size: 11.2, weight: .regular, design: .monospaced))` for error and hint. Use `Color` tokens for the error-foreground and secondary-foreground tokens above. Render conditionally: show error if present, else show hint if present, else return `EmptyView()`.
+- **Compose**: Implement using a `Text` composable with `fontSize = 11.2.sp`, `fontFamily = FontFamily.Monospace`, and `fontWeight = FontWeight.Normal`. Apply the error-foreground/secondary-foreground color tokens. Render conditionally: if error is not null show it in the error color, else if hint is not null show it in the secondary color, else render nothing.
+- **AppKit/UIKit**: On macOS, use `NSTextField` or `NSTextView` (read-only) with `.monospacedSystemFont(ofSize: 11.2, weight: .regular)`. On iOS, use `UILabel` with `.monospacedSystemFont(ofSize: 11.2, weight: .regular)`. Apply the platform color tokens equivalent to error-foreground/secondary-foreground. Render conditionally; update layout when error/hint changes.
+- **WinUI 3**: Implement using `TextBlock` with `FontFamily="Consolas"` (or a theme monospace resource), `FontSize="11.2"`, and `FontWeight="Normal"`. Bind `Foreground` to a brush that switches between the error-foreground and secondary-foreground tokens depending on whether error or hint is present. Render conditionally using the `Visibility` property: `Visible` if content exists, `Collapsed` otherwise.
 
 ## Design Decisions
 
-The component deliberately avoids the standard `ErrorText` component (which uses `text-sm` and `role="alert"`) because the metrics of `text-sm` differ significantly from the hint text size (`text-[0.7rem]`). When an error swaps in for a hint, layout shift occurs if the two have different line heights or text sizes. FieldFootnote solves this by making error and hint visually identical in size and metric, differing only in color. This is a deliberate trade-off: the component sacrifices automatic screen reader alerts on error (`role="alert"` behavior) for layout stability. Consumers must wire the error span's `errorId` to a control's `aria-describedby` to ensure errors are announced.
+**Decision**: FieldFootnote does not use the standard `ErrorText` component; it renders its own error/hint spans at one shared size (`font-mono text-[0.7rem]`) instead of `ErrorText`'s `text-sm`.
+**Rationale**: `ErrorText` uses `text-sm`, whose metrics differ from the hint text. If an error at `ErrorText`'s size swapped in for a hint at FieldFootnote's size, the differing text size/line height would shift the surrounding layout on the keystroke that made the value invalid. Giving error and hint identical metrics, differing only in color, keeps that swap layout-stable. `ErrorText` separately carries `role="alert"`; FieldFootnote does not, but that is an independent consequence of not reusing `ErrorText`, not a cause of the layout-stability decision — FieldFootnote's error is announced through `errorId`/`aria-describedby` instead (see **Accessibility**).
+**Approved**: pending
 
-The component also stands alone rather than living inside `Field` wrapper because some form controls (notably checkboxes) cannot use `Field`'s label structure and must build their own row layout. To prevent duplication and divergence of error/hint logic, FieldFootnote is exported as a reusable primitive so both `Field`-wrapped controls and custom-row controls use the same implementation.
+**Decision**: FieldFootnote is exported as a standalone primitive rather than living only inside `Field`.
+**Rationale**: Some form controls — notably checkboxes with custom row layouts — cannot use `Field`'s label structure and must build their own row, but still need to report validation feedback in the same place and words. Extracting FieldFootnote lets both `Field`-wrapped controls and custom-row controls share one implementation, so a fix to the error/hint logic does not have to be made twice and risk drifting between the two call sites.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Accessible error feedback via aria-describedby | passed | Accessibility |
-| Monospace font for error and hint | passed | Visual Consistency |
-| Error takes precedence over hint | passed | Behavior |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
+
+Statuses rest on the source directly: it renders arbitrary caller-supplied `ReactNode` content with no strings, truncation, or direction-specific styling of its own (the internationalization checks pass), uses a relative `text-[0.7rem]` size with no explicit Dynamic Type binding and named color tokens with no contrast values given (both partial, since the source cannot confirm the rest), and applies no ARIA role while correctly scoping `errorId` to only the error span (semantic-markup passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from field-footnote.tsx source |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and reworded the class-merge and ReactNode requirements platform-neutrally; unified the font size to one logical 11.2 across platforms and replaced the hardcoded WinUI font; named semantic color tokens in place of raw Tailwind class names; reformatted Design Decisions and separated the layout-shift cause from the role="alert" consequence; corrected the hint accessible-description claim and the color-dependence description; replaced the made-up Compliance checks with real accessibility and internationalization checks; fixed test vectors to assert observable outcomes instead of raw class strings; added the errorId/hint edge case; added tags and related links |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from field-footnote.tsx source (drafted by Claude Haiku 4.5) |

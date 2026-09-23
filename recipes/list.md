@@ -3,7 +3,7 @@ id: 3785363d-118e-4d7e-98e6-afaca8bf0838
 title: List
 domain: agenticdevelopertoolkit://recipes/list
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -35,11 +35,11 @@ List is a semantic container component for displaying flat collections of items 
 
 ## Behavioral Requirements
 
-- **must-render-semantic-list**: The List component MUST render a `<ul>` element.
-- **must-render-semantic-item**: The ListItem component MUST render an `<li>` element.
-- **must-accept-classname**: Both List and ListItem MUST accept a `className` prop and merge it with their base styles using the `cn()` utility.
-- **must-forward-props**: Both List and ListItem MUST forward all remaining React props (`...props`) to their underlying HTML element.
-- **must-set-data-slot**: The List component MUST set `data-slot="list"` on the rendered `<ul>`. The ListItem component MUST set `data-slot="list-item"` on the rendered `<li>`.
+- **semantic-list**: The List component MUST render a `<ul>` element.
+- **semantic-item**: The ListItem component MUST render an `<li>` element.
+- **classname-merge**: Both List and ListItem MUST accept a `className` prop and merge it with their base styles using the `cn()` utility (`twMerge(clsx(...))`); when the caller's `className` conflicts with a base Tailwind class, the caller's class MUST win.
+- **prop-forwarding**: Both List and ListItem MUST forward all remaining React props (`...props`) to their underlying HTML element. This includes props such as `role`, which can override the element's implicit semantics — restoring or removing that semantics is the caller's responsibility.
+- **data-slot**: The List component MUST set `data-slot="list"` on the rendered `<ul>`. The ListItem component MUST set `data-slot="list-item"` on the rendered `<li>`.
 
 ## Appearance
 
@@ -66,26 +66,26 @@ Not applicable: List and ListItem are static presentational components with no i
 
 ## Accessibility
 
-Not applicable: List and ListItem render semantic HTML (`<ul>` and `<li>`) without additional ARIA attributes or accessible labels. Accessibility concerns (such as list semantics, item announcements, and screen reader handling) are inherited from the HTML elements. Parent components are responsible for adding labels or descriptions as needed for the content displayed within the list items.
+List and ListItem render semantic HTML (`<ul>` and `<li>`) without additional ARIA attributes or accessible labels; list semantics, item announcements, and screen reader handling are inherited from these elements. Because both components forward all remaining props (see **prop-forwarding**), a caller can pass a `role` that overrides this implicit semantics; restoring or removing list semantics in that case is the caller's responsibility, not the component's. Safari/VoiceOver also drops the implicit `list` role from a `<ul>` styled with `display:flex` and no `list-style` — which is how `List`'s base classes (`flex flex-col`) render — so consumers targeting VoiceOver on Safari SHOULD set `role="list"` explicitly to restore the announced list semantics. Parent components remain responsible for adding labels or descriptions for the content displayed within the list items.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| list-001 | must-render-semantic-list | Render `<List />` | Output contains `<ul data-slot="list">` |
-| list-002 | must-render-semantic-item | Render `<ListItem />` | Output contains `<li data-slot="list-item">` |
-| list-003 | must-accept-classname | Render `<List className="custom-class" />` | Output element has both base classes and `custom-class` applied |
-| list-004 | must-accept-classname | Render `<ListItem className="custom-item" />` | Output element has both base classes and `custom-item` applied |
-| list-005 | must-forward-props | Render `<List id="test-list" role="region" />` | Output `<ul>` contains `id="test-list"` and `role="region"` attributes |
-| list-006 | must-forward-props | Render `<ListItem id="item-1" data-test="value" />` | Output `<li>` contains `id="item-1"` and `data-test="value"` attributes |
-| list-007 | must-set-data-slot | Render `<List />` with child `<ListItem />` | Both elements have correct `data-slot` values |
+| list-001 | semantic-list, data-slot | Render `<List />` | Output contains `<ul data-slot="list">` |
+| list-002 | semantic-item, data-slot | Render `<ListItem />` | Output contains `<li data-slot="list-item">` |
+| list-003 | classname-merge | Render `<List className="custom-class" />` | Output element has both base classes and `custom-class` applied |
+| list-004 | classname-merge | Render `<ListItem className="custom-item" />` | Output element has both base classes and `custom-item` applied |
+| list-005 | prop-forwarding | Render `<List id="test-list" role="region" />` | Output `<ul>` contains `id="test-list"` and `role="region"` attributes |
+| list-006 | prop-forwarding | Render `<ListItem id="item-1" data-test="value" />` | Output `<li>` contains `id="item-1"` and `data-test="value"` attributes |
+| list-007 | classname-merge | Render `<ListItem className="px-6" />` | Output `<li>` class list contains `px-6` and does not contain the conflicting base class `px-3` |
 
 ## Edge Cases
 
 - **Empty list**: Rendering `<List />` with no children produces an empty bordered container.
 - **Single item**: Rendering a List with one ListItem produces the container with no visible row dividers (dividers appear between rows, not above or below).
 - **Nested flex content**: ListItem uses flex layout; when child content includes flex or grid elements, they inherit the flex context.
-- **className collision**: If a `className` prop contains conflicting Tailwind classes (e.g., `p-4` conflicting with `px-3 py-1.5`), standard CSS cascade applies; specificity and source order determine which wins. The `cn()` utility does not deduplicate conflicting classes.
+- **className collision**: If a `className` prop contains a Tailwind class that conflicts with a base class (e.g., `px-6` conflicting with the base `px-3`), `cn()` resolves it with `tailwind-merge`: the caller's class wins and the conflicting base class is dropped, rather than emitting both classes for the CSS cascade to resolve. See **classname-merge** and test vector list-007.
 
 ## Configuration
 
@@ -121,24 +121,37 @@ Not applicable: List and ListItem do not emit any logs.
 
 ## Platform Notes
 
-- **SwiftUI**: SwiftUI's `List` view with `.divider()` modifier provides an equivalent component, rendering rows with dividers and border. Use `List { ForEach(...) { item in ... } }` to compose rows dynamically.
+- **SwiftUI**: SwiftUI has no `.divider()` modifier, and `List` does not render an outer border by default. Compose the container as `VStack(spacing: 0) { ForEach(...) { item in ...; Divider() } }` for row dividers, and add `.overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.aptBorder))` to reproduce the bordered, rounded-corner container.
 - **Compose**: Android Compose's `LazyColumn` with `Divider()` composables between items provides equivalent row divider behavior. Combine with `Card` or custom styling to add the border treatment.
 - **React/Web**: The source implementation is in `packages/web/packages/ui/src/components/list.tsx`. The List component renders a styled `<ul>` with Tailwind classes (`flex flex-col divide-y divide-apt-border overflow-hidden rounded-lg border border-apt-border`). The ListItem component renders a styled `<li>` with Tailwind classes (`flex min-h-9 items-center gap-3 px-3 py-1.5`). Both use the `cn()` utility from `lib/utils` to merge classnames.
-- **AppKit/UIKit**: NSTableView (macOS) or UITableView (iOS) with `separatorStyle = .singleLine` provides row dividers. A custom cell layout with flex-equivalent auto-layout constraints replicates the padding and gap behavior.
-- **WinUI 3**: `ItemsRepeater` with a Separator element between items, or `ListView` with `SingleSelectionMode`, provides row dividers. Use `Grid` for cell layout with column spacing equivalent to `gap-3`.
+- **AppKit / UIKit**: `separatorStyle = .singleLine` on `NSTableView`/`UITableView` gives row separators but not this component's outer border or rounded corners. A plain stack view (`NSStackView`/`UIStackView`) with a hairline divider view between rows, wrapped in a container view with a 1pt border and rounded corners, reproduces the source's appearance without the selection and reuse chrome a table view brings.
+- **WinUI 3**: `SingleSelectionMode` is not a real WinUI API, and `ListView` adds selection behavior this static component doesn't have. Use `ItemsRepeater` with a separator element between rows, hosted inside a `Border` with `CornerRadius` and `BorderThickness` to reproduce the outer border and rounded corners. Use a `Grid`/`StackPanel` for cell layout with column spacing equivalent to `gap-3`.
 
 ## Design Decisions
 
-List and ListItem are minimal presentational components designed for simplicity and reusability. They do not enforce content structure or manage state; they forward all props to underlying HTML elements, allowing flexible composition and styling. The `data-slot` attributes enable targeted CSS and testing selectors without requiring a class-based API.
+**Decision**: List and ListItem manage no internal state and enforce no content structure.
+**Rationale**: Simplicity and reusability; state management is left to parent components.
+**Approved**: pending
+
+**Decision**: Both components forward all remaining props to their underlying HTML element.
+**Rationale**: Allows flexible composition and styling without a bespoke prop API.
+**Approved**: pending
+
+**Decision**: Use `data-slot` attributes (`data-slot="list"`, `data-slot="list-item"`) instead of a class-based API.
+**Rationale**: Enables targeted CSS and testing selectors without requiring a class-based API.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [semantic-html](agenticdevelopercookbook://compliance/html#semantic-html) | passed | HTML |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+
+Status rests on `list.tsx`: it renders plain `<ul>`/`<li>` elements with correct implicit roles, but it forwards an overridable `role` prop (**prop-forwarding**) and does not add `role="list"` to guard against Safari/VoiceOver dropping list semantics on a flexed `<ul>` (see Accessibility).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated all citations; corrected the className-collision edge case and added a tailwind-merge test vector (list-007); reformatted Design Decisions into Decision/Rationale/Approved entries; corrected the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes; marked Accessibility applicable with role-override and WebKit list-semantics guidance; corrected the Compliance entry to semantic-markup/partial; aligned the Change History author with the author field |

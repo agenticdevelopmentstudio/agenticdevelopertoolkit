@@ -3,7 +3,7 @@ id: 3b509297-83b2-4a5b-a331-56d0d4be548d
 title: Radio
 domain: agenticdevelopertoolkit://recipes/radio
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,9 +16,15 @@ summary: Single-selection control in a group where users pick one option from mu
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- form
+- selection
+- radio-button
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/radio-group
+- agenticdevelopertoolkit://recipes/checkbox
+- agenticdevelopertoolkit://recipes/field
 references: []
 approved-by: ''
 approved-date: ''
@@ -28,18 +34,18 @@ approved-date: ''
 
 ## Overview
 
-A radio button is a single-selection control used within a radio group to allow users to select exactly one option from a set of mutually exclusive choices. The component consists of a RadioGroup container that manages the group's state and RadioGroupItem elements representing individual options. Built on Base UI radio primitives with theme tokens for styling.
+A radio button is a single-selection control used within a radio group to allow users to select exactly one option from a set of mutually exclusive choices. This recipe covers `RadioGroupItem`, the individual control; the `RadioGroup` container's layout, spacing, and cross-item keyboard navigation are documented in agenticdevelopertoolkit://recipes/radio-group. Built on Base UI radio primitives (`@base-ui/react/radio-group`, `@base-ui/react/radio`) with theme tokens for styling.
 
 ## Behavioral Requirements
 
-- **must-render-in-group**: RadioGroupItem MUST only function as part of a RadioGroup container.
-- **must-indicate-selection**: RadioGroupItem MUST display a visual indicator (filled dot) when selected.
-- **must-hide-indicator-when-unselected**: The inner indicator MUST NOT be visible when the radio button is unselected.
-- **must-support-disabled-state**: RadioGroupItem MUST be disableable, preventing user interaction and reducing opacity when disabled.
-- **must-support-focus-visible**: RadioGroupItem MUST display a focus-visible border and ring styling when focused via keyboard navigation.
-- **must-apply-theme-tokens**: RadioGroupItem MUST use theme tokens (`apt-border`, `apt-bg`, `apt-gold`) for styling.
-- **must-transition-colors**: RadioGroupItem MUST smoothly transition color changes when state changes occur.
-- **must-group-spacing**: RadioGroup MUST apply consistent spacing between radio items (2.5 units vertically and horizontally).
+- **indicate-selection**: RadioGroupItem MUST display a visual indicator (filled dot) when selected.
+- **hide-indicator-when-unselected**: The inner indicator MUST NOT be visible when the radio button is unselected.
+- **single-selection**: Within a RadioGroup, selecting one RadioGroupItem MUST deselect any previously selected item, so at most one item in the group is selected at a time.
+- **disabled-state**: RadioGroupItem MUST be disableable; a disabled item MUST ignore pointer clicks and keyboard input (Space/Enter) and MUST render at reduced opacity.
+- **focus-visible**: RadioGroupItem MUST display a focus-visible border and ring styling when focused via keyboard navigation.
+- **space-selects**: RadioGroupItem MUST become selected when it has keyboard focus and the user presses Space.
+- **theme-token-styling**: RadioGroupItem MUST use the toolkit's border, background, and accent theme tokens to visually distinguish its default, checked, and focused states.
+- **color-transitions**: RadioGroupItem MUST transition color changes smoothly rather than switching state colors abruptly.
 
 ## Appearance
 
@@ -49,6 +55,7 @@ A radio button is a single-selection control used within a radio group to allow 
 - **Font**: N/A (no text in the control itself; label text is external)
 - **Background**: `apt-bg` (theme token for default state background)
 - **Border**: 1px solid `apt-border` (default state); 1px solid `apt-gold` when checked or focused
+- **Ring**: 2px, `apt-gold` at 25% opacity, shown on focus-visible only
 - **Indicator**: 8×8px inner circle, `apt-gold` when checked; hidden when unchecked
 - **Shadow**: None
 - **Min/Max size**: Fixed at 16×16px; shrink-0 prevents size changes due to flex containers
@@ -69,38 +76,49 @@ A radio button is a single-selection control used within a radio group to allow 
 - **Role/trait**: Radio button (native semantic role via Base UI RadioPrimitive.Root)
 - **Label requirements**: Labels are external to the RadioGroupItem; the form must associate labels via standard form patterns (e.g., `<label htmlFor="radio-id">` or wrapping)
 - **Announce state changes**: Checked/unchecked state is automatically announced by assistive technology via the semantic radio role
-- **Minimum tap target**: 16×16px (below WCAG minimum of 44×44px; container layout or wrapper should ensure adequate spacing)
-- **Keyboard navigation**: MUST support arrow key navigation between options within the radio group (provided by Base UI RadioGroup)
+- **Minimum tap target**: The 16×16px control alone is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels. Base UI's radio role lets a click on the associated `<label>` select the item, so consumers MUST ensure the label (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px.
+- **Keyboard navigation**: RadioGroupItem supports Space to select while focused (see **space-selects**) and shows a visible focus indicator (see **focus-visible**). Arrow-key navigation between items and the group's single Tab stop are managed by the RadioGroup container — see agenticdevelopertoolkit://recipes/radio-group.
 - **Focus indicator**: Visible focus ring (gold border and ring) provides keyboard focus indication
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| radio-001 | must-indicate-selection | RadioGroupItem with checked state | Filled `apt-gold` dot visible inside the 16×16px circle |
-| radio-002 | must-hide-indicator-when-unselected | RadioGroupItem with unchecked state | No indicator dot visible |
-| radio-003 | must-support-disabled-state | RadioGroupItem with disabled prop | Opacity 50%, pointer-events-none, cursor-not-allowed |
-| radio-004 | must-support-focus-visible | RadioGroupItem with keyboard focus | `apt-gold` border and ring with 25% opacity visible |
-| radio-005 | must-group-spacing | RadioGroup with multiple RadioGroupItems | 2.5 unit (10px) gap between items vertically and horizontally |
-| radio-006 | must-apply-theme-tokens | RadioGroupItem in default state | Border color is `apt-border`, background is `apt-bg` |
-| radio-007 | must-transition-colors | RadioGroupItem state change from unchecked to checked | Color change animates smoothly via CSS transition |
+| radio-001 | indicate-selection | RadioGroupItem with checked state | Filled `apt-gold` dot visible inside the 16×16px circle |
+| radio-002 | hide-indicator-when-unselected | RadioGroupItem with unchecked state | No indicator dot visible |
+| radio-003 | single-selection | Two RadioGroupItems in a group; item A is checked, then item B is selected | Item A's indicator disappears as item B's appears; only one item is checked |
+| radio-004 | disabled-state | Disabled RadioGroupItem receives a pointer click | Checked state does not change; no selection callback fires |
+| radio-005 | disabled-state | Disabled RadioGroupItem holds focus and receives Space or Enter | Checked state does not change; no selection callback fires |
+| radio-006 | focus-visible | RadioGroupItem with keyboard focus | `apt-gold` border and 2px ring at 25% opacity visible |
+| radio-007 | space-selects | Unchecked RadioGroupItem holds keyboard focus and receives Space | Item becomes checked |
+| radio-008 | theme-token-styling | RadioGroupItem in default state | Border color is `apt-border`, background is `apt-bg` |
+| radio-009 | color-transitions | RadioGroupItem state change from unchecked to checked | Color change animates smoothly via CSS transition |
+| radio-010 | edge case: no initial selection | RadioGroup rendered with neither `value` nor `defaultValue` set | No RadioGroupItem in the group renders its selected indicator |
+| radio-011 | edge case: value matches no item | RadioGroup's `value` does not match any item's `value` | No RadioGroupItem displays as checked |
+| radio-012 | edge case: all items disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; all render at 50% opacity |
+| radio-013 | edge case: disabled item already checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled opacity and non-interactive styling |
+| radio-014 | edge case: boundary size | RadioGroupItem rendered inside a shrinking flex container | Item stays fixed at 16×16px (`shrink-0` prevents resizing) |
 
 ## Edge Cases
 
-- **Null/empty input**: RadioGroup with no children renders as an empty grid; RadioGroupItem requires a parent RadioGroup for proper functionality.
-- **Boundary values**: Size is fixed at 16×16px; no resizing or scaling is applied. Disabled state always reduces opacity to exactly 50%.
-- **Concurrent access**: Not applicable; the component is a single-threaded UI control managed by React on the main thread.
-- **Error states**: RadioGroupItem has no error state defined in the source. Errors are handled at the form level, not the component level.
-- **Offline/disconnected state**: Not applicable; the component is a client-side UI primitive with no network behavior.
+- **No initial selection**: When neither `value` nor `defaultValue` is set on the group, no RadioGroupItem in the set renders its selected indicator.
+- **Value matches no item**: When the group's `value` does not match any item's `value`, no RadioGroupItem displays as checked; this is a valid state, e.g., before a default is chosen.
+- **All items disabled**: When every RadioGroupItem in the group has `disabled` set, none can be selected via pointer or keyboard; all render at 50% opacity.
+- **Disabled item already checked**: A RadioGroupItem can be both checked and disabled simultaneously; it shows the selected indicator combined with the disabled opacity and non-interactive styling (see States: Checked + Disabled).
+- **Boundary values**: Size is fixed at 16×16px via `shrink-0`; no resizing or scaling occurs even inside a shrinking flex container.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `className` | string | `undefined` | Additional CSS classes to apply to RadioGroupItem or RadioGroup for customization |
-| `disabled` | boolean | `false` | Disables the radio button, preventing interaction |
-| `checked` | boolean | `false` | Sets the radio button to checked state (typically managed by RadioGroup) |
-| `data-slot` | string | `"radio-group"` or `"radio-group-item"` | Data attribute for identifying component hierarchy |
+| `value` (RadioGroup) | string | — | The controlled selected value for the group; the RadioGroupItem whose own `value` matches renders as checked |
+| `defaultValue` (RadioGroup) | string | `undefined` | Initial selected value for an uncontrolled group |
+| `onValueChange` (RadioGroup) | `(value: string) => void` | `undefined` | Callback invoked with the new value when the user selects a different item |
+| `name` (RadioGroup) | string | auto-generated | Shared form field name applied to all items in the group |
+| `disabled` (RadioGroup) | boolean | `false` | Disables every RadioGroupItem in the group |
+| `value` (RadioGroupItem) | string | required | The value this item represents; compared against the group's `value` to determine checked state |
+| `disabled` (RadioGroupItem) | boolean | `false` | Disables this individual item, overriding group-level enablement |
+| `className` | string | `undefined` | Additional CSS classes applied to RadioGroup or RadioGroupItem |
 
 ## Deep Linking
 
@@ -112,8 +130,8 @@ Not applicable: The radio button control itself contains no user-facing text. La
 
 ## Accessibility Options
 
-- **Reduce Motion**: The `transition-colors` class applies transitions; components using reduce-motion should override with `transition-none` in their stylesheet.
-- **Increase Contrast**: The `apt-gold` and `apt-border` tokens are theme-specific; high-contrast themes should override token values to ensure sufficient contrast ratio (WCAG AA 4.5:1 for UI components).
+- **Reduce Motion**: The `transition-colors` class applies a brief color-only fade (no transform or motion), so it is treated as exempt from Reduce Motion policies; the component does not itself read `prefers-reduced-motion`. Consumers whose design system wants zero transition can override with `transition-none` in their stylesheet.
+- **Increase Contrast**: The `apt-gold` and `apt-border` tokens are theme-specific; high-contrast themes should override token values to ensure sufficient contrast (WCAG AA non-text contrast, SC 1.4.11: 3:1 for UI components).
 - **Differentiate Without Color**: Not applicable; the component uses both color (gold vs. border) and shape (dot appears/disappears) to indicate state, providing non-color differentiation.
 
 ## Feature Flags
@@ -137,29 +155,50 @@ Not applicable: The component does not implement logging. Debug logging is the r
 
 ## Platform Notes
 
-- **React/Web**: Source uses Base UI `RadioGroup` and `Radio` primitives via `@base-ui/react/radio-group`. RadioGroup applies grid layout with gap-2.5 (10px) spacing. RadioGroupItem wraps RadioPrimitive.Root with inline styles for focus, checked, and disabled states using Tailwind classes and `data-*` selectors. The Indicator (hidden when unchecked via `data-[unchecked]:hidden`) shows as an 8×8px gold dot when checked. Reference: `/packages/web/packages/ui/src/components/radio.tsx`.
-- **SwiftUI**: iOS Radio buttons are typically implemented using `Picker` with `segmentedPickerStyle()` or custom VStack with toggle-style buttons. Base UI's semantic HTML radio behavior maps to SwiftUI's `Picker` selections, with focus ring and color tokens translating to SwiftUI state and appearance modifiers.
-- **Compose**: Android Material Design 3 provides `RadioButton` composable. Spacing between options uses Material Design's 16dp vertical spacing. Color tokens (`apt-gold`, `apt-border`) map to Material 3's `colorScheme` and `surfaceColorAtElevation` for semantic theming.
-- **AppKit / UIKit**: macOS uses `NSButton(radioButtonWithTitle:)` or custom views. iOS and iPadOS use similar patterns with custom styling or `UISegmentedControl` for single-selection scenarios. Focus and disabled states follow platform HIG conventions.
-- **WinUI 3**: Windows uses `RadioButton` control from the WinUI 3 library. Control templates override default appearance to match design tokens. Spacing uses `StackPanel` with Spacing property (typically 10px to match gap-2.5). Focus states are managed via `VisualStateManager` with custom border and shadow brushes bound to color tokens. RadioButton grouping uses XAML `RadioButton` elements within a container, with `GroupName` property for mutual exclusion.
+- **React/Web**: Source uses Base UI `RadioGroup` and `Radio` primitives via `@base-ui/react/radio-group`. RadioGroupItem wraps `RadioPrimitive.Root`, styled with the `apt-border`/`apt-bg`/`apt-gold` Tailwind theme tokens; `transition-colors` provides the smooth color transition and `focus-visible:ring-2 focus-visible:ring-apt-gold/25` renders the focus ring. The Indicator (hidden when unchecked via `data-[unchecked]:hidden`) shows as an 8×8px gold dot when checked. Reference: `/packages/web/packages/ui/src/components/radio.tsx`.
+- **SwiftUI**: On macOS, use `Picker` with `.pickerStyle(.radioGroup)`, which renders true radio buttons with built-in mutual exclusivity and keyboard navigation. iOS has no native SwiftUI radio-group style; use a `List` whose selected row shows a trailing checkmark (`Image(systemName: "checkmark")`) instead. Color tokens and the focus ring translate to SwiftUI's `.tint`/appearance modifiers and focus state.
+- **Compose**: Android Material Design 3 provides the `RadioButton` composable. Color tokens (`apt-gold`, `apt-border`) map to `RadioButtonDefaults.colors(selectedColor, unselectedColor)`, which is the Material 3 API for radio button color states.
+- **AppKit / UIKit**: macOS uses `NSButton(radioButtonWithTitle:)` with shared target/action for mutual exclusivity, or custom views. UIKit has no native radio control; use a `UITableView`/list row with a checkmark accessory (`.checkmark` accessory type) for the selected row rather than `UISegmentedControl`, which represents a different interaction pattern. Focus and disabled states follow platform HIG conventions.
+- **WinUI 3**: Windows uses the `RadioButtons` group control (not loose `RadioButton` elements with `GroupName`), which provides built-in arrow-key navigation and a single tab stop for the whole group. Control templates override default appearance to match design tokens; focus states are managed via `VisualStateManager` with custom border and shadow brushes bound to color tokens.
 
 ## Design Decisions
 
-- **Size**: The 16×16px dimension is based on Tailwind's `size-4` class and is smaller than the WCAG AA 44×44px minimum tap target. This is acceptable for web components where the containing form or grid provides spacing and can increase the effective touch target. Consumers should ensure adequate padding or wrapper sizing when the component is used on mobile.
-- **Color transitions**: Smooth `transition-colors` is applied to all state changes (checked, focused, disabled) to provide visual feedback without jarring state shifts. This follows modern UI conventions and can be disabled globally if `prefers-reduced-motion` is active.
-- **Focus ring**: The focus-visible state uses a 2px ring with 25% opacity of `apt-gold`. This provides sufficient visibility without overwhelming the control, balancing accessibility with design aesthetic.
-- **Disabled state**: Opacity reduction (50%) is the sole visual indicator for disabled state, combining with `pointer-events-none` and `cursor-not-allowed` to prevent interaction. High-contrast themes may need to override this with additional border or background changes to meet WCAG contrast requirements.
+- **Size**
+  **Decision**: RadioGroupItem renders at 16×16px (Tailwind `size-4`).
+  **Rationale**: Matches the toolkit's compact control sizing; this is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels, so consumers MUST ensure the associated `<label>` (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px — Base UI's radio role allows selecting via a click on the associated label.
+  **Approved**: pending
+
+- **Color transitions**
+  **Decision**: `transition-colors` is applied to all state changes (checked, focused, disabled).
+  **Rationale**: Provides visual feedback without jarring state shifts, following modern UI conventions. The transition is a brief color fade only, with no transform or motion, so it is treated as exempt from Reduce Motion policies rather than something the component must gate on `prefers-reduced-motion`; a consuming design system that wants zero transition can override with `transition-none`.
+  **Approved**: pending
+
+- **Focus ring**
+  **Decision**: The focus-visible state uses a 2px ring (`ring-2`) at 25% opacity of `apt-gold`, in addition to the 1px `apt-gold` border.
+  **Rationale**: Provides sufficient visibility without overwhelming the control, balancing accessibility with design aesthetic.
+  **Approved**: pending
+
+- **Disabled state**
+  **Decision**: Opacity reduction (50%) is the sole visual indicator for disabled state, combined with `pointer-events-none` and `cursor-not-allowed` to prevent interaction.
+  **Rationale**: Keeps the disabled treatment simple and consistent with other controls in the toolkit; high-contrast themes may need to override this with additional border or background changes to meet WCAG contrast requirements.
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [focus-visible-indicator](agenticdevelopercookbook://compliance/accessibility#focus-visible-indicator) | passed | Accessibility |
-| [semantic-radio-role](agenticdevelopercookbook://compliance/accessibility#semantic-radio-role) | passed | Accessibility |
-| [minimum-tap-target](agenticdevelopercookbook://compliance/accessibility#minimum-tap-target) | partial | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
+
+These statuses rest on the source's use of Base UI's semantic radio primitives and native label-click/Space-select behavior (screen-reader-support, semantic-markup, keyboard-navigable), its theme tokens having no literal color values and its fixed 16×16px size being below the 24×24px minimum (contrast-ratio and touch-target-size as partial), and its color-only, non-transform `transition-colors` (reduced-motion).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from Base UI radio primitives |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from Base UI radio primitives |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: scoped this file to RadioGroupItem only, moving group spacing/layout out and linking radio-group/checkbox/field via `related`; corrected WCAG citations (SC 2.5.8 24×24px target, SC 1.4.11 3:1 contrast); made theme-token and color-transition requirements platform-neutral with Tailwind specifics moved to the React/Web platform note; added `single-selection` and `space-selects` requirements with test vectors and rewrote the disabled-state vectors to test ignored interaction instead of class names; replaced the SwiftUI/UIKit/Compose/WinUI platform notes with real, correct APIs; corrected the Compliance check IDs and expanded coverage; reformatted Design Decisions into Decision/Rationale/Approved form; replaced the Configuration table with Base UI's real API; replaced filler edge cases with real ones and added their test vectors; resolved the Reduce Motion contradiction between Accessibility Options and Design Decisions. |

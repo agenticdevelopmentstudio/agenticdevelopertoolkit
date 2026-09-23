@@ -3,7 +3,7 @@ id: b3a92adc-a28e-4a33-8120-c33f8f0abdf6
 title: Progress
 domain: agenticdevelopertoolkit://recipes/progress
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-07-03'
@@ -21,7 +21,8 @@ tags:
 - feedback
 - ui
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/progress-modal
 references: []
 approved-by: ''
 approved-date: ''
@@ -39,7 +40,7 @@ primitive, so it needs no extra runtime dependency.
 
 The fill is a full-width indicator translated horizontally so that a `value` of 0
 hides it entirely (`translateX(-100%)`) and a `value` of 100 reveals it fully
-(`translateX(0)`); the transform animates smoothly. The track uses the
+(`translateX(-0%)`); the transform animates smoothly. The track uses the
 `apt-surface-2` token and the fill defaults to `apt-gold`, but the fill is meant to
 be re-tinted per context via `indicatorClassName` — e.g. amber while a job is
 building, green once it completes.
@@ -59,6 +60,8 @@ holds no internal state — `value` is fully controlled by the consumer.
 - **fill-tracks-value**: The component MUST size the visible fill proportionally to the clamped value, from empty at 0 to full at 100.
 - **indicator-class-tints-fill**: The component MUST apply any `indicatorClassName` to the fill element so a consumer MAY override its color.
 - **forwards-track-props**: The component MUST forward arbitrary props (`className`, `aria-label`, `id`, `data-*`) onto the track element.
+- **requires-accessible-name**: The consumer MUST supply an accessible name (`aria-label` or `aria-labelledby`) via the forwarded track props; an unnamed `progressbar` fails WCAG 4.1.2 (Name, Role, Value).
+- **honors-shared-reduce-motion**: The fill's transition MUST be expressed as an ordinary class-based `transition`/`duration` utility, never an inline `style` or `!important` override, so the shared `accessibility.css` reduce-motion rule (`html[data-reduce-motion="on"] *`, or the `prefers-reduced-motion` media query when the setting is "auto") can zero its duration without any change to this component.
 
 ## Appearance
 
@@ -71,8 +74,9 @@ value = 100      █████████████████████
 - Track: `relative h-2 w-full overflow-hidden rounded-full bg-apt-surface-2`; extra
   classes merge via `cn()` through `className`.
 - Indicator: `h-full w-full rounded-full bg-apt-gold` with
-  `transition-transform duration-300 ease-out`; positioned by an inline
-  `transform: translateX(-{100 - pct}%)`.
+  `transition-transform duration-[calc(300ms*var(--apt-anim-scale,1))] ease-out`
+  (a nominal 300ms, scaled by the shared dev-only slow-motion switch); positioned
+  by an inline `transform: translateX(-{100 - pct}%)`.
 - Fill color is token-based (`apt-gold` by default) and overridable through
   `indicatorClassName` (e.g. `bg-apt-green` for complete).
 - No raw hex; no `!important`.
@@ -83,7 +87,7 @@ value = 100      █████████████████████
 |---|---|
 | Empty (`value` ≤ 0) | Indicator fully translated out (`translateX(-100%)`); `aria-valuenow` = 0 |
 | Partial (0 < `value` < 100) | Indicator revealed proportionally; `aria-valuenow` = rounded value |
-| Full (`value` ≥ 100) | Indicator fully revealed (`translateX(0)`); `aria-valuenow` = 100 |
+| Full (`value` ≥ 100) | Indicator fully revealed (`translateX(-0%)`); `aria-valuenow` = 100 |
 | Transitioning | Fill animates between positions via `transition-transform` (300ms ease-out) |
 | Tinted (`indicatorClassName`) | Fill color overridden (e.g. amber while building, green when done) |
 
@@ -93,9 +97,10 @@ value = 100      █████████████████████
   `aria-valuenow` set to the rounded, clamped percentage — so assistive technology
   announces determinate progress.
 - It is a determinate bar only; there is no indeterminate mode.
-- The component carries no built-in visible or accessible label. Consumers SHOULD
+- The component carries no built-in visible or accessible label. Consumers MUST
   pass an `aria-label` (or `aria-labelledby`) — the demo labels each bar
-  ("Build progress", "Complete") — since a progress bar with no name is ambiguous to AT.
+  ("Build progress", "Complete") — since an unnamed `progressbar` fails WCAG
+  4.1.2 (Name, Role, Value); see **requires-accessible-name** and T8.
 - Purely presentational otherwise: not focusable and not interactive; progress is
   driven by the consumer's `value`.
 
@@ -107,10 +112,12 @@ value = 100      █████████████████████
 | T2 | reflects-value-in-valuenow, fill-tracks-value | `value={35}` | `aria-valuenow="35"`; indicator transform `translateX(-65%)` |
 | T3 | defaults-to-zero | render `<Progress />` (no `value`) | `aria-valuenow="0"`; indicator transform `translateX(-100%)` |
 | T4 | clamps-below-zero | `value={-40}` | `aria-valuenow="0"`; transform `translateX(-100%)` |
-| T5 | clamps-above-hundred | `value={140}` | `aria-valuenow="100"`; transform `translateX(0%)` |
+| T5 | clamps-above-hundred | `value={140}` | `aria-valuenow="100"`; transform `translateX(-0%)` |
 | T6 | reflects-value-in-valuenow | `value={35.6}` | `aria-valuenow="36"` (rounded) |
-| T7 | indicator-class-tints-fill | `value={100} indicatorClassName="bg-apt-green"` | fill element carries `bg-apt-green` |
-| T8 | forwards-track-props | `aria-label="Sync" id="p1"` | track element carries `aria-label="Sync"` and `id="p1"` |
+| T7 | indicator-class-tints-fill | `value={100} indicatorClassName="bg-apt-green"` | fill element carries `bg-apt-green` and NOT `bg-apt-gold` (`cn()` runs `tailwind-merge`, which drops the conflicting `bg-*` utility) |
+| T8 | forwards-track-props, requires-accessible-name | `aria-label="Sync" id="p1"` | track element carries `aria-label="Sync"` and `id="p1"` |
+| T9 | honors-shared-reduce-motion | render `<Progress value={35} />` under `html[data-reduce-motion="on"]` | computed `transition-duration` on the indicator resolves to `0.001ms` (the shared `accessibility.css` override), superseding the nominal `calc(300ms*var(--apt-anim-scale,1))` duration |
+| T10 | clamps-below-zero, clamps-above-hundred (see **non-finite-value-handling** under Edge Cases) | `value={NaN}` | `aria-valuenow="NaN"`; transform `translateX(-NaN%)` — `Math.min`/`Math.max` pass `NaN` through unclamped |
 
 ## Edge Cases
 
@@ -122,6 +129,12 @@ value = 100      █████████████████████
 - There is no indeterminate state — a value is always supplied, defaulting to 0.
 - `indicatorClassName` that also sets a background token overrides the default gold
   fill; a class that only tweaks other properties leaves the gold in place.
+- **non-finite-value-handling** — A non-finite `value` (`NaN`, `Infinity`) is not
+  caught by the `Math.min`/`Math.max` clamp — it passes straight through to
+  `aria-valuenow` and the fill's `transform` (see T10). The
+  **clamps-below-zero**/**clamps-above-hundred** guarantees cover finite
+  out-of-range numbers only; the source does not decide what a non-finite
+  value should mean, so it propagates unchanged.
 
 ## Configuration
 
@@ -144,8 +157,8 @@ Not applicable: Progress has no user-facing strings to localize; all content is 
 
 | Option | Behavior |
 |---|---|
-| Reduce Motion | Fill animation duration respects the `--apt-anim-scale` CSS custom property (default 1); set to 0 to disable transitions. |
-| Increase Contrast | Not applicable: the component uses fixed token-based colors (`apt-surface-2`, `apt-gold`) that meet platform contrast standards. |
+| Reduce Motion | Not driven by `--apt-anim-scale` — that CSS custom property is a dev-only 10x-slow-motion debug switch, unrelated to accessibility. The fill's transition is an ordinary class-based utility (see **honors-shared-reduce-motion**), so the shared `accessibility.css` reduce-motion rule (`html[data-reduce-motion="on"] *`, or the OS `prefers-reduced-motion` media query when the setting is "auto") overrides its duration to near-zero without any change to this component (T9). |
+| Increase Contrast | The Increase Contrast setting overrides `--color-on-surface`/`--color-outline*`/the focus-ring width (`accessibility.css`) — it does not touch `apt-gold`/`apt-surface-2`, so this component's colors are unaffected by that setting either way. Every shipped theme (`adh.css` and its siblings) resolves `apt-gold`/`apt-surface-2` to the same `#c4a35a` on `#1c1c24`, a measured ratio of ~7.0:1 — well above the WCAG 1.4.11 non-text 3:1 minimum. |
 | Differentiate Without Color | Not applicable: the component conveys progress via fill width and horizontal translation, not color alone. |
 
 ## Feature Flags
@@ -168,38 +181,56 @@ telemetry around a job's progress belong to the consumer, not the bar.
 ## Platform Notes
 
 - **Web/TypeScript**: File `packages/web/packages/ui/src/components/progress.tsx`. Carries `"use client"` because it renders an inline `style` transform, but holds no internal state — `value` is fully controlled by the consumer. Demo in `ui-showcase` Topic `progress` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`).
-- **SwiftUI**: Start from `ProgressView` with a `.linear` style and custom `ProgressViewStyle` to match token-based colors. Translate the fill position via a modifier rather than width animation for compositor efficiency.
-- **Compose**: Use `LinearProgressIndicator` with `progress` parameter clamped to 0–1. Animate fill translation via `Modifier.graphicsLayer()` with `translationX` keyed to the progress value.
-- **AppKit / UIKit**: Use `NSProgressIndicator` (AppKit) or `UIProgressView` (UIKit). Both are determinate by default; configure with a custom tint and animate progress updates on the main thread.
-- **WinUI 3**: Use `ProgressBar` with `Maximum=100`, `Value=clampedValue`, and bind `ProgressBarTemplate` to customize fill color via `TemplateBinding`. Animate value changes using a `Storyboard` on the `Value` property with `DoubleAnimation` duration 300ms.
+- **SwiftUI**: Start from `ProgressView(value: clampedValue, total: 100)` with the `.linear` `progressViewStyle` (or a custom `ProgressViewStyle` only if the track/fill need token colors the default style doesn't expose). `ProgressView` already draws and animates its own fill — no compositor translation modifier is needed; tint via `.tint(_:)` or the style's tint color.
+- **Compose**: Use `LinearProgressIndicator` with `progress = clampedValue / 100f` (the composable takes a 0–1 `Float`, not 0–100). Tint via the `color`/`trackColor` parameters. `LinearProgressIndicator` already draws and animates its own fill — no `Modifier.graphicsLayer()` translation is needed.
+- **AppKit / UIKit**: `NSProgressIndicator` (AppKit) defaults to `isIndeterminate = true` — set it to `false` (and `style = .bar`) to get a determinate bar. `UIProgressView` (UIKit) is determinate-only by default, no flag needed. Configure either with a custom tint and animate progress updates on the main thread.
+- **WinUI 3**: Use `ProgressBar` with `Maximum=100`, `Value=clampedValue`. Tint the fill by setting the `Foreground` brush (not `ProgressBarTemplate`/`TemplateBinding`, which isn't how `ProgressBar` fill color works). `ProgressBar` already animates value changes on its own — no custom `Storyboard`/`DoubleAnimation` is needed.
 
 ## Design Decisions
 
-- **Self-contained, no primitive dependency.** Rather than wrapping a headless
-  progress primitive, the bar owns its own `role="progressbar"` + `aria-value*`
-  attributes. Progress is simple enough that the ARIA is trivial, and avoiding an
-  extra runtime dependency keeps the shared bundle lean.
-- **Translate the fill, don't resize it.** The indicator is a full-width element
-  moved with `translateX(-{100 - pct}%)` rather than a width animation, so the fill
-  animates on the compositor (`transition-transform`) and stays crisp on its rounded ends.
-- **Clamp defensively.** `value` is clamped to 0–100 in the component so an
-  out-of-range value from a consumer can never overflow the track or produce a
-  nonsensical `aria-valuenow`.
-- **Tint via `indicatorClassName`, keep gold default.** The fill defaults to the
-  family `apt-gold` token but exposes a dedicated class hook so context can recolor
-  it (amber building → green done) without a variant explosion.
+**Decision**: The bar owns its own `role="progressbar"` + `aria-value*` attributes
+rather than wrapping a headless progress primitive.
+**Rationale**: Progress is simple enough that the ARIA is trivial, and avoiding
+an extra runtime dependency keeps the shared bundle lean.
+**Approved**: pending
+
+**Decision**: The indicator is a full-width element translated with
+`translateX(-{100 - pct}%)` rather than animated via a width change.
+**Rationale**: The fill animates on the compositor (`transition-transform`) and
+stays crisp on its rounded ends.
+**Approved**: pending
+
+**Decision**: `value` is clamped to 0–100 inside the component.
+**Rationale**: An out-of-range value from a consumer can never overflow the
+track or produce a nonsensical `aria-valuenow`.
+**Approved**: pending
+
+**Decision**: The fill defaults to the `apt-gold` token but exposes
+`indicatorClassName` as a dedicated recoloring hook.
+**Rationale**: Context can recolor the fill (amber building → green done)
+without a variant explosion.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Determinate progress exposes `role=progressbar` + `aria-value*` | pass | accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | passed | Accessibility |
+
+All three rest on `progress.tsx`: the `role="progressbar"` + `aria-valuemin`/
+`aria-valuemax`/`aria-valuenow` attributes; the class-based (non-inline,
+non-`!important`) `transition`/`duration` utility that lets the shared
+`accessibility.css` reduce-motion rule zero its duration; and the shared theme
+stylesheets (`adh.css` and its siblings), which all resolve `apt-gold`/
+`apt-surface-2` to `#c4a35a`/`#1c1c24` — a measured ~7.0:1 ratio, above the
+WCAG 1.4.11 non-text 3:1 minimum.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
-| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); update platform notes to cover all target platforms; correct domain URI. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the self-contained determinate Progress bar. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the Reduce Motion/Increase Contrast claims and cited the measured contrast ratio; fixed the SwiftUI/Compose/AppKit/WinUI 3 platform notes to use each platform's native progress control and API correctly; documented the unclamped non-finite `value` edge case; raised the accessible-name guidance from SHOULD to MUST; rebuilt the Compliance table with canonical linked checks; reformatted Design Decisions to the Decision/Rationale/Approved form; added `progress-modal` to `related`; fixed the States/T5 transform string mismatch; added test vectors for reduce motion, non-finite input, and the tailwind-merge fill override; corrected the 1.1.0 Change History entry's wording and author. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); update platform notes to cover all target platforms; correct domain URI. Drafted by Claude Haiku 4.5. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the self-contained determinate Progress bar. |

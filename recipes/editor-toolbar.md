@@ -3,11 +3,11 @@ id: 3C65C844-6C3C-43E2-B792-8575F5DDA9CF
 title: EditorToolbar
 domain: agenticdevelopertoolkit://recipes/editor-toolbar
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -16,10 +16,15 @@ summary: Semantic HTML toolbar wrapper with flexbox layout and ARIA accessibilit
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- toolbar
+- layout
+- accessibility
+- editor
 depends-on: []
 related: []
-references: []
+references:
+- https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/
 approved-by: ''
 approved-date: ''
 ---
@@ -28,18 +33,18 @@ approved-date: ''
 
 ## Overview
 
-EditorToolbar is a semantic layout wrapper that houses a horizontal control strip for text-editor surfaces (such as the row above a MarkdownEditor's textarea). It provides proper `role="toolbar"` and `aria-label` semantics for assistive technology, combined with flexbox layout and consistent gap spacing. The component is server-safe—it contains no hooks or client-side logic—and exists purely to establish correct HTML semantics and layout constraints for its children.
+EditorToolbar is a semantic layout wrapper that houses a horizontal control strip for text-editor surfaces (such as the row above a MarkdownEditor's textarea). It provides `role="toolbar"` and `aria-label` semantics for assistive technology, combined with flexbox layout and consistent gap spacing. The component is server-safe—it contains no hooks or client-side logic—and exists purely to establish correct HTML semantics and layout constraints for its children.
 
 ## Behavioral Requirements
 
-- **must-render-toolbar-role**: Component MUST render a `div` element with `role="toolbar"` to identify itself to assistive technology as a toolbar region.
-- **must-accept-aria-label**: Component MUST accept an `ariaLabel` prop that is passed directly to the `aria-label` attribute of the rendered element.
-- **must-default-aria-label**: Component MUST use the default aria-label value `"Editor toolbar"` when the `ariaLabel` prop is not provided.
-- **must-render-children**: Component MUST render the `children` prop without modification or filtering.
-- **must-accept-class-name**: Component MUST accept a `className` prop and merge it with the component's default Tailwind classes using the `cn()` utility.
-- **must-use-flexbox-layout**: Component MUST render with `display: flex` to establish flexbox layout for its children.
-- **must-center-items-vertically**: Component MUST use flexbox alignment to center children vertically (`align-items: center`).
-- **must-apply-gap-spacing**: Component MUST apply a consistent horizontal gap of `0.375rem` (6 pixels) between direct child elements via the `gap-1.5` Tailwind class.
+- **toolbar-role**: Component MUST render a `div` element with `role="toolbar"` to identify itself to assistive technology as a toolbar region.
+- **aria-label-prop**: Component MUST accept an `ariaLabel` prop that is passed directly to the `aria-label` attribute of the rendered element.
+- **aria-label-default**: Component MUST use the default aria-label value `"Editor toolbar"` when the `ariaLabel` prop is not provided.
+- **render-children**: Component MUST render the `children` prop without modification or filtering.
+- **class-name-merge**: Component MUST accept a `className` prop and merge it with the component's default layout classes so that a caller's classes can override the defaults.
+- **flex-layout**: Component MUST render with `display: flex` to establish flexbox layout for its children.
+- **vertical-center**: Component MUST use flexbox alignment to center children vertically (`align-items: center`).
+- **child-gap**: Component MUST apply a consistent horizontal gap of `0.375rem` (6 pixels) between direct child elements.
 
 ## Appearance
 
@@ -57,30 +62,33 @@ Not applicable: EditorToolbar is a pure layout container with no interactive sta
 
 ## Accessibility
 
-- **Role**: `toolbar` — identifies the region as a toolbar to assistive technology.
-- **Accessible name**: MUST be provided via `aria-label`. The default name is `"Editor toolbar"`, which is announced by screen readers when focus enters or the region is explicitly searched.
-- **Child focus management**: The component does not manage focus; child elements are responsible for their own keyboard and focus behavior.
+- **Role**: `toolbar` — identifies the region as a toolbar to assistive technology (see **toolbar-role**). The component establishes this semantic grouping only; see the Design Decisions entry below for what it deliberately does not provide.
+- **Accessible name**: MUST be provided via `aria-label`. The default name is `"Editor toolbar"` (see **aria-label-default**), which is announced by screen readers when focus enters or the region is explicitly searched. If a caller explicitly passes `ariaLabel=""`, the component applies it as given rather than falling back — see Edge Cases: **Empty ariaLabel** — which leaves the region with no accessible name; that is a caller error the component does not guard against.
+- **Child focus management**: The component does not manage focus; child elements are responsible for their own keyboard and focus behavior. Because `role="toolbar"` alone does not deliver the WAI-ARIA toolbar keyboard pattern (roving tabindex, arrow-key navigation, Home/End), consumers must not expect toolbar keyboard shortcuts from this container — see **keyboard-navigable** in Compliance and the Design Decisions entry below.
 - **Minimum tap target**: Not applicable to the container itself; child elements are responsible for meeting touch target size requirements (44×44pt minimum on iOS, 48×48dp minimum on Android, per platform guidelines).
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| editor-toolbar-001 | must-render-toolbar-role | Render component with default props | `<div role="toolbar" ...>` is present in the DOM |
-| editor-toolbar-002 | must-default-aria-label | Render component without `ariaLabel` prop | Element has `aria-label="Editor toolbar"` |
-| editor-toolbar-003 | must-accept-aria-label | Render with `ariaLabel="Custom toolbar"` | Element has `aria-label="Custom toolbar"` |
-| editor-toolbar-004 | must-render-children | Render with `children={<button>Bold</button>}` | Button element is rendered inside the toolbar |
-| editor-toolbar-005 | must-accept-class-name | Render with `className="custom-class"` | Element has both default classes and `custom-class` applied |
-| editor-toolbar-006 | must-use-flexbox-layout | Render component and inspect computed style | `display: flex` is present on the element |
-| editor-toolbar-007 | must-center-items-vertically | Render with tall and short children; inspect alignment | All children are vertically centered; no baseline drift |
-| editor-toolbar-008 | must-apply-gap-spacing | Render with multiple child elements; inspect spacing | Horizontal gap between children is 6px (0.375rem) |
+| editor-toolbar-001 | toolbar-role | Render component with default props | `<div role="toolbar" ...>` is present in the DOM |
+| editor-toolbar-002 | aria-label-default | Render component without `ariaLabel` prop | Element has `aria-label="Editor toolbar"` |
+| editor-toolbar-003 | aria-label-prop | Render with `ariaLabel="Custom toolbar"` | Element has `aria-label="Custom toolbar"` |
+| editor-toolbar-004 | render-children | Render with `children={<button>Bold</button>}` | Button element is rendered inside the toolbar |
+| editor-toolbar-005 | class-name-merge | Render with `className="custom-class"` | Element has both default classes and `custom-class` applied |
+| editor-toolbar-006 | flex-layout | Unit test: render component and inspect the rendered `class` attribute | Class attribute contains `flex` |
+| editor-toolbar-007 | vertical-center | Unit test: render component and inspect the rendered `class` attribute | Class attribute contains `items-center` |
+| editor-toolbar-008 | child-gap | Unit test: render component and inspect the rendered `class` attribute | Class attribute contains `gap-1.5` |
+| editor-toolbar-009 | vertical-center | Playwright: render with tall and short children in a browser; measure each child's bounding-box vertical center | All children's vertical centers match within a 1px tolerance; no baseline drift |
+| editor-toolbar-010 | child-gap | Playwright: render with multiple child elements in a browser; measure the gap between adjacent children | Horizontal gap is 6px ± 1px |
+| editor-toolbar-011 | child-gap | Playwright: render with `className="gap-4"` and multiple children; measure the gap between adjacent children | Horizontal gap is 16px ± 1px — the caller's `gap-4` overrides the default `gap-1.5` (tailwind-merge resolves the conflict; the later class wins) |
 
 ## Edge Cases
 
 - **No children**: Component MUST render successfully with `children={undefined}` or `children={[]}`, producing an empty `<div role="toolbar">` element.
 - **Single child**: Component MUST render successfully with a single child; gap spacing is not visible with only one child.
-- **Empty ariaLabel**: If `ariaLabel=""` is explicitly passed, component MUST apply the empty string as the aria-label; assistive technology will announce "toolbar" (the role alone).
-- **Multiple className values with conflicting styles**: The `cn()` utility resolves class conflicts by Tailwind's precedence rules; the last class in the argument order typically wins.
+- **Empty ariaLabel**: If `ariaLabel=""` is explicitly passed, component MUST apply the empty string as the aria-label as given — it does not fall back to the default and does not warn. Assistive technology then announces only the role ("toolbar") with no accessible name; callers must not pass an empty string if they want the region to have an accessible name.
+- **Multiple className values with conflicting styles**: The `cn()` utility resolves class conflicts using `tailwind-merge`, which is deterministic: within the same Tailwind class group, the later class in the merged argument order wins. A caller's `gap-4` therefore overrides the default `gap-1.5` (see Conformance Test Vector editor-toolbar-011).
 - **Server-side rendering**: Component is server-safe; it contains no hooks or client-side logic and MUST render correctly in server-side rendering contexts.
 
 ## Configuration
@@ -97,7 +105,9 @@ Not applicable: EditorToolbar is a layout container without deep-linking capabil
 
 ## Localization
 
-Not applicable: EditorToolbar has no user-facing strings beyond the `ariaLabel` prop, which is supplied by the caller and is not localized by the component itself.
+| String Key | Default (en) | Context |
+|-----------|-------------|---------|
+| `ariaLabel` (default) | `Editor toolbar` | Accessible name announced by screen readers when the caller does not supply `ariaLabel`. This default is a hardcoded English string and is not localized by the component itself; callers rendering in a non-English locale MUST supply a localized `ariaLabel`. |
 
 ## Accessibility Options
 
@@ -121,25 +131,35 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 
 ## Platform Notes
 
-- **React/Web**: Source files `packages/web/packages/ui/src/components/editor-toolbar.tsx`. Uses Tailwind CSS classes (`flex`, `items-center`, `gap-1.5`) for layout and the `cn()` utility from the local `lib/utils` module to merge custom className props. Server-safe; no `use client` directive required.
-- **SwiftUI**: Start from a `HStack` with spacing set to `6` points. Apply a `ControlGroup` wrapper or semantic `Section` header if the platform's equivalent toolbars require it. Ensure focus management for keyboard navigation within the stack.
-- **Compose**: Start from a `Row` (or `LazyRow` if large datasets) with `horizontalArrangement = Arrangement.spacedBy(6.dp)` and `verticalAlignment = Alignment.CenterVertically`. Wrap in a `Box` with semantic role (`role = Role.ToolBar` if the Compose runtime supports it) or apply a content description for accessibility.
-- **AppKit / UIKit**: Start from an `NSStackView` (AppKit) or `UIStackView` (UIKit) configured with `axis = .horizontal`, `spacing = 6`, and `alignment = .center`. If using SwiftUI on iOS/macOS, use a native `HStack` as above. Apply appropriate accessibility labels and traits to the container.
-- **WinUI 3**: Start from a `StackPanel` with `Orientation="Horizontal"` and `Spacing="6"`. Apply `VerticalAlignment="Center"` to align children. Use a `Grid` or `Border` as the parent if a toolbar control with built-in styling is preferred. Set `AutomationProperties.Name` to the equivalent of the `aria-label` prop for UIA accessibility.
+- **React/Web**: Source file `packages/web/packages/ui/src/components/editor-toolbar.tsx`. Renders a `div` with the Tailwind classes `flex items-center gap-1.5`, merged with a caller-supplied `className` via the `cn()` utility (`clsx` + `tailwind-merge`) from the local `lib/utils` module. `tailwind-merge` resolves conflicting utility classes deterministically — within a class group, the later class wins — so a caller's `gap-4` overrides the default `gap-1.5`. Server-safe; no `use client` directive required.
+- **SwiftUI**: Start from an `HStack(spacing: 6)`. Native toolbar containers (`.toolbar`, `ToolbarItemGroup`) attach chrome to a `NavigationStack` or window and don't apply to a strip embedded above a text view, so use a plain `HStack` instead. Group it for assistive technology with `.accessibilityElement(children: .contain)` and set the accessible name with `.accessibilityLabel(_:)`.
+- **Compose**: Start from a `Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically)`. `Role.ToolBar` does not exist in Compose's semantics API; apply `Modifier.semantics { contentDescription = "Editor toolbar" }` (or the caller-supplied label) to the `Row` instead. Compose's `TopAppBar`/`BottomAppBar` are for app-level chrome, not an in-editor strip, so they don't apply here. Do not use `LazyRow` — toolbar children are a small, fixed set, not a large scrollable dataset.
+- **AppKit / UIKit**: Start from an `NSStackView` (AppKit) or `UIStackView` (UIKit) configured with `axis = .horizontal`, `spacing = 6`, and `alignment = .center`. `NSToolbar` (AppKit) and `UIToolbar` (UIKit) attach to a window or navigation bar for app-level chrome and don't apply to a strip embedded above a text view, so use the stack view instead. If using SwiftUI on iOS/macOS, use the native `HStack` above. Apply an accessibility label and container semantics equivalent to `.accessibilityElement(children: .contain)` to the stack view.
+- **WinUI 3**: Start from a `StackPanel` with `Orientation="Horizontal"` and `Spacing="6"`. `VerticalAlignment="Center"` on the `StackPanel` positions the panel itself, not its children; set `VerticalAlignment="Center"` on each child instead (or via an implicit `Style` targeting the child type). The `StackPanel` is the toolbar's root — no additional `Grid` or `Border` parent is needed. `CommandBar` supplies built-in overflow/menu chrome for app-level toolbars and isn't a fit for a plain in-editor strip; prefer the `StackPanel`. Set `AutomationProperties.Name` to the equivalent of the `aria-label` prop for UIA accessibility.
 
 ## Design Decisions
 
-EditorToolbar is deliberately minimal and headless — it provides only semantic HTML structure and basic flexbox layout, deferring all visual styling to the caller via the `className` prop. This design allows the component to work in any visual context (light mode, dark mode, custom themes) without baking in colors or opinionated styling. The component's sole responsibility is to establish correct toolbar semantics and consistent child spacing, leaving presentational concerns to the parent or a parent-provided theme.
+**Decision**: Render as a headless, minimal wrapper — semantic HTML structure and flexbox layout only, with all visual styling deferred to the caller via `className`.
+**Rationale**: This design allows the component to work in any visual context (light mode, dark mode, custom themes) without baking in colors or opinionated styling; its sole responsibility is correct toolbar semantics and consistent child spacing, leaving presentational concerns to the parent or a parent-provided theme.
+**Approved**: pending
+
+**Decision**: Use `role="toolbar"` for semantic grouping without implementing the WAI-ARIA toolbar keyboard pattern (roving tabindex, arrow-key navigation, Home/End); focus and keyboard handling are left entirely to child elements.
+**Rationale**: The component composes arbitrary, caller-supplied children and cannot know their keyboard semantics in advance. It establishes the `toolbar` region for assistive technology without promising keyboard behavior it doesn't implement — see **keyboard-navigable** in Compliance for the resulting gap.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [toolbar-semantics](agenticdevelopercookbook://compliance/accessibility#toolbar-semantics) | passed | Accessibility |
-| [aria-label-presence](agenticdevelopercookbook://compliance/accessibility#aria-label-presence) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | failed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+
+`semantic-markup` is `partial` because the source (`editor-toolbar.tsx`) sets `role="toolbar"` and `aria-label` but does not guard an explicitly empty `ariaLabel`, and the `toolbar` role doesn't fully match the keyboard behavior it implies; `keyboard-navigable` is `failed` because the source has no focus or keyboard handling at all; `no-hardcoded-strings` is `failed` because the default `"Editor toolbar"` string is a literal in the source rather than a localization lookup.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed must-* requirements to subject-only kebab-case; reformatted Design Decisions into Decision/Rationale/Approved form and added a decision documenting the toolbar-role/keyboard-behavior gap; corrected Compliance check names against the catalog and added keyboard-navigable and no-hardcoded-strings; rewrote Platform Notes to drop the Tailwind/`cn()` coupling outside the React/Web note and to address native toolbar controls per platform; split Conformance Test Vectors into unit class assertions and Playwright pixel/gap vectors, adding a vector for className override precedence; reconciled the Accessibility section with the Empty ariaLabel edge case; populated Localization with the hardcoded default string; added the WAI-ARIA toolbar reference; added tags; fixed modified-date quoting; corrected Change History author to match frontmatter author |

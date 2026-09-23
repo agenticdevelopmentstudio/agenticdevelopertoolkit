@@ -3,7 +3,7 @@ id: 169da1b6-2a22-4fec-9f01-8118e5242bd5
 title: ReactionBar
 domain: agenticdevelopertoolkit://recipes/reaction-bar
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-08-08'
@@ -64,7 +64,7 @@ fact rather than restating a literal per surface.
 - **palette-uses-the-same-toggle**: Picking an emoji from the palette MUST invoke `onToggle` with that emoji — the same call a chip makes — and MUST close the popover.
 - **palette-offers-everything**: The palette MUST offer every entry in `choices`, including emoji already present on the subject, so it never has to explain an absence.
 - **busy-goes-inert**: When `busy`, every chip and the palette trigger MUST be disabled, and the bar MUST keep rendering the same chips in the same order.
-- **disabled-hides-the-way-in**: When `disabled`, the counts MUST still render and the palette trigger MUST NOT render at all.
+- **disabled-hides-the-way-in**: When `disabled`, the counts MUST still render, every chip MUST be disabled, and the palette trigger MUST NOT render at all.
 - **names-the-subject**: Every control's accessible name MUST include `subjectLabel`, so two bars on one page are distinguishable.
 - **glyph-is-decorative**: The emoji glyph inside a control MUST be `aria-hidden`, leaving the control's `aria-label` as its sole accessible name.
 
@@ -132,7 +132,7 @@ fact rather than restating a literal per surface.
 | T5 | palette-offers-choices, palette-uses-the-same-toggle | open the palette, pick `DEFAULT_REACTIONS[1]` | `onToggle` called with that emoji; the popover closes |
 | T6 | palette-offers-everything | open the palette while 👍 is on the subject | 👍 is still offered in the palette |
 | T7 | busy-goes-inert | `busy` | every chip is `disabled`; the same two chips are still present, in order |
-| T8 | disabled-hides-the-way-in | `disabled` | the chips render; no control named `React to <subject>` exists |
+| T8 | disabled-hides-the-way-in | `disabled` | the chips render and are disabled; no control named `React to <subject>` exists |
 | T9 | renders-one-chip-per-tally | `reactions=[]` | no chip; the palette trigger alone |
 | T10 | glyph-is-decorative | inspect a chip's glyph | the emoji `<span>` carries `aria-hidden` |
 | T11 | names-the-subject (Playwright) | two bars with different `subjectLabel` | each bar's chips are addressable by name without ambiguity |
@@ -168,13 +168,22 @@ fact rather than restating a literal per surface.
 
 `ReactionBarItem` is `{ emoji: string; count: number; mine: boolean }`.
 
+`DEFAULT_REACTIONS` is `["👍", "🎉", "👀", "🙏", "😄", "❤️"]`, in that order.
+
 ## Deep Linking
 
 Not applicable: ReactionBar is a presentational component with no navigable state or independent views to deep-link to. Navigation concerns belong to the consumer.
 
 ## Localization
 
-Not applicable: The component displays emoji (language-neutral) and all user-facing text labels (aria-label, accessible names) are supplied by the consumer through `subjectLabel`. The component itself carries no translatable strings.
+The component builds its own accessible-name strings around the consumer-supplied `subjectLabel`:
+`` `${emoji} ${count} on ${subjectLabel}` ``, `` `React to ${subjectLabel}` ``, and
+`` `React ${emoji} to ${subjectLabel}` ``. Only `subjectLabel` comes from the consumer — the
+surrounding English phrasing ("on", "React to", "React … to") is hardcoded in the component and
+is not externalized or translated. The count is interpolated as a plain number without
+locale-aware formatting (no `Intl.NumberFormat`), so a large count renders in a fixed,
+non-localized digit grouping. See **string-externalization**, **no-hardcoded-strings**, and
+**locale-aware-formatting** in Compliance.
 
 ## Accessibility Options
 
@@ -200,45 +209,97 @@ No logging. `ReactionBar` is presentational; what a toggle means, and any teleme
 
 - **React/Web**: File: `packages/web/packages/ui/src/components/reaction-bar.tsx`, exported from `@agenticdevelopertoolkit/ui/components/reaction-bar` via the package's `./components/*` wildcard. Composes the shared `Button` and `Popover`/`PopoverTrigger`/`PopoverContent` primitives, plus a lucide `SmilePlus` icon; carries `"use client"` directive to own the popover's open state. Themes via `@agenticdevelopertoolkit/ui` token system (`apt-gold`, `apt-border`, `apt-text-*`, etc.).
 
-- **SwiftUI**: Start from a `VStack` or `HStack` with wrapping layout; use SwiftUI `Button` for each reaction chip with a `@State` boolean to track whether the viewer has reacted. The palette could be a `Menu` or custom `Popup`/`Popover` with emoji buttons. Count display uses `Text` with `.monospacedDigit()` font modifier. State management via `@State` for open/closed palette.
+- **SwiftUI**: `VStack`/`HStack` do not wrap, so use a custom flow `Layout` for the chip row.
+  Each reaction is a SwiftUI `Button` with its pressed state driven from the `mine` input, not
+  from local state, and announced via `.accessibilityAddTraits(mine ? .isSelected : [])` — the
+  equivalent of `aria-pressed`. The palette could be a `Menu` or custom `Popup`/`Popover` with
+  emoji buttons. Count display uses `Text` with `.monospacedDigit()` font modifier. `@State` is
+  used only for whether the palette is open or closed.
 
-- **Compose**: Implement using `Row` with `Modifier.fillMaxWidth(1f)` and `wrapContentHeight()` for wrapping layout. Each reaction is a `Button` composable, with a separate trigger `Button` styled as a circular icon for the palette. Palette is a `Popup` or `DropdownMenu`. Counts display in `Text` with `.fontFeatureSettings("tnum")` for monospaced digits. Use `remember { mutableStateOf(false) }` for palette open state.
+- **Compose**: `Row` with `Modifier.fillMaxWidth()` does not wrap, so use `FlowRow` for the chip
+  row. Each reaction is a `Button` composable with the pressed state exposed via
+  `Modifier.toggleable(value = mine, onValueChange = { ... })` or
+  `Modifier.semantics { selected = mine }` — the equivalent of `aria-pressed` — plus a separate
+  trigger `Button` styled as a circular icon for the palette. Palette is a `Popup` or
+  `DropdownMenu`. Counts display in `Text` with `style = TextStyle(fontFeatureSettings = "tnum")`
+  for monospaced digits (`fontFeatureSettings` is a `TextStyle` parameter, not a modifier). Use
+  `remember { mutableStateOf(false) }` only for palette open state.
 
-- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `distribution = .fillEqually` and `axis = .horizontal` wrapping to a new line; alternately, use a grid layout. Each chip is an `NSButton` (AppKit, `bezelStyle = .rounded`) or `UIButton` (UIKit, custom styling). The palette is an `NSPopover` (AppKit) or `UIMenuActions`/`UIMenu` (UIKit 13+). Accessibility via `NSAccessibilityRole` (AppKit) or `accessibilityTraits` (UIKit) set to `.button` and custom `NSAccessibilityElement` / `accessibilityLabel` construction for each chip and trigger.
+- **AppKit / UIKit**: `NSStackView`/`UIStackView` do not wrap, and `.fillEqually` is wrong for
+  chips of different widths, so use `NSCollectionView` (AppKit) or `UICollectionView` (UIKit)
+  with a flow layout. Each chip is an `NSButton` (AppKit) with `.pushOnPushOff` for toggle
+  semantics, or a `UIButton` (UIKit) with the `.selected` trait bound to `mine`. The palette is
+  an `NSPopover` (AppKit) or a `UIMenu`/`UIAction` presented via a
+  `UIPopoverPresentationController` (UIKit; `UIMenuActions` does not exist). Accessibility via
+  `NSAccessibilityRole` (AppKit) or `accessibilityTraits` (UIKit) set to `.button`, with custom
+  `NSAccessibilityElement` / `accessibilityLabel` construction for each chip and trigger.
 
-- **WinUI 3**: Use a `StackPanel` with `Orientation="Horizontal"` and `TextWrapping="Wrap"` for the row layout. Each reaction is a `Button` with `IsToggled` property for the `mine` state (or custom `ToggleButton`); style with border and background per the Fluent 2 Design System. The palette is a `Flyout` or `MenuFlyout` attached to a `Button` trigger. Count display uses `TextBlock` with `FontFamily="Segoe UI Variable"` and `NumberSubstitution.CultureOverride` set for monospaced numerals. Accessibility via `AutomationProperties.Name` (equivalent to aria-label) for every interactive element.
+- **WinUI 3**: `StackPanel` has no `TextWrapping` property, so use an `ItemsRepeater` with a
+  `WrapLayout` (or a `WrapPanel`) for the row. Each reaction is a `ToggleButton` with `IsChecked`
+  bound to `mine` (`Button` has no `IsToggled` property), styled per the Fluent 2 Design System.
+  The palette is a `Flyout` or `MenuFlyout` attached to a `Button` trigger. Count display uses
+  `TextBlock` with `FontFamily="Segoe UI Variable"` and `Typography.NumeralAlignment="Tabular"`
+  for tabular numerals (`NumberSubstitution.CultureOverride` does not give tabular digits).
+  Accessibility via `AutomationProperties.Name` (equivalent to aria-label) for every interactive
+  element.
 
 ## Design Decisions
 
-- **One `onToggle`, not `onAdd` + `onRemove`.** The caller already knows which way the press
-  goes — it supplied `mine`. A second callback would let the two disagree and would push the
-  same decision into every consumer.
-- **The bar holds no tallies.** Optimistically mutating a count here would fork the truth: the
-  server's answer arrives moments later and the bar would have to reconcile a state it does not
-  own. Keeping it presentational is also what lets one component serve every subject kind.
-- **`aria-pressed` rather than colour alone.** The pressed/not distinction is the whole
-  interaction; a border tint states it only to people who can see it.
-- **The palette trigger is the primitive, styled.** Wrapping a `Button` inside a
-  `PopoverTrigger` nests two focusable elements; styling the trigger directly is the sibling
-  `OptionMenu` / `SectionHeader` idiom in this package.
-- **`DEFAULT_REACTIONS` is exported and short.** Exported so the default palette is one fact
-  rather than a literal per surface; short because a long grid is a picker, and a picker is a
-  different component.
-- **`busy` disables rather than hides.** Removing chips mid-write moves the pointer's target
-  between the press and its result.
+**Decision**: One `onToggle` callback, not separate `onAdd` and `onRemove` callbacks.
+**Rationale**: The caller already knows which way the press goes — it supplied `mine`. A second
+callback would let the two disagree and would push the same decision into every consumer.
+**Approved**: pending
+
+**Decision**: The bar holds no tallies itself.
+**Rationale**: Optimistically mutating a count here would fork the truth: the server's answer
+arrives moments later and the bar would have to reconcile a state it does not own. Keeping it
+presentational is also what lets one component serve every subject kind.
+**Approved**: pending
+
+**Decision**: Announce the pressed state with `aria-pressed` rather than colour alone.
+**Rationale**: The pressed/not distinction is the whole interaction; a border tint states it
+only to people who can see it.
+**Approved**: pending
+
+**Decision**: The palette trigger is the `PopoverTrigger` primitive itself, styled directly, not
+a `Button` wrapped in one.
+**Rationale**: Wrapping a `Button` inside a `PopoverTrigger` nests two focusable elements;
+styling the trigger directly is the sibling `OptionMenu` / `SectionHeader` idiom in this
+package.
+**Approved**: pending
+
+**Decision**: `DEFAULT_REACTIONS` is exported and deliberately short.
+**Rationale**: Exported so the default palette is one fact rather than a literal per surface;
+short because a long grid is a picker, and a picker is a different component.
+**Approved**: pending
+
+**Decision**: `busy` disables controls rather than hiding them.
+**Rationale**: Removing chips mid-write moves the pointer's target between the press and its
+result.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Toggle state announced (`aria-pressed`), not colour-only | pass | accessibility |
-| Every control's accessible name names its subject | pass | accessibility |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
+
+Statuses rest on the source: it styles every element through `apt-*` tokens with no raw hex and
+composes only the shared `Button`/`Popover` primitives (no bespoke controls); it sets
+`aria-pressed`, `aria-hidden`, and a subject-naming `aria-label` correctly on every control; and
+it builds its accessible-name and count text as hardcoded English template literals with no
+`Intl.NumberFormat` call, which is what fails the three internationalization checks.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix Compliance table statuses/links and add the Internationalization checks the Localization gap fails; reformat Design Decisions to the Decision/Rationale/Approved triple; correct WinUI 3, Compose, SwiftUI and AppKit/UIKit platform-note API errors; drive the SwiftUI pressed state from `mine` instead of local state; require chips to be disabled under `disabled`; list the exact `DEFAULT_REACTIONS` array in Configuration; rewrite Localization to describe the component's hardcoded English strings and unformatted counts. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark inapplicable sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy). |
 | 1.0.0 | 2026-08-08 | Mike Fullerton | Initial recipe; documents the toggle chips, the palette, and the presentational contract. |

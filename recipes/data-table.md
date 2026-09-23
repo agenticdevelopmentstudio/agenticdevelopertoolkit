@@ -3,7 +3,7 @@ id: d04eef56-2dbf-4148-964b-c095f242227f
 title: "DataTable"
 domain: agenticdevelopertoolkit://recipes/data-table
 type: ingredient
-version: 1.3.1
+version: 1.4.0
 status: review
 language: en
 created: 2026-06-26
@@ -20,8 +20,13 @@ tags:
   - data-table
   - table
   - ui
-depends-on: []
-related: []
+depends-on:
+  - agenticdevelopertoolkit://recipes/checkbox
+  - agenticdevelopertoolkit://recipes/dnd
+  - agenticdevelopertoolkit://recipes/inline-commit-control
+related:
+  - agenticdevelopertoolkit://recipes/list-with-details-pane
+  - agenticdevelopertoolkit://recipes/add-users-modal
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,7 +40,7 @@ A generic, selectable, optionally-sortable, optionally-reorderable table primiti
 It is a **controlled** table: the caller owns `rows`, the `selectedIds` set, and
 the optional `sort`. The component renders columns, handles pointer + keyboard
 selection, and reports changes up. It is generic over the row type `T` and owns
-the multi-row selection model (click / ⇧-click / ⌘-click / keyboard). It is the
+the multi-row selection model (click / ⇧-click / ⌥-click / keyboard). It is the
 foundation for `ListWithDetailsPane` and `AddUsersModal`.
 
 ## Behavioral Requirements
@@ -44,7 +49,7 @@ foundation for `ListWithDetailsPane` and `AddUsersModal`.
 
 - **click-selects-row**: On a plain click of a row, the component MUST set the selection to exactly `{id}` and set the internal anchor to that id.
 - **shift-click-extends-range**: On ⇧-click of a row, the component MUST set the selection to the contiguous range from the anchor to the clicked id (in the current `rows` order) and MUST leave the anchor unchanged.
-- **modifier-click-toggles**: On ⌘/Ctrl-click or ⌥/Alt-click of a row, the component MUST toggle that id in or out of the selection and MUST set the anchor to that id.
+- **alt-click-adds-to-selection**: On ⌥/Alt-click of a row, the component MUST add that id to the selection (leaving the selection unchanged if it is already present) and MUST set the anchor to that id. There is no ⌘/Ctrl-click binding on the pointer path; ⌘/Ctrl is not read by the click handler.
 - **arrow-key-moves-selection**: When the grid is focused, ↑/↓ MUST set the selection to the previous/next row's id, set the anchor to it, and clamp at the first/last row.
 - **shift-arrow-extends-range**: ⇧+↑/⇧+↓ MUST extend the selection one row from the anchor.
 - **space-toggles-focused-row**: Space MUST toggle the focused row in or out of the selection.
@@ -64,29 +69,35 @@ foundation for `ListWithDetailsPane` and `AddUsersModal`.
 
 ### Column Sizing (`autoSizeColumns`, opt-in)
 
-- **must-size-columns-to-widest-cell**: With `autoSizeColumns`, a column with no declared `width` MUST be as wide as its WIDEST cell — measured across the header and every row, so all rows share one track and the columns LINE UP. A `max-content` track alone does NOT satisfy this: each row is its own grid (it must be, to carry the row's background/selection), so `max-content` would size every row independently and the header would not align with the body. The component therefore renders one pass at `max-content` (each cell at its natural width), measures the widest cell per column, and locks that in as an explicit px track — both passes BEFORE paint, so no misaligned frame is ever shown. It MUST re-measure when the rows or columns change.
-- **must-resize-columns-by-drag**: With `autoSizeColumns`, each column (except one marked `resizable: false`) MUST offer a drag handle on its TRAILING border that sets an explicit width; DOUBLE-CLICKING the handle MUST clear it, springing the column back to fitting its content. A dragged width MUST win over the measured one, and MUST NOT go below a legible minimum (48px).
-- **may-persist-column-widths**: Given `columnWidthsKey`, the dragged widths MUST persist (localStorage under key `data-table-cols:{columnWidthsKey}`) so a table remembers its layout across visits.
-- **must-fill-slack-not-stretch**: Content-sized columns MUST pack to the leading edge — a trailing filler track absorbs any leftover width — rather than stretching to fill the table.
-- **must-truncate-when-dragged-narrow**: A column dragged NARROWER than its content MUST ellipsise, never reflow (which would knock every row out of vertical alignment).
+- **size-columns-to-widest-cell**: With `autoSizeColumns`, a column with no declared `width` MUST be as wide as its WIDEST cell — measured across the header and every row, so all rows share one track and the columns LINE UP. A `max-content` track alone does NOT satisfy this: each row is its own grid (it must be, to carry the row's background/selection), so `max-content` would size every row independently and the header would not align with the body. The component therefore renders one pass at `max-content` (each cell at its natural width), measures the widest cell per column, and locks that in as an explicit px track — both passes BEFORE paint, so no misaligned frame is ever shown. It MUST re-measure when the rows or columns change.
+- **resize-columns-by-drag**: With `autoSizeColumns`, each column (except one marked `resizable: false`) MUST offer a drag handle on its TRAILING border that sets an explicit width; DOUBLE-CLICKING the handle MUST clear it, springing the column back to fitting its content. A dragged width MUST win over the measured one, and MUST NOT go below a legible minimum (48px).
+- **persist-column-widths**: Given `columnWidthsKey`, the dragged widths MUST persist (localStorage under key `data-table-cols:{columnWidthsKey}`) so a table remembers its layout across visits.
+- **fill-slack-not-stretch**: Content-sized columns MUST pack to the leading edge — a trailing filler track absorbs any leftover width — rather than stretching to fill the table.
+- **truncate-when-dragged-narrow**: A column dragged NARROWER than its content MUST ellipsise, never reflow (which would knock every row out of vertical alignment).
 
 ### Reordering (`reorder`, opt-in)
 
-- **must-enable-row-drag-to-reorder**: When `reorder` is provided, rows MUST be draggable; releasing a row over the table MUST invoke `reorder.onDrop` with a `SortableDrop` object describing the new position.
-- **must-respect-candrag-check**: When `reorder.canDrag` is provided, a row MUST NOT be draggable if `canDrag(id)` returns false.
-- **must-announce-drag-state**: When a row is picked up, dragged, or dropped, the component MUST emit accessible announcements describing the row and the drop zone using `reorder.describeRow` (or the row's `describeRow` function, or a fallback description).
-- **must-not-reorder-while-sorted**: Reordering SHOULD be omitted when a sort or filter is in force, as a dragged position would describe the view rather than the underlying list.
+- **enable-row-drag-to-reorder**: When `reorder` is provided, rows MUST be draggable; releasing a row over the table MUST invoke `reorder.onDrop` with a `SortableDrop` object describing the new position.
+- **respect-candrag-check**: When `reorder.canDrag` is provided, a row MUST NOT be draggable if `canDrag(id)` returns false.
+- **announce-drag-state**: When a row is picked up, dragged, or dropped, the component MUST emit accessible announcements describing the row and the drop zone using `reorder.describeRow` (or the row's `describeRow` function, or a fallback description).
+
+Whether reordering should be disabled while a sort or filter is in force is a caller obligation, not a component behavior — see **Design Decisions**.
 
 ### Selection Checkboxes (`showSelectionCheckboxes`, opt-in)
 
-- **must-add-leading-checkbox-column**: When `showSelectionCheckboxes` is true and the table is selectable, the component MUST add a leading checkbox column that displays one checkbox per row.
-- **must-include-select-all**: The selection checkbox column header MUST include a "Select all" checkbox that toggles the selection state of every visible row (not other pages or filters).
-- **must-label-checkboxes**: Each row's checkbox MUST have an accessible label derived from `describeRow(row)` if provided, or by looking for the first non-empty string field in the row that is not the id, or falling back to `row {id}`.
-- **checkbox-click-not-select-row**: Clicking a selection checkbox MUST NOT trigger row selection via `onRowClick`; it MUST only toggle that row's checkbox.
+- **add-leading-checkbox-column**: When `showSelectionCheckboxes` is true and the table is selectable, the component MUST add a leading checkbox column that displays one checkbox per row.
+- **include-select-all**: The selection checkbox column header MUST include a "Select all" checkbox that toggles the selection state of every visible row (not other pages or filters).
+- **label-checkboxes**: Each row's checkbox MUST have an accessible label derived from `describeRow(row)` if provided, or by looking for the first non-empty string field in the row that is not the id, or falling back to `row {id}`.
+- **checkbox-click-not-select-row**: Clicking a selection checkbox MUST NOT trigger the row's own selection handling; it MUST only toggle that row's checkbox.
 
 ### Inline-Editable Cells
 
-- **must-not-hijack-cell-controls**: The selectable grid's keyboard/pointer machinery MUST ignore events that originate from a control INSIDE a cell (input / textarea / select / button / link / contenteditable / `[role='button']`). Its Arrow/Space handlers call `preventDefault`, which would swallow a space typed into an inline editor or a native select's keyboard use; and its mousedown-`preventDefault` would stop the control taking focus at all. Without this, selection and inline editing are mutually exclusive — a selectable table could not host an editable cell. A click on an in-cell control MUST still select its row (so a details pane follows the row being edited) while leaving the control's own click intact.
+- **not-hijack-cell-controls**: The selectable grid's keyboard/pointer machinery MUST ignore events that originate from a control INSIDE a cell (input / textarea / select / button / link / contenteditable / `[role='button']`). Its Arrow/Space handlers call `preventDefault`, which would swallow a space typed into an inline editor or a native select's keyboard use; and its mousedown-`preventDefault` would stop the control taking focus at all. Without this, selection and inline editing are mutually exclusive — a selectable table could not host an editable cell. A click on an in-cell control MUST still select its row (so a details pane follows the row being edited) while leaving the control's own click intact.
+
+### Empty and Loading States
+
+- **renders-empty-state**: When `rows` is empty and `loading` is false, the component MUST render `emptyLabel` in place of rows.
+- **renders-loading-state**: When `loading` is true, the component MUST render a loading affordance (`role="status"`) instead of rows, taking precedence over the empty state.
 
 ### Action-List Mode (Unselectable)
 
@@ -141,24 +152,35 @@ foundation for `ListWithDetailsPane` and `AddUsersModal`.
 |---|---|---|---|
 | T1 | click-selects-row | click row Ada | selection = `{Ada}`, anchor = Ada |
 | T2 | shift-click-extends-range | click Ada, ⇧-click Grace | selection = contiguous Ada…Grace |
-| T3 | modifier-click-toggles | ⌘-click selected row | row removed from selection |
+| T3 | alt-click-adds-to-selection | ⌥-click an unselected row | row added to selection, anchor set to it |
+| T3b | alt-click-adds-to-selection | ⌥-click an already-selected row | selection unchanged |
 | T4 | arrow-key-moves-selection | focus grid, press ↓ | selection moves to next row, clamps at end |
 | T5 | shift-arrow-extends-range | anchor set, ⇧+↓ | range extends one row from anchor |
 | T6 | space-toggles-focused-row | focus row, press Space | focused row toggles |
-| T7 | no-internal-sort, onselectionchange-new-set | click sortable header | `onSortChange` fires with toggled dir; `rows` unchanged by component |
+| T7 | no-internal-sort | click sortable header | `onSortChange` fires with toggled dir; `rows` unchanged by component |
 | T8 | selection-by-id | reorder `rows` after selecting | selection preserved across reorder |
-| T9 | inert-sort-when-no-handler | render without `onSortChange` | empty + loading states render; headers inert |
+| T9 | inert-sort-when-no-handler | render without `onSortChange`, click a sortable header | no sort affordance fires; `onSortChange` is never called |
 | T10 | action-list-mode-when-unselectable | render without `selectedIds`/`onSelectionChange`; click a row | rows carry no `aria-selected`/`data-selected`, no pointer cursor; the click selects nothing; in-cell buttons remain operable |
 | T11 | double-click-activates-row | double-click row with `onRowActivate` | `onRowActivate(id)` fires |
+| T11b | double-click-activates-row | double-click an in-cell control (e.g. a button) with `onRowActivate` provided | `onRowActivate` does not fire; the control's own double-click behavior is unaffected |
 | T12 | enter-activates-focused-row | focus row, press Enter with `onRowActivate` | `onRowActivate(id)` fires |
-| T13 | must-size-columns-to-widest-cell | render with `autoSizeColumns: true` | header and body cells align; column is as wide as widest cell |
-| T14 | must-resize-columns-by-drag | drag column header's trailing border | column width changes; width persists if `columnWidthsKey` set |
-| T15 | must-truncate-when-dragged-narrow | drag column narrower than content | cell text ellipsises; row heights remain aligned |
-| T16 | must-enable-row-drag-to-reorder | drag row with `reorder` prop | `reorder.onDrop` fires with new position |
-| T17 | must-respect-candrag-check | drag row where `canDrag(id)` = false | row does not enter dragged state; `onDrop` does not fire |
-| T18 | must-add-leading-checkbox-column | render with `showSelectionCheckboxes: true` | leading column added with checkbox per row |
-| T19 | must-include-select-all | click "Select all" checkbox | all visible rows selected |
-| T20 | checkbox-click-not-select-row | click row checkbox | checkbox toggles; `onSelectionChange` fires; row does not fire `onRowClick` |
+| T13 | size-columns-to-widest-cell | render with `autoSizeColumns: true` | header and body cells align; column is as wide as widest cell |
+| T14 | resize-columns-by-drag | drag column header's trailing border | column width changes |
+| T15 | truncate-when-dragged-narrow | drag column narrower than content | cell text ellipsises; row heights remain aligned |
+| T16 | enable-row-drag-to-reorder | drag row with `reorder` prop | `reorder.onDrop` fires with new position |
+| T17 | respect-candrag-check | drag row where `canDrag(id)` = false | row does not enter dragged state; `onDrop` does not fire |
+| T18 | add-leading-checkbox-column | render with `showSelectionCheckboxes: true` | leading column added with checkbox per row |
+| T19 | include-select-all | click "Select all" checkbox | all visible rows selected |
+| T20 | checkbox-click-not-select-row | click row checkbox | checkbox toggles; `onSelectionChange` fires; the row's own click-selection handling does not fire |
+| T21 | onselectionchange-new-set | click row Ada, capture the `Set` passed to `onSelectionChange`, then click row Grace | the second call receives a new `Set` instance, distinct from the first |
+| T22 | pointer-no-focus-steal | focus an in-cell editor elsewhere on the page, then mousedown a row (not on an in-cell control) | the editor keeps focus; the grid does not receive it |
+| T23 | persist-column-widths | drag a column with `columnWidthsKey` set, then remount the table with the same key | the dragged width is read back from `localStorage` and applied |
+| T24 | fill-slack-not-stretch | render with `autoSizeColumns: true` and columns narrower than the container | a trailing filler track absorbs the slack; content-sized columns stay left-packed |
+| T25 | not-hijack-cell-controls | focus an in-cell `<input>`, press Space | the grid's Space handler does not fire; the input receives the space character |
+| T26 | announce-drag-state | pick up a row via `reorder` | an accessible announcement naming the row and drop zone is emitted |
+| T27 | label-checkboxes | render a row checkbox with no `describeRow` prop and no other non-empty string field on the row | checkbox `aria-label` falls back to `row {id}` |
+| T28 | renders-empty-state | render with `rows: []`, `loading: false` | `emptyLabel` is shown in place of rows |
+| T29 | renders-loading-state | render with `loading: true` and non-empty `rows` | the `role="status"` loading affordance is shown instead of rows |
 
 ## Edge Cases
 
@@ -166,11 +188,14 @@ foundation for `ListWithDetailsPane` and `AddUsersModal`.
 - Ids no longer present in `rows` are pruned by the caller, not the component.
 - With `onSortChange` omitted, sortable headers are inert (no sorting offered).
 - `loading` and an empty `rows` array each render their dedicated state; `loading` takes precedence.
-- "Select all" checkbox toggles only the rows in the current `rows` array, preserving selections outside it (e.g., on other pages or filtered views).
-- Column widths stored in localStorage are not validated; if corrupted, they are silently ignored and fall back to measured size.
+- The "Select all" checkbox is a plain boolean toggle, not tri-state/indeterminate: it is checked only when every row in the current `rows` array is selected. Clicking it again in that state clears those rows rather than being a no-op, while selections outside the current `rows` array (other pages, filtered-out rows) are left untouched either way.
+- Clicking a sortable header cycles between two states, not three: a header that is unsorted, sorted on a different column, or sorted descending on this column goes to ascending on the next click; a header already ascending on this column goes to descending. There is no click that returns a column to unsorted — the caller clears `sort` itself for that.
+- Column widths loaded from `localStorage` are parsed as JSON; a parse failure falls back to an empty width map (so all columns behave as freshly measured). The parsed value's shape — that each entry is actually a number — is not validated beyond that.
 - If localStorage is full or access is blocked, widths still apply for the session but are not persisted.
 - A column dragged narrower than 48px is clamped to that minimum.
-- Drag operations that originate from in-cell controls (buttons, inputs) do not select rows; the control's own interaction takes precedence.
+- A drag-to-reorder gesture, picked up from the row's drag handle, does not also select the row — dragging and selecting are different acts. This is distinct from a plain click landing on an in-cell control, which still selects the row per **not-hijack-cell-controls**.
+- Double-click activation (`onRowActivate`) fires in action-list mode as well as in a selectable table — it is gated only on `onRowActivate` being provided, not on `selectedIds`/`onSelectionChange`. Enter activation, by contrast, is reachable only when the grid is selectable, because only the selectable grid attaches a key handler at all.
+- When the focused row's id is no longer present in `rows`, the component does not reset `aria-activedescendant` or internal focus tracking on its own; the caller is expected to keep `selectedIds` (and, indirectly, focus) in sync with `rows`.
 
 ## Configuration
 
@@ -202,11 +227,25 @@ Not applicable: DataTable is a presentational primitive with no routing or URL-b
 
 ## Localization
 
-Not applicable: DataTable accepts all user-facing strings as props (`ariaLabel`, `emptyLabel`, column `header`, `describeRow` for labels) — localization is the caller's responsibility.
+Most user-facing text is caller-supplied (`ariaLabel`, `emptyLabel`, column `header`, `describeRow`), and localization of those is the caller's responsibility. The component itself also owns a small set of hardcoded English strings that have no override besides `emptyLabel`:
+
+| String | Context |
+|---|---|
+| `"Select all"` | Select-all checkbox `aria-label`, shown when `showSelectionCheckboxes` is true |
+| `"No items."` | Default `emptyLabel`; overridable via that prop |
+| `` `row {id}` `` | Fallback row-checkbox `aria-label` when no `describeRow` is given and the row has no other non-empty string field |
+| `` `Select {name}` `` | Row-checkbox `aria-label` template, `{name}` from `describeRow(row)` or the fallback above |
+| `` `Resize column {key}` `` | Column resize-handle `aria-label`, built from the column `key` rather than its header text |
+
+These literals are not routed through any localization layer; a non-English caller sees them in English regardless of locale.
 
 ## Accessibility Options
 
-Not applicable: DataTable does not respond to system accessibility settings (Reduce Motion, Increase Contrast, etc.) — it relies on platform defaults and the caller's styling layer for theme compliance.
+| Option | Behavior |
+|---|---|
+| Reduce Motion | Not honored: a dragged row's transform (`drag?.style`) is applied unconditionally, with no `prefers-reduced-motion` check. |
+| Increase Contrast | Not applicable: DataTable renders no direct colors — foreground/background come entirely from the caller's `apt-*` design tokens. |
+| Differentiate Without Color | Partially addressed: selection is conveyed through `aria-selected`/`data-selected` plus a background tint together, not color alone, but no additional non-color marker (e.g. an icon) is added. |
 
 ## Feature Flags
 
@@ -226,26 +265,66 @@ Not applicable: DataTable is a presentational primitive; it emits no structured 
 
 ## Platform Notes
 
-- **Web/React**: Source file is `packages/web/packages/ui/src/components/data-table.tsx` (exported via the `./components/*` wildcard). Uses CSS Grid for layout, dnd-kit for drag-and-drop (via `SortableItem`, `SortableSurface`, `SortableZone`), and lucide-react for sort carets (`ChevronUp`, `ChevronDown`). Checkbox cells use a separate `Checkbox` component from the same UI package. Storage is via localStorage for column widths.
-- **SwiftUI**: Start from `Table` (iOS 17+) or a `List` with `.listStyle(.inset(grouped))` for earlier versions. Selection maps to a SwiftUI `@State` binding tracking `Set<ID>`. Sorting maps to a data-binding holding the current sort column and direction; the table does not reorder rows itself. Column resize and reorder are not native SwiftUI affordances; consider using `List` with custom drag-and-drop or adopting a third-party component for advanced column operations.
-- **Compose**: Start from a `LazyColumn` or `Column` with a custom row layout per column definition. Selection uses a mutable state `Set<ID>` held at the caller level. Sorting is caller-driven via a state binding; the component renders `rows` as given. Column resize and reorder require custom Modifier-based drag-and-drop handlers; dnd-kit or a platform equivalent provides the gesture layer.
+- **React/Web**: Source file is `packages/web/packages/ui/src/components/data-table.tsx` (exported via the `./components/*` wildcard). Uses CSS Grid for layout, dnd-kit for drag-and-drop (via `SortableItem`, `SortableSurface`, `SortableZone`), and lucide-react for sort carets (`ChevronUp`, `ChevronDown`). Checkbox cells use a separate `Checkbox` component from the same UI package. Storage is via localStorage for column widths.
+- **SwiftUI**: `Table` is available from iOS 16 / macOS 12 and resizes its columns natively on macOS. For earlier OS versions, use a `List` with `.listStyle(.insetGrouped)` (there is no `.inset(grouped)` modifier). Selection maps to a SwiftUI `@State` binding tracking `Set<ID>`. Sorting maps to a data-binding holding the current sort column and direction; the table does not reorder rows itself. Column reorder is not a native `Table` affordance; consider `List` with custom drag-and-drop or a third-party component for that.
+- **Compose**: Start from a `LazyColumn` or `Column` with a custom row layout per column definition. Selection uses a mutable state `Set<ID>` held at the caller level. Sorting is caller-driven via a state binding; the component renders `rows` as given. Column resize and reorder require custom Modifier-based drag-and-drop handlers — dnd-kit is web-only and has no Compose equivalent; use Compose's pointer-input APIs or a Compose-native drag-and-drop library instead.
 - **AppKit / UIKit**: macOS (AppKit): start from `NSTableView` with `NSTableColumn` per column; selection maps to `selectedRowIndexes` binding. iOS (UIKit): `UITableView` is single-column, so use `UICollectionView` with a custom `UICollectionViewCompositionalLayout` for multi-column grids. Selection uses `UICollectionViewDelegate.didSelectItemAt` and an index-to-id mapping; sorting is caller-driven. Column resize and reorder (iOS) are limited; macOS `NSTableView` offers native resize.
-- **WinUI 3**: Start from `DataGrid` (Microsoft.UI.Xaml.Controls, CommunityToolkit) or `ItemsView` with `ItemsRepeater` rows. Selection: use `DataGrid.SelectionMode = "Multiple"` or bind `SelectedItems` to a collection; track by id via a data object. Sorting: use `DataGrid` built-in sorting or manage `SortDescription` in a `CollectionViewSource` wrapping `rows`. Column resize: `DataGrid` columns are natively resizable; set `CanUserResizeColumns="True"`. Reorder: `DataGrid` does not natively reorder rows; use `ItemsRepeater` with `DragItemsStartingEventArgs` / `DragItemsCompletedEventArgs` or wire an external reordering gesture handler.
+- **WinUI 3**: Start from `DataGrid` (`CommunityToolkit.WinUI.Controls`, not `Microsoft.UI.Xaml.Controls`) or `ItemsView` with `ItemsRepeater` rows. Selection: use `DataGrid.SelectionMode = "Multiple"` or bind `SelectedItems` to a collection; track by id via a data object. Sorting: use `DataGrid` built-in sorting or manage `SortDescription` in a `CollectionViewSource` wrapping `rows`. Column resize: `DataGrid` columns are natively resizable; set `CanUserResizeColumns="True"`. Reorder: `DataGrid` does not natively reorder rows; use `ItemsRepeater` with `DragItemsStartingEventArgs` / `DragItemsCompletedEventArgs` or wire an external reordering gesture handler.
 
 ## Design Decisions
 
-- **Caller-owned sorting.** The component reports `onSortChange` and renders `rows` as given, keeping sorting policy with the data owner rather than duplicating it inside the table.
-- **Selection is a capability, not a mandate.** Omitting the selection props turns the same grid into an action-list table (admin's users/flags/feedback/api-tokens lists), so sites never fork a second table for rows whose interaction lives in per-cell controls.
-- **Internal anchor is private.** The anchor id used for range selection is internal state and is not part of the public API. It is not reported to the caller, but is used to compute shift-click ranges.
-- **Row activation is separate from selection.** Click selects, double-click (or Enter) opens/activates. This allows a table to support both multi-select (for bulk actions) and row opening (for details view) without conflict.
-- **Reordering is opt-in and separate from sorting.** Reordering should be omitted when a sort or filter is active, because a dragged row's new position would describe the filtered/sorted view, not the underlying data. The caller owns this constraint and omits the `reorder` prop when appropriate.
-- **Inline editing works with selection.** The table does not hijack keyboard or mouse events from in-cell controls (inputs, selects, buttons, contenteditable). This allows a row to be selected (driving a details pane) while remaining inline-editable.
-- **Column sizing requires two pre-paint passes.** With `autoSizeColumns: true`, the component renders once at `max-content` (measuring each cell), then locks in explicit widths for the second pass. This ensures the header aligns with the body despite each row being its own grid. Both passes complete before paint, so no misaligned frame is visible.
-- **Supersedes an earlier placeholder-grade table.** An earlier metadata-driven list was single-purpose and had no selection model; DataTable exists to be the general-purpose replacement.
+**Decision**: The component reports `onSortChange` and renders `rows` as given, rather than sorting internally.
+**Rationale**: Keeps sorting policy with the data owner rather than duplicating it inside the table.
+**Approved**: pending
+
+**Decision**: Selection is a capability, not a mandate — omitting `selectedIds`/`onSelectionChange` turns the same grid into an action-list table.
+**Rationale**: Sites never fork a second table for rows whose interaction lives entirely in per-cell controls (admin's users/flags/feedback/api-tokens lists).
+**Approved**: pending
+
+**Decision**: The anchor id used for range selection is internal state, not part of the public API.
+**Rationale**: It is only ever used to compute shift-click ranges and has no meaning to a caller.
+**Approved**: pending
+
+**Decision**: Row activation is a separate act from selection — click selects, double-click (or Enter) activates.
+**Rationale**: Lets one table support multi-select (bulk actions) and row opening (a details view) without the two conflicting.
+**Approved**: pending
+
+**Decision**: Reordering is opt-in (`reorder`) and independent of sorting; the component does not itself disable reordering when a sort or filter is active.
+**Rationale**: A dragged row's new position would describe the filtered/sorted view rather than the underlying list, so reordering while sorted is misleading — but enforcing that is a caller obligation the component leaves to the caller, who simply omits `reorder` when a sort or filter is in force.
+**Approved**: pending
+
+**Decision**: The table does not hijack keyboard or pointer events from in-cell controls (inputs, selects, buttons, contenteditable).
+**Rationale**: Lets a row be selected (driving a details pane) while remaining inline-editable, instead of making selection and inline editing mutually exclusive.
+**Approved**: pending
+
+**Decision**: With `autoSizeColumns: true`, the component renders once at `max-content` (measuring each cell), then locks in explicit widths for a second pass.
+**Rationale**: Each row is its own grid, so a single `max-content` pass would size every row independently and the header would not align with the body. Both passes complete before paint, so no misaligned frame is ever visible.
+**Approved**: pending
+
+**Decision**: Column auto-sizing, drag-resize, persistence, and row reorder are kept as internal behavior of `DataTable` rather than split into separate hooks or wrapper components.
+**Rationale**: Both features build on state the table already computes once per render — `ids` and `renderedColumns` — that reorder's `SortableZone`/`SortableSurface` and the auto-size measuring pass both read directly. Extracting either into a standalone hook or wrapper would mean re-threading that same state across a new boundary for every consumer, in exchange for splitting up a table that, as built, has one render pass and one set of derived ids to keep in sync.
+**Approved**: pending
 
 ## Compliance
 
-No additional compliance categories apply to this presentational primitive.
+| Check | Status | Category |
+|---|---|---|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
+
+`screen-reader-support`, `focus-management`, and `semantic-markup` rest on the `role`/`aria-*` attributes the source sets on the grid, rows, cells, headers, and resize handles. `keyboard-navigable` is partial because selection, activation, and sorting are fully keyboard-operable but column resize and row reorder have no keyboard path in this source. `dynamic-type-support` and `contrast-ratio` are partial because the source uses relative Tailwind sizing and design tokens without verifying either against a scaling or contrast requirement. `touch-target-size` is partial because the resize handle (`w-1.5`, 6px) is well under a legible target and checkbox sizing is delegated to the `Checkbox` component. `reduced-motion` fails because the drag transform (`drag?.style`) is applied unconditionally with no `prefers-reduced-motion` check. `string-externalization` and `no-hardcoded-strings` fail because of the literal strings listed under Localization. `text-expansion-tolerance` fails because cells `truncate` rather than reflow. `rtl-layout-support` is partial because the resize handle is positioned with physical `right-0`/`translate-x-1/2` rather than a logical (start/end) property. `unicode-support` passes because row content renders through ordinary React string interpolation with no charset restriction. `safe-defaults` passes because every added-surface prop (`autoSizeColumns`, `reorder`, `showSelectionCheckboxes`) defaults to off/undefined.
 
 ## Change History
 
@@ -256,3 +335,4 @@ No additional compliance categories apply to this presentational primitive.
 | 1.2.0 | 2026-07-11 | Mike Fullerton | **Content-sized + user-resizable columns** (`autoSizeColumns`, `columnWidthsKey`, per-column `resizable`), and **selectable tables can now host inline editors**. Sizing: a `max-content` track cannot do this on its own, because each row is its own grid — it would size every row independently and the header would not line up with the body. So the table renders one pass at `max-content`, measures the widest cell per column, and locks that in as an explicit px track shared by every row (both passes pre-paint, so no misaligned frame is shown), re-measuring when rows/columns change. A drag handle on each column's trailing border overrides the measured width; double-click springs it back; widths optionally persist. Editing: the selectable grid's Arrow/Space handlers `preventDefault` and its row `mousedown` handler `preventDefault`s to avoid focus-stealing — which swallowed spaces typed into an in-cell editor and stopped in-cell controls taking focus at all, making selection and inline editing mutually exclusive. Both now ignore events originating inside a cell control, so a row can be selected (driving a details pane) AND edited in place. New requirements `must-size-columns-to-widest-cell`, `must-resize-columns-by-drag`, `may-persist-column-widths`, `must-fill-slack-not-stretch`, `must-truncate-when-dragged-narrow`, `must-not-hijack-cell-controls`. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | **Row activation, reordering, and selection checkboxes** (`onRowActivate`, `reorder`, `showSelectionCheckboxes`). Activation: double-click and Enter open a row when handler is provided; reaches keyboard-only users. Reordering: `reorder` prop enables drag-and-drop row reordering with accessible announcements and `canDrag` guards; omit when sorted/filtered. Checkboxes: `showSelectionCheckboxes` adds a leading column with per-row and select-all checkboxes; row labels derive from `describeRow` or row content. New requirements `double-click-activates-row`, `enter-activates-focused-row`, `must-enable-row-drag-to-reorder`, `must-respect-candrag-check`, `must-announce-drag-state`, `must-not-reorder-while-sorted`, `must-add-leading-checkbox-column`, `must-include-select-all`, `must-label-checkboxes`, `checkbox-click-not-select-row`. Platform Notes section added. Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy, Logging sections added with not-applicable explanations. |
 | 1.3.1 | 2026-09-22 | Mike Fullerton | Platform Notes expanded to five separate bullets (SwiftUI, Compose, AppKit/UIKit, WinUI 3) with concrete guidance on control selection, property mapping, and platform-specific constraints. WinUI 3 bullet specifies DataGrid vs. ItemsRepeater, SelectionMode binding, sorting via SortDescription or built-in, column resize handling, and row reorder patterns. |
+| 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the ⌥/Alt-click requirement and its test vector to additive-only selection (source has no ⌘/Ctrl handling); renamed all keyword-prefixed requirements to subject-only kebab-case; added depends-on/related cross-references; added Empty and Loading States requirements; moved the sorted/filtered reorder constraint out of Behavioral Requirements into Design Decisions; reformatted Design Decisions into Decision/Rationale/Approved form and added an SRP-scope decision; rewrote Conformance Test Vectors for full requirement/edge-case coverage and split multi-outcome rows; resolved the in-cell-control contradiction between the last edge case and not-hijack-cell-controls; reworded checkbox-click-not-select-row off the undefined onRowClick API; specified the sort cycle, select-all indeterminate/clear behavior, stale-focused-id, and action-list double-click behaviors; corrected Localization, Accessibility Options, and Platform Notes (React/Web label, SwiftUI Table availability and .insetGrouped, Compose has no dnd-kit equivalent, WinUI 3 DataGrid namespace); added the Compliance table. |

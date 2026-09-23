@@ -3,7 +3,7 @@ id: 7b54db6e-755d-4665-a091-d34cfcaac146
 title: Color Mode Toggle
 domain: agenticdevelopertoolkit://recipes/color-mode-toggle
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -21,7 +21,8 @@ tags:
 - appearance
 - toggle
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/appearance-mode-toggle
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,6 +36,8 @@ The Color Mode Toggle is a button component that allows users to cycle between t
 
 The component visually indicates the current mode with three icon states (Sun for light, Moon for dark, RefreshCw refresh icon for auto). When the mode is "auto", the component queries the system's `prefers-color-scheme` to determine and display the currently active effective mode.
 
+Not to be confused with `agenticdevelopertoolkit://recipes/appearance-mode-toggle`, a separate ingredient with the same three-state cycling shape that binds a different, legacy document contract (`data-appearance-mode` plus an `awt:appearance-cycle` event) for one demo site. See Design Decisions for why the two stay separate.
+
 ## Behavioral Requirements
 
 - **must-render-button**: Component MUST render as a `<button>` element with `type="button"`.
@@ -47,19 +50,22 @@ The component visually indicates the current mode with three icon states (Sun fo
 - **must-listen-to-system-changes**: Component MUST subscribe to changes in the system dark mode preference and update the displayed effective mode without requiring props to change.
 - **must-provide-aria-label**: Component MUST set an `aria-label` attribute that includes the current mode and the next mode in cycle, provided after client hydration.
 - **must-provide-title-attribute**: Component MUST set a `title` attribute (tooltip) that describes the current mode and how to switch, provided after client hydration.
-- **must-defer-label-until-mounted**: Component MUST NOT set `aria-label` or `title` on server-side rendering; these attributes MUST only be populated after client mounting.
+- **must-defer-label-until-mounted**: Component MUST NOT populate the real `aria-label`/`title` text on server-side rendering. `aria-label` MUST render the placeholder `"Theme"` during SSR and the client's first render; `title` MUST be omitted (`undefined`) until the component mounts. Both populate with their full text on the next render after mount.
 - **must-handle-missing-matchMedia**: When `window.matchMedia` is unavailable (server-side rendering or older browsers), component MUST treat system dark mode as false.
+- **host-html-attribute-sync**: The host application MUST keep `data-color-mode` (`"auto"` | `"dark"` | `"light"`) and the `dark` class on `<html>` synchronized with `mode` and the resolved effective mode. The component's own CSS (`.adh-color-mode-toggle__*`) reads only those host-controlled attributes to decide which icon and the auto-mode badge are visible — it does not read the `mode` prop for that purpose.
 
 ## Appearance
 
-- **Icon size**: 24×24px (via strokeWidth 2 for Sun/Moon, strokeWidth 3 for RefreshCw badge)
+- **Icon size**: 20×20px (`1.25rem`, set by the `.adh-color-mode-toggle > svg` CSS rule) for the Sun and Moon icons; size is controlled by CSS `width`/`height`, not by `strokeWidth`.
+- **Stroke width**: 2 for Sun/Moon, 3 for the RefreshCw badge — a thicker line keeps the smaller badge glyph legible.
+- **Auto-mode badge**: RefreshCw renders as a 10×10px (`0.625rem`) corner overlay, absolutely positioned at the bottom-right of the button and colored `var(--color-accent)`. It is shown only when `data-color-mode="auto"` is present on `<html>`, layered on top of whichever of Sun/Moon is currently visible; otherwise it is hidden.
 - **Color**: Icons inherit the text color of the button's scope; determined by CSS based on `data-color-mode` or `.dark` class on document root
 - **Padding**: None — component is a bare icon button with no internal spacing
 - **Background**: None by default — host application supplies button styling via className
 - **Border**: None by default
 - **Corner radius**: None
 - **Shadow**: None
-- **Visibility logic**: CSS rules (`.adh-color-mode-toggle__*` selectors) determine which icon is visible based on the `data-color-mode` attribute on `<html>` and presence of `.dark` class
+- **Visibility logic**: CSS rules (`.adh-color-mode-toggle__*` selectors, in `styles/components.css`) determine which icon is visible based on the `data-color-mode` attribute on `<html>` and presence of `.dark` class. That stylesheet is a required runtime dependency — see Design Decisions.
 
 ## States
 
@@ -74,11 +80,11 @@ The component visually indicates the current mode with three icon states (Sun fo
 ## Accessibility
 
 - **Role**: Button (implicit from `<button>` element)
-- **Label requirement**: `aria-label` MUST communicate the current mode and available action. Before hydration, label reads "Theme". After hydration, label reads "Theme: [mode]. Click to switch to [next mode]." If mode is "auto", the current effective mode (light or dark) is included in parentheses.
-- **Title**: Tooltip text MUST be populated after client mount. Text reads "Following system (light|dark)" for auto mode, or "[Dark|Light] mode — click for [light|auto]" for explicit modes.
+- **Label requirement**: `aria-label` MUST communicate the current mode and the next mode in the cycle. Before hydration (SSR and the client's first render) it is the placeholder `"Theme"`. After the component mounts it becomes `Theme: {mode}. Click to switch to {next}.` for `light`/`dark`, or `Theme: Auto (currently {resolved}). Click to switch to dark.` for `auto` (the next mode from `auto` is always `dark`), where `{resolved}` is `light` or `dark` from the system preference.
+- **Title**: Tooltip text MUST be `undefined` until the component mounts, then read `Following system ({resolved})` for `auto` mode, or `Light mode — click for auto` / `Dark mode — click for light` for explicit modes.
 - **Touch target size**: The component itself is an icon button and relies on the host's button styling to meet platform touch target minimums (44×44pt on iOS, 48×48dp on Android, platform-appropriate for web).
 - **Keyboard navigation**: Button MUST be keyboard accessible and focusable (inherent from `<button>` element).
-- **Announcement of state**: The `aria-label` changes when mode changes, and assistive technologies MUST announce the new label on next interaction.
+- **Announcement of state**: The accessible name (`aria-label`) MUST update synchronously with `mode` — in the same render — so assistive technology reads the current value whenever it next queries the element. The component places no requirement on how or when a screen reader announces the change; that is outside its control.
 - **No color-only information**: The three different icons (Sun, Moon, RefreshCw) serve as distinct visual indicators, not relying on color alone.
 
 ## Conformance Test Vectors
@@ -97,14 +103,15 @@ The component visually indicates the current mode with three icon states (Sun fo
 | cmt-010 | must-read-system-dark-preference | mode="auto" and system prefers dark | Effective mode is "dark" | Via matchMedia query |
 | cmt-011 | must-read-system-dark-preference | mode="auto" and system prefers light | Effective mode is "light" | Via matchMedia query |
 | cmt-012 | must-listen-to-system-changes | mode="auto" and system changes from light to dark | aria-label updates to reflect new effective mode | Should reflect change without prop change |
-| cmt-013 | must-provide-aria-label | After client mount with mode="light" | aria-label contains "Light mode" | |
-| cmt-014 | must-provide-aria-label | After client mount with mode="auto" | aria-label contains "Auto (currently light)" or "Auto (currently dark)" | Based on system preference |
+| cmt-013 | must-provide-aria-label | After client mount with mode="light" | aria-label is exactly "Theme: light. Click to switch to auto." | |
+| cmt-014 | must-provide-aria-label | After client mount with mode="auto" | aria-label is exactly "Theme: Auto (currently light). Click to switch to dark." (system prefers light) or "Theme: Auto (currently dark). Click to switch to dark." (system prefers dark) | Next mode from auto is always "dark" |
 | cmt-015 | must-provide-title-attribute | After client mount with mode="light" | title contains "Light mode — click for auto" | Tooltip text |
 | cmt-016 | must-provide-title-attribute | After client mount with mode="dark" | title contains "Dark mode — click for light" | Tooltip text |
 | cmt-017 | must-provide-title-attribute | After client mount with mode="auto" | title contains "Following system (light)" or "Following system (dark)" | Based on system preference |
 | cmt-018 | must-defer-label-until-mounted | Server-side render mode="light" | aria-label is "Theme" only | No specific mode in SSR HTML |
 | cmt-019 | must-defer-label-until-mounted | After hydration mode="light" | aria-label becomes "Theme: light. Click to switch to auto." | Updated after mount |
 | cmt-020 | must-handle-missing-matchMedia | mode="auto" in environment without matchMedia | Component does not throw; treats system as light mode | |
+| cmt-021 | host-html-attribute-sync | Render with mode="light" while host sets `data-color-mode="dark"` and `.dark` on `<html>` | Moon icon visible, Sun icon hidden, badge hidden — icon selection follows the host's `<html>` attributes, not the `mode` prop | Demonstrates the coupling the requirement makes explicit |
 
 ## Edge Cases
 
@@ -115,7 +122,7 @@ The component visually indicates the current mode with three icon states (Sun fo
 - **matchMedia available but event support missing (legacy Safari < 14)**: Component MUST proactively check for `addEventListener` support on the MediaQueryList object. If unavailable, the component MUST return an empty unsubscribe function and continue rendering.
 - **Rapid successive clicks**: Each click calls `onChange` with the next mode in the cycle. The parent is responsible for debouncing or managing state; the component imposes no rate limits.
 - **Component unmounts while system preference listener is active**: The `useSyncExternalStore` subscription cleanup (returned unsubscribe function) MUST properly remove the event listener.
-- **Hydration mismatch**: The component uses `mounted` state to prevent hydration mismatches. Server-side, `aria-label` and `title` are omitted or set to placeholder values. After hydration, the real labels populate without re-rendering the HTML structure.
+- **Hydration mismatch**: The component uses `mounted` state to prevent hydration mismatches. Server-side and on the client's first render, `aria-label` is set to the placeholder `"Theme"` and `title` is omitted (`undefined`). After the `mounted` effect runs, the real labels populate without re-rendering the HTML structure.
 
 ## Configuration
 
@@ -161,35 +168,62 @@ Not applicable. The component does not emit any log messages.
 
 - **React/Web**: Implementation provided in `packages/web/packages/ui/src/components/color-mode-toggle.tsx`. Uses `useState` for client-only `mounted` gate, `useEffect` for mount detection, and `useSyncExternalStore` to subscribe to `prefers-color-scheme` media query without causing hydration mismatches. Icons imported from `lucide-react`. CSS classes `.adh-color-mode-toggle` and `.adh-color-mode-toggle__*` are applied; visual rendering delegated to `styles/components.css`. Component is a client-side rendered button (`"use client"` directive).
 
-- **SwiftUI**: A SwiftUI equivalent would use `@State` for the mode preference and `@Environment(\.colorScheme)` or `AppKit`/`UIKit` equivalents to read system appearance. The component would render three Image views with conditional visibility based on mode. Accessibility would use `.accessibilityLabel()` and `.accessibilityValue()` modifiers.
+- **SwiftUI**: A SwiftUI equivalent would take `mode: Binding<ColorMode>` (or a `mode` value plus an `onChange` closure) rather than owning the mode in `@State`, preserving the source's controlled contract. It would read the resolved system appearance via `@Environment(\.colorScheme)`. The three icons would be `Image` views with conditional visibility based on `mode`/resolved appearance. Accessibility would use `.accessibilityLabel()` and `.accessibilityHint()` modifiers with the same label templates as the source.
 
-- **Compose (Android/Kotlin)**: A Compose equivalent would use a MutableState for the mode, and `LocalConfiguration.current` or Android's system color-scheme detection to read system preference. Three Icon composables would be rendered with conditional visibility. Accessibility would use `Modifier.semantics {}` with role and contentDescription.
+- **Compose (Android/Kotlin)**: A Compose equivalent would take `mode: ColorMode` and `onModeChange: (ColorMode) -> Unit` as parameters rather than a `MutableState`, preserving the same controlled contract. System color scheme would be read via `isSystemInDarkTheme()`. Three `Icon` composables would be rendered with conditional visibility. Accessibility would use `Modifier.semantics { role = Role.Button; contentDescription = ... }` with the same label templates as the source.
 
-- **AppKit / UIKit**: An AppKit NSButton or UIButton subclass would render three NSImageView or UIImageView subviews, toggling visibility based on mode. UIAppearance or NSAppearance APIs would detect system preference. Accessibility would use `NSAccessibility` (AppKit) or `UIAccessibility` (UIKit) protocols to set accessible labels and values.
+- **AppKit / UIKit**: An `NSButton`/`UIButton` subclass would render three `NSImageView`/`UIImageView` subviews, toggling visibility based on `mode`/resolved appearance, with `mode` supplied by the caller and changes reported via target-action or a closure rather than owned internally. System appearance would be read via `traitCollection.userInterfaceStyle` (UIKit) or `NSApp.effectiveAppearance` (AppKit) — `UIAppearance`/`NSAppearance` are styling-proxy APIs that configure an appearance, not detect the current one. Accessibility would use `UIAccessibility` (UIKit) or `NSAccessibility` (AppKit) to set the same label text as the source.
 
 - **WinUI 3**: A WinUI 3 implementation would use a Button with three FontIcon children, binding visibility to the mode state via converters or code-behind. System dark mode would be detected via `UISettings` class listening to the `ColorValuesChanged` event. Accessibility would use `AutomationProperties.Name` and `AutomationProperties.HelpText` attached properties. The component would inherit from `Button` or be a custom control template that cycles mode on click.
 
 ## Design Decisions
 
-1. **Controlled component, not a store**: The component is intentionally divorced from any specific state management or storage layer. It is a **control** that receives the current mode from a parent and emits change events. This allows it to be used in header chrome, sidebars, settings panels, or anywhere a mode toggle is needed, and to integrate with any parent state system (local storage, user account, Redux, Zustand, etc.). The comment in the source code explicitly warns against baking in a dependency on a specific theme context.
+**Decision**: The component is a controlled control — it receives the current `mode` via a prop and emits change requests via `onChange`; it owns no mode or storage state itself.
+**Rationale**: This keeps the component independent of any specific state-management or storage layer, so it can be used in header chrome, sidebars, or settings panels and wired to local storage, a user account, Redux, Zustand, or any other store. The source's own comment explicitly warns against baking in a dependency on a specific theme context.
+**Approved**: pending
 
-2. **Cycle direction is fixed**: The cycle order (auto → dark → light → auto) is a deliberate design choice. Users expect a single toggle button to cycle through a fixed sequence; the cycle is not configurable. This is encoded in the `NEXT_MODE` map rather than an array walked with modular arithmetic, making every mode's successor total and explicit.
+**Decision**: The mode cycle order (auto → dark → light → auto) is fixed and not configurable.
+**Rationale**: Users expect a single toggle button to walk a consistent sequence. The order is encoded in the `NEXT_MODE` map rather than an array walked with modular arithmetic, making every mode's successor total and explicit.
+**Approved**: pending
 
-3. **Server-side rendering safety via `mounted` gate**: The `aria-label` and `title` attributes are omitted on server-side rendering and only populated after the component mounts on the client. This prevents hydration mismatches when the server does not have access to the mode value or the user's system preference. The component uses `useSyncExternalStore` to ensure the system preference is read before the first render, preventing a render flash.
+**Decision**: `aria-label`/`title` render placeholder/omitted values until the component mounts on the client, then switch to their real text on the next render.
+**Rationale**: Neither value the component needs to word the label correctly is available during server rendering: the `mode` a parent supplies during SSR is often a guess (the true preference commonly lives in a client-only store such as `localStorage`), and even when `mode` is known, resolving `"auto"` requires `window.matchMedia`, which does not exist on the server. Gating on a `mounted` state — `false` on both the server and the client's first render, then `true` after a `useEffect` — guarantees the server and client agree on the placeholder, avoiding a hydration mismatch; the real label then appears on the very next client render. `useSyncExternalStore` is a separate mechanism: it supplies the resolved system-dark value once mounted so that value itself doesn't render wrong then correct in an effect, but it does not control when the label text appears.
+**Approved**: pending
 
-4. **System preference subscription via `useSyncExternalStore`**: The component uses React's `useSyncExternalStore` hook to subscribe to `prefers-color-scheme` changes. This is the correct pattern for integrating with external stores (browser APIs, event listeners) that are not controlled by React. It ensures the first render already has the correct system preference value, rather than rendering wrong and correcting in an effect.
+**Decision**: The component reads `prefers-color-scheme: dark` through `useSyncExternalStore`, not `useState` + `useEffect`.
+**Rationale**: `useSyncExternalStore` is React's designated pattern for subscribing to a store outside React's own state (here, `window.matchMedia`). It gives the first client render the correct value immediately, rather than rendering with a wrong value and correcting it in a later effect.
+**Approved**: pending
 
-5. **No visual styling in the component**: All visual rendering — which icon is visible, colors, sizing — is delegated to CSS. The component does not import or apply any styles directly. This allows the host application to fully style the button and its icons without re-implementing the component for each design system. The source comments note that the button's identity comes from the `className` prop (e.g., `"adh-header__icon-button"`), not from the component.
+**Decision**: The component applies no styles of its own beyond one structural class (`adh-color-mode-toggle`, plus any host `className`) and three icon-part classes; all colors, sizing, and icon-visibility rules live in CSS.
+**Rationale**: This lets a host fully restyle the button and its icons — including the host's own button identity via `className` — without forking the component per design system. Correctness depends on that CSS: `.adh-color-mode-toggle__*` in `styles/components.css` is what actually decides which icon, and the auto-mode badge, is visible, so that stylesheet is a required runtime dependency of this component, not an optional layer the host may omit.
+**Approved**: pending
 
-6. **Media query fallback for legacy browsers**: The component proactively checks for `addEventListener` support on the MediaQueryList object. Safari < 14 shipped with only the legacy `addListener` method. If the check fails, the component returns an empty unsubscribe function and continues rendering, gracefully degrading to the mode value alone without system preference tracking.
+**Decision**: On a `MediaQueryList` without `addEventListener` (Safari < 14, which shipped only the legacy `addListener`/`removeListener`), the component returns a no-op unsubscribe and renders using `mode` alone, without system-preference tracking, rather than falling back to `addListener`.
+**Rationale**: The check probes for the modern API rather than assuming it, for the same reason the host's own appearance store does. Supporting the legacy `addListener` path would mean carrying and testing a second, deprecated subscription mechanism for a browser version past its support window; the component instead degrades gracefully to a static `mode`-only render, keeping the subscription logic to one code path.
+**Approved**: pending
+
+**Decision**: `ColorModeToggle` and the separate `agenticdevelopertoolkit://recipes/appearance-mode-toggle` ingredient are not merged, despite both being a three-state (auto/dark/light) cycling icon button.
+**Rationale**: They bind to two different, incompatible document contracts. This component's CSS reads `data-color-mode`/`.dark` on `<html>`, driven by a controlled `mode` prop and the family's own appearance store. `AppearanceModeToggle` reads `data-appearance-mode` and dispatches an `awt:appearance-cycle` custom event for a separate, legacy appearance system still used by one demo site. Merging them would change that site's live document contract, not just its markup, so they stay separate until that site migrates.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable. The component has no platform-specific compliance requirements (WCAG, GDPR, etc.) beyond standard web accessibility guidelines, which are covered in the Accessibility section.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+The source renders a native `<button>` with an always-present, mount-aware `aria-label` and no custom ARIA roles (passed on screen-reader-support, keyboard-navigable, and semantic-markup); it delegates icon color and hit-area sizing entirely to host CSS the source itself cannot verify (partial on contrast-ratio and touch-target-size); and `title()` plus the `aria-label` template are literal English strings baked into the component with no externalization mechanism (failed on both internationalization checks).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: distinguished this component from Appearance Mode Toggle in Design Decisions and `related`; added a host `<html>` attribute-sync requirement and test vector; corrected the SSR label/title, appearance sizing, and legacy-fallback design decisions; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with a check table; fixed aria-label/title test-vector consistency; corrected the SwiftUI, Compose, and AppKit/UIKit platform notes |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise Accessibility Options: convert to table format; clarify Reduce Motion as not applicable (no transitions applied); add guidance on Increase Contrast and Differentiate Without Color |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source code |

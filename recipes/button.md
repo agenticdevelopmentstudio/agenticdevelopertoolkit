@@ -3,7 +3,7 @@ id: f3c25236-d72f-4a7b-839a-b7f335b3acd0
 title: Button
 domain: agenticdevelopertoolkit://recipes/button
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: '2026-06-26'
@@ -21,9 +21,9 @@ tags:
   - forms
   - ui
 depends-on: []
-related: []
-references:
+related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+references: []
 approved-by: ''
 approved-date: ''
 ---
@@ -33,8 +33,8 @@ approved-date: ''
 ## Overview
 
 The shared `Button` in `@agenticdevelopertoolkit/ui` — a Base UI button primitive dressed in
-the shadcn token vocabulary so the whole ~40-site platform renders one button.
-It exposes eight visual `variant`s × a size scale, the standard disabled/focus/
+the shadcn token vocabulary so every site drawing from `@agenticdevelopertoolkit/ui`
+renders one button. It exposes eight visual `variant`s × a size scale, the standard disabled/focus/
 invalid states, a **pointer-driven pressed state** that reflects a real press
 the way CSS `:active` cannot, and an **ancestor-settable minimum touch-target
 floor** that lets a surface raise every descendant button's minimum hit area
@@ -54,6 +54,14 @@ The pressed visual (a small downward dip plus a subtle darken) is driven by the
 press correctly clears when the pointer leaves the button while it is still held.
 
 ## Behavioral Requirements
+
+*Provenance: `press-on-pointerdown-inside` through `no-pointer-capture` below describe the
+pointer-tracking contract of the sibling `button-pressable.tsx`, which was not part of the
+source excerpt supplied for this revision pass. These requirements are carried forward from
+the prior recipe version and are corroborated only indirectly, by `button.tsx`'s own comments
+describing `PressableButton`'s pointer-tracking behavior (data-pressed set by pointer tracking;
+clears when the pointer leaves while held). A future revision with direct access to
+`button-pressable.tsx` SHOULD re-verify these requirements against it directly.*
 
 - **press-on-pointerdown-inside**: The button MUST set `data-pressed` when a pointer is pressed down inside it.
 - **release-clears-pressed**: The button MUST clear `data-pressed` on `pointerup`.
@@ -75,7 +83,7 @@ press correctly clears when the pointer leaves the button while it is still held
 - **icon-sizes-square-to-height-floor**: Each `icon`/`icon-xs`/`icon-sm`/`icon-lg` size MUST redefine `--adh-button-min-width` to the current `--adh-button-min-height` value, so an ancestor-raised height floor keeps an icon button square.
 - **icon-svgs-non-interactive**: An SVG child of the button MUST NOT receive pointer events (`pointer-events: none`) and MUST NOT shrink in the flex layout (`flex-shrink: 0`).
 - **unsized-icon-svgs-scale-with-button-size**: An SVG child that carries no `size-*` class MUST render at `1rem` (16px) square by default, `0.875rem` (14px) at the `sm` size, and `0.75rem` (12px) at the `xs`/`icon-xs` sizes.
-- **should-preserve-consumer-classname-precedence**: The button SHOULD apply a consumer-supplied `className` so it can override the variant/size classes it conflicts with, per the project's `cn()` merge convention. (Rationale: see Design Decisions.)
+- **consumer-classname-precedence**: The button SHOULD apply a consumer-supplied `className` so it can override the variant/size classes it conflicts with, per the project's `cn()` merge convention. (Rationale: see Design Decisions.)
 
 ## Appearance
 
@@ -88,15 +96,38 @@ press correctly clears when the pointer leaves the button while it is still held
 
 - Base: `inline-flex` centered, `rounded-lg`, `text-sm font-medium`, `transition-all`,
   `select-none`; focus-visible ring via the `ring`/`border-ring` tokens.
-- Variants: `default` (`bg-primary`), `outline`, `secondary`, `ghost`,
-  `destructive`, `warning`, `destructive-ghost`, `link` — all expressed in shadcn
-  theme tokens (the button's established vocabulary), never raw colors.
-  `destructive-ghost` is a borderless destructive action
-  (`text-destructive hover:bg-destructive/10`), used by `ButtonBar` /
-  `ListWithDetailsPane`. `warning` (`bg-apt-orange/15 text-apt-orange`) is one
-  step down the status spectrum from `destructive`, for consequential-but-not-
-  destructive actions (e.g. an ownership transfer).
-- Sizes: `xs`, `sm`, `default`, `lg`, plus `icon`/`icon-xs`/`icon-sm`/`icon-lg`.
+- Variants: `default`, `outline`, `secondary`, `ghost`, `destructive`, `warning`,
+  `destructive-ghost`, `link` — all expressed in shadcn theme tokens (the
+  button's established vocabulary), never raw colors. `destructive-ghost` is a
+  borderless destructive action, used by `ButtonBar` / `ListWithDetailsPane`.
+  `warning` is one step down the status spectrum from `destructive`, for
+  consequential-but-not-destructive actions (e.g. an ownership transfer). Each
+  variant's resting tokens and the hover/active tokens layered on top of them:
+
+  | Variant | Resting tokens | Hover / active tokens |
+  |---|---|---|
+  | `default` | `bg-primary text-primary-foreground` | `hover:bg-primary-bright` |
+  | `outline` | `border-input bg-input/30` | `hover:bg-input/50 hover:text-foreground`, `aria-expanded:bg-muted aria-expanded:text-foreground` |
+  | `secondary` | `bg-secondary text-secondary-foreground` | `hover:bg-secondary/80`, `aria-expanded:bg-secondary aria-expanded:text-secondary-foreground` |
+  | `ghost` | (transparent) | `hover:bg-muted/50 hover:text-foreground`, `aria-expanded:bg-muted aria-expanded:text-foreground` |
+  | `destructive` | `bg-destructive/15 text-destructive` | `hover:bg-destructive/25`, `focus-visible:border-destructive/40 focus-visible:ring-destructive/40` |
+  | `warning` | `bg-apt-orange/15 text-apt-orange` | `hover:bg-apt-orange/25`, `focus-visible:border-apt-orange/40 focus-visible:ring-apt-orange/40` |
+  | `destructive-ghost` | `text-destructive` | `hover:bg-destructive/10 hover:text-destructive`, `aria-expanded:bg-destructive/10 focus-visible:border-destructive/40 focus-visible:ring-destructive/40` |
+  | `link` | `text-primary underline-offset-4` | `hover:underline` |
+
+- Sizes: `xs`, `sm`, `default`, `lg`, plus `icon`/`icon-xs`/`icon-sm`/`icon-lg`,
+  mapped to their height/width utility:
+
+  | `size` | Utility | Rendered dimension |
+  |---|---|---|
+  | `xs` | `h-6` | 24px tall |
+  | `sm` | `h-7` | 28px tall |
+  | `default` | `h-8` | 32px tall |
+  | `lg` | `h-9` | 36px tall |
+  | `icon-xs` | `size-6` | 24×24px |
+  | `icon-sm` | `size-7` | 28×28px |
+  | `icon` | `size-8` | 32×32px |
+  | `icon-lg` | `size-9` | 36×36px |
 - Pressed: `data-[pressed]:not-aria-[haspopup]:translate-y-px` plus
   `data-[pressed]:not-aria-[haspopup]:brightness-95`.
 - Min/Max size: `min-height: var(--adh-button-min-height, 0px)` and
@@ -168,7 +199,11 @@ press correctly clears when the pointer leaves the button while it is still held
 | T15 | icon-sizes-square-to-height-floor, respects-ancestor-min-width-var | render `<Button size="icon"/>` under an ancestor with `style="--adh-button-min-height:44px"` | computed `min-width` is `44px` |
 | T16 | icon-svgs-non-interactive | render `<Button><svg data-testid="icon"/></Button>` | svg computed `pointer-events` is `none`; computed `flex-shrink` is `0` |
 | T17 | unsized-icon-svgs-scale-with-button-size | render default-size `<Button><svg data-testid="icon"/></Button>` (svg has no `size-*` class) | svg renders at 16×16px |
-| T18 | should-preserve-consumer-classname-precedence | render `<Button className="bg-brand-500"/>` | resulting background utility resolves to `bg-brand-500` |
+| T18 | consumer-classname-precedence | render `<Button className="bg-brand-500"/>` | class list includes `bg-brand-500`; class list does not include `bg-primary` |
+| T19 | respects-ancestor-min-width-var | render `<Button size="default"/>` (non-icon) under an ancestor with `style="--adh-button-min-width:120px"` | computed `min-width` is `120px` |
+| T20 | pressed-visual-from-data-attr | render `<Button/>`, trigger native `:active` (e.g. `mousedown` without a `pointerdown` event reaching the pressed-tracking handler) without `data-pressed` being set | class list does not include `translate-y-px`/`brightness-95`; computed `transform` shows no dip |
+| T21 | unsized-icon-svgs-scale-with-button-size | render `size="sm"` `<Button><svg data-testid="icon"/></Button>` (svg has no `size-*` class) | svg renders at 14×14px |
+| T22 | unsized-icon-svgs-scale-with-button-size | render `size="xs"` (and separately `size="icon-xs"`) `<Button><svg data-testid="icon"/></Button>` (svg has no `size-*` class) | svg renders at 12×12px |
 
 ## Edge Cases
 
@@ -294,67 +329,55 @@ telemetry belong to the consumer's handler, not the button.
 
 ## Design Decisions
 
-- **Split client boundary, keep `buttonVariants` server-safe.** The pressed state
-  needs React hooks, but `buttonVariants` must remain a plain server-callable
-  function. So the stateful interactivity lives in a sibling `"use client"`
-  `PressableButton`, and `button.tsx` stays a non-client module that re-exports
-  the variants and renders the client layer.
-- **`data-pressed`, not `:active`.** CSS `:active` does not clear when the pointer
-  leaves a held button, so it cannot express "released visual while still armed."
-  Tracking held + pointer-inside in JS and reflecting it via `data-pressed` gives
-  the precise behavior, and matches the `data-[pressed]` token pattern already
-  used elsewhere in the library.
-- **No `setPointerCapture`.** Capture would re-target subsequent pointer events to
-  the button and defeat the leave/re-enter detection; tracking held state plus a
-  window release listener is simpler and reversible.
-- **Subtle, token-only press feedback.** The dip (`translate-y-px`) is kept and a
-  `brightness-95` darken added — variant-agnostic and free of color literals, so
-  it reads as pressed on every variant without per-variant color rules.
-- **`warning` reuses the M3 warning role, not a new alias.** The variant reads
-  the `apt-orange` role that every theme already defines (exposed by
-  `@agenticdevelopertoolkit/themes`), rather than minting a second color alias —
-  it needs no new token and no per-theme work.
-- **Ancestor-settable minimum size instead of prop drilling.** `--adh-button-min-height`
-  and `--adh-button-min-width` default to `0px`, so nothing changes anywhere
-  until an ancestor sets them; a surface that needs a bigger hit target (the
-  source cites shipr's dialogs, where buttons were reported as too small) sets
-  the pair once on itself and every descendant button grows, whatever its
-  `size` — including buttons nested components render that the surface never
-  names. The alternative was passing `size="lg"` down through every dialog and
-  button bar, which is the same decision made in a hundred places and is why it
-  drifted in the first place. The tradeoff, documented honestly in Accessibility
-  above: the default floor is `0px`, so none of the fixed size variants meet the
-  44×44pt/48×48dp guidance on their own — a surface MUST opt in.
-- **`icon*` sizes redefine `--adh-button-min-width`, not a second utility.**
-  Redefining the variable to the height var (rather than emitting a second
-  `min-w-*` utility) matters because `buttonVariants` is also called bare
-  (`<Link className={buttonVariants()}/>`), where no tailwind-merge runs to
-  resolve two conflicting arbitrary `min-width` utilities — which one would win
-  there is decided by CSS source order, i.e. by nothing anyone can see from the
-  call site.
-- **`className` merge precedence (SHOULD, not MUST).** `buttonVariants({ variant,
-  size, className })` passes the consumer's `className` through `cva`/`cn`,
-  which is the project's general override convention rather than a rule
-  specific to this component; a valid deviation would be a call site that
-  intentionally does not want overridable classes, which is why it is a SHOULD.
-- **Evidence-source note for pointer-tracking requirements.** The detailed
-  pointer-tracking requirements above (`press-on-pointerdown-inside` through
-  `no-pointer-capture`) are implemented in the sibling `button-pressable.tsx`
-  file. That file was not part of the source excerpt supplied for this revision
-  pass; these requirements are carried forward from the prior recipe version and
-  are corroborated by `button.tsx`'s own comments describing `PressableButton`'s
-  pointer-tracking contract (data-pressed set by pointer tracking; clears when
-  the pointer leaves while held). A future revision that has direct access to
-  `button-pressable.tsx` SHOULD re-verify these requirements against it directly.
+**Decision**: Split the client boundary; keep `buttonVariants` server-safe.
+**Rationale**: The pressed state needs React hooks, but `buttonVariants` must remain a plain server-callable function. So the stateful interactivity lives in a sibling `"use client"` `PressableButton`, and `button.tsx` stays a non-client module that re-exports the variants and renders the client layer.
+**Approved**: pending
+
+**Decision**: Drive the pressed visual from `data-pressed`, not CSS `:active`.
+**Rationale**: CSS `:active` does not clear when the pointer leaves a held button, so it cannot express "released visual while still armed." Tracking held + pointer-inside in JS and reflecting it via `data-pressed` gives the precise behavior, and matches the `data-[pressed]` token pattern already used elsewhere in the library.
+**Approved**: pending
+
+**Decision**: Never call `setPointerCapture`.
+**Rationale**: Capture would re-target subsequent pointer events to the button and defeat the leave/re-enter detection; tracking held state plus a window release listener is simpler and reversible.
+**Approved**: pending
+
+**Decision**: Keep press feedback subtle and token-only.
+**Rationale**: The dip (`translate-y-px`) is kept and a `brightness-95` darken added — variant-agnostic and free of color literals, so it reads as pressed on every variant without per-variant color rules.
+**Approved**: pending
+
+**Decision**: `warning` reuses the M3 warning role instead of minting a new alias.
+**Rationale**: The variant reads the `apt-orange` role that every theme already defines (exposed by `@agenticdevelopertoolkit/themes`), rather than minting a second color alias — it needs no new token and no per-theme work.
+**Approved**: pending
+
+**Decision**: Make the minimum size ancestor-settable instead of prop-drilled.
+**Rationale**: `--adh-button-min-height` and `--adh-button-min-width` default to `0px`, so nothing changes anywhere until an ancestor sets them; a surface that needs a bigger hit target (`button.tsx`'s own comments cite shipr's dialogs, where the buttons were reported as too small) sets the pair once on itself and every descendant button grows, whatever its `size` — including buttons nested components render that the surface never names. The alternative was passing `size="lg"` down through every dialog and button bar, which is the same decision made in a hundred places and is why it drifted in the first place. The tradeoff, documented honestly in Accessibility above: the default floor is `0px`, so none of the fixed size variants meet the 44×44pt/48×48dp guidance on their own — a surface MUST opt in.
+**Approved**: pending
+
+**Decision**: `icon*` sizes redefine `--adh-button-min-width` rather than emitting a second utility.
+**Rationale**: Redefining the variable to the height var (rather than emitting a second `min-w-*` utility) matters because `buttonVariants` is also called bare (`<Link className={buttonVariants()}/>`), where no tailwind-merge runs to resolve two conflicting arbitrary `min-width` utilities — which one would win there is decided by CSS source order, i.e. by nothing anyone can see from the call site.
+**Approved**: pending
+
+**Decision**: Make `className` merge precedence a SHOULD, not a MUST.
+**Rationale**: `buttonVariants({ variant, size, className })` passes the consumer's `className` through `cva`/`cn`, which is the project's general override convention rather than a rule specific to this component; a valid deviation would be a call site that intentionally does not want overridable classes, which is why it is a SHOULD.
+**Approved**: pending
+
+**Decision**: Document the `--adh-button-min-*` / `apt-orange` prefix mismatch as-is rather than normalizing it.
+**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@agenticdevelopertoolkit` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this recipe pass, so the recipe records the tokens exactly as `button.tsx` and the theme package expose them.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Keyboard operable + visible focus | pass | accessibility |
-| Default size variants meet 44×44pt (Apple HIG) / 48×48dp (Material) minimum touch target | failed | accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+
+Statuses rest on the source as documented above: `keyboard-activates` and the native Base UI `<button>` (T7) ground `keyboard-navigable`; the Accessibility section's accessible-name gap (label comes from consumer `children`/`aria-label`, absent for an unlabeled icon-only button) grounds `screen-reader-support` as partial; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; the Accessibility section's explicit statement that the fixed size-variant heights fall below the 44×44pt/48×48dp guidance by default grounds `touch-target-size` as failed; `disabled`/`aria-invalid`/`aria-haspopup` mapping to native attributes grounds `semantic-markup` as passed; and the Localization section's "no built-in strings to localize" grounds both internationalization checks as passed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above).
 
 ## Change History
 
@@ -364,3 +387,4 @@ telemetry belong to the consumer's handler, not the button.
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Add the `destructive-ghost` variant (seven total) and fix the `default` hover to `hover:bg-primary-bright`, matching `button.tsx`. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Add the `warning` variant (eight total) and the ancestor-settable `--adh-button-min-height`/`--adh-button-min-width` touch-target floor; document icon SVG auto-sizing; restore the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, and Privacy sections required by the template; fix `domain` to the `agenticdevelopercookbook://` scheme; expand Conformance Test Vectors and Edge Cases to cover every MUST/SHOULD requirement and the five completeness categories. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Complete Deep Linking, Localization, Accessibility Options, Feature Flags, and Analytics sections as not applicable per source fidelity; set status to review. |
+| 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: moved the `references` entry to `related`; rewrote Compliance as a link/status/category table against the real catalog; reformatted Design Decisions into Decision/Rationale/Approved triples and relocated the pointer-tracking provenance caveat inline above Behavioral Requirements; renamed `should-preserve-consumer-classname-precedence` to `consumer-classname-precedence` everywhere it's cited; added a size-to-utility table and a per-variant hover/active token table; made T18's expectation a concrete class-list assertion and added test vectors for a non-icon min-width floor, `:active`-absence, and sm/xs icon scaling; named `button.tsx` as the source of the shipr's-dialogs citation and dropped the uncitable "~40-site" figure; documented the `adh`/`apt` token-prefix mismatch as a Design Decision. |
