@@ -3,7 +3,7 @@ id: 9e06ce25-a124-473e-9cf6-ea11a7c40b2d
 title: KeyWindowBorderView
 domain: agenticdevelopertoolkit://recipes/key-window-border-view
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -35,19 +35,20 @@ approved-date: ''
 
 ## Behavioral Requirements
 
-- **must-draw-border**: Component MUST draw a 1-point stroked rounded rectangle aligned to the window's edge.
-- **must-inset-by-half-point**: Component MUST inset the path by 0.5 points horizontally and vertically to align the stroke center with the pixel grid, preventing blurring from sub-pixel rendering.
-- **must-use-accent-color**: Component MUST use the theme's accent color as the stroke color.
-- **must-apply-inactive-alpha**: Component MUST apply `inactiveAlpha` opacity to the stroke when the window is not key.
-- **must-apply-active-alpha**: Component MUST apply `activeAlpha` opacity to the stroke when the window is key.
-- **must-be-click-through**: Component MUST return `nil` from `hitTest(_:)` and not intercept mouse events.
-- **must-respond-to-key-state-changes**: Component MUST observe window key state notifications and redraw when key state changes.
-- **must-support-corner-radius-customization**: Component MUST allow the corner radius to be customized via the public `cornerRadius` property.
-- **must-support-alpha-customization**: Component MUST allow the inactive and active alpha values to be customized via the public `inactiveAlpha` and `activeAlpha` properties.
-- **must-redraw-on-property-change**: Component MUST mark itself for redisplay when `cornerRadius`, `inactiveAlpha`, or `activeAlpha` properties are modified.
-- **must-respond-to-theme-changes**: Component MUST observe theme palette changes and update the accent color when the theme changes.
-- **must-clean-up-observers**: Component MUST remove all observers from the notification center when deallocated or moved to a window.
-- **must-be-main-actor-isolated**: Component MUST be annotated as `@MainActor` to ensure all drawing and observation occur on the main thread.
+- **stroke-border**: Component MUST draw a 1-point stroked rounded rectangle aligned to the window's edge.
+- **half-point-inset**: Component MUST inset the path by 0.5 points horizontally and vertically so the 1-point stroke lies fully inside `bounds`, which on a 1x display also aligns the stroke to the pixel grid.
+- **accent-stroke-color**: Component MUST use the theme's accent color as the stroke color.
+- **inactive-alpha**: Component MUST apply `inactiveAlpha` opacity to the stroke when the window is not key.
+- **active-alpha**: Component MUST apply `activeAlpha` opacity to the stroke when the window is key.
+- **click-through**: Component MUST return `nil` from `hitTest(_:)` and not intercept mouse events.
+- **key-state-redraw**: Component MUST observe window key state notifications and redraw when key state changes.
+- **initial-key-state**: Component MUST read the window's current key state when it first moves to a window and draw accordingly, without waiting for a subsequent key-state notification.
+- **corner-radius-customization**: Component MUST allow the corner radius to be customized via the public `cornerRadius` property.
+- **alpha-customization**: Component MUST allow the inactive and active alpha values to be customized via the public `inactiveAlpha` and `activeAlpha` properties.
+- **redraw-on-property-change**: Component MUST mark itself for redisplay when `cornerRadius`, `inactiveAlpha`, or `activeAlpha` properties are modified.
+- **theme-color-update**: Component MUST observe theme palette changes and update the accent color when the theme changes.
+- **observer-cleanup**: Component MUST remove all observers from the notification center when deallocated or moved to a window.
+- **main-actor-isolation**: Component MUST be annotated as `@MainActor` to ensure all drawing and observation occur on the main thread.
 
 ## Appearance
 
@@ -58,12 +59,12 @@ approved-date: ''
 - **Inactive opacity**: Default 0.28 (customizable via `inactiveAlpha` property)
 - **Active opacity**: Default 0.85 (customizable via `activeAlpha` property)
 - **Background**: Transparent (no fill)
-- **Rendering**: Drawn using `NSBezierPath` with `stroke()` method
 
 ## States
 
 | State | Appearance change | Opacity | When triggered |
 |-------|------------------|---------|-----------------|
+| Detached | No stroke drawn | — | View has no window (`window` is `nil`); no key-state observers are registered |
 | Inactive | Border faded | `inactiveAlpha` (0.28) | Window is not key; see `NSWindow.didResignKeyNotification` |
 | Active | Border brightened | `activeAlpha` (0.85) | Window is key; see `NSWindow.didBecomeKeyNotification` |
 
@@ -75,29 +76,31 @@ Not applicable: This component is a purely decorative visual affordance with no 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| key-001 | must-draw-border | Component initialized and added to a window | 1-point stroked rounded rectangle is drawn within the component's bounds |
-| key-002 | must-inset-by-half-point | Component draws | Stroke path is inset by (0.5, 0.5) on all sides; stroke appears sharp without sub-pixel blurring |
-| key-003 | must-use-accent-color | Theme accent is red (example) | Stroke color is red with appropriate alpha |
-| key-004 | must-apply-inactive-alpha | Window is not key; `inactiveAlpha` = 0.28 | Stroke is drawn with 0.28 alpha component |
-| key-005 | must-apply-active-alpha | Window becomes key; `activeAlpha` = 0.85 | Stroke is drawn with 0.85 alpha component |
-| key-006 | must-be-click-through | Mouse event at (x, y) within component bounds | `hitTest(_:)` returns `nil`; event passes through to view underneath |
-| key-007 | must-respond-to-key-state-changes | Window key state changes from inactive to active | Component redraws and stroke brightness increases visibly |
-| key-008 | must-support-corner-radius-customization | Set `cornerRadius` to 15 | Stroke path is drawn with corner radius 15 instead of default 10 |
-| key-009 | must-support-alpha-customization | Set `inactiveAlpha` to 0.5; window is not key | Stroke is drawn with 0.5 alpha |
-| key-010 | must-redraw-on-property-change | Modify `cornerRadius` property | Component marks itself for display; redraw occurs |
-| key-011 | must-respond-to-theme-changes | Theme palette changes; accent color changes to blue | Stroke color updates to blue |
-| key-012 | must-clean-up-observers | Move component between windows | Observers for the previous window are removed; observers for the new window are registered |
-| key-013 | must-be-main-actor-isolated | Component is allocated and drawn | No thread safety warnings; all UI updates occur on main thread |
+| key-001 | stroke-border | Component initialized and added to a window | `draw(_:)` strokes a rounded-rect path with `lineWidth == 1` within the view's bounds |
+| key-002 | half-point-inset | Component draws | The stroked path's rect equals `bounds.insetBy(dx: 0.5, dy: 0.5)` |
+| key-003 | accent-stroke-color | Theme accent is red (example) | `strokeColor`'s underlying color, ignoring alpha, equals the theme's red accent |
+| key-004 | inactive-alpha | Window is not key; `inactiveAlpha` = 0.28 | `strokeColor.alphaComponent == 0.28` |
+| key-005 | active-alpha | Window becomes key; `activeAlpha` = 0.85 | `strokeColor.alphaComponent == 0.85` |
+| key-006 | click-through | Mouse event at (x, y) within component bounds | `hitTest(_:)` returns `nil`; event passes through to the view underneath |
+| key-007 | key-state-redraw | Window key state changes from inactive to active | `keyStateChanged()` sets `needsDisplay = true`; the next `draw(_:)` computes `strokeColor.alphaComponent == activeAlpha` |
+| key-008 | corner-radius-customization | Set `cornerRadius` to 15 | The stroked path is built with `xRadius == 15` and `yRadius == 15` |
+| key-009 | alpha-customization | Set `inactiveAlpha` to 0.5; window is not key | `strokeColor.alphaComponent == 0.5` |
+| key-010 | redraw-on-property-change | Modify `cornerRadius`, `inactiveAlpha`, or `activeAlpha` | `needsDisplay` becomes `true` immediately after the property's `didSet` runs |
+| key-011 | theme-color-update | Theme palette changes; accent color changes to blue | `accent` updates to blue and `needsDisplay` becomes `true`; the next stroke uses the blue accent |
+| key-012 | observer-cleanup | Component is deallocated | `deinit` calls `NotificationCenter.default.removeObserver(self)`; no further notifications reach the instance |
+| key-013 | observer-cleanup | `viewDidMoveToWindow()` runs with `window == nil` (view removed from its window) | Observers registered for the previous window are removed; no drawing is scheduled; no observers remain for `self` |
+| key-014 | observer-cleanup | Component is moved from window A to window B | Observers for window A are removed before observers for window B are registered; `needsDisplay` becomes `true` for the new window |
+| key-015 | initial-key-state | `viewDidMoveToWindow()` runs for the first time on a window that is already key | `needsDisplay` becomes `true`, and the next `draw(_:)` uses `activeAlpha`, without waiting for a `didBecomeKeyNotification` |
+| key-016 | main-actor-isolation | Project builds under Swift strict concurrency (`SWIFT_STRICT_CONCURRENCY: complete`) | The build succeeds with zero data-race or actor-isolation diagnostics for `KeyWindowBorderView` |
 
 ## Edge Cases
 
-- **Initial window state**: When the view is first added to a window via `viewDidMoveToWindow()`, the current key state is read and drawn correctly without requiring user interaction.
-- **Window move between windows**: If the view is moved from one window to another, observers for the old window are removed and re-registered for the new window. The stroke is redrawn to reflect the new window's key state.
-- **Nil window**: If `viewDidMoveToWindow()` is called and `window` is `nil` (view removed), all observers are cleaned up and no drawing occurs.
+- **Window move between windows**: If the view is moved from one window to another, observers for the old window are removed and re-registered for the new window. The stroke is redrawn to reflect the new window's key state. See **observer-cleanup**.
+- **Nil window**: If `viewDidMoveToWindow()` is called and `window` is `nil` (view removed), all observers are cleaned up and no drawing occurs. See **observer-cleanup**.
 - **Zero or negative corner radius**: The behavior is not explicitly constrained by the source; the underlying `NSBezierPath` method determines the rendering. A host that sets invalid radii accepts that consequence.
 - **Alpha values outside [0, 1]**: Setting `inactiveAlpha` or `activeAlpha` to values outside the valid range does not raise an error; the `NSColor.withAlphaComponent(_:)` method handles or clips the value, and drawing proceeds.
 - **Theme change during deallocating**: The `ThemePaletteObserver` is held by the view; when the view deallocates, the observer is released and no further theme updates are received.
-- **Rapid key state toggles**: Each key state notification triggers a redraw. No debounce or deduplication is performed; rapid toggles result in multiple draw cycles.
+- **Rapid key state toggles**: Each key-state notification calls `keyStateChanged()`, which sets `needsDisplay = true`. AppKit coalesces multiple `needsDisplay` requests made within the same run-loop pass into a single redraw before the next display cycle, so rapid toggles do not produce one draw call per notification.
 
 ## Configuration
 
@@ -137,36 +140,47 @@ Not applicable: No logging is implemented in the source.
 
 ## Platform Notes
 
-- **SwiftUI**: `KeyWindowBorderView` is an `NSView` subclass and requires wrapping in `NSViewRepresentable` for use in SwiftUI. Create a simple wrapper that instantiates the view and exposes the `cornerRadius`, `inactiveAlpha`, and `activeAlpha` properties as SwiftUI bindings or state parameters. The wrapper must ensure the view is added to the SwiftUI hierarchy as a background or overlay layer so it does not interfere with interactive content.
+- **SwiftUI**: SwiftUI can express this natively without wrapping the AppKit view. Apply `.overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).strokeBorder(Color.accentColor, lineWidth: 1))`, inset by 0.5 points to match the AppKit version's alignment, to the window's root content view. Read `@Environment(\.controlActiveState) private var controlActiveState` and set the overlay's opacity to `activeAlpha` when it is `.key` and `inactiveAlpha` otherwise. Add `.allowsHitTesting(false)` so the overlay never intercepts events, matching the source's `hitTest` override.
 
-- **Compose**: Not applicable: Android does not have frameless or translucent windows with key state semantics equivalent to macOS. A Compose-based companion component would need to redefine the concept (e.g., as a subtle top border on a translucent dialog) and adapt to Material Design principles rather than replicate the macOS behavior.
+- **Compose**: Android does not have frameless or translucent windows with key-state semantics equivalent to macOS, so the component has no equivalent there. Compose Desktop windows do expose a focus state, though: `LocalWindowInfo.current.isWindowFocused` reports whether the window currently has focus. A `Modifier.border(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = if (isWindowFocused) activeAlpha else inactiveAlpha), shape = RoundedCornerShape(cornerRadius.dp))` overlay reproduces the same brightening affordance for a Compose Desktop translucent window.
 
-- **React/Web**: Not applicable: Web browsers do not expose window-level focus or key state in the same way as macOS. A web implementation would require simulating window focus via JavaScript `window.focus()` and `blur()` events, which have different semantics and limited utility in a browser context.
+- **React/Web**: Browsers expose window focus via the `focus` / `blur` events on `window`, and `document.hasFocus()` reads the current state synchronously. For an app shell running in a borderless/frameless window (for example, an Electron `BrowserWindow` with `frame: false`), a CSS overlay — `position: absolute; inset: 0; border-radius: var(--corner-radius); border: 1px solid var(--accent); opacity: var(--inactive-alpha); pointer-events: none;` — toggling to `var(--active-alpha)` via a class set from those listeners reproduces the affordance. A page rendered inside ordinary browser chrome has no use for this, since the OS-drawn window frame already shows focus.
 
-- **AppKit / UIKit**: On macOS, `KeyWindowBorderView` is implemented as an `NSView` subclass using `NSBezierPath` and direct drawing in `draw(_:)`. The view observes `NSWindow.didBecomeKeyNotification` and `NSWindow.didResignKeyNotification` to respond to key state changes. On iOS, `UIView` does not have an equivalent key state (windows are always "key"), so a UIKit equivalent would need to use alternative signals such as visibility or user interaction to simulate the active/inactive states. A cross-platform AppKit/UIKit component would likely remain AppKit-only or require a significant redesign for iOS.
+- **AppKit / UIKit**: On macOS, `KeyWindowBorderView` is implemented as an `NSView` subclass, drawn with `NSBezierPath(roundedRect:xRadius:yRadius:)` and `stroke()` inside `draw(_:)`. It observes `NSWindow.didBecomeKeyNotification` and `NSWindow.didResignKeyNotification` on its window to react to key-state changes. On iOS, `UIWindow` does have a key-state concept — `UIWindow.isKeyWindow`, plus `UIWindow.didBecomeKeyNotification` / `didResignKeyNotification` — but a scene-based app's foreground/background transitions are better tracked via `UIScene.activationState` and the owning `UIWindowSceneDelegate`'s `sceneDidActivate(_:)` / `sceneWillDeactivate(_:)`. A UIKit port would draw the same inset, rounded, stroked path in `draw(_:)` (or a `CAShapeLayer`) and toggle its alpha from those callbacks.
 
-- **WinUI 3**: On Windows, implement this as a custom `Control` that draws a border using `CanvasControl` or `Windows.UI.Xaml.Shapes.Rectangle` with a `Stroke`. Hook the window's `Activated` and `Deactivated` events to toggle between `inactiveAlpha` and `activeAlpha` opacity states. Use `Windows.UI.Xaml.Media.SolidColorBrush` to apply the accent color dynamically from the app's theme resources. Set `IsHitTestVisible` to `false` to make the border click-through. Draw the border inset by 0.5 logical pixels on all sides and apply the appropriate `CornerRadius` property to match macOS rendering. Bind the accent color to the system theme palette via `Windows.UI.Xaml.Application.Current.Resources["SystemAccentColor"]` or the app's custom theme provider.
+- **WinUI 3**: On Windows, implement this as a `Microsoft.UI.Xaml.Controls.Border` with `CornerRadius` set to `cornerRadius` and a `BorderThickness` of 1, its `BorderBrush` bound to the app's accent-color resource (for example `{ThemeResource SystemAccentColor}`, or a custom theme provider). A XAML `Border` draws its stroke fully inside its own bounds, so the manual 0.5-point inset this view needs in AppKit is unnecessary there. Set `IsHitTestVisible="False"` to make it click-through. Toggle the brush's opacity between `inactiveAlpha` and `activeAlpha` from the `Window.Activated` event, switching on `e.WindowActivationState == WindowActivationState.Deactivated` (inactive) versus any other value (active) — WinUI 3's `Window` has no separate `Deactivated` event.
 
 ## Design Decisions
 
-- **Half-point inset**: The stroke is inset by 0.5 points on all sides to align the stroke center with the pixel grid. This prevents the 1-point stroke from straddling two pixel columns, which would cause the line to render as a 2-point blur. This is a pixel-grid-specific rendering detail that applies to AppKit and WinUI 3 but may not be necessary on platforms with different rendering pipelines.
+- **Decision**: Inset the stroke path by 0.5 points on all sides.
+  **Rationale**: A 1-point stroke is centered on its path, so half its width would fall outside `bounds` without the inset; insetting keeps the full stroke within the view. At 1x this also lands the stroke on a single pixel column rather than straddling two, avoiding blur — on Retina displays 0.5pt maps to a whole number of device pixels, so the pixel-alignment benefit is a 1x-specific side effect rather than the primary reason for the inset.
+  **Approved**: pending
 
-- **Inactive/active opacity defaults (0.28 / 0.85)**: The large gap between the two opacity values is intentional. The inactive line must be quiet enough to read as the window's edge rather than a highlight, while the active line must be bright enough to clearly signal which window has focus. These defaults are calibrated for readability against a light or dark desktop.
+- **Decision**: Default `inactiveAlpha` to 0.28 and `activeAlpha` to 0.85.
+  **Rationale**: The gap between the two is deliberate: the inactive line must read as the window's edge rather than a highlight, while the active line must be bright enough to clearly signal which window has focus. These defaults are calibrated for readability against both light and dark desktops.
+  **Approved**: pending
 
-- **Click-through behavior**: The view is implemented as a hit-test sink (`hitTest` returns `nil`) rather than using `isUserInteractionEnabled = false` or `canBecomeFirstResponder`. This keeps the view in the responder chain but prevents it from consuming events, allowing windows with this border to remain interactive.
+- **Decision**: Implement click-through by overriding `hitTest(_:)` to always return `nil`, rather than hiding the view or intercepting events another way.
+  **Rationale**: Returning `nil` from `hitTest(_:)` is the standard `NSView` mechanism for excluding a view from mouse-event dispatch — AppKit's hit-testing walks the view tree and skips any view whose `hitTest(_:)` returns `nil`, passing the event to the view underneath. This keeps the border purely decorative while every window beneath it remains fully interactive.
+  **Approved**: pending
 
-- **Theme palette observation**: The component uses `ThemePaletteObserver` to update the accent color dynamically. This ties the border to the app's theme and ensures the border adapts if the user or the app changes the accent color.
+- **Decision**: Observe theme changes via `ThemePaletteObserver` rather than reading the accent color once at init.
+  **Rationale**: Ties the border's color to the app's live theme so it updates immediately if the user or the app changes the accent color, instead of requiring the view to be recreated.
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Decorative element; no accessibility violations | passed | Accessibility |
-| Click-through design ensures no mouse event blocking | passed | Usability |
-| Main-actor isolation ensures thread safety | passed | Concurrency |
+| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+
+`platform-design-language` and `platform-theming` rest on the source drawing with the system accent color and mirroring macOS's own key/inactive window semantics via `NSWindow.didBecomeKeyNotification` / `didResignKeyNotification` and `ThemePaletteObserver`. `fault-tolerance` is partial because out-of-range `cornerRadius` and alpha inputs (see Edge Cases) do not crash the view, but the source also does not validate or normalize them to a defined result.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial recipe extraction from KeyWindowBorderView.swift |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added an `initial-key-state` requirement and vector for reading key state on first window attachment; moved the `NSBezierPath`/`stroke()` implementation detail from Appearance into the AppKit/UIKit platform note; corrected the UIKit note's false "always key" claim to `UIWindow.isKeyWindow`/`UIScene.activationState`, the WinUI 3 note's UWP namespaces and nonexistent `Deactivated` event to `Microsoft.UI.Xaml`/`WindowActivationState` with a native `Border`, and the SwiftUI note to prefer a native `.overlay(RoundedRectangle.strokeBorder)` over `NSViewRepresentable`; replaced the Compose and React/Web "Not applicable" notes with minimal focus-based equivalents; rewrote the click-through and half-point-inset Design Decisions to drop UIKit-only APIs and the inaccurate 2-point-blur claim, and reformatted all Design Decisions into the Decision/Rationale/Approved form; rebuilt Compliance as a linked checks table (platform-design-language, platform-theming, fault-tolerance) and dropped the invented Usability/Concurrency categories; added a Detached state and fixed the rapid-key-state-toggle edge case to describe `needsDisplay` coalescing; split the "sharp"/"visible" test vectors into concrete assertions, turned main-actor-isolation into a build-time check, and added observer-cleanup vectors for deallocation and window removal; fixed the 1.0.0 row's author to Mike Fullerton |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial recipe extraction from KeyWindowBorderView.swift |

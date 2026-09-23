@@ -3,11 +3,11 @@ id: 811cc18f-e33a-42bb-bd2d-dfc3dc21bc77
 title: Lede
 domain: agenticdevelopertoolkit://recipes/lede
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -16,7 +16,11 @@ summary: Introductory paragraph component that renders semantic text content und
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- typography
+- text
+- landing
+- paragraph
 depends-on: []
 related: []
 references: []
@@ -32,18 +36,25 @@ A paragraph component used for introductory or emphasized text following heading
 
 ## Behavioral Requirements
 
-- **must-render-as-paragraph**: Component MUST render as an HTML `<p>` element.
-- **must-render-children**: Component MUST render the provided `children` prop as the paragraph content.
-- **must-apply-lede-class**: Component MUST apply the `lp-lede` CSS class to the rendered element.
-- **may-accept-additional-class**: Component MAY accept an optional `className` prop that is concatenated with `lp-lede`.
-- **must-filter-empty-classes**: Component MUST filter empty class values before joining (remove undefined or falsy className values).
+- **render-as-paragraph**: Component MUST render as an HTML `<p>` element.
+- **render-children**: Component MUST render the provided `children` prop as the paragraph content.
+- **apply-lede-class**: Component MUST apply the `lp-lede` CSS class to the rendered element.
+- **accept-additional-class**: Component MUST accept an optional `className` prop that is concatenated with `lp-lede`.
+- **clean-class-attribute**: The rendered `class` attribute MUST contain no `undefined` or empty-string tokens: falsy `className` values (`undefined`, `null`, `""`) are filtered out before the attribute is joined. A whitespace-only value is truthy and is therefore not filtered (see Edge Cases).
+- **constrain-paragraph-measure**: Component MUST constrain the paragraph to a maximum measure of 72 characters (`max-width: 72ch`, defined by the `lp-lede` CSS rule) for readability.
 
 ## Appearance
 
 - **Element**: Semantic `<p>` HTML element
 - **Base class**: `lp-lede`
+- **Color**: `var(--lp-ink-dim, #a0a0a0)`
+- **Font**: weight 300, size `1.02rem`
+- **Measure**: `max-width: 72ch` (see **constrain-paragraph-measure**) — wider than the 60ch a proportional face would want, because the site is set in one monospace face where a character is narrower than average
+- **Spacing**: `margin-top: 1.15rem` by default; `0.9rem` between two consecutive ledes (`.lp-lede + .lp-lede`); `1.8rem` when a lede is the first child of `.lp-wrap`
+- **Text wrapping**: `text-wrap: pretty`
+- **Emphasis (`<em>`)**: rendered in `var(--lp-accent-bright, #d8d8d8)` with `font-style: normal` — color signals emphasis instead of italics
 - **Additional styling**: Applied via optional `className` prop
-- **Visual styling details**: Defined by `lp-lede` CSS rule (not provided in source)
+- **Styling source**: `packages/web/packages/landing/src/css/blocks.css` (`.lp-lede` rule)
 
 ## States
 
@@ -59,16 +70,22 @@ Not applicable: Lede is a static presentational component with no interactive or
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| lede-001 | must-render-as-paragraph | `<Lede>Text</Lede>` | Element is rendered as `<p>` in the DOM |
-| lede-002 | must-render-children | `<Lede>Hello World</Lede>` | Text content "Hello World" appears in paragraph |
-| lede-003 | must-apply-lede-class | `<Lede>Text</Lede>` | Rendered element includes `lp-lede` class |
-| lede-004 | may-accept-additional-class | `<Lede className="extra">Text</Lede>` | Rendered element includes both `lp-lede` and `extra` classes |
-| lede-005 | must-filter-empty-classes | `<Lede className={undefined}>Text</Lede>` | Rendered element class is `lp-lede` only (undefined filtered out) |
+| lede-001 | render-as-paragraph | `<Lede>Text</Lede>` | Element is rendered as `<p>` in the DOM |
+| lede-002 | render-children | `<Lede>Hello World</Lede>` | Text content "Hello World" appears in paragraph |
+| lede-003 | apply-lede-class | `<Lede>Text</Lede>` | Rendered element includes `lp-lede` class |
+| lede-004 | accept-additional-class | `<Lede className="extra">Text</Lede>` | Rendered element includes both `lp-lede` and `extra` classes |
+| lede-005 | clean-class-attribute | `<Lede className={undefined}>Text</Lede>` | Rendered element class is `lp-lede` only (undefined filtered out) |
+| lede-006 | clean-class-attribute | `<Lede className="">Text</Lede>` | Rendered element class is `lp-lede` only (empty string filtered out) |
+| lede-007 | clean-class-attribute | `<Lede className=" ">Text</Lede>` | Rendered element class attribute is `lp-lede  ` (two spaces): a whitespace-only value is truthy, so it is not filtered and leaves a stray blank token |
+| lede-008 | constrain-paragraph-measure | `<Lede>Text</Lede>` | Computed style of the rendered `<p>` has `max-width: 72ch` |
+| lede-009 | Edge Case: empty children | `<Lede></Lede>` | Component renders `<p className="lp-lede"></p>` with no children guard |
 
 ## Edge Cases
 
-- **Empty children**: If children is empty string or not provided, component renders an empty paragraph.
-- **Null or undefined className**: Optional className prop defaults to undefined; component handles this by filtering falsy values.
+- **Empty children**: If children is empty string or not provided, component renders an empty paragraph; no guard prevents this (lede-009).
+- **Null or undefined className**: Optional className prop defaults to undefined; filtered out via **clean-class-attribute**.
+- **Empty-string className**: An explicit `className=""` is also falsy and is filtered out the same way, leaving only `lp-lede`.
+- **Whitespace-only className**: A className that is only whitespace (e.g. `" "`) is truthy, so **clean-class-attribute** does not filter it; the rendered class attribute keeps the stray whitespace token.
 - **Multiple class names in className**: If className contains multiple space-separated class names, all are appended after `lp-lede`.
 - **No className provided**: Component renders with only the `lp-lede` class.
 
@@ -89,7 +106,11 @@ Not applicable: Lede contains no text strings of its own. All text content is pr
 
 ## Accessibility Options
 
-Not applicable: Lede is a static text component that does not animate or respond to motion preferences.
+| Option | Behavior |
+|--------|----------|
+| Dynamic Type / Font Scaling | Font size (`1.02rem`) and measure (`max-width: 72ch`, see **constrain-paragraph-measure**) are set in relative units, so the rendered paragraph scales with the user's font-size and browser-zoom preference without truncation. |
+| Color Contrast | Text renders in the `--lp-ink-dim` token (fallback `#a0a0a0`); it MUST meet WCAG AA contrast against its background (see **Compliance**). |
+| Reduce Motion | Not applicable — Lede has no animation or transition. |
 
 ## Feature Flags
 
@@ -109,22 +130,33 @@ Not applicable: Lede is a presentational component with no operational state or 
 
 ## Platform Notes
 
-- **React/Web**: Render as `<p>` with `className` attribute. Source file: `packages/web/packages/landing/src/blocks/Lede.tsx`. Implementation filters falsy class values before joining with space.
-- **SwiftUI**: Use `Text` view with conditional `.padding()` modifier. Apply font, size, and color via `.font()` and `.foregroundColor()` modifiers to match `lp-lede` styling.
-- **Compose**: Use `Text` composable with `Modifier.then()` to apply padding and font styling. Pass text content as `text` parameter. Apply color via `.color()` modifier.
-- **AppKit / UIKit**: Use `NSTextField` (macOS) or `UILabel` (iOS) with `attributedStringValue` or `attributedText` to match `lp-lede` styling. Disable editing on UITextField. Configure font, size, and text color properties.
-- **WinUI 3**: Use `TextBlock` control with `Text` property for content. Set `FontSize`, `FontFamily`, and `Foreground` (color) properties to match web styling. Apply padding via `Margin` property.
+- **React/Web**: Render as `<p>` with `className` attribute; base class `lp-lede`, measure constrained to `max-width: 72ch`. Source file: `packages/web/packages/landing/src/blocks/Lede.tsx` (styling in `packages/web/packages/landing/src/css/blocks.css`). Implementation filters falsy class values before joining with a space; a whitespace-only `className` value is not filtered.
+- **SwiftUI**: Use a `Text` view; apply font, size, and color with `.font()` and `.foregroundStyle()` (not the deprecated `.foregroundColor()`), and constrain width with `.frame(maxWidth:)` sized to the same measure to match `lp-lede` styling. `Text` wraps by default.
+- **Compose**: Use the `Text` composable, passing `color` directly (or a `style = TextStyle(color = ...)`) — Compose has no `.color()` modifier — along with `fontWeight` and `fontSize` parameters, and `Modifier.widthIn(max = ...)` sized to the same measure to match `lp-lede` styling. `Text` wraps by default.
+- **AppKit / UIKit**: Use `NSTextField(wrappingLabelWithString:)` (macOS) or `UILabel` with `numberOfLines = 0` (iOS) to match `lp-lede` styling; both wrap by default. Constrain width to the same measure via a layout constraint. Configure font, size, and text color properties.
+- **WinUI 3**: Use a `TextBlock` control with the `Text` property for content and `TextWrapping="Wrap"`; constrain width with `MaxWidth` sized to the same measure (rather than `Margin` padding) to match web styling. Set `FontSize`, `FontFamily`, and `Foreground` (color) properties.
 
 ## Design Decisions
 
-Lede is deliberately implemented as a standalone component rather than scoped to appear only under a specific heading component, because the same visual treatment and measure are desired for paragraphs following card grids, chip lists, and other content blocks. This provides flexibility for repeated use across different layout contexts.
+**Decision**: Lede is implemented as a standalone component rather than scoped to appear only under a specific heading component (e.g. `Head`).
+**Rationale**: The same voice and measure (`max-width: 72ch`, see **constrain-paragraph-measure**) are wanted for the odd paragraph that follows a card grid, a chip list, or another content block, not only the one under a heading.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Lede is a simple semantic element with no security, authentication, or regulatory compliance concerns.
+| Check | Status | Category |
+|-------|--------|----------|
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+
+`semantic-markup` and `text-expansion-tolerance` pass because the source renders a plain `<p>` with no fixed width or overflow rule that would truncate wrapped or RTL text; `dynamic-type-support`, `contrast-ratio`, and `rtl-layout-support` are partial because the `lp-lede` CSS uses relative `rem`/`ch` units and `--lp-ink-dim`/`--lp-accent-bright` custom properties whose resolved values and RTL behavior this source cannot fully confirm.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case, promote accept-additional-class to MUST, restate class filtering as observable clean-class-attribute with new edge-case vectors, add constrain-paragraph-measure with concrete lp-lede appearance values, reformat design decision, replace Compliance with an applicable-checks table, correct Platform Notes APIs and add wrapping guidance, add accessibility-options text-scaling guidance, unquote frontmatter dates, add tags |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

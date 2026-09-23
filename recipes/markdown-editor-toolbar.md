@@ -3,7 +3,7 @@ id: 3600088a-a9f6-42ca-81db-43f0eb6ddd79
 title: Markdown Editor Toolbar
 domain: agenticdevelopertoolkit://recipes/markdown-editor-toolbar
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -22,7 +22,8 @@ tags:
 - toolbar
 - markdown
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/markdown-document-editor
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,19 +37,20 @@ The Markdown Editor Toolbar is a horizontal chrome bar that hosts mode selection
 
 ## Behavioral Requirements
 
-- **must-render-mode-selector**: The component MUST render a segmented control displaying all modes in `availableModes`.
-- **must-hide-mode-selector-when-single-mode**: The component MUST hide the segmented control when `availableModes` contains fewer than 2 entries.
-- **must-build-empty-mode-control-when-no-modes**: When `availableModes` is empty, the component MUST build the segmented control with zero segments (`rebuildModeControl` iterates the empty array and adds none) and MUST hide it under the fewer-than-2 rule above.
-- **must-render-help-button**: The component MUST render a help button labeled "?" by default.
-- **must-support-help-button-visibility**: The component MUST respect the `showsHelpButton` property and hide the button when set to false.
-- **must-render-import-button**: The component MUST render an import button labeled "Open…" by default.
-- **must-support-import-button-visibility**: The component MUST respect the `showsImportButton` property and hide the button when set to false.
-- **must-fire-mode-change-callback**: The component MUST call `onModeChange` with the newly selected mode when the user taps a different mode segment.
-- **must-sync-selection-on-mode-property-change**: The component MUST update the segmented control's selected segment when the `mode` property changes programmatically.
-- **must-fire-help-callback**: The component MUST call `onSyntaxHelpRequested` when the user taps the help button.
-- **must-fire-import-callback**: The component MUST call `onImport` when the user taps the import button.
-- **must-apply-theme-background**: The component MUST apply the `elevatedSurface` color from a `SemanticPalette` to its background when `applyTheme(_:)` is called.
-- **must-apply-theme-button-tint**: The component MUST apply the `accent` color from a `SemanticPalette` to the help and import buttons' tint color when `applyTheme(_:)` is called.
+- **mode-selector**: The component MUST render a segmented control displaying all modes in `availableModes`.
+- **hide-mode-selector-single-mode**: The component MUST hide the segmented control when `availableModes` contains fewer than 2 entries.
+- **empty-mode-list**: When `availableModes` is empty, the component MUST render the segmented control with zero segments and MUST hide it under **hide-mode-selector-single-mode**, with no segment selected. See Change History 1.1.0 for the source trace of this behavior.
+- **help-button**: The component MUST render a help button labeled "?" by default.
+- **help-button-visibility**: The component MUST respect the `showsHelpButton` property and hide the button when set to false.
+- **import-button**: The component MUST render an import button labeled "Open…" by default.
+- **import-button-visibility**: The component MUST respect the `showsImportButton` property and hide the button when set to false.
+- **mode-change-callback**: The component MUST call `onModeChange` with the newly selected mode when the user taps a mode segment.
+- **mode-change-callback-scope**: `onModeChange` MUST fire on any user tap that the platform control reports as its action — including a tap on the segment that is already selected, since the handler applies no equality check before firing — and MUST NOT fire when `mode` is set programmatically, since the `mode` property's `didSet` only re-syncs the control's selection (**sync-selection**) and never invokes the tap handler.
+- **sync-selection**: The component MUST update the segmented control's selected segment when the `mode` property changes programmatically.
+- **help-callback**: The component MUST call `onSyntaxHelpRequested` when the user taps the help button.
+- **import-callback**: The component MUST call `onImport` when the user taps the import button.
+- **theme-background**: The component MUST apply the `elevatedSurface` color from a `SemanticPalette` to its background when `applyTheme(_:)` is called.
+- **theme-button-tint**: The component MUST apply the `accent` color from a `SemanticPalette` to the help and import buttons' tint color when `applyTheme(_:)` is called.
 
 ## Appearance
 
@@ -62,6 +64,7 @@ The Markdown Editor Toolbar is a horizontal chrome bar that hosts mode selection
 - **Mode control segments**: System segmented control styling (texturedRounded on macOS)
 - **Buttons**: System button styling (rounded bezel on macOS, system type on iOS)
 - **Spacer**: Flexible space between mode control and buttons, expands to fill available width
+- **Dynamic Type / larger accessibility text**: The bar's height (44pt/32pt) is fixed and does not grow with the system text-size setting; only the button and segment titles use system fonts that scale with the content size category. At larger accessibility sizes the labels are what adapts — by shrinking within their intrinsic sizing or, at extreme sizes, truncating — while the bar itself keeps its fixed height. Neither implementation adjusts the bar's height for content size category.
 
 ## States
 
@@ -76,13 +79,13 @@ The Markdown Editor Toolbar is a horizontal chrome bar that hosts mode selection
 
 ## Accessibility
 
-- **Mode control role**: Segmented control; MUST be labeled "Editor Mode" (macOS) or accessible via context.
+- **Mode control role**: Segmented control. Labeled "Editor Mode" via an explicit accessibility label on macOS (`setAccessibilityLabel`). On iOS, no group-level label is set in source; VoiceOver reads each segment by its own title (the mode's `label`, e.g. "Edit", "Preview", "Split"), since `UISegmentedControl` exposes per-segment titles as accessibility labels by default.
 - **Mode control accessibility ID** (macOS): "markdown-editor.mode"
-- **Help button role**: Button; MUST be labeled "Markdown Syntax Help" (not just "?") on macOS.
+- **Help button role**: Button. Labeled "Markdown Syntax Help" via an explicit accessibility label on macOS. On iOS, no explicit label is set in source; VoiceOver reads the button's own title, "?", which does not convey the button's purpose (see Compliance: screen-reader-support).
 - **Help button accessibility ID** (macOS): "markdown-editor.help"
-- **Import button role**: Button; MUST be labeled "Open Markdown File" on macOS.
+- **Import button role**: Button. Labeled "Open Markdown File" via an explicit accessibility label on macOS. On iOS, no explicit label is set in source; VoiceOver reads the button's own title, "Open…".
 - **Import button accessibility ID** (macOS): "markdown-editor.import"
-- **Minimum touch target size** (iOS): 44×44pt per Apple HIG.
+- **Minimum touch target size** (iOS): Apple HIG recommends 44×44pt. The bar's 44pt height minus the stack's 4pt top/bottom padding leaves at most 36pt of vertical space for the arranged controls, so the 44pt minimum is not guaranteed by layout alone (see Compliance: touch-target-size).
 - **Keyboard navigation**: All buttons MUST be keyboard-focusable and activatable via Return/Space (platform default).
 - **Announcements**: Mode changes MUST be announced to assistive technology when the segmented control selection updates.
 
@@ -90,26 +93,37 @@ The Markdown Editor Toolbar is a horizontal chrome bar that hosts mode selection
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| toolbar-001 | must-render-mode-selector | availableModes = [.split, .raw] | Segmented control visible with two segments labeled "Split" and "Raw" |
-| toolbar-002 | must-hide-mode-selector-when-single-mode | availableModes = [.split] | Segmented control hidden |
-| toolbar-003 | must-render-help-button | No special config | Help button ("?") visible |
-| toolbar-004 | must-support-help-button-visibility | showsHelpButton = false | Help button hidden |
-| toolbar-005 | must-render-import-button | No special config | Import button ("Open…") visible |
-| toolbar-006 | must-support-import-button-visibility | showsImportButton = false | Import button hidden |
-| toolbar-007 | must-fire-mode-change-callback | User taps second mode segment | onModeChange callback fired with new mode |
-| toolbar-008 | must-sync-selection-on-mode-property-change | mode = .raw (programmatically) | Segmented control's selected segment updates to match |
-| toolbar-009 | must-fire-help-callback | User taps help button | onSyntaxHelpRequested callback fired |
-| toolbar-010 | must-fire-import-callback | User taps import button | onImport callback fired |
-| toolbar-011 | must-apply-theme-background | applyTheme(palette) called | Background color matches palette.elevatedSurface |
-| toolbar-012 | must-apply-theme-button-tint | applyTheme(palette) called | Help and import button tint colors match palette.accent |
+| toolbar-001 | mode-selector | availableModes = [.edit, .preview, .split] | Segmented control visible with three segments labeled "Edit", "Preview", "Split" |
+| toolbar-002 | hide-mode-selector-single-mode | availableModes = [.split] | Segmented control hidden |
+| toolbar-003 | empty-mode-list | availableModes = [] | Segmented control built with zero segments, hidden, no segment selected |
+| toolbar-004 | help-button | No special config | Help button ("?") visible |
+| toolbar-005 | help-button-visibility | showsHelpButton = false | Help button hidden |
+| toolbar-006 | help-button-visibility | showsHelpButton toggled false then true | Help button hidden, then visible again |
+| toolbar-007 | import-button | No special config | Import button ("Open…") visible |
+| toolbar-008 | import-button-visibility | showsImportButton = false | Import button hidden |
+| toolbar-009 | import-button-visibility | showsImportButton toggled false then true | Import button hidden, then visible again |
+| toolbar-010 | mode-change-callback | User taps a mode segment other than the selected one | onModeChange callback fired with the new mode |
+| toolbar-011 | mode-change-callback-scope | User taps the already-selected mode segment | onModeChange callback fires again with the same mode |
+| toolbar-012 | mode-change-callback-scope | mode = .preview set programmatically | onModeChange callback does not fire |
+| toolbar-013 | sync-selection | mode = .split (programmatically) | Segmented control's selected segment updates to match |
+| toolbar-014 | sync-selection | mode set to a value not present in availableModes | Segmented control's selected segment becomes no-segment (iOS `UISegmentedControl.noSegment` / macOS -1); no segment appears selected |
+| toolbar-015 | help-callback | User taps help button | onSyntaxHelpRequested callback fired |
+| toolbar-016 | import-callback | User taps import button | onImport callback fired |
+| toolbar-017 | theme-background | applyTheme(palette) called | Background color matches palette.elevatedSurface |
+| toolbar-018 | theme-button-tint | applyTheme(palette) called (iOS) | Help and import button tint colors match palette.accent |
+| toolbar-019 | mode-selector | macOS, default config | Mode control's accessibility label is "Editor Mode" and accessibility identifier is "markdown-editor.mode" |
+| toolbar-020 | help-button | macOS, default config | Help button's accessibility label is "Markdown Syntax Help" and accessibility identifier is "markdown-editor.help" |
+| toolbar-021 | import-button | macOS, default config | Import button's accessibility label is "Open Markdown File" and accessibility identifier is "markdown-editor.import" |
+| toolbar-022 | sync-selection | User changes the mode control's selection | The new selection is announced to assistive technology |
 
 ## Edge Cases
 
-- **Empty availableModes**: `rebuildModeControl` builds a segmented control with zero segments (the `for` loop over an empty array adds none) and hides it via the same `availableModes.count < 2` check used for the single-mode case. `syncSelection` finds no match for `mode` in the empty array, so the selected segment is set to no-segment (iOS `UISegmentedControl.noSegment`) / -1 (macOS). The help and import buttons are unaffected.
-- **Mode not in availableModes**: When `mode` is set to a value not present in `availableModes`, the segmented control's selected segment is set to "no segment" (UISegmentedControl.noSegment / -1). The modeControl does not update unless the selection index is within availableModes.indices.
+- **Empty availableModes**: The segmented control is built with zero segments and hidden under the same rule as the single-mode case (**hide-mode-selector-single-mode**); no segment is selected. The help and import buttons are unaffected. See Change History 1.1.0 for the source trace of this behavior.
+- **Mode not in availableModes**: Setting `mode` to a value absent from `availableModes` sets the segmented control to no selected segment (iOS `UISegmentedControl.noSegment` / macOS -1); no segment appears selected until `mode` is set to a value present in `availableModes`.
 - **Mode change during presentation**: On iOS, help is presented with `modalPresentationStyle = .formSheet`, a modal presentation that blocks interaction with the presenting view; the mode control cannot be tapped while the sheet is showing, so a mode change during presentation cannot occur. On macOS, `popover.behavior = .transient`, and no code path in `modeChanged()` touches `popover` — tapping the mode control is an interaction outside the popover, which AppKit's transient behavior closes automatically as a side effect of the click; the mode change itself proceeds unaffected.
-- **Theme applied before toolbar added to window** (macOS): The `presentSyntaxHelp` method guards against calling `NSPopover.show(relativeTo:of:)` when the help button has no window. If theme is applied before the toolbar is added to a window hierarchy, the background color layer will be created but may not render until the window is established.
-- **Multiple theme applications**: If `applyTheme(_:)` is called multiple times, each call updates the background color and button tint colors without side effects.
+- **Theme applied before window** (macOS): `applyTheme(_:)` sets `wantsLayer` and the layer's background color at any time; the color takes effect once the view is drawn, so calling it before the toolbar joins a window hierarchy has no visible effect until the window is established.
+- **Help requested before window** (macOS): `presentSyntaxHelp` guards on `helpButton.window != nil`; calling it before the toolbar is added to a window hierarchy silently no-ops — no popover is shown and no callback fires.
+- **Multiple theme applications**: If `applyTheme(_:)` is called multiple times, each call updates the background color (and, on iOS, the button tint colors) without side effects.
 - **Null callbacks**: Callbacks (`onModeChange`, `onImport`, `onSyntaxHelpRequested`) are optional and default to nil. Tapping a button when the callback is nil results in no action.
 
 ## Configuration
@@ -132,8 +146,12 @@ Not applicable: The toolbar does not respond to deep links; it is a sub-componen
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| markdown-editor.mode-label | (derived from MarkdownEditorMode enum) | Segmented control segment labels for each mode |
+| markdown-editor.mode-label.edit | "Edit" | Segmented control segment label for the `.edit` mode |
+| markdown-editor.mode-label.preview | "Preview" | Segmented control segment label for the `.preview` mode |
+| markdown-editor.mode-label.split | "Split" | Segmented control segment label for the `.split` mode |
+| markdown-editor.help-title | "?" | Visible title of the help button |
 | markdown-editor.help-label | "Markdown Syntax Help" | Accessibility label for help button (macOS) |
+| markdown-editor.import-title | "Open…" | Visible title of the import button |
 | markdown-editor.import-label | "Open Markdown File" | Accessibility label for import button (macOS) |
 
 ## Accessibility Options
@@ -162,28 +180,53 @@ Not applicable: The toolbar does not emit logging output in its current implemen
 
 ## Platform Notes
 
-- **Source platform (UIKit/AppKit)**: Separate implementations in `packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown/MarkdownEditorToolbar.swift` (UIView) and `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownEditorToolbar.swift` (NSView). Both expose the same property and callback API; presentSyntaxHelp differs by platform (UIViewController.present on iOS, NSPopover on macOS).
 - **SwiftUI**: A SwiftUI wrapper around the UIView/NSView would use `UIViewRepresentable` (iOS) or `NSViewRepresentable` (macOS) to embed the native toolbar. Callbacks are mapped to SwiftUI state updates via `@State` or parent-driven properties.
 - **Compose (Android)**: Start with a `Row` layout containing a `SegmentedButton` group for modes, a `Spacer` modifier with `Modifier.weight(1f)`, and `IconButton` or `Button` composables for help and import. Mode changes call a callback passed as a lambda. Visibility controlled by simple conditional rendering.
-- **AppKit / UIKit**: Directly use the NSView/UIView classes provided. Apply theme via `applyTheme(_:)` after initialization. Wire callbacks to your presentation logic.
-- **WinUI 3**: Build from `RadioButtons` control (UWP RadioButton style alternative) or a custom segmented button group for mode selection, followed by a flexible spacer and `AppBarButton` controls for help and import. Handle mode changes via `SelectionChanged` events. Apply theme colors via `Resources` (theme overrides) or direct property assignment. Help presentation uses a `ContentDialog` or `TeachingTip` instead of NSPopover.
+- **React/Web**: A `<div role="toolbar">` with `display: flex` (row) hosts a `radiogroup` of `role="radio"` buttons — one per `MarkdownEditorMode` — for the mode selector, a `flex: 1` spacer `<div>`, and two `<button>` elements for help and import. Selecting a radio calls an `onModeChange` prop with the new mode; the mode selector renders nothing (or `display: none`) when `availableModes.length < 2`. Apply theme colors via CSS custom properties bound to the semantic palette.
+- **AppKit / UIKit**: Implemented directly in `packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown/MarkdownEditorToolbar.swift` (`UIView`) and `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownEditorToolbar.swift` (`NSView`); both expose the same property and callback API. Apply theme via `applyTheme(_:)` after initialization and wire callbacks to your presentation logic. `presentSyntaxHelp` differs by platform: `UIViewController.present` (modal `.formSheet`) on iOS, `NSPopover` on macOS.
+- **WinUI 3**: Build the mode selector from a single `RadioButtons` control (`Microsoft.UI.Xaml.Controls.RadioButtons`), one radio per `MarkdownEditorMode`, followed by a flexible spacer and `AppBarButton` controls for help and import. Map the control's `SelectionChanged` event to `onModeChange` by indexing `availableModes` with the control's `SelectedIndex`. Apply theme colors via `Resources` (theme overrides) or direct property assignment. Help presentation uses a `ContentDialog` or `TeachingTip` instead of `NSPopover`.
 
 ## Design Decisions
 
-- **Fixed height per platform**: iOS uses 44pt (Apple HIG standard button height) and macOS uses 32pt (macOS toolbar standard). Different heights reflect platform conventions, not functional differences.
-- **Segmented control hidden when single mode**: When only one mode is available, hiding the control reduces visual clutter and simplifies the toolbar. The mode value is still tracked internally and can be changed programmatically.
-- **Spacer for right-alignment**: A flexible spacer between the mode control and buttons ensures buttons align to the right edge, following common toolbar patterns.
-- **Accessibility labels on macOS**: The "?" symbol is ambiguous for screen readers; macOS implementations set explicit accessibility labels. iOS relies on button title inference by the system or must be similarly labeled in a real implementation.
-- **Popover vs. modal for help**: macOS uses a transient NSPopover for contextual help (dismisses on blur), while iOS uses a modal sheet. This reflects platform norms for supplementary information windows.
-- **Optional callbacks**: Callbacks are not required; a host can ignore mode changes by not setting `onModeChange`, or suppress the help button entirely via `showsHelpButton = false`.
+**Decision**: Use a fixed height per platform — 44pt on iOS, 32pt on macOS.
+**Rationale**: iOS follows the Apple HIG standard button height; macOS follows the macOS toolbar standard. The different heights reflect platform conventions, not functional differences.
+**Approved**: pending
+
+**Decision**: Hide the segmented control when only one mode is available.
+**Rationale**: Reduces visual clutter and simplifies the toolbar when there is nothing to switch between; the mode value is still tracked internally and can be changed programmatically.
+**Approved**: pending
+
+**Decision**: Insert a flexible spacer between the mode control and the buttons.
+**Rationale**: Ensures the help and import buttons align to the right edge, following common toolbar patterns.
+**Approved**: pending
+
+**Decision**: Set explicit accessibility labels for the mode control, help button, and import button on macOS; rely on system title inference on iOS.
+**Rationale**: The "?" title is ambiguous for screen readers, so macOS sets explicit labels ("Editor Mode", "Markdown Syntax Help", "Open Markdown File"). iOS has no equivalent explicit labels in source; VoiceOver falls back to reading each control's own title text, which is a real gap for the help button (see Compliance: screen-reader-support).
+**Approved**: pending
+
+**Decision**: Present help as a transient `NSPopover` on macOS and a modal sheet on iOS.
+**Rationale**: Reflects each platform's norm for supplementary information windows — a dismiss-on-blur popover on macOS, a modal presentation on iOS.
+**Approved**: pending
+
+**Decision**: Make all three callbacks (`onModeChange`, `onImport`, `onSyntaxHelpRequested`) optional.
+**Rationale**: Lets a host ignore mode changes by leaving `onModeChange` unset, or suppress the help button entirely via `showsHelpButton = false`, without requiring stub callbacks.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Accessibility labels present (macOS) | passed | Accessibility |
-| Minimum touch target (iOS 44×44) | passed | Accessibility |
-| Keyboard navigation support | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+
+These statuses rest on: macOS's explicit `setAccessibilityLabel`/`accessibilityID` calls on the mode control and both buttons, against iOS's complete absence of any accessibility-label call, for the partial screen-reader-support; the standard `UIButton`/`NSButton`/`UISegmentedControl`/`NSSegmentedControl` focus and activation behavior for the passed keyboard-navigable; the fixed 44pt/32pt bar height with no content-size-category handling in either source file for the failed dynamic-type-support; the palette-driven `accent`/`elevatedSurface` colors whose literal values live outside this file for the partial contrast-ratio; the 44pt iOS height minus the stack's 4pt top/bottom padding, leaving at most 36pt of usable height, for the failed touch-target-size; the literal `"?"`, `"Open…"`, `"Markdown Syntax Help"`, and `"Open Markdown File"` strings set directly on the controls with no localization lookup for the failed internationalization checks; the intrinsic (non-fixed-width) sizing of the segmented control and buttons for the partial text-expansion-tolerance; and the unmodified default stack-view mirroring behavior, which flips under RTL by system default but is exercised by no test in source, for the partial rtl-layout-support.
 
 ## Change History
 
@@ -191,3 +234,4 @@ Not applicable: The toolbar does not emit logging output in its current implemen
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from macOS and iOS source |
 | 1.1.0 | 2026-09-22 | Claude Sonnet 5 | Settled the three open review points from source: empty availableModes builds a hidden zero-segment control (traced to rebuildModeControl/syncSelection), and mode changes cannot occur during iOS's modal help sheet and only incidentally close macOS's transient popover |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added mode-change-callback-scope settling programmatic vs. repeat-tap firing, corrected test-vector mode cases to the real MarkdownEditorMode set and added vectors for empty/out-of-range modes, visibility toggling, and accessibility/announcement coverage, expanded localization keys per visible string and per mode, split the theme-before-window and help-before-window edge cases, added a Dynamic Type note to Appearance and a derived touch-target note to Accessibility, reformatted Design Decisions to Decision/Rationale/Approved, canonicalized the Compliance table with corrected touch-target and screen-reader statuses, merged the two AppKit/UIKit platform notes, added a React/Web platform note, named a single WinUI 3 control, and listed the parent editor in related |
