@@ -3,7 +3,7 @@ id: 89a912f3-f0a0-4896-ba06-a386407ecb15
 title: Divider
 domain: agenticdevelopertoolkit://recipes/divider
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -34,52 +34,55 @@ A divider is a horizontal line element that provides visual separation between d
 
 ## Behavioral Requirements
 
-- **must-render-hr-element**: The component MUST render as an HTML `<hr>` element.
-- **must-apply-base-class**: The component MUST apply the class `aws-divider` to the rendered element.
-- **should-accept-className**: The component SHOULD accept an optional `className` prop that is appended to the base class.
-- **must-filter-empty-classes**: The component MUST not render empty or null class names; class filtering MUST remove falsy values before joining.
+- **hr-element**: The component MUST render as an HTML `<hr>` element.
+- **base-class**: The component MUST apply the class `{{app_prefix}}-divider` to the rendered element.
+- **extra-class-name**: The component SHOULD accept an optional `className` prop that is appended to the base class.
+- **filter-empty-classes**: The component MUST NOT render empty or null class names; class filtering MUST remove falsy values before joining.
 
 ## Appearance
 
-- **Border**: Single horizontal line; styling inherited from `aws-divider` class and any additional className.
-- **Height**: Determined by browser `<hr>` default rendering and CSS class definitions.
-- **Margin**: Determined by browser `<hr>` default rendering and CSS class definitions.
-- **Background**: None (line rendered via border).
+- **Border**: A single horizontal line rendered via `border-top: 1px solid`, using the app's subtle border/separator color token; no other border sides are set.
+- **Height**: A 1px/1pt hairline — the element carries no intrinsic height beyond the `border-top` line.
+- **Margin**: 0.5rem vertical margin (top and bottom), 0 horizontal; the line spans the full width of its container.
+- **Background**: None (the line is drawn via `border-top`, not a filled background).
 - **Corner radius**: Not applicable; element is a line.
 - **Shadow**: None.
-- **Min/Max size**: No constraints enforced by component; sizing determined by CSS.
+- **Min/Max size**: No constraints enforced by the component; the line always spans the full width of its container.
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Horizontal line with styling from `aws-divider` class |
+| Default | Horizontal line with styling from the `{{app_prefix}}-divider` class |
 
 Not applicable: Divider is a static, non-interactive element with no pressed, disabled, focused, or loading states.
 
 ## Accessibility
 
-- **Role**: Presentational separator; implicit role of `<hr>` element is separator.
+- **Role**: `separator` — the implicit ARIA role of the HTML `<hr>` element; the component adds no explicit `role` attribute.
 - **Label requirements**: Not applicable; the `<hr>` element is a semantic separator and requires no additional label or aria-label.
 - **Keyboard interaction**: Not applicable; divider is not interactive.
-- **Screen reader**: The semantic `<hr>` element is recognized by assistive technologies as a separator or thematic break.
+- **Screen reader**: The semantic `<hr>` element is exposed to assistive technology with the `separator` role and is announced as a separator or thematic break.
+- **Native platforms**: SwiftUI's `Divider()` and Compose's `HorizontalDivider()` render as non-interactive, decorative elements and are excluded from the accessibility tree by the platform framework's default; AppKit's `NSBox(.separator)` and a UIKit hairline view behave the same way. This matches the non-interactive separator semantics on the web.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| divider-001 | must-render-hr-element | No props | Rendered element is `<hr>` |
-| divider-002 | must-apply-base-class | No props | Element has class `aws-divider` |
-| divider-003 | should-accept-className | `className="custom-style"` | Element has classes `aws-divider custom-style` |
-| divider-004 | must-filter-empty-classes | `className={undefined}` or `className=""` | Element has only `aws-divider`, no empty values in class list |
-| divider-005 | must-filter-empty-classes | `className="variant"` | Element has classes `aws-divider variant` with single space separator |
+| divider-001 | hr-element | No props | Rendered element is `<hr>` |
+| divider-002 | base-class | No props | Element has class `{{app_prefix}}-divider` |
+| divider-003 | extra-class-name | `className="custom-style"` | Element has classes `{{app_prefix}}-divider custom-style` |
+| divider-004 | filter-empty-classes | `className={undefined}` or `className=""` | Element has only `{{app_prefix}}-divider`, no empty values in class list |
+| divider-005 | filter-empty-classes | `className="   "` (whitespace only) | Raw class attribute is `"{{app_prefix}}-divider    "` (whitespace preserved, not trimmed); the parsed class list contains only `{{app_prefix}}-divider` — the whitespace-only string is truthy so it passes the filter but yields no additional class token |
+| divider-006 | hr-element | No props | Rendered element exposes the implicit ARIA role `separator` |
 
 ## Edge Cases
 
-- **Null or undefined className**: Component MUST filter out falsy values; the rendered element receives only `aws-divider`.
-- **Empty string className**: Component MUST filter out empty strings; the rendered element receives only `aws-divider`.
-- **Multiple class names in className prop**: The string is passed as-is to the class list; whitespace and multiple tokens within the prop are preserved as provided by the caller.
-- **No props provided**: Component MUST render with only the `aws-divider` class.
+- **Null or undefined className**: Component MUST filter out falsy values; the rendered element receives only `{{app_prefix}}-divider`.
+- **Empty string className**: Component MUST filter out empty strings; the rendered element receives only `{{app_prefix}}-divider`.
+- **Whitespace-only className**: A string containing only whitespace (e.g. `"   "`) is truthy, so filtering does not remove it. The raw class attribute is not trimmed and includes the literal whitespace verbatim, but split into a class list it contributes no additional token — the effective class list is unchanged (`{{app_prefix}}-divider` only).
+- **Multiple class names in className prop**: The string is passed as-is to the class list; whitespace and multiple tokens within the prop are preserved as provided by the caller. className is never trimmed before joining, so leading or trailing whitespace in the caller's string appears verbatim in the resulting attribute (potentially producing consecutive spaces), though this does not change the parsed set of class tokens.
+- **No props provided**: Component MUST render with only the `{{app_prefix}}-divider` class.
 
 ## Configuration
 
@@ -98,7 +101,7 @@ Not applicable: Divider is a presentational element with no user-facing text.
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable; divider has no motion or animation. |
-| Increase Contrast | Not applicable; contrast is controlled by CSS class, not the component. |
+| Increase Contrast | The divider's line color comes from a themable separator-color token rather than a fixed value (see **Appearance**), not from the component itself; on native platforms this SHOULD map to a system separator color (e.g. `NSColor.separatorColor`, `UIColor.separator`, `DividerStrokeColorDefaultBrush`) that already adapts automatically when Increase Contrast is enabled. |
 | Differentiate Without Color | Not applicable; divider is rendered as a line, not dependent on color alone. |
 
 ## Feature Flags
@@ -119,22 +122,29 @@ Not applicable: Divider requires no diagnostic logging.
 
 ## Platform Notes
 
-- **React/Web**: Render as `<hr className={cls} />` where cls combines `aws-divider` with optional additional classes. Files: `packages/web/packages/controls/src/user-settings/components/Divider.tsx`.
-- **SwiftUI**: Render using native `Divider()` view, which provides a semantic dividing line. Pass through any platform-equivalent styling via `.frame(height:)` or divider modifier if custom sizing is needed.
-- **Compose**: Render using `Divider()` composable, which is a horizontal line semantic separator. Apply Compose styling for custom appearance via padding and modifier chains.
-- **AppKit / UIKit**: Render as `NSView` or `UIView` with `backgroundColor` set to a separator color. Set appropriate height (typically 1pt) and configure constraints to span horizontally with appropriate margins.
-- **WinUI 3**: Render using `<muxc:Separator />` XAML control with `Grid.Column` spanning the content width, or manually render a `Rectangle` with `Height="1"` and `Fill="{ThemeResource DividerStrokeColorDefaultBrush}"`. Apply margin via `Margin` property for spacing.
+- **React/Web**: Render as `<hr className={cls} />` where `cls` combines `{{app_prefix}}-divider` with any additional classes via `[base, className].filter(Boolean).join(' ')`; the border, height, and margin come from the `{{app_prefix}}-divider` CSS class. Files: `packages/web/packages/controls/src/user-settings/components/Divider.tsx`.
+- **SwiftUI**: Render using the native `Divider()` view, which draws a 1pt separator line in the system separator color and adapts automatically to Dark Mode and Increase Contrast. Use `.frame(height:)` only when a non-default thickness is required.
+- **Compose**: Render using the Material 3 `HorizontalDivider()` composable (the older `Divider()` composable is deprecated in Material 3), which draws a horizontal separator line using the current `Material` color scheme's divider/outline color. Apply padding or modifier chains for custom spacing.
+- **AppKit / UIKit**: On AppKit, render an `NSBox` with `boxType = .separator`, which draws the native hairline separator in the system separator color. On UIKit, render a hairline `UIView` with `backgroundColor = .separator`, sized to 1pt height via a `heightAnchor` constraint and constrained to span the container horizontally.
+- **WinUI 3**: Render a `Rectangle` (or `Border`) with `Height="1"` and `Fill="{ThemeResource DividerStrokeColorDefaultBrush}"`, stretched to span the content width via `HorizontalAlignment="Stretch"` (or `Grid.ColumnSpan` when placed in a multi-column `Grid`); apply vertical spacing via the element's `Margin`.
 
 ## Design Decisions
 
-The component is intentionally minimal: it delegates all visual styling to CSS classes and renders a semantic `<hr>` element rather than a styled `<div>`. This approach preserves accessibility (the `<hr>` element is recognized as a separator by assistive technologies) and allows flexible styling via the `aws-divider` class and additional classes provided via the `className` prop.
+**Decision**: Render a semantic `<hr>` element and delegate all visual styling to CSS classes, rather than a styled `<div>`.
+**Rationale**: The `<hr>` element is recognized as a separator by assistive technologies, and delegating styling to the `{{app_prefix}}-divider` class plus an optional `className` prop keeps the component minimal while allowing flexible styling.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Divider is a simple presentational element without security, data handling, or complex interaction concerns.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+
+The `passed` status rests on the component rendering a bare `<hr>` element with no added ARIA overrides, which the browser maps to the correct implicit `separator` role.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names, templated the hardcoded class prefix, corrected the AppKit/UIKit, Compose, and WinUI 3 platform notes to real native APIs, grounded Appearance in the source CSS, fixed the Accessibility role and Increase Contrast guidance, replaced the duplicate test vector and added a role vector, clarified whitespace handling in Edge Cases, reformatted Design Decisions, and added a Compliance table |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

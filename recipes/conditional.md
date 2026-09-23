@@ -3,7 +3,7 @@ id: f361ebe1-69b9-4089-8079-94f4b26a37d3
 title: Conditional
 domain: agenticdevelopertoolkit://recipes/conditional
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -30,14 +30,18 @@ approved-date: ''
 
 ## Overview
 
-The Conditional component renders either its `children` or `fallback` content based on the value of the `when` boolean prop. It is a simple, stateless branching component that wraps React's fragment syntax to conditionally display content. Use this component when you need inline conditional rendering without creating an extra DOM node or wrapper element.
+Conditional renders one of two content branches — `children` when the `when` boolean is `true`, otherwise `fallback` — without adding a layout or container node around whichever branch is shown. It is a simple, stateless branching pattern. On React/Web, where JSX benefits from an explicit component for inline conditional rendering, this is a concrete `Conditional` component; SwiftUI, Compose, AppKit/UIKit, and WinUI 3 need no wrapper type at all — see Platform Notes for the native control-flow equivalent on each.
 
 ## Behavioral Requirements
 
 - **render-children-when-true**: Component MUST render the `children` prop when the `when` prop is `true`.
 - **render-fallback-when-false**: Component MUST render the `fallback` prop when the `when` prop is `false`.
 - **fallback-defaults-to-null**: Component MUST default `fallback` to `null` when the `fallback` prop is not provided.
-- **no-wrapper-element**: Component MUST NOT introduce an additional wrapper element; content MUST be rendered in a React fragment.
+- **no-wrapper-element**: Component MUST NOT add a layout or container node around the rendered branch (on React/Web this is a fragment — see Platform Notes).
+- **null-children-renders-nothing**: Component MUST render nothing when `children` is `null` or `undefined` and `when` is `true`.
+- **falsy-children-renders-value**: Component MUST render a falsy `children` value (e.g. `0`, `false`, or an empty string) when `when` is `true`, rather than treating it as no content.
+- **mixed-children-render-in-order**: Component MUST render multiple or mixed-type `children` (arrays, strings, elements, fragments) in the order provided when `when` is `true`.
+- **inactive-branch-not-mounted**: Component MUST NOT keep the branch that is not currently selected mounted; toggling `when` MUST unmount the previously rendered branch, discarding its state, and mount the newly selected branch.
 
 ## Appearance
 
@@ -49,7 +53,7 @@ Not applicable: Conditional does not have visual states. Its behavior is determi
 
 ## Accessibility
 
-Not applicable: Conditional does not add any accessibility features or roles itself. Content rendered within Conditional inherits the accessibility properties of the `children` and `fallback` components. Implementors MUST ensure that both branches meet accessibility requirements independently.
+Conditional does not add any accessibility features or roles itself. Content rendered within Conditional inherits the accessibility properties of the `children` and `fallback` components; because the component adds no wrapper node (**no-wrapper-element**), it MUST NOT alter the accessibility tree structure of whichever branch is rendered. Implementors SHOULD ensure that both branches meet accessibility requirements independently.
 
 ## Conformance Test Vectors
 
@@ -58,16 +62,19 @@ Not applicable: Conditional does not add any accessibility features or roles its
 | conditional-001 | render-children-when-true | `when={true}`, `children="Hello"`, `fallback="Goodbye"` | Renders "Hello" |
 | conditional-002 | render-fallback-when-false | `when={false}`, `children="Hello"`, `fallback="Goodbye"` | Renders "Goodbye" |
 | conditional-003 | fallback-defaults-to-null | `when={false}`, `children="Hello"` (no fallback prop) | Renders nothing (null) |
-| conditional-004 | render-children-when-true | `when={true}`, `children={<Component />}`, `fallback={<Other />}` | Renders Component, not Other |
+| conditional-004 | inactive-branch-not-mounted | Render with `when={true}`, `children={<Stateful />}` (a component holding local state); re-render with `when={false}` | The `fallback` branch renders; the previous `children` branch is unmounted and its state is discarded |
 | conditional-005 | no-wrapper-element | `when={true}`, `children=[<span>A</span>, <span>B</span>]` | Both children render without a parent wrapper |
+| conditional-006 | null-children-renders-nothing | `when={true}`, `children={null}` | Renders nothing |
+| conditional-007 | falsy-children-renders-value | `when={true}`, `children={0}` | Renders "0" |
+| conditional-008 | mixed-children-render-in-order | `when={true}`, `children={["A", <span>B</span>, <>C</>]}` | Renders "A", then `<span>B</span>`, then "C", in that order |
 
 ## Edge Cases
 
-- **Null children**: When `children` is `null` or `undefined` and `when` is `true`, the component MUST render `null` (no content).
-- **Falsy children values**: When `children` is a falsy value (e.g., `0`, `false`, empty string) and `when` is `true`, the component MUST render that falsy value as React normally would (not as no content).
-- **Empty fallback**: When `when` is `false` and `fallback` is not provided (defaults to `null`), the component MUST render nothing.
-- **Array children**: When `children` is an array of React elements and `when` is `true`, the component MUST render all elements without wrapping them.
-- **ReactNode with mixed types**: When `children` contains mixed content (strings, elements, fragments) and `when` is `true`, all content MUST be rendered in order.
+- **Null children** (see **null-children-renders-nothing**): When `children` is `null` or `undefined` and `when` is `true`, the component renders nothing.
+- **Falsy children values** (see **falsy-children-renders-value**): When `children` is a falsy value such as `0`, `false`, or an empty string and `when` is `true`, the component renders that value as React normally would.
+- **Empty fallback** (see **fallback-defaults-to-null**): When `when` is `false` and `fallback` is not provided, the component renders nothing.
+- **Mixed and array children** (see **mixed-children-render-in-order** and **no-wrapper-element**): When `children` is an array or contains mixed content (strings, elements, fragments) and `when` is `true`, all content renders in order without an added wrapper.
+- **Toggling `when` at runtime** (see **inactive-branch-not-mounted**): Switching `when` unmounts the previous branch and mounts the new one; state in the unmounted branch is discarded.
 
 ## Configuration
 
@@ -103,19 +110,34 @@ Not applicable: Conditional does not emit log messages.
 
 ## Platform Notes
 
-- **React/Web**: Implement using the native ternary operator with a React fragment, as shown in the reference source. Return `<>{when ? children : fallback}</>`. This approach produces no extra DOM nodes and allows sibling elements to render at the same nesting level.
-- **SwiftUI**: Use the native `if` statement within the view hierarchy or implement a custom `@ViewBuilder` that conditionally includes content: `if when { children } else { fallback }`. SwiftUI's view builders naturally support conditional rendering without wrapper views.
-- **Compose (Android/Kotlin)**: Use Kotlin's `if` expression within a `@Composable` function: `if (when) { children() } else { fallback() }`. Pass content as lambdas (composable blocks) for lazy evaluation.
-- **AppKit / UIKit (Swift)**: In view-based code, conditionally add subviews to a container or return different view hierarchies. In SwiftUI, use the pattern described above. For imperative UIKit, create both branches and toggle visibility with `isHidden` or conditionally add to the view hierarchy.
-- **WinUI 3**: Use C# conditional expressions (`when ? children : fallback`) within XAML's code-behind or data binding with `x:Bind` converters. For more complex scenarios, use `VisualStateManager` to toggle visibility of pre-laid-out branches, or bind element visibility to the condition with a `BoolToVisibilityConverter`.
+- **React/Web**: Implemented as a fragment-based ternary — `<>{when ? children : fallback}</>` — in the reference implementation at `packages/web/packages/controls/src/user-settings/components/Conditional.tsx`. This produces no extra DOM nodes and lets sibling elements render at the same nesting level as the parent.
+- **SwiftUI**: No wrapper type is needed: use the native `if` statement within the view hierarchy, or a custom `@ViewBuilder` for reuse: `if when { children } else { fallback }`. SwiftUI's view builders naturally avoid wrapper views for conditional content.
+- **Compose (Android/Kotlin)**: No wrapper type is needed: use Kotlin's `if` expression directly within a `@Composable` function, naming the boolean parameter something other than `when` since `when` is a reserved keyword in Kotlin (e.g. `condition`): `if (condition) { children() } else { fallback() }`. Pass content as lambdas (composable blocks) for lazy evaluation.
+- **AppKit / UIKit**: No wrapper type is needed in view-based code: conditionally add or remove the branch's view (or view controller) from its superview/container to satisfy **inactive-branch-not-mounted** — creating both views and toggling `isHidden` keeps the hidden view and its state alive, so prefer adding/removing over hiding.
+- **WinUI 3**: Bind the displayed content to the boolean directly with `x:Bind` (built into WinUI 3, no custom converter needed), or use a `ContentControl` whose `Content` is set based on the boolean to swap the displayed element — either approach satisfies **inactive-branch-not-mounted** by only realizing the active branch. Toggling the `Visibility` of two pre-laid-out, already-realized branches with `VisualStateManager` is a valid alternative only when both branches' state must survive the toggle; that tradeoff means it does not satisfy **inactive-branch-not-mounted**.
 
 ## Design Decisions
 
-The component defaults `fallback` to `null` rather than requiring it explicitly to simplify the common case where no fallback content is needed. This design allows callers to omit the prop when rendering conditionally is sufficient to hide content entirely. The component uses a fragment (`<>...</>`) rather than a `<div>` or other wrapper to avoid introducing an extra DOM node that would affect styling and layout. This follows React best practices for utility components that should be transparent to the component tree.
+**Decision**: `fallback` defaults to `null` when the `fallback` prop is not provided.
+**Rationale**: Simplifies the common case where no fallback content is needed; callers can omit the prop when rendering conditionally is sufficient to hide content entirely.
+**Approved**: pending
+
+**Decision**: The component renders via a fragment (`<>...</>`) rather than a `<div>` or other wrapper element.
+**Rationale**: Avoids introducing an extra DOM node that would affect styling and layout, keeping the component transparent to the surrounding component tree.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Conditional does not implement features that require compliance verification.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+
+The `passed` status rests on the component's fragment-based render (`<>{when ? children : fallback}</>`), which adds no wrapper node and therefore preserves whatever ARIA roles and semantic structure the rendered branch already has.
 
 ## Change History
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: fixed Kotlin reserved-keyword note, added inactive-branch-not-mounted requirement, promoted edge-case MUSTs to named requirements with vectors, neutralized Overview/no-wrapper-element wording, corrected WinUI 3 and AppKit/UIKit platform notes, cited reference implementation, reformatted Design Decisions, added Compliance table |
 

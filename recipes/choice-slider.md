@@ -3,8 +3,8 @@ id: 6f7c9bb6-b6fe-479a-9dbc-3ff174f7fed2
 title: Choice Slider
 domain: agenticdevelopertoolkit://recipes/choice-slider
 type: ingredient
-version: 1.2.0
-status: review
+version: 1.3.0
+status: draft
 language: en
 created: '2026-09-22'
 modified: '2026-09-22'
@@ -29,20 +29,20 @@ approved-date: ''
 
 ## Overview
 
-A choice slider is a slider control that lets users select one value from a discrete set of labeled options. It's useful when presenting 3–7 mutually exclusive choices where the options have a natural order and occupy limited space. Unlike a dropdown or radio buttons, the slider makes all choices immediately visible and suggests progression or spectrum. The component combines an HTML range input with a label, caption showing the current selection, and optional hint text.
+A choice slider is a slider control that lets users select one value from a discrete set of labeled options. It's useful when presenting 3–7 mutually exclusive choices where the options have a natural order and occupy limited space. Unlike a dropdown or radio buttons, the slider makes all choices immediately visible and suggests progression or spectrum. The component combines a discrete range/slider control with a label, caption showing the current selection, and optional hint text.
 
 ## Behavioral Requirements
 
-- **must-accept-choice-array**: Component MUST accept an array of `Choice<T>` objects, each with a `value` property (string or number) and a `label` property (ReactNode or equivalent).
-- **must-maintain-value-in-range**: When the `value` prop is passed, the component MUST find the matching choice by value and position the slider at its index. If no match is found, it MUST default to the first choice (index 0).
-- **must-fire-change-callback**: When the user moves the slider, the component MUST call the `onChange` callback with the `value` property of the newly selected choice, not the index.
-- **must-display-current-label**: The component MUST display the `label` of the currently selected choice.
-- **must-render-html-range-input**: The component MUST render an HTML `<input type="range">` element with `min="0"`, `max` equal to the number of choices minus 1, and `step="1"`.
-- **must-respect-disabled-state**: When the `disabled` prop is true, the range input MUST be disabled, preventing user interaction.
-- **may-render-label**: If a `label` prop is provided, the component MAY render it in a `<label>` element associated with the range input via `htmlFor`.
-- **may-render-hint**: If a `hint` prop is provided, the component MAY render it as additional descriptive text below the slider.
-- **may-apply-custom-classname**: The component MAY accept a `className` prop and apply it to the root container alongside the required `aws-field` and `aws-field--choice-slider` classes.
-- **may-accept-custom-id**: If an `id` prop is provided, the component MAY use it for the range input. Otherwise, it MUST generate a unique ID internally.
+- **accept-choice-array**: Component MUST accept an ordered collection of `Choice<T>` objects, each with a `value` property (string or number) and a `label` property (presentable content, e.g. text or a small view).
+- **maintain-value-in-range**: When the `value` prop is passed, the component MUST find the matching choice by value and position the control at its index. If no match is found, it MUST default to the first choice (index 0).
+- **fire-change-callback**: When the user changes the selection, the component MUST call the `onChange` callback with the `value` property of the newly selected choice, not the index.
+- **display-current-label**: The component MUST display the `label` of the currently selected choice.
+- **render-discrete-control**: The component MUST render a native discrete range/slider control with exactly `choices.length` selectable positions (one per choice), so only one choice can be selected at a time.
+- **respect-disabled-state**: When the `disabled` prop is true, the control MUST be disabled, preventing user interaction.
+- **render-label**: If a `label` prop is provided, the component MUST render it and MUST associate it with the control (e.g. a native label-for-control association) so assistive technology can read it as the control's accessible name.
+- **render-hint**: If a `hint` prop is provided, the component MAY render it as additional descriptive text below the control.
+- **custom-styling**: The component MAY accept a platform-appropriate styling hook (e.g. a `className` on web) and apply it to the root container alongside the component's required base style classes.
+- **custom-id**: If an identifier (e.g. an `id` prop on web) is provided, the component MAY use it for the control. Otherwise, it MUST generate a unique identifier internally.
 
 ## Appearance
 
@@ -64,29 +64,34 @@ A choice slider is a slider control that lets users select one value from a disc
 ## Accessibility
 
 - **Role**: The range input has the implicit ARIA role `slider`.
-- **Labeling**: If a `label` prop is provided, it MUST be associated with the range input via `<label htmlFor={fieldId}>`, where `fieldId` is the `id` prop or the `useId()` fallback. The `label` prop is optional, and when it is omitted the source sets no `aria-label`, no `aria-labelledby` and no `title` on the input, so the slider renders with no accessible name at all. NEEDS REVIEW: Not implemented in source. Behavior undefined. Missing is any fallback accessible name for the label-less case; the gap is settled by a decision from the design/accessibility owner on whether `label` becomes a required prop or an `aria-label` prop is added, confirmed by an accessibility audit of a rendering with `label` omitted.
+- **Labeling**: Per **render-label**, if a `label` prop is provided, it MUST be associated with the range input via `<label htmlFor={fieldId}>`, where `fieldId` is the `id` prop or the `useId()` fallback. The `label` prop is optional, and when it is omitted the source sets no `aria-label`, no `aria-labelledby` and no `title` on the input, so the slider renders with no accessible name at all. NEEDS REVIEW: Not implemented in source. Behavior undefined. Missing is any fallback accessible name for the label-less case; the gap is settled by a decision from the design/accessibility owner on whether `label` becomes a required prop or an `aria-label` prop is added, confirmed by an accessibility audit of a rendering with `label` omitted.
 - **Keyboard support**: The range input MUST support arrow key navigation (left/right to decrease/increase value) per HTML range input spec. No additional keyboard handling required.
 - **Screen reader announcement**: The source sets no `aria-valuetext` on the range input, so assistive technology announces the raw numeric value — the choice index, `0` through `choices.length - 1` — and never the choice label. The `aws-slider__caption` span that carries the label is a sibling of the input and is not referenced by `aria-describedby`, `aria-labelledby` or any other relation, so it is not announced with the value either. NEEDS REVIEW: Not implemented in source. Behavior undefined. Missing is any announced textual value for the selected choice; the gap is settled by a VoiceOver/NVDA pass confirming that only the index is spoken, plus a decision to map each index to `aria-valuetext`.
-- **Touch target size**: The source sets no thumb size. `styles.css` gives `.aws-slider__input` only `flex: 1`, `min-width: 0`, `cursor: pointer` and `accent-color: var(--aws-accent)`, and declares no `::-webkit-slider-thumb`, `::-moz-range-thumb`, `height` or `width` rule anywhere, so the thumb is the user agent's native range thumb at its default size, tinted by the `--aws-accent` token. An implementation MUST keep the platform's native range thumb rather than substituting a custom one, and MUST tint it using the `--aws-accent` token.
+- **Touch target size**: The source sets no thumb size. `styles.css` gives `.aws-slider__input` only `flex: 1`, `min-width: 0`, `cursor: pointer` and `accent-color: var(--aws-accent)`, and declares no `::-webkit-slider-thumb`, `::-moz-range-thumb`, `height` or `width` rule anywhere, so the thumb is the user agent's native range thumb at its default size, tinted by the `--aws-accent` token. Native range thumb sizes vary by browser and are not guaranteed to meet a minimum interactive target. An implementation MUST keep the platform's native range thumb rather than substituting a custom one, MUST tint it using the `--aws-accent` token, and MUST ensure the resulting hit area meets at least 24×24 CSS px (WCAG 2.5.8 Target Size Minimum), enlarging the thumb's hit area with padding if the platform's native default falls short.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| choice-slider-001 | must-accept-choice-array | choices = [{value: "a", label: "Option A"}, {value: "b", label: "Option B"}] | Component renders without error and accepts the array |
-| choice-slider-002 | must-maintain-value-in-range | value = "b", choices = [{value: "a", label: "A"}, {value: "b", label: "B"}, {value: "c", label: "C"}] | Slider positioned at index 1; caption displays "B" |
-| choice-slider-003 | must-maintain-value-in-range | value = "unknown", choices = [{value: "a", label: "A"}, {value: "b", label: "B"}] | Slider positioned at index 0; caption displays "A" (first choice is default) |
-| choice-slider-004 | must-fire-change-callback | Slider moved from index 0 to index 1, choices = [{value: "opt-1", ...}, {value: "opt-2", ...}] | onChange called once with argument "opt-2" |
-| choice-slider-005 | must-display-current-label | value = "c", choices = [{value: "a", label: "Label A"}, {value: "b", label: "Label B"}, {value: "c", label: "Label C"}] | Caption element displays text "Label C" |
-| choice-slider-006 | must-render-html-range-input | choices.length = 5 | Range input has min="0", max="4", step="1" |
-| choice-slider-007 | must-respect-disabled-state | disabled = true | Range input element has disabled attribute; user cannot interact with slider |
-| choice-slider-008 | may-render-label | label = "Select preference" | Label element rendered with htmlFor pointing to range input id |
-| choice-slider-009 | may-render-hint | hint = "Choose your preferred option" | Hint text rendered in paragraph with class aws-field__hint |
-| choice-slider-010 | may-accept-custom-id | id = "my-slider" | Range input has id="my-slider" |
+| choice-slider-001 | accept-choice-array, display-current-label | choices = [{value: "a", label: "Option A"}, {value: "b", label: "Option B"}], value = "a" | Component renders without error; caption displays "Option A" |
+| choice-slider-002 | maintain-value-in-range | value = "b", choices = [{value: "a", label: "A"}, {value: "b", label: "B"}, {value: "c", label: "C"}] | Slider positioned at index 1; caption displays "B" |
+| choice-slider-003 | maintain-value-in-range | value = "unknown", choices = [{value: "a", label: "A"}, {value: "b", label: "B"}] | Slider positioned at index 0; caption displays "A" (first choice is default) |
+| choice-slider-004 | fire-change-callback | Slider moved from index 0 to index 1, choices = [{value: "opt-1", ...}, {value: "opt-2", ...}] | onChange called once with argument "opt-2" |
+| choice-slider-005 | display-current-label | value = "c", choices = [{value: "a", label: "Label A"}, {value: "b", label: "Label B"}, {value: "c", label: "Label C"}] | Caption element displays text "Label C" |
+| choice-slider-006 | render-discrete-control | choices.length = 5 | Range input has min="0", max="4", step="1" |
+| choice-slider-007 | respect-disabled-state | disabled = true | Range input element has disabled attribute; user cannot interact with slider |
+| choice-slider-008 | render-label | label = "Select preference" | Label element rendered with htmlFor pointing to range input id |
+| choice-slider-009 | render-hint | hint = "Choose your preferred option" | Hint text rendered in paragraph with class aws-field__hint |
+| choice-slider-010 | custom-id | id = "my-slider" | Range input has id="my-slider" |
+| choice-slider-011 | render-discrete-control, edge case: Empty choices array | choices = [] | Range input renders inert with min="0", max="0"; caption is empty; onChange is never invoked |
+| choice-slider-012 | maintain-value-in-range, edge case: Single choice | choices = [{value: "only", label: "Only Option"}], value = "only" | Range input has min="0", max="0" (slider cannot move); caption displays "Only Option" |
+| choice-slider-013 | fire-change-callback; Keyboard support (Accessibility) | choices = [{value: "a", label: "A"}, {value: "b", label: "B"}, {value: "c", label: "C"}], value = "a", input focused, ArrowRight pressed once | Slider moves to index 1; onChange called once with argument "b" |
+| choice-slider-014 | maintain-value-in-range, edge case: Number vs. string values | choices = [{value: 1, label: "One"}, {value: 2, label: "Two"}], value = "1" (string) | Strict-equality match fails against both entries; slider positioned at index 0; caption displays "One" |
+| choice-slider-015 | fire-change-callback, edge case: onChange called during render | choices = [{value: "a", label: "A"}, {value: "b", label: "B"}], component re-rendered with a new `value` prop and no user interaction | onChange is not invoked |
 
 ## Edge Cases
 
-- **Empty choices array**: `choices: Choice<T>[]` accepts an empty array and the source adds no guard, so the path is reachable — and every step of it is defined. `findIndex` returns `-1`, `Math.max(0, -1)` yields index `0`, `choices[0] ?? choices[0]` is `undefined`, and `current?.label` short-circuits, so the caption renders empty instead of throwing. `max` evaluates to `Math.max(0, -1)` = `0`, so the range input renders inert with `min="0"` and `max="0"`, and `onChange` can never fire because `choices[Number(e.target.value)]` is `undefined` and the `if (next)` guard rejects it. An implementation MUST render an inert range input with an empty caption for an empty `choices` array, MUST NOT throw, and MUST NOT invoke `onChange`.
+- **Empty choices array**: `choices: Choice<T>[]` accepts an empty array and the source adds no guard against it. An implementation MUST render an inert range input (`min="0"`, `max="0"`) with an empty caption for an empty `choices` array, MUST NOT throw, and MUST NOT invoke `onChange`.
 - **Single choice**: If `choices.length === 1`, the range input has `max="0"`, preventing any slider movement. The single choice is always selected and displayed. This is valid but may confuse users; no error state defined.
 - **Null or undefined value prop**: When `value` is undefined, `findIndex` returns -1, and `Math.max(0, -1)` yields 0, selecting the first choice by default. This is a safe fallback.
 - **Null or undefined label or hint**: If `label` is falsy, the label element is not rendered (conditional render). If `hint` is falsy, hint paragraph is not rendered. This is correct.
@@ -99,7 +104,7 @@ A choice slider is a slider control that lets users select one value from a disc
 |--------|------|---------|-------------|
 | `label` | ReactNode | undefined | Optional label text or element displayed above the slider. |
 | `hint` | ReactNode | undefined | Optional hint text or element displayed below the slider. |
-| `value` | string \| number | (required) | The currently selected choice value. MUST match one of the choice values. |
+| `value` | string \| number | (required) | The currently selected choice value. SHOULD match one of the choice values; if no match is found, the component falls back to the first choice rather than erroring (see **maintain-value-in-range**). |
 | `onChange` | function | (required) | Callback invoked with the selected choice's value when the slider moves. |
 | `choices` | Choice<T>[] | (required) | Array of selectable options. Each choice has a `value` and `label`. |
 | `disabled` | boolean | false | When true, slider interaction is disabled. |
@@ -136,40 +141,63 @@ Not applicable: Component does not collect, store, or transmit user data.
 
 ## Logging
 
-Not applicable: Component does not perform logging. Debugging is handled via React DevTools.
+Not applicable: Component does not perform logging. Debugging is handled via the platform's standard developer tooling (e.g. React DevTools on web).
 
 ## Platform Notes
 
-- **SwiftUI**: Implement using `Slider` with an `.onEditingChanged` modifier to track thumb movement. Map the slider's continuous `value` (0 to choices.count - 1) to discrete choice indices via `Int(value)`. Render the current choice's label in a `Text` view below or adjacent to the slider. Use `Text("Label") + Spacer()` to achieve label + hint layout. Disabled state via `.disabled(isDisabled)` modifier.
+- **SwiftUI**: Implement using `Slider(value:in:step:)` with `value` bound to a `Double` that is rounded to `Int` on read (`in: 0...Double(choices.count - 1)`, `step: 1`). Track the rounded index in state and derive the current choice from it. Render the current choice's label in a `Text` view, and lay out label + control + caption + hint in a `VStack` (or `LabeledContent` for the label association). Disabled state via `.disabled(isDisabled)` modifier.
 
-- **Compose**: Use `Slider` composable with `value`, `onValueChange`, `valueRange = 0f..(choices.size - 1)`, and `steps = choices.size - 2` to enforce discrete steps. Convert the `value` to `Int` to index into the choices array. Render the current choice label in a `Text` composable. Apply `enabled` parameter to the slider for the disabled state. Use `Modifier.padding()` and `Modifier.fillMaxWidth()` for spacing and layout.
+- **Compose**: Use `Slider` composable with `value`, `onValueChange`, `valueRange = 0f..maxOf(0, choices.size - 1).toFloat()`, and `steps = maxOf(0, choices.size - 2)` to enforce discrete steps; when `choices.size <= 1` the range is degenerate (`0f..0f`), so render the slider disabled/inert rather than passing a negative `steps` value. Convert the `value` to `Int` to index into the choices array. Render the current choice label in a `Text` composable. Apply `enabled` parameter to the slider for the disabled state. Use `Modifier.padding()` and `Modifier.fillMaxWidth()` for spacing and layout.
 
-- **React/Web**: Implement as in the source using an HTML `<input type="range">` element wrapped in a container. Bind `value={currentIndex}`, `min="0"`, `max={choices.length - 1}`, and `step="1"`. Call `onChange` with `choices[newIndex].value`. Style using CSS classes (e.g., `aws-field`, `aws-slider`). Use `useId()` for auto-generated IDs. Support `label` and `hint` ReactNode props for flexibility.
+- **React/Web**: Implement as in the source using an HTML `<input type="range">` element with `min="0"`, `max` equal to `choices.length - 1`, and `step="1"`, wrapped in a container. Bind `value={currentIndex}` and call `onChange` with `choices[newIndex].value` on the input's `input`/`onChange` event. Associate an optional `label` with the input via `<label htmlFor={fieldId}>`, where `fieldId` is the `id` prop or a `useId()` fallback. Accept `label` and `hint` as `ReactNode` for flexibility. Style using CSS classes (`aws-field`, `aws-field--choice-slider`, `aws-slider`, `aws-slider__input`, `aws-slider__caption`, `aws-field__hint`).
 
-- **AppKit / UIKit**: On macOS, use `NSSlider` with `minValue = 0`, `maxValue = choices.count - 1`, and `numberOfTickMarks = choices.count`. Use `isIntegral = true` and `allowsTickMarkValuesOnly = true` to enforce discrete steps. Add a `NSTextField` to display the current choice label. On iOS, `UISlider` does not support discrete steps natively; use `gestureRecognizer` with `discrete` rounding in the `valueChanged` event or consider using a custom `UIControl` subclass. For iOS, a segmented control (`UISegmentedControl`) may be more appropriate if screen space permits.
+- **AppKit / UIKit**: On macOS, use `NSSlider` with `minValue = 0`, `maxValue = choices.count - 1`, `numberOfTickMarks = choices.count`, and `allowsTickMarkValuesOnly = true` to enforce discrete steps (`NSSlider` has no `isIntegral` property, so tick-mark snapping alone provides the discreteness). Add an `NSTextField` to display the current choice label. On iOS, `UISlider` does not support discrete steps natively; round `value` to the nearest integer in the `.valueChanged` action and call `setValue(_:animated:)` to snap the thumb back to that rounded position. For iOS, a segmented control (`UISegmentedControl`) may be more appropriate if screen space permits.
 
-- **WinUI 3**: Use `Slider` control with `Minimum = 0`, `Maximum = choices.Count - 1`, `StepFrequency = 1`, and `SnapsTo = SnapPointsType.MandatoryWithinRange` to enforce discrete stepping. Bind the slider's `Value` to an index variable. Use a `TextBlock` to display the current choice's label. Apply `IsEnabled` binding for the disabled state. Use `StackPanel` for layout (label, slider, caption, hint). Leverage `x:Uid` or RESX files for localization if the consumer provides localized labels.
+- **WinUI 3**: Use `Slider` control with `Minimum = 0`, `Maximum = choices.Count - 1`, `StepFrequency = 1`, and `SnapsTo = SnapsTo.StepValues` to enforce discrete stepping (`SnapPointsType.MandatoryWithinRange` belongs to `ScrollViewer`, not `Slider`). Bind the slider's `Value` to an index variable. Use a `TextBlock` to display the current choice's label. Apply `IsEnabled` binding for the disabled state. Use `StackPanel` for layout (label, slider, caption, hint). Localization of the `label`/`hint`/choice labels is the consumer's responsibility, consistent with the Localization section — do not resource them with `x:Uid`/RESX inside this control.
 
 ## Design Decisions
 
-- **Index-based slider with value-based callback**: The component uses the HTML range input's inherent index-based positioning (0 to choices.length - 1) but exposes the selected choice's `value` in the callback. This decouples the choice order from its identity, allowing reordering without breaking callers. However, it adds a layer of indirection (index → value) that is not explicit in the prop types; consumers must understand this behavior.
+- **Decision**: The control's positioning is index-based (0 to `choices.length - 1`) while the `onChange` callback exposes the selected choice's `value`, not its index.
+  **Rationale**: This decouples choice order from choice identity, so callers can reorder choices without breaking `onChange` handling, at the cost of an index → value translation that is not explicit in the prop types.
+  **Approved**: pending
 
-- **Default to first choice on value mismatch**: When `value` does not match any choice, the component silently selects the first choice. This is a "fail safe" approach that prevents undefined rendering but masks a programming error (passing an invalid value). An alternative would be to throw an error or require controlled behavior. The current behavior is permissive but could hide bugs.
+- **Decision**: When `value` does not match any choice, the component selects the first choice (index 0) rather than throwing or rendering nothing; no dev-time warning is logged.
+  **Rationale**: This fail-safe avoids undefined rendering for an invalid `value`, at the cost of silently masking a caller error. See **maintain-value-in-range** and the Configuration section's `value` entry, which record this as the single, non-contradictory contract.
+  **Approved**: pending
 
-- **No type-coercing equality check**: The component uses strict equality (`===`) to match `value` against `choice.value`. If the choice array contains numbers and `value` is a string (or vice versa), no match occurs. This is intentional to preserve type safety but can be surprising if the consumer mixes types. No automatic type conversion is performed.
+- **Decision**: `value` is matched against `choice.value` using strict equality (`===`); no type coercion is performed between string and number values.
+  **Rationale**: Preserves type safety and predictable matching, at the cost of surprising a caller who mixes numeric and string choice values across renders.
+  **Approved**: pending
 
-- **Disabled state disables only the input, not the label**: When `disabled` is true, the HTML range input is marked with the `disabled` attribute. The label and hint remain interactive (clickable/focusable). This matches standard HTML form behavior but means clicking the label does not focus the now-disabled input; clarify expected behavior in implementation.
+- **Decision**: When `disabled` is true, only the range control receives the `disabled` attribute; the label and hint continue to render as normal, non-disabled elements.
+  **Rationale**: Matches standard HTML form behavior, where disabling an input does not implicitly disable its associated label. Consumers should not expect clicking the label to focus the now-disabled control.
+  **Approved**: pending
 
-- **No announcement of choice label to screen readers**: The range input announces its numeric value (index) to screen readers. The choice's label is visual-only and not included in `aria-valuetext` or read aloud. For full accessibility, consumers should pair this component with an additional description or label. This is a gap in the source implementation.
+- **Decision**: The control announces only its numeric index to screen readers; the selected choice's label is visual-only and is not included in `aria-valuetext` or otherwise related to the input for announcement.
+  **Rationale**: The source sets no `aria-valuetext` and does not relate the caption to the input via `aria-describedby` or `aria-labelledby`, so no textual value is exposed to assistive technology today. See the Accessibility section's "Screen reader announcement" item for the open gap.
+  **Approved**: pending
 
 ## Compliance
 
-Not applicable: No specific compliance checks are defined for this ingredient.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+
+Statuses rest on `ChoiceSlider.tsx` and `styles.css`: the native `<input type="range">` gives keyboard operability and an implicit `slider` role with a native `<label>` association for free (passed), font sizes in `styles.css` (`aws-field__label`, `aws-field__hint`, `aws-slider__caption`) use `rem` units that scale with the browser's root font size (passed for dynamic type); but the missing `aria-valuetext`/fallback accessible name (the two open accessibility gaps above) make screen-reader support partial, the unset thumb size against theme-driven `--aws-accent`/`--aws-border`/`--aws-text-muted` colors makes touch-target size and contrast ratio partial (the source cannot guarantee either from its CSS alone), and the component never hardcodes or transforms consumer-supplied text (label/hint/choice labels pass through as opaque `ReactNode`/string content) so hardcoded-strings and Unicode handling pass while text-expansion tolerance is partial, since the flex layout has no explicit overflow handling verified for very long translated labels.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.0 | 2026-09-22 | Claude Opus 5 | Thumb sizing and empty-choices behavior restated as fact from `styles.css` and the source; two accessibility gaps retained |
-| 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revision pass Phase 1: gap triage across Accessibility and Edge Cases |
-| 1.0.0 | 2026-09-22 | (cookbook update) | Initial creation |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: behavioral requirements restated platform-neutral and renamed to subject-only kebab-case, with render-label promoted to MUST; value-match contract contradiction between Configuration and requirements resolved to the documented fallback; Design Decisions reformatted to Decision/Rationale/Approved; Compliance table added; Edge Cases narration replaced with observable behavior and new test vectors added for empty/single choice, keyboard input, type mismatch, and prop-only updates; Platform Notes API errors fixed for SwiftUI, Compose, AppKit, UIKit, and WinUI 3; Change History authorship normalized; status set to draft pending the two open accessibility gaps |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Thumb sizing and empty-choices behavior restated as fact from `styles.css` and the source (tooling: Claude Opus 5); two accessibility gaps retained |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Revision pass Phase 1: gap triage across Accessibility and Edge Cases (tooling: Claude Haiku 4.5) |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

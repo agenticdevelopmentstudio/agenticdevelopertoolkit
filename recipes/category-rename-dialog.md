@@ -3,7 +3,7 @@ id: 526da033-2f0d-4bd7-b2c2-99faba4783a3
 title: Category Rename Dialog
 domain: agenticdevelopertoolkit://recipes/category-rename-dialog
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -35,23 +35,23 @@ A modal dialog that allows renaming a single category or item. The component val
 
 ## Behavioral Requirements
 
-- **must-display-when-open**: Component MUST display a modal dialog when `open` is `true`.
-- **must-render-nothing-when-closed**: Component MUST render `null` when `open` is `false` and the component has never received a truthy `node` prop.
-- **must-prefill-current-name**: Component MUST pre-fill the input field with the current node's name when the dialog opens.
-- **must-require-non-empty-name**: Component MUST reject submission if the trimmed input is an empty string, displaying the error message: `A ${noun} needs a name.`
-- **must-reject-unchanged-name**: Component MUST close without calling `onRename` if the trimmed input matches the original node name (case-sensitive comparison after trim).
-- **must-validate-duplicate-names**: Component MUST reject submission if the trimmed input name matches any existing node name (case-insensitive), excluding the node being renamed, displaying the error message: `There is already a ${noun} called "${name}".`
-- **must-validate-extra-names**: Component MUST check the `extraNames` array for duplicates (case-insensitive) and reject submission if a match is found (excluding the original node name itself).
-- **must-accept-enter-key**: Component MUST trigger submission when the user presses Enter within the text input field.
-- **must-show-loading-state**: Component MUST set `disabled={true}` on the input and show a loading state in the confirm button while `onRename` is executing.
-- **must-clear-error-on-input**: Component MUST clear any error message when the user modifies the input text.
-- **must-call-onrename**: Component MUST call `onRename(node, trimmedName)` with the trimmed input after all validation passes.
-- **must-handle-async-rename**: Component MUST support async `onRename` (returns `Promise<void>`), display the error message if the promise rejects, and keep the dialog open on error.
-- **must-call-onrenamed**: Component MUST call `onRenamed(node, trimmedName)` after a successful rename.
-- **must-call-onclose-after-success**: Component MUST call `onClose()` after a successful rename.
-- **must-prevent-close-while-busy**: Component MUST not close the dialog (via close button, escape key, or backdrop click) if a rename operation is in progress (`busy === true`).
-- **must-disable-confirm-when-empty**: Component MUST set `disabled={true}` on the confirm button when the trimmed input is an empty string.
-- **must-show-error-text**: Component MUST display validation and operation error messages in an error text component.
+- **display-when-open**: Component MUST display a modal dialog when `open` is `true`.
+- **render-nothing-when-closed**: Component MUST render `null` when the `node` prop is `null` and has never previously been non-null. Once a non-null `node` has been supplied, the component keeps rendering with the last-held value (via `useLastPresent`) even after `node` reverts to `null`, so the exit animation can complete before unmounting.
+- **prefill-current-name**: Component MUST pre-fill the input field with the current node's name when the dialog opens (i.e., when `open` becomes `true` with a non-null `node`); the input is not re-seeded on any other `node` change.
+- **require-non-empty-name**: Component MUST reject submission if the trimmed input is an empty string, displaying the error message: `A ${noun} needs a name.`
+- **reject-unchanged-name**: Component MUST close without calling `onRename` if the trimmed input matches the original node name using a case-sensitive comparison after trim. A case-only change (e.g., "Inventory" → "INVENTORY") is not considered unchanged and proceeds to validation.
+- **validate-duplicate-names**: Component MUST reject submission if the trimmed input name matches any existing node name (case-insensitive), excluding the node being renamed, displaying the error message: `There is already a ${noun} called "${name}".`
+- **validate-extra-names**: Component MUST check the `extraNames` array for duplicates (case-insensitive) and reject submission if a match is found, excluding the original node's own name from the `extraNames` check (that exclusion is also compared case-insensitively).
+- **accept-enter-key**: Component MUST trigger submission when the user presses Enter within the text input field.
+- **show-loading-state**: Component MUST set `disabled={true}` on the input and show a loading state in the confirm button while `onRename` is executing.
+- **clear-error-on-input**: Component MUST clear any error message when the user modifies the input text.
+- **call-onrename**: Component MUST call `onRename(node, trimmedName)` with the trimmed input after all validation passes.
+- **handle-async-rename**: Component MUST support async `onRename` (returns `Promise<void>`), display the error message if the promise rejects, and keep the dialog open on error.
+- **call-onrenamed**: Component MUST call `onRenamed(node, trimmedName)` after a successful rename.
+- **call-onclose-after-success**: Component MUST call `onClose()` after a successful rename.
+- **prevent-close-while-busy**: Component MUST not close the dialog (via close button, escape key, or backdrop click) if a rename operation is in progress (`busy === true`).
+- **disable-confirm-when-empty**: Component MUST set `disabled={true}` on the confirm button when the trimmed input is an empty string; the confirm button is not otherwise disabled while a validation or operation error is showing.
+- **show-error-text**: Component MUST display validation and operation error messages in an error text component.
 
 ## Appearance
 
@@ -59,10 +59,10 @@ A modal dialog that allows renaming a single category or item. The component val
 - **Padding**: Input field uses standard form spacing; error text is displayed inline below the input.
 - **Font**: Uses system default input font; error text uses a distinct error-colored variant.
 - **Background**: Dialog content uses light/dark mode theme from Dialog component.
-- **Foreground/Text**: Input text is black (light mode) or white (dark mode); error text uses red/error color.
+- **Foreground/Text**: Input text and dialog content use the `apt-text` foreground token, which resolves per active theme rather than a literal black/white value; error text uses the `apt-red` destructive/error token.
 - **Border**: Input field uses standard form input border; dialog has no explicit border.
 - **Shadow**: Dialog elevation/shadow deferred to Dialog component implementation.
-- **Min/Max size**: Dialog content has `max-width: small` (typically 384px or similar).
+- **Min/Max size**: Dialog content uses the `max-w-sm` utility — exactly 384px (24rem), not an approximation.
 
 ## States
 
@@ -72,7 +72,7 @@ A modal dialog that allows renaming a single category or item. The component val
 | Open (default) | Dialog visible, input focused | Ready for input; error message cleared |
 | Focused | Input field has focus outline | User can type or press Enter to submit |
 | Loading | Input disabled, confirm button shows loading indicator | All inputs disabled; dialog cannot close |
-| Validation error | Error message displayed in red below input | Input remains enabled; confirm button disabled until error is fixed |
+| Validation error | Error message displayed in red below input | Input remains enabled; confirm button is disabled only when the trimmed input is empty, per **disable-confirm-when-empty** — it stays enabled while a duplicate or operation error is showing, so the user can retry immediately |
 | Operation error | Error message displayed below input | Input enabled; user can edit and retry |
 
 ## Accessibility
@@ -82,7 +82,7 @@ A modal dialog that allows renaming a single category or item. The component val
 - **Dialog title**: Dialog header contains `<DialogTitle>Rename {noun}</DialogTitle>` for context.
 - **Dialog description**: Dialog header contains `<DialogDescription>This renames it everywhere it is used.</DialogDescription>`.
 - **Keyboard navigation**: Input auto-focuses on dialog open; Tab moves between input and buttons; Enter submits; Escape closes (if not busy).
-- **Error announcement**: Error text SHOULD be announced to screen readers (typically via ErrorText component ARIA attributes).
+- **Error announcement**: Error text MUST be announced to screen readers; both `ErrorText` and its dialog-description variant always render the message with `role="alert"` whenever an error is present.
 - **Announce loading state**: While `busy` is `true`, the confirm button SHOULD indicate loading (e.g., via aria-busy or button text change).
 - **Minimum touch target**: Dialog buttons (Confirm, Cancel) MUST have touch targets of at least 44×44pt.
 
@@ -90,41 +90,47 @@ A modal dialog that allows renaming a single category or item. The component val
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| rename-001 | must-display-when-open | `open={true}`, `node={categoryNode}` | Dialog is visible |
-| rename-002 | must-render-nothing-when-closed | `open={false}`, `node={null}` | Component returns `null` |
-| rename-003 | must-prefill-current-name | `open={true}`, `node={categoryNode}` where `node.name="Inventory"` | Input field displays "Inventory" |
-| rename-004 | must-require-non-empty-name | User leaves input empty, clicks Confirm | Error message: "A category needs a name." |
-| rename-005 | must-reject-unchanged-name | Input shows original name "Inventory", user clicks Confirm | Dialog closes without calling `onRename` |
-| rename-006 | must-validate-duplicate-names | Input: "Armory", `nodes` includes node with `name="Armory"` (different id) | Error: "There is already a category called "Armory"." |
-| rename-007 | must-validate-extra-names | Input: "Taken", `extraNames=["Taken"]` | Error: "There is already a category called "Taken"." |
-| rename-008 | must-accept-enter-key | Input focused with text "NewName", user presses Enter | `onRename` is called (validation passes) |
-| rename-009 | must-show-loading-state | `onRename` is async and pending | Input is disabled; confirm button shows loading state |
-| rename-010 | must-clear-error-on-input | Error displayed, user types in input | Error message is cleared |
-| rename-011 | must-call-onrename | User enters valid name "NewCategory" and submits | `onRename(node, "NewCategory")` is called |
-| rename-012 | must-handle-async-rename | `onRename` returns rejected promise | Dialog remains open; error message displays rejection reason |
-| rename-013 | must-call-onrenamed | Rename succeeds | `onRenamed(node, newName)` is called |
-| rename-014 | must-call-onclose-after-success | Rename succeeds | `onClose()` is called |
-| rename-015 | must-prevent-close-while-busy | User presses Escape while `busy={true}` | Dialog remains open |
-| rename-016 | must-disable-confirm-when-empty | Input value is "", no input has occurred | Confirm button is disabled |
-| rename-017 | must-show-error-text | Validation fails | Error text component displays error message |
+| rename-001 | display-when-open | `open={true}`, `node={categoryNode}` | Dialog is visible |
+| rename-002 | render-nothing-when-closed | `open={false}`, `node={null}` | Component returns `null` |
+| rename-003 | prefill-current-name | `open={true}`, `node={categoryNode}` where `node.name="Inventory"` | Input field displays "Inventory" |
+| rename-004 | require-non-empty-name | User leaves input empty, clicks Confirm | Error message: "A category needs a name." |
+| rename-005 | reject-unchanged-name | Input shows original name "Inventory", user clicks Confirm | Dialog closes without calling `onRename` |
+| rename-006 | validate-duplicate-names | Input: "Armory", `nodes` includes node with `name="Armory"` (different id) | Error: "There is already a category called "Armory"." |
+| rename-007 | validate-extra-names | Input: "Taken", `extraNames=["Taken"]` | Error: "There is already a category called "Taken"." |
+| rename-008 | accept-enter-key | Input focused with text "NewName", user presses Enter | `onRename` is called (validation passes) |
+| rename-009 | show-loading-state | `onRename` is async and pending | Input is disabled; confirm button shows loading state |
+| rename-010 | clear-error-on-input | Error displayed, user types in input | Error message is cleared |
+| rename-011 | call-onrename | User enters valid name "NewCategory" and submits | `onRename(node, "NewCategory")` is called |
+| rename-012 | handle-async-rename | `onRename` returns rejected promise | Dialog remains open; error message displays rejection reason |
+| rename-013 | call-onrenamed | Rename succeeds | `onRenamed(node, newName)` is called |
+| rename-014 | call-onclose-after-success | Rename succeeds | `onClose()` is called |
+| rename-015 | prevent-close-while-busy | User presses Escape while `busy={true}` | Dialog remains open |
+| rename-016 | disable-confirm-when-empty | Input value is "", no input has occurred | Confirm button is disabled |
+| rename-017 | show-error-text | Validation fails | Error text component displays error message |
+| rename-018 | require-non-empty-name | Input is whitespace only ("   "), user clicks Confirm | Trimmed to ""; error message: "A category needs a name." |
+| rename-019 | handle-async-rename | `onRename` rejects with a non-`Error` value (e.g., a plain string) | Error message: "Could not rename the category."; dialog remains open |
+| rename-020 | prevent-close-while-busy | `busy={true}` | `DialogActions` renders only a loading spinner; Cancel and Confirm buttons are not present to click |
+| rename-021 | prevent-close-while-busy | User clicks the dialog backdrop while `busy={true}` | `onOpenChange` fires but does not call `onClose()`; dialog remains open |
+| rename-022 | reject-unchanged-name | Input "INVENTORY" when `node.name` is "inventory" | `onRename(node, "INVENTORY")` is called — a case-only change is not treated as unchanged |
+| rename-023 | prefill-current-name | Dialog closes with edited (unsaved) text present; host later reopens it with a different `node` | Input displays the new node's name, not the previous session's edited text |
 
 ## Edge Cases
 
-- **Empty name after trim**: If input is whitespace only (e.g., "   "), component trims to "" and rejects with "needs a name" error. MUST behavior per requirement.
-- **Duplicate check is case-insensitive**: Input "inventory" matches existing node "Inventory". Comparison uses `.toLowerCase()`. MUST behavior per requirement.
-- **Unchanged name with different casing**: Input "INVENTORY" when current is "inventory" — these are different case-sensitive strings, so `onRename` is called. MUST behavior per requirement.
-- **Extra names and node name coincidence**: If `extraNames` contains the original node name, the duplicate check at line 1010 excludes it from the taken check, allowing the user to "rename" to the same name (which then closes per must-reject-unchanged-name). MUST behavior per requirement.
-- **Async onRename rejection**: If `onRename` throws or rejects, the error is caught at line 1022–1023; if the error is an `Error` instance, its message is displayed; otherwise, a generic message is shown. MUST behavior per requirement.
-- **Dialog close while busy**: The `onOpenChange` callback at line 1032–1034 prevents close if `busy === true`. Escape and backdrop click are blocked. MUST behavior per requirement.
-- **Null node while promise pending**: The component holds `node` via `useLastPresent`, so it survives the host clearing `target`; this allows the exit animation to complete before unmounting. MUST behavior per requirement.
-- **Input re-seeding on re-open**: The effect at line 987–992 seeding the input only triggers when `open` changes to `true` with a non-null `target`, so reopening on null does not restore stale text. MUST behavior per requirement.
+- **Empty name after trim**: If input is whitespace only (e.g., "   "), component trims to "" and rejects with the "needs a name" error, per **require-non-empty-name**.
+- **Duplicate check is case-insensitive**: Input "inventory" matches existing node "Inventory" in `commit()`'s `taken` check, which compares via `.toLowerCase()`, per **validate-duplicate-names**.
+- **Unchanged name with different casing**: Input "INVENTORY" when current is "inventory" — these differ under the case-sensitive comparison in **reject-unchanged-name**, and the case-only match is excluded from the duplicate check by node id, so `onRename` is called per **call-onrename**.
+- **Extra names and node name coincidence**: If `extraNames` contains the original node name, the `extraNames` check in `commit()` excludes it (case-insensitively) from the taken check, per **validate-extra-names** — allowing the user to "rename" to the same name, which then closes silently per **reject-unchanged-name**.
+- **Async onRename rejection fallback**: If `onRename` throws or rejects, `commit()`'s `catch` block displays the rejection's `message` when it is an `Error` instance; otherwise it shows the fallback message `Could not rename the ${noun}.`. Displaying an error on rejection is required by **handle-async-rename**; the specific Error/non-Error split is an implementation detail of `commit()`, not a separately named requirement.
+- **Dialog close while busy**: The `onOpenChange` callback passed to `Dialog` calls `onClose()` only when `busy` is `false`, so Escape and backdrop-triggered closes are blocked while busy, per **prevent-close-while-busy**. The Cancel and Confirm buttons are also removed from the DOM while busy (`DialogActions` renders only a loading spinner), so there is nothing to click.
+- **Held node survives target going null**: `useLastPresent(target)` keeps rendering the last non-null node after the host clears `target`, so the exit animation completes before the component unmounts (see **Design Decisions**, "useLastPresent for exit animation"). This is an implementation detail supporting the exit transition, not itself a separately named behavioral requirement.
+- **Input re-seeding on re-open**: The `React.useEffect` that seeds `text` only re-seeds when `open` becomes `true` with a non-null `target`, per **prefill-current-name**, so reopening on a `null` target does not restore stale text from a previous session.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `open` | boolean | (required) | Whether the dialog is visible. |
-| `node` | CategoryTreeNode &#124; null | null | The category being renamed. `null` renders nothing; the host may keep the dialog mounted between opens. |
+| `node` | CategoryTreeNode &#124; null | null | The category being renamed. `null` renders nothing only until a non-null value has been supplied at least once; after that the component keeps showing the last-held node (via `useLastPresent`) through a `null` reversion, so the exit animation can finish — see **render-nothing-when-closed**. The host may keep the dialog mounted between opens. |
 | `nodes` | readonly CategoryTreeNode[] | (required) | The full vocabulary for duplicate-name validation. |
 | `extraNames` | readonly string[] | [] | Additional names to treat as taken (e.g., names known to the host but not yet in `nodes`). |
 | `noun` | string | (required) | Singular, lowercase term for microcopy (e.g., "category", "folder"). Interpolated into error messages and dialog title. |
@@ -142,12 +148,12 @@ Not applicable: This component is a modal dialog without independent deep-linkin
 |-----------|-------------|---------|-------|
 | dialog.title | `Rename {noun}` | Dialog header title. Interpolated with `noun` prop. | |
 | dialog.description | `This renames it everywhere it is used.` | Dialog header description. | Describes consequence of rename. |
-| input.label | `New ${noun} name` | Input aria-label. Interpolated with `noun` prop. | Screen reader only. |
-| error.empty-name | `A ${noun} needs a name.` | Validation error for empty trimmed input. Interpolated with `noun` prop. | |
-| error.duplicate | `There is already a ${noun} called "${nextName}".` | Validation error for duplicate name. Interpolated with `noun` and attempted name. | Case-insensitive comparison. |
+| input.label | `New {noun} name` | Input aria-label. Interpolated with `noun` prop. | Screen reader only. |
+| error.empty-name | `A {noun} needs a name.` | Validation error for empty trimmed input. Interpolated with `noun` prop. | |
+| error.duplicate | `There is already a {noun} called "{nextName}".` | Validation error for duplicate name. Interpolated with `noun` and attempted name. | Case-insensitive comparison. |
 | button.confirm | `Rename` | Confirm button label. | |
 | button.cancel | `Cancel` | Cancel button label. | |
-| error.fallback | `Could not rename the ${noun}.` | Fallback error message if `onRename` rejects without an Error. Interpolated with `noun` prop. | |
+| error.fallback | `Could not rename the {noun}.` | Fallback error message if `onRename` rejects without an Error. Interpolated with `noun` prop. | |
 
 ## Accessibility Options
 
@@ -163,12 +169,7 @@ Not applicable: Component has no feature flag integration in source code.
 
 ## Analytics
 
-| Event | Properties | When |
-|-------|-----------|------|
-| `category_rename_dialog.opened` | `{}` | Dialog becomes visible (`open` changes to `true`). |
-| `category_rename_dialog.renamed` | `{ noun: string, newName: string }` | Rename completes successfully. |
-| `category_rename_dialog.cancelled` | `{}` | User closes dialog without renaming (cancel button or Escape). |
-| `category_rename_dialog.error` | `{ reason: string, noun: string }` | Validation error or `onRename` rejection. |
+Not applicable: Component has no analytics or telemetry integration in source code. Privacy and Feature Flags confirm the same — there is no instrumentation to report on. A host that wants to track opens, renames, cancels, or errors should add that instrumentation in a host-level recipe, not here.
 
 ## Privacy
 
@@ -185,41 +186,64 @@ Not applicable: Component has no logging implementation in source code. Host is 
 
 - **React/Web**: The source (`category-rename-dialog.tsx`) uses Dialog, Input, and DialogActions from a shared UI component library. Customization points are the Dialog component's styling props (e.g., `className="max-w-sm"`), Input component behavior (autoFocus, disabled, aria-label), and ErrorText rendering. Validation logic is co-located with the component; duplicate checking happens in-memory before the async `onRename` call to prevent corrupting duplicates on the server.
 
-- **SwiftUI**: Start with a `.sheet` or `.confirmationDialog` modifier controlling visibility via the `open` binding. Use a `TextField` for input with a `.onSubmit` handler for Enter key. Bind the input text to a `@State` variable. Implement duplicate validation before calling the async `onRename` closure. Use a `.disabled()` modifier on the TextField and confirm button while an async operation is pending. Display validation errors in a separate Text view styled with `.foregroundColor(.red)`.
+- **SwiftUI**: Start with a `.sheet` modifier controlling visibility via the `open` binding — `.confirmationDialog` cannot host a `TextField` and should not be used here. (A `.alert` with a `TextField` in its actions closure, supported since iOS 16, is also viable for a single-field prompt.) Use a `TextField` for input with an `.onSubmit` handler for Enter key, bound to a `@State` variable. Implement duplicate validation before calling the async `onRename` closure. Use a `.disabled()` modifier on the TextField and confirm button while an async operation is pending. Display validation errors in a separate Text view styled with `.foregroundStyle(.red)` (not the deprecated `.foregroundColor`).
 
-- **Compose (Kotlin)**: Use a `Dialog` composable for the modal. Place a `TextField` (or `OutlinedTextField`) with `autofocus` enabled inside the dialog. Implement a `KeyEvent.Key.Enter` handler in the TextField's `onKeyEvent` lambda to trigger submission. Manage duplicate validation and async `onRename` in a ViewModel using coroutines. Disable the TextField and confirm button while the rename operation is in-flight (use a `LaunchedEffect` or `rememberCoroutineScope`). Display error messages in a `Text` composable below the input with red text color.
+- **Compose (Kotlin)**: Use a `Dialog` composable for the modal. Place a `TextField` (or `OutlinedTextField`) inside the dialog, with a `FocusRequester` requesting focus in a `LaunchedEffect` to autofocus it. Set `KeyboardOptions(imeAction = ImeAction.Done)` and handle submission in the field's `KeyboardActions(onDone = { ... })`, rather than a raw `onKeyEvent` handler. Manage duplicate validation and async `onRename` in a ViewModel using coroutines. Disable the TextField and confirm button while the rename operation is in-flight (use a `LaunchedEffect` or `rememberCoroutineScope`). Display error messages in a `Text` composable below the input with red text color.
 
-- **AppKit / UIKit**: Use `NSAlert` (macOS) or `UIAlertController` (iOS) for the modal. Add a single text field via `addTextField()` with placeholder text and keyboard return type set to `.done`. Implement a target-action handler for the return key (or use a text field delegate) to trigger validation and submission. Display validation errors by re-presenting the alert or updating an error label below the text field. Block the close button or escape key while an async operation is pending by managing the `NSAlert` button state or the controller's dismissal state.
+- **AppKit / UIKit**: `NSAlert` (macOS) and `UIAlertController` (iOS) can host a single text field via `addTextField()`, but neither supports updating an inline error label inside an already-presented alert — re-presenting the alert to show an error is a poor substitute and loses the user's in-progress input. Prefer a custom sheet or modal view controller with its own `TextField`/`UITextField` and an error label that can be shown or hidden in place. Implement a target-action handler for the return key (or a text field delegate) to trigger validation and submission. Block the close button and Escape/dismiss gesture while an async operation is pending by disabling dismissal on the view controller. If the host requires the native alert specifically, state plainly that it cannot meet **show-error-text** for operation/validation errors surfaced after the alert is already presented.
 
-- **WinUI 3**: Use `ContentDialog` for the modal. Place a `TextBox` control inside the dialog with `IsEnabled` binding to reflect the busy state. Handle the `KeyDown` event on the TextBox to detect Enter and trigger submission. Implement duplicate validation in code-behind or via a ViewModel (MVVM pattern). Disable the `IsPrimaryButtonEnabled` property on the dialog's primary button (Rename) while async operations are pending. Display validation errors in a `TextBlock` below the TextBox, styled with a `Foreground` color of `{StaticResource SystemControlErrorTextForeground}`.
+- **WinUI 3**: Use `ContentDialog` for the modal. Place a `TextBox` control inside the dialog with `IsEnabled` binding to reflect the busy state. Handle the `KeyDown` event on the TextBox to detect Enter and trigger submission. Implement duplicate validation in code-behind or via a ViewModel (MVVM pattern). Disable the `IsPrimaryButtonEnabled` property on the dialog's primary button (Rename) while async operations are pending, and handle the `ContentDialog.Closing` event to set `args.Cancel = true` while busy, so Escape and the system close affordance are blocked the same way **prevent-close-while-busy** blocks them on web. Display validation errors in a `TextBlock` below the TextBox, styled with a `Foreground` of `{ThemeResource SystemFillColorCriticalBrush}` (the current, non-legacy critical-fill brush).
 
 ## Design Decisions
 
-- **Duplicate validation in-component, not server-side**: The duplicate check happens before `onRename` is called, preventing the server from creating duplicates via a generic CRUD update that has no uniqueness lock. Traceability: lines 1007–1015.
+**Decision**: Duplicate validation happens in-component, before `onRename` is called, rather than being left to the server.
+**Rationale**: The duplicate check in `commit()` (the `taken` computation) runs before the async `onRename` call, preventing a generic CRUD update — which takes no uniqueness lock — from creating a duplicate and breaking every read that keys on the name.
+**Approved**: pending
 
-- **useLastPresent for exit animation**: The component holds `node` via `useLastPresent(target)` so the exit transition completes before the component unmounts. If unmounting happened immediately when `target` became null, the dialog's open-to-closed transition would be cut off. Traceability: lines 979–980.
+**Decision**: The component holds the `node` prop's value via `useLastPresent(target)` rather than reading `target` directly.
+**Rationale**: If the component unmounted the instant `target` became `null`, the Dialog's `open → false` exit transition would be cut off before it started. Holding the last non-null value one render longer lets the transition finish.
+**Approved**: pending
 
-- **Input seeding only on open**: The effect re-seeds the input only when `open` becomes `true` with a non-null `target`, not on every `target` change. This prevents reopening on null from restoring stale text. Traceability: lines 987–992.
+**Decision**: The `React.useEffect` that seeds the input text runs only when `open` becomes `true` with a non-null `target` — not on every `target` change.
+**Rationale**: Seeding from `target` on every change, rather than only on open, would let a `target` update while the dialog is reopening on `null` restore stale text from the previous session.
+**Approved**: pending
 
-- **Case-insensitive but display-preserving duplicates**: Duplicate checks use `.toLowerCase()` to ignore case (lines 1008, 1009–1010), but the error message displays the user's typed name as-is (line 1013), not a normalized version. This respects user intent while preventing case-only renames.
+**Decision**: The duplicate check in `commit()` compares names with `.toLowerCase()` to ignore case, but the error message displays the user's typed name exactly as entered, not a normalized version.
+**Rationale**: Case-insensitive comparison catches near-duplicates like "inventory" vs. "Inventory" across different nodes, while echoing the user's own input keeps the error message trustworthy. This does not prevent a case-only rename of the node's own name — "inventory" → "INVENTORY" still calls `onRename`, since it differs from the case-sensitive check in **reject-unchanged-name** and is excluded from the duplicate check by node id (see the corresponding edge case). Note also that `.toLowerCase()` is a locale-sensitive transform (for example, Turkish's dotless "ı"); ports to other platforms should use the platform's locale-aware lowercasing for this comparison, not an invariant-culture call.
+**Approved**: pending
 
-- **Enter submits, Escape closes**: Enter key (line 1053) commits; Escape is handled by the Dialog component itself (line 1032), not by the input. This is a common web dialog pattern.
+**Decision**: Enter, handled in the `Input`'s `onKeyDown`, commits the form; Escape is handled by the `Dialog` component itself, not by the input.
+**Rationale**: This matches the common web dialog pattern where the primary field commits on Enter and the container owns Escape-to-close.
+**Approved**: pending
 
-- **Unchanged name closes silently**: If the user submits without changing the name, the dialog closes via `onClose()` without calling `onRename` (lines 1003–1005). This avoids a no-op server round-trip.
+**Decision**: Submitting without changing the name closes the dialog via `onClose()` — the early return in `commit()` when the trimmed input equals `node.name` — without calling `onRename`.
+**Rationale**: This avoids a no-op server round-trip for a rename that would change nothing.
+**Approved**: pending
 
-- **Error message includes attempted name**: The duplicate error message includes the user's attempted name in quotes (line 1013) so the user sees exactly what they tried to use.
+**Decision**: The duplicate error message, set in `commit()`'s `taken` branch, includes the user's attempted name in quotes.
+**Rationale**: This lets the user see exactly what they tried to use.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [must-have-keyboard-submit](agenticdevelopercookbook://compliance/accessibility#must-have-keyboard-submit) | passed | Accessibility — Enter key submits from the input field. |
-| [must-have-escape-close](agenticdevelopercookbook://compliance/accessibility#must-have-escape-close) | passed | Accessibility — Escape key closes the dialog (unless busy). |
-| [must-prevent-invalid-state](agenticdevelopercookbook://compliance/form-validation#must-prevent-invalid-state) | passed | Form Validation — Confirm button disabled when input is empty; duplicates rejected before submission. |
-| [must-show-validation-error](agenticdevelopercookbook://compliance/form-validation#must-show-validation-error) | passed | Form Validation — Validation errors displayed inline below the input field. |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+
+Statuses rest on: the source's `onKeyDown`/`onOpenChange` handling, `aria-label`, and `role="alert"` usage plus the base-ui `Dialog`'s own focus trap (Accessibility, passed/partial where pixel sizing and motion-reduction can't be confirmed from source); the literal `${noun}`-style template strings baked into `commit()` and the JSX with no i18n resource lookup, despite Unicode-safe `.trim()`/`.toLowerCase()` string handling (Internationalization); and the empty/duplicate-name validation in `commit()` running with no explicit sanitization step (Security, partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case (dropped `must-` prefix) everywhere they're cited; replaced line-number citations with source symbol/function names; reformatted Design Decisions into Decision/Rationale/Approved form and corrected the case-only-rename claim; rewrote Compliance as real catalog checks with a plain Category column; marked Analytics "Not applicable" to match Privacy/Feature Flags/Logging; fixed the render-null, confirm-disabled, and extra-names-case-insensitivity ambiguities; added test vectors for whitespace input, the non-Error rejection fallback, busy-state backdrop/cancel, case-only rename, and re-seeding on reopen; unified localization placeholders on `{noun}`/`{nextName}`; grounded Appearance's foreground and max-width claims in theme tokens; and corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes' APIs |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

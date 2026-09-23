@@ -3,7 +3,7 @@ id: 88d69611-4a12-4777-9509-8af6c0626dc7
 title: CategoryPickerDialog
 domain: agenticdevelopertoolkit://recipes/category-picker-dialog
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: '2026-08-23'
@@ -16,19 +16,17 @@ platforms:
 - typescript
 - web
 tags:
-- component
 - category
 - picker
 - tree
 - dialog
-- chooser
-- ui
 depends-on:
 - agenticdevelopertoolkit://recipes/dialog
 - agenticdevelopertoolkit://recipes/dialog-actions
 related:
 - agenticdevelopertoolkit://recipes/list-chooser
 - agenticdevelopertoolkit://recipes/entity-chooser
+- agenticdevelopertoolkit://recipes/alert-and-dialog
 references: []
 approved-by: ''
 approved-date: ''
@@ -47,33 +45,43 @@ primitives (`Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`,
 over a **flat** list, and a place in a tree cannot be expressed as a bare name.
 
 The dialog folds the caller's flat `nodes: CategoryTreeNode[]` into a forest with
-`buildCategoryTree` (`category-tree.ts`) on every render of `nodes`, so it always
-browses the same materialisation the rail draws. Browsing is a real WAI-ARIA
-`tree` — one roving tab stop, arrow-key expand/move/collapse — and typing into the
-field switches the list to a flat, trail-annotated filter (`role="listbox"`) so a
-match three levels down is found by typing its name rather than walking to it.
+`buildCategoryTree` (`category-tree.ts`), inside a `useMemo` keyed on `nodes` — so
+it recomputes only when the caller's rows actually change, always browsing the
+same materialisation [Topic Detail](agenticdevelopertoolkit://recipes/topic-detail)
+draws for its own rail. Browsing is a real WAI-ARIA `tree` — one roving tab stop,
+arrow-key expand/move/collapse — and typing into the field switches the list to a
+flat, trail-annotated filter (`role="listbox"`) so a match three levels down is
+found by typing its name rather than walking to it.
 
 It is the modal behind a hierarchical category browser's "Move…" gear action —
 the host supplies `disabledIds` (the moved category and its own descendants, so a
 category can never become its own ancestor) and `allowRoot` (a move can land a
-category at the top level, which is why the root row exists at all). Every word on
-screen — `title`, `description`, `confirmLabel`, `rootLabel` — is the host's; this
-component owns no copy of its own beyond the two built-in empty messages.
+category at the top level, which is why the root row exists at all). Every word
+the host controls — `title`, `description`, `confirmLabel`, `rootLabel` — is
+supplied by it; the component's own built-in English strings ("No categories
+yet.", the filter-match message, `aria-label="Filter categories"` /
+`aria-label="Categories"`, the placeholder "Filter categories…", and the
+Expand/Collapse `title`) are not props and are not currently overridable — see
+Compliance and Localization-adjacent notes below.
 
 ## Behavioral Requirements
 
-- **must-return-a-place-not-a-record**: Confirming MUST call `onConfirm` with either a category id (the selected node) or `null` (the root row), never a name or a record — the picked value is WHERE, not WHAT.
-- **must-browse-the-full-forest**: With the filter empty, the dialog MUST render every node `buildCategoryTree(nodes)` yields, each with a chevron toggle when it has children and no toggle when it does not.
-- **must-filter-by-substring-with-trail**: Typing in the field MUST narrow the list to nodes whose name contains the typed text (case-insensitive substring), each option showing the "/"-joined names of its ancestors; a node filed under more than one parent MUST appear once, keeping its first (sibling-order) trail.
-- **must-offer-a-root-row-only-when-allowed**: The "top level" row (`rootLabel`, default "Top level") MUST render only when `allowRoot` is set, and selecting it MUST make `null` the pending selection.
-- **must-disable-forbidden-rows**: A node whose id is in `disabledIds` MUST render visibly disabled and MUST NOT become selectable, in both browse and filter mode.
-- **must-preselect-initial-id**: On open, the pending selection MUST start at `initialSelectedId` (or no selection when it is `null`).
-- **must-support-tree-keyboard-nav**: In browse mode, ArrowDown/ArrowUp MUST move the roving tab stop to the next/previous VISIBLE row (collapsed children skipped); ArrowRight on a collapsed parent MUST expand it, on an expanded parent MUST move into its first child; ArrowLeft on an expanded parent MUST collapse it, on a leaf or collapsed node MUST move to its parent; Home/End MUST move to the first/last visible row.
-- **must-disable-confirm-when-unpickable**: The confirm button MUST be disabled unless the pending selection is confirmable — the root row when `allowRoot`, or a node not in `disabledIds`.
-- **must-reset-on-reopen**: Each transition to `open=true` MUST clear the filter text, the expanded set and the roving focus, and MUST reset the pending selection to `initialSelectedId` — a reopen is a fresh question, not a resumed one.
-- **must-report-write-errors-inline**: A non-null `error` MUST render above the button bar without closing the dialog; `busy` MUST disable the field and both buttons while a confirm is in flight.
-- **must-cancel-without-confirming**: Esc, the Cancel button, or a non-busy outside dismiss MUST call `onCancel` and MUST NOT call `onConfirm`.
-- **must-show-empty-messages**: With no categories at all, browse mode MUST show "No categories yet."; with a filter that matches nothing, filter mode MUST show a message naming the typed text.
+- **return-a-place-not-a-record**: Confirming MUST call `onConfirm` with either a category id (the selected node) or `null` (the root row), never a name or a record — the picked value is WHERE, not WHAT.
+- **browse-the-full-forest**: With the filter empty, the dialog MUST render every node `buildCategoryTree(nodes)` yields, each with a chevron toggle when it has children and no toggle when it does not.
+- **filter-by-substring-with-trail**: Typing in the field MUST narrow the list to nodes whose name contains the typed text (case-insensitive substring), each option showing the "/"-joined names of its ancestors; a node filed under more than one parent MUST appear once, keeping its first (sibling-order) trail.
+- **offer-a-root-row-only-when-allowed**: The "top level" row (`rootLabel`, default "Top level") MUST render only when `allowRoot` is set, and selecting it MUST make `null` the pending selection.
+- **disable-forbidden-rows**: A node whose id is in `disabledIds` MUST render visibly disabled and MUST NOT become selectable, in both browse and filter mode.
+- **preselect-initial-id**: On open, the pending selection MUST start at `initialSelectedId` (or no selection when it is `null`).
+- **tree-keyboard-nav**: In browse mode, ArrowDown/ArrowUp MUST move the roving tab stop to the next/previous VISIBLE row (collapsed children skipped); ArrowRight on a collapsed parent MUST expand it, on an expanded parent MUST move into its first child; ArrowLeft on an expanded parent MUST collapse it, on a leaf or collapsed node MUST move to its parent; Home/End MUST move to the first/last visible row.
+- **filter-mode-arrow-nav**: In filter mode, ArrowDown/ArrowUp MUST move the roving tab stop to the next/previous option in the flat hit list (the same shared row list and key handler browse mode uses), and Home/End MUST move it to the first/last option; arrow keys have no effect while focus is still in the filter field itself — reaching the list requires Tab (to the roving tab stop) or a pointer click first. No `aria-activedescendant` is used; each option is an independently focusable `<button>` using the same roving-tabindex pattern browse mode uses.
+- **native-row-activation**: Every row, in either mode, MUST be a native `<button>`, so Enter, Space, a click, and a double-click all activate it identically — there is no separate keydown handler for row selection, only the browser's own button-activation behavior.
+- **filter-field-enter-inert**: Enter pressed in the filter field MUST NOT select or confirm anything — the field is not enclosed in a `<form>`, so Enter performs no default action and the dialog defines none of its own.
+- **disable-confirm-when-unpickable**: The confirm button MUST be disabled unless the pending selection is confirmable — the root row when `allowRoot`, or a node not in `disabledIds`.
+- **reset-on-reopen**: Each transition to `open=true` MUST clear the filter text, the expanded set and the roving focus, and MUST reset the pending selection to `initialSelectedId` — a reopen is a fresh question, not a resumed one.
+- **roving-focus-origin**: The roving tab stop MUST start on the first visible row after a reset — the root row when `allowRoot` is set, otherwise the first top-level category — regardless of `initialSelectedId`; a collapsed branch containing `initialSelectedId` is NOT auto-expanded to reveal it, so a nested preselection starts off-screen and unfocused until the user navigates to it.
+- **report-write-errors-inline**: A non-null `error` MUST render above the button bar without closing the dialog; `busy` MUST disable the field and both buttons while a confirm is in flight.
+- **cancel-without-confirming**: Esc, the Cancel button, or a non-busy outside dismiss MUST call `onCancel` and MUST NOT call `onConfirm`; while `busy`, all three are blocked instead — the Cancel button is disabled (see **report-write-errors-inline**) and Esc/outside dismissal are suppressed by the same busy check, so none of them call `onCancel` either.
+- **show-empty-messages**: With no categories at all, browse mode MUST show "No categories yet."; with a filter that matches nothing, filter mode MUST show a message naming the typed text.
 
 ## Appearance
 
@@ -81,17 +89,17 @@ Filter field, then either the tree or the filtered list, then the button bar:
 
 ```
 ┌───────────────────────────────────────────┐
-│ Move "Q3"                                  │  ← title (host's confirmLabel verb elsewhere)
+│ Move "Q3"                                  │  ← title — the host's own words
 │ Choose where it should sit. Its other      │  ← optional description
 │ filings are left alone.                    │
 ├───────────────────────────────────────────┤
 │ [ Filter categories…                    ]  │  ← Input, autoFocus, role="searchbox"
 ├───────────────────────────────────────────┤
-│ ▸ Top level                                │  ← allowRoot row (FolderTree icon)
+│   Top level                                │  ← allowRoot row (FolderTree icon, no chevron)
 │ ▾ Work                                     │  ← expanded parent (ChevronDown)
-│     Q1                                     │  ← child of Work
+│     Q1                                     │  ← child of Work (Folder icon, no chevron)
 │     Q2                                     │
-│   Planning                                 │  ← collapsed sibling (ChevronRight)
+│ ▸ Planning                                 │  ← collapsed parent (ChevronRight)
 ├───────────────────────────────────────────┤
 │                         Cancel      Move   │  ← DialogActions; confirm disabled if unpickable
 └───────────────────────────────────────────┘
@@ -131,40 +139,55 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
   and `autoFocus` on open.
 - The dialog itself carries the shared `Dialog`'s focus trap, portal and
   Escape-to-close; closing (when not `busy`) returns focus per that primitive.
-- Every expand/collapse chevron button carries `aria-label="Expand/Collapse
-  <name>"` and is excluded from the tab order (`tabIndex={-1}`) — it is a pointer
+- Every expand/collapse chevron button carries a `title="Expand/Collapse <name>"`
+  tooltip and is `aria-hidden`, so it is excluded from both the tab order
+  (`tabIndex={-1}`) and the accessibility tree entirely — it is a pointer
   affordance; the same action is reachable from the row via ArrowRight/Left.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | must-browse-the-full-forest | open with a 2-level forest | roots render; expanding a root reveals its children |
-| T2 | must-filter-by-substring-with-trail | type a substring matching a depth-2 node | that node appears as an option with its "/"-joined ancestor trail |
-| T3 | must-return-a-place-not-a-record, must-disable-confirm-when-unpickable | open, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
-| T4 | must-offer-a-root-row-only-when-allowed | `allowRoot`, select "Top level", confirm | `onConfirm(null)` |
-| T5 | must-disable-forbidden-rows | `disabledIds=[x]`, click row x | row x stays unselected; confirm stays disabled |
-| T6 | must-cancel-without-confirming | open, click Cancel | `onCancel` fires; `onConfirm` never fires |
-| T7 | must-support-tree-keyboard-nav | roving stop on a collapsed parent; ArrowRight, ArrowDown, ArrowUp | ArrowRight expands it; ArrowDown moves into its now-visible first child, skipping collapsed siblings; ArrowUp reverses |
-| T8 | must-support-tree-keyboard-nav | roving stop on an expanded parent's child; ArrowLeft, ArrowLeft again | first collapses the parent; second moves the stop to the parent |
-| T9 | must-support-tree-keyboard-nav | Home, then End | roving stop moves to the first, then the last, visible row |
-| T10 | must-preselect-initial-id, must-reset-on-reopen | open with `initialSelectedId="x"`, close, reopen with the same prop | selection starts at x both times; filter/expanded state is empty each open |
-| T11 | must-report-write-errors-inline | `error="conflict"`, `busy` | error text shown above the buttons; field and both buttons disabled |
-| T12 | must-show-empty-messages | `nodes=[]` (browse); a filter matching nothing | "No categories yet."; `No categories match "<text>".` |
+| T1 | browse-the-full-forest | open with a 2-level forest | roots render; expanding a root reveals its children |
+| T2 | filter-by-substring-with-trail | type a substring matching a depth-2 node | that node appears as an option with its "/"-joined ancestor trail |
+| T3 | return-a-place-not-a-record, disable-confirm-when-unpickable | open, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
+| T4 | offer-a-root-row-only-when-allowed | `allowRoot`, select "Top level", confirm | `onConfirm(null)` |
+| T5 | disable-forbidden-rows | `disabledIds=[x]`, click row x | row x stays unselected; confirm stays disabled |
+| T6 | cancel-without-confirming | open, click Cancel | `onCancel` fires; `onConfirm` never fires |
+| T7 | tree-keyboard-nav | roving stop on a collapsed parent; ArrowRight, ArrowDown, ArrowUp | ArrowRight expands it; ArrowDown moves into its now-visible first child, skipping collapsed siblings; ArrowUp reverses |
+| T8 | tree-keyboard-nav | roving stop on an expanded parent's child; ArrowLeft, ArrowLeft again | first collapses the parent; second moves the stop to the parent |
+| T9 | tree-keyboard-nav | Home, then End | roving stop moves to the first, then the last, visible row |
+| T10 | preselect-initial-id, reset-on-reopen | open with `initialSelectedId="x"`, close, reopen with the same prop | selection starts at x both times; filter/expanded state is empty each open |
+| T11 | report-write-errors-inline | `error="conflict"`, `busy` | error text shown above the buttons; field and both buttons disabled |
+| T12 | show-empty-messages | `nodes=[]` (browse); a filter matching nothing | "No categories yet."; `No categories match "<text>".` |
+| T13 | roving-focus-origin | open with `initialSelectedId` inside a collapsed branch, `allowRoot` unset | roving tab stop is the first top-level category, not the (invisible) preselected node |
+| T14 | native-row-activation | focus a row, press Enter (then, on another row, Space) | row selects, identical to a click |
+| T15 | filter-field-enter-inert | type a filter, press Enter while focus is still in the field | nothing selects or confirms; focus remains in the field |
+| T16 | filter-mode-arrow-nav | type a filter matching several nodes, Tab into the list, ArrowDown twice | roving tab stop moves to the second option, then the third |
+| T17 | filter-by-substring-with-trail | type a substring matching a node filed under two parents | exactly one option renders, showing its first (sibling-order) trail |
+| T18 | filter-by-substring-with-trail, show-empty-messages | type only spaces into the filter field | browse mode (tree) renders; the "no match" message does not |
+| T19 | disable-confirm-when-unpickable | open with `initialSelectedId` naming an id absent from `nodes` | no row renders selected; Confirm's enabled state follows only `disabledIds` membership, so it stays enabled and would call `onConfirm` with the nonexistent id if clicked |
+| T20 | disable-forbidden-rows | `disabledIds=[x]`, filter to a hit that includes x | row x renders disabled and unselectable in the option list too |
+| T21 | offer-a-root-row-only-when-allowed | open with `allowRoot` unset (default `false`) | no "Top level" row renders; the first visible row is the first top-level category |
+| T22 | cancel-without-confirming | press Esc while not busy; then press Esc (and attempt an outside click) while `busy` | not busy: `onCancel` fires; busy: dialog remains open and `onCancel` does not fire either time |
 
 ## Edge Cases
 
-- **Empty vocabulary.** `nodes=[]` renders no rows in browse mode and only the
-  root row (if `allowRoot`) — never an error state; see T12.
+- **Empty vocabulary.** `nodes=[]` renders no category rows in browse mode; the
+  root row still renders when `allowRoot` is set (it does not depend on `nodes`),
+  and the **show-empty-messages** text ("No categories yet.") renders alongside
+  it in the same pass — the message names the absence of categories, not the
+  absence of rows generally, so the root row does not suppress it. Never an
+  error state; see T12.
 - **A category filed under two parents.** It draws once per placement in browse
   mode (the same node, two different `path`s — `categoryKey` disambiguates the
   React keys), but the FILTER list dedupes it to one option by `id`, keeping the
   first placement's trail — a filter result is one id, so it must read as one
-  option (see `category-picker-dialog.tsx`'s `dedupeById`).
+  option (see `category-picker-dialog.tsx`'s `dedupeById`); see T17.
 - **A cycle in legacy data.** The dialog never sees the raw edges — `nodes` is
-  already the flat `CategoryTreeNode[]` a caller passes through `buildCategoryTree`
-  itself (this component calls it once more, on the same input), and that fold's
-  own cycle-breaking (re-seeding an orphaned branch as a root) is what determines
+  the caller's flat `CategoryTreeNode[]` rows, unfolded. This component is the
+  one that calls `buildCategoryTree` (memoized on `nodes`), and that fold's own
+  cycle-breaking (re-seeding an orphaned branch as a root) is what determines
   what the tree shows; see the tree-fold's own contract for `buildCategoryTree`.
   The dialog adds no cycle handling of its own — it only walks what the
   fold hands back.
@@ -173,10 +196,15 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
   dialog from walking whatever it received; a picker over a capped forest simply
   cannot offer the nodes that were never drawn.
 - **Whitespace-only filter text.** Trimmed before matching; an all-whitespace
-  filter behaves as no filter (browse mode, not an empty-match message).
+  filter behaves as no filter (browse mode, not an empty-match message); see T18.
 - **Reopening on a stale `initialSelectedId`.** If the id no longer exists in
-  `nodes`, no row shows as selected and confirm stays disabled until a fresh pick
-  — the dialog does not fall back to the root or the first row.
+  `nodes`, no row renders as selected — the lookup that drives the highlight
+  finds nothing to match — but **disable-confirm-when-unpickable** checks only
+  `disabledIds` membership, not existence in `nodes`; a stale id that is not
+  itself in `disabledIds` leaves Confirm enabled, and clicking it calls
+  `onConfirm` with an id no visible row matches. The dialog does not fall back
+  to the root or the first row, and performs no validation of
+  `initialSelectedId` against `nodes` on its own; see T19.
 
 ## Configuration
 
@@ -206,69 +234,107 @@ drives and owns any telemetry for it.
 ## Platform Notes
 
 - **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/category-picker-dialog.tsx`. `"use client"`.
-- **SwiftUI:** Compose a `Dialog` window with a `List` showing `DisclosureGroup` elements for hierarchical browsing, each group's label clickable to select a category; add a `SearchField` above that filters the list to show only matching categories with breadcrumb trails, switching the control from hierarchical to flat mode; the dialog's confirm button disables unless a selection is pickable or `allowRoot` is set; keyboard navigation uses arrow keys for tree expansion/collapse/movement (matching WAI-ARIA tree pattern).
-- **Compose:** Build on `AlertDialog` with a `LazyColumn` displaying expandable category items managed via mutable state; add a `TextField` for search/filtering that switches to showing a flat list with parent breadcrumbs; disabled categories use reduced opacity; selection state drives confirm button availability; arrow keys and roving focus pattern (one item at a time in tab order) provide keyboard-only navigation.
-- **AppKit / UIKit:** Use `NSAlert` (macOS) or `UIAlertController` (iOS) as the container, with an `NSOutlineView` (macOS) or custom hierarchical table (iOS) for browsing; add a `NSSearchField` or `UISearchBar` for filtering; when filtering, replace the tree with a flat list showing breadcrumbs; disabled items are visually muted; confirm button disables conditionally; keyboard navigation follows platform conventions for tree navigation.
-- **WinUI 3:** Use `ContentDialog` as the modal container with a `TreeView` control for hierarchical browsing of categories (each node has expand/collapse capability via `IsExpanded` property); add an `AutoSuggestBox` above the tree for search/filtering; when a filter is active, replace the tree with a `ListBox` or `ListView` showing flat filtered results with ancestor breadcrumbs below each match; apply disabled visual state (reduced opacity or disabled property) to items in the `disabledIds` set; the primary button (`IsPrimaryButtonEnabled`) binds to a computed property that checks whether a selection is pickable; keyboard support uses arrow keys for tree navigation (standard TreeView behavior) and `IsTabStop` on rows for roving focus pattern.
+- **SwiftUI:** Present with `.sheet(isPresented:)`, pairing `.interactiveDismissDisabled()` with this dialog's non-busy-only dismissal; inside the sheet, an `OutlineGroup` (or nested `DisclosureGroup`s, one per row) over the category forest gives native disclosure-triangle expand/collapse and built-in keyboard navigation — not a bare `List`. Apply `.searchable(text:)` to the sheet for the filter field; SwiftUI itself switches to a flat, breadcrumb-annotated result list when the search text is non-empty. The confirm button's `disabled` binding tracks the same pickability computation as the source; a tap on a row selects it, matching the WAI-ARIA tree pattern's row-activation model.
+- **Compose:** Build on `Dialog` (or `ModalBottomSheet`) with custom content — not `AlertDialog`, which is an alert-shaped container with no room for a tree body or a search field. A `LazyColumn` displays expandable category items, each row's expand icon toggling a `remember`ed expanded-id set; a `TextField` above the column switches it to a flat list with parent breadcrumbs when its value is non-empty; disabled categories render at reduced opacity and ignore taps; the confirm button's `enabled` binding mirrors the same pickability computation; arrow keys and a roving `FocusRequester` provide keyboard-only navigation over the shared row list.
+- **AppKit / UIKit:** Not `NSAlert`/`UIAlertController` — both are scoped to alert/action-sheet layouts and cannot host a tree or a search field (the same reason the web implementation builds on plain `Dialog` rather than `AlertModal`; see Design Decisions). Use an `NSPanel` presented as a sheet (macOS) or a modally presented `UIViewController` (iOS) as the container, with an `NSOutlineView` (macOS) or a custom hierarchical `UITableView`/`UICollectionView` (iOS) for browsing; add an `NSSearchField` or `UISearchBar` above it that swaps the outline/table for a flat, breadcrumb-annotated result list while its text is non-empty; disabled rows render at reduced opacity and reject selection; the confirm control's enabled state tracks the same pickability computation; keyboard navigation follows each platform's native outline/table conventions.
+- **WinUI 3:** Use `ContentDialog` as the modal container with a `TreeView` for hierarchical browsing (`IsExpanded` per node) — `TreeView` already provides roving keyboard focus and arrow-key navigation natively, so no additional `IsTabStop` wiring is needed. Add an `AutoSuggestBox` above it for search/filtering; when its text is non-empty, replace the `TreeView` with a `ListView` showing the flat, breadcrumb-annotated results below each match. Apply a disabled visual state (reduced opacity) to items in the `disabledIds` set; `IsPrimaryButtonEnabled` binds to a computed property mirroring the same pickability check.
 
 Consumes `buildCategoryTree`, `categoryKey`, `CategoryNode`, `CategoryTreeNode` from the sibling `category-tree.ts` — the single fold every hierarchical category surface reads. Demo: the UI showcase app's demo page (Topic id `category-picker`) + the showcase source registry. The showcase is a consumer of this package and lives outside this repo. First (and so far only) consumer: a hierarchical category browser's Move action. Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the dialog's own `max-w-md` and internal scroll (`max-h-72`) keep it usable at phone width; keyboard-only and pointer flows both apply at every width.
 
 ## Design Decisions
 
-- **A tree, not `ListChooser`/`EntityChooser`'s flat filter-and-add.**
-  [[list-chooser]] and [[entity-chooser]] both pick a RECORD from a flat set —
-  the correct model when a name is already a unique, sufficient answer (a
-  document's category via `CategoryField`, or a tag). This dialog picks a
-  **place** in a tree — a parent — and a place cannot be named without saying
-  where it sits; "no parent (make it a root)" is a legitimate answer neither
-  chooser can express (`ListChooser`/`EntityChooser` have no concept of nesting,
-  let alone an explicit top-level option). So the tree is the primary control
-  here and the filter is a shortcut into it, the reverse of `ListChooser`'s
-  filter-is-everything model. `CategoryField`'s own chooser (the document-level
-  "pick a category by name" control) makes the identical trade the other way,
-  for the identical reason: names are unique per owner across the whole
-  hierarchy, so a bare name is already an exact address there, and walking a
-  tree to find what typing three characters already resolves would be slower,
-  not more precise. `CategoryField` is shipped but has no recipe of its own yet;
-  the contrast lives here because a reader comparing the two pickers is most
-  likely to land on this file first.
-- **Compose the base `Dialog`, not `AlertModal`.** [[alert-and-dialog]]'s
-  `AlertModal` is an alert/confirm shape with a single description slot; this
-  dialog needs an interactive tree body, a search field, and an OK that is
-  conditionally disabled on a live selection — none of which fits the
-  alert/confirm contract. Building on the plain `Dialog` primitives keeps the
-  focus trap, portal and Escape-close shared without forcing an ill-fitting
-  shape onto them.
-- **Filter dedupes by id; browse does not.** Browsing shows every real placement
-  (the honest DAG picture the rail itself shows); a filter result is read as one
-  answer per id, so showing the same category twice there would look like two
-  different categories. Deduping only the filter view keeps both readings correct
-  for what each is for.
-- **The fold runs again here, not passed in pre-built.** Taking `nodes:
-  CategoryTreeNode[]` rather than a pre-built `CategoryNode[]` keeps this
-  component's public contract independent of the internal fold's shape, and lets
-  any caller with the flat rows open the picker without importing
-  `buildCategoryTree` itself. `buildCategoryTree` is deterministic and cheap
-  enough (bounded by `MAX_TREE_NODES`) that recomputing it here costs nothing a
-  memoized caller would save.
-- **No built-in async state.** `nodes` is a controlled in-memory prop; the host
-  owns fetching, loading and error, and reports a REJECTED confirm through
-  `error`/`busy` — consistent with the sibling form controls ([[list-chooser]],
-  [[entity-chooser]]).
+**Decision**: Build a tree browser on the base `Dialog` primitives, not on
+`ListChooser`/`EntityChooser`'s flat filter-and-add pattern.
+**Rationale**: [list-chooser](agenticdevelopertoolkit://recipes/list-chooser)
+and [entity-chooser](agenticdevelopertoolkit://recipes/entity-chooser) both pick
+a RECORD from a flat set — the correct model when a name is already a unique,
+sufficient answer (a document's category via `CategoryField`, or a tag). This
+dialog picks a **place** in a tree — a parent — and a place cannot be named
+without saying where it sits; "no parent (make it a root)" is a legitimate
+answer neither chooser can express (`ListChooser`/`EntityChooser` have no
+concept of nesting, let alone an explicit top-level option). So the tree is the
+primary control here and the filter is a shortcut into it, the reverse of
+`ListChooser`'s filter-is-everything model. `CategoryField`'s own chooser (the
+document-level "pick a category by name" control) makes the identical trade the
+other way, for the identical reason: names are unique per owner across the whole
+hierarchy, so a bare name is already an exact address there, and walking a tree
+to find what typing three characters already resolves would be slower, not more
+precise. `CategoryField` is shipped but has no recipe of its own yet; the
+contrast lives here because a reader comparing the two pickers is most likely to
+land on this file first.
+**Approved**: pending
+
+**Decision**: Compose the base `Dialog` primitives, not
+[alert-and-dialog](agenticdevelopertoolkit://recipes/alert-and-dialog)'s
+`AlertModal`.
+**Rationale**: `AlertModal` is an alert/confirm shape with a single description
+slot; this dialog needs an interactive tree body, a search field, and an OK
+that is conditionally disabled on a live selection — none of which fits the
+alert/confirm contract. Building on the plain `Dialog` primitives keeps the
+focus trap, portal and Escape-close shared without forcing an ill-fitting shape
+onto them.
+**Approved**: pending
+
+**Decision**: The filter result dedupes by category id; the browse tree does
+not.
+**Rationale**: Browsing shows every real placement (the honest DAG picture
+[Topic Detail](agenticdevelopertoolkit://recipes/topic-detail) itself shows for
+its own rail); a filter result is read as one answer per id, so showing the
+same category twice there would look like two different categories. Deduping
+only the filter view keeps both readings correct for what each is for.
+**Approved**: pending
+
+**Decision**: `buildCategoryTree` runs again inside this component rather than
+accepting a pre-built `CategoryNode[]` prop.
+**Rationale**: Taking `nodes: CategoryTreeNode[]` rather than a pre-built
+`CategoryNode[]` keeps this component's public contract independent of the
+internal fold's shape, and lets any caller with the flat rows open the picker
+without importing `buildCategoryTree` itself. The fold runs inside a `useMemo`
+keyed on `nodes`, so it recomputes only when the caller's rows actually change
+rather than on every render; bounded by `MAX_TREE_NODES`, that memoized
+recomputation is cheap enough that this component's contract independence costs
+nothing measurable.
+**Approved**: pending
+
+**Decision**: No built-in async state.
+**Rationale**: `nodes` is a controlled in-memory prop; the host owns fetching,
+loading and error, and reports a REJECTED confirm through `error`/`busy` —
+consistent with the sibling form controls
+([list-chooser](agenticdevelopertoolkit://recipes/list-chooser),
+[entity-chooser](agenticdevelopertoolkit://recipes/entity-chooser)).
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| Artifact formatting (ingredient) | passed | artifact-formatting |
-| UI guidelines — `apt-*` tokens, no raw hex, no `!important` | passed | adh-ui-guidelines |
-| Live demo exists in ui-showcase (`category-picker`) | passed | demo-exists |
-| Base UI only (via shared `Dialog`), never Radix | passed | adh-ui-guidelines |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+Statuses rest on `category-picker-dialog.tsx`: the `role`/`aria-*` attributes on
+tree and listbox rows, the inherited `Dialog` focus trap, and the full arrow-key
+plus Home/End coverage support the passed accessibility rows; the `apt-*` token
+contrast values and whether the `text-sm`/`text-xs` rem-based classes track
+system font scaling aren't verifiable from this file, hence partial; the
+expand/collapse toggle's `size-6` (24×24px) hit area and the row buttons'
+`px-2 py-1` padding both fall well short of the 44×44 target, so
+touch-target-size fails; and the hardcoded, non-overridable built-in strings
+("No categories yet.", the filter-match message, `aria-label="Filter
+categories"`/`"Categories"`, the placeholder, and the Expand/Collapse `title`)
+fail both internationalization checks.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; added filter-mode-arrow-nav, native-row-activation, filter-field-enter-inert and roving-focus-origin requirements with new test vectors T13-T16; added vectors T17-T22 for multi-parent filter dedupe, whitespace-only filter, a stale initialSelectedId, disabled rows in filter mode, no root row when allowRoot is unset, and Esc/outside-dismiss under busy; corrected the Appearance diagram's glyphs and dropped its unclear title annotation; corrected the chevron button's Accessibility citation from aria-label to title/aria-hidden; resolved the buildCategoryTree double-fold contradiction between the Edge Cases and Design Decisions and restated the fold's actual useMemo-based memoization; corrected the stale-initialSelectedId and empty-vocabulary Edge Cases against source; replaced wiki-link cross-references with full domain URLs, linked "the rail" to Topic Detail, and added alert-and-dialog to related; trimmed tags from seven to four; reformatted Design Decisions into Decision/Rationale/Approved blocks; rebuilt Compliance as linked accessibility/internationalization checks with a supporting sentence; corrected the SwiftUI/Compose/AppKit-UIKit/WinUI 3 Platform Notes to real, tree-and-search-capable APIs |
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Add concrete WinUI 3 and other platform translation guidance to Platform Notes |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revised recipe per writer guidelines for Phase 2 ui-blocks recipes. |
 | 1.0.0 | 2026-08-23 | Mike Fullerton | Initial component + recipe. |
