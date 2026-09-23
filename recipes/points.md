@@ -3,7 +3,7 @@ id: 91db9191-1ab2-4d09-a9a8-b0dc23669066
 title: Points
 domain: agenticdevelopertoolkit://recipes/points
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,9 +16,15 @@ summary: Marked list of long-form claims with optional bold lead-in text per ite
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- list
+- marked-list
+- claims
+- landing-page
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/trust
+- agenticdevelopertoolkit://recipes/cards
 references: []
 approved-by: ''
 approved-date: ''
@@ -32,25 +38,25 @@ Points is a marked list component designed for presenting a sequence of related 
 
 ## Behavioral Requirements
 
-- **must-render-list-element**: Component MUST render `<ul>` when `ordered` is false (default) or omitted, and MUST render `<ol>` when `ordered` is true.
-- **must-render-list-items**: Component MUST render one `<li>` element for each entry in the `entries` array.
-- **must-wrap-content-in-span**: Each list item content MUST be wrapped in a single `<span>` element to enforce grid layout structure (two-column: marker and content).
-- **must-render-term-as-bold**: When an entry has a `term` property, Component MUST render it as `<b>{term}</b>`.
-- **must-render-detail-text**: Component MUST render the `detail` property of each entry as ReactNode content.
-- **must-space-term-and-detail**: When both `term` and `detail` are present, Component MUST render a space character between them.
-- **must-omit-term-when-undefined**: When an entry has no `term` property, Component MUST NOT render a `<b>` element or space separator.
-- **must-apply-base-class**: Component MUST apply the CSS class `lp-points` to the root list element.
-- **must-apply-ordered-class**: Component MUST apply the CSS class `lp-points--ordered` to the root element when `ordered` is true.
-- **must-not-apply-ordered-class-when-unordered**: Component MUST NOT apply `lp-points--ordered` class when `ordered` is false.
-- **must-handle-empty-entries**: Component MUST accept an empty `entries` array and render an empty list element with no items.
+- **list-element**: Component MUST render `<ul>` when `ordered` is false (default) or omitted, and MUST render `<ol>` when `ordered` is true.
+- **list-items**: Component MUST render one `<li>` element for each entry in the `entries` array.
+- **content-span**: Each list item content MUST be wrapped in a single `<span>` element to enforce grid layout structure (two-column: marker and content).
+- **term-bold**: When an entry has a `term` property, Component MUST render it as `<b>{term}</b>`.
+- **detail-text**: Component MUST render the `detail` property of each entry as ReactNode content.
+- **term-detail-spacing**: When both `term` and `detail` are present, Component MUST render a space character between them.
+- **term-omission**: When an entry has no `term` property, Component MUST NOT render a `<b>` element or space separator.
+- **base-class**: Component MUST apply the CSS class `lp-points` to the root list element.
+- **ordered-class**: Component MUST apply the CSS class `lp-points--ordered` to the root element when `ordered` is true.
+- **ordered-class-exclusion**: Component MUST NOT apply `lp-points--ordered` class when `ordered` is false.
+- **empty-entries**: Component MUST accept an empty `entries` array and render an empty list element with no items.
 
 ## Appearance
 
-- **Marker appearance**: Configurable via CSS token; appearance and size delegated to style layer.
-- **Item spacing**: Delegated to CSS; each `<li>` element receives default browser list styling by element type.
-- **Typography**: Text within `<span>` inherits from parent container; no inline typography overrides.
-- **Grid layout**: Two-column structure (marker column, content column) is enforced by CSS Grid on the root element.
-- **Bold text**: Term text rendered with `<b>` element; visual weight delegated to CSS.
+- **Marker appearance**: Each `<li>`'s `::before` pseudo-element supplies the marker: `content: var(--lp-points-mark, "\2192")` for unordered lists, or `counter(lp-point) var(--lp-points-ordinal-suffix, ".")` for ordered lists. Both the glyph and the ordinal suffix are CSS custom-property tokens the host can override.
+- **Item spacing**: The root `.lp-points` is a single-column CSS Grid with `gap: 0.75rem` between `<li>` rows, and sets `list-style: none` so the browser's default marker is suppressed in favor of the `::before` token.
+- **Typography**: Text within the `<span>` inherits `.lp-points li`'s `font-size: 0.94rem`, `font-weight: 300`, and `line-height: 1.7`; no inline typography overrides.
+- **Grid layout**: The two-column structure (marker column, content column) is CSS Grid on each `<li>` (`grid-template-columns: 1.4rem 1fr`, widened to `1.9rem 1fr` when ordered) — not on the root, which is a single-column grid used only for row spacing.
+- **Bold text**: Term text rendered with `<b>` element; CSS raises it to `font-weight: 500` and a brighter `--lp-ink` color token for visual weight.
 
 ## States
 
@@ -64,24 +70,26 @@ Points is a marked list component designed for presenting a sequence of related 
 ## Accessibility
 
 - **Role**: List item containers are semantic `<ul>` or `<ol>` and `<li>` elements, providing correct list semantics to assistive technologies.
-- **Ordered list semantics**: When `ordered=true`, the `<ol>` element signals to screen readers that the sequence is ordered and announces "list item N of M" for each item.
+- **List role preservation**: The root sets `list-style: none` (see #appearance) without an explicit `role="list"`. Some older WebKit/VoiceOver combinations dropped the implicit list/listitem roles when `list-style: none` was present; current Safari and other major browsers preserve the implicit roles regardless. A consumer targeting older WebKit SHOULD add `role="list"` to the root and `role="listitem"` to each `<li>` at integration time.
+- **Ordered list semantics**: When `ordered=true`, the `<ol>` element signals to screen readers that the sequence is ordered. Position announcements (e.g. "item 3 of 7") are common but not universal across screen reader/browser combinations for either `<ol>` or `<ul>`, so content MUST NOT depend on a position announcement for meaning.
 - **Unordered list semantics**: When `ordered=false`, the `<ul>` element signals that items are not sequenced.
-- **Label requirements**: The component itself has no explicit label; list context is provided by surrounding content or page structure. Each item's `detail` content MUST be meaningful and complete.
-- **Text content**: Term and detail text are read in sequence; screen readers announce bold formatting on the term if supported by the platform.
+- **Label requirements**: The component itself has no explicit label; list context is provided by surrounding content or page structure. Each item's `detail` content SHOULD be meaningful and complete on its own, since the component neither truncates nor supplements it.
+- **Text content**: Term and detail text are read in sequence; whether bold formatting on the term is announced as emphasis depends on the screen reader and is not guaranteed.
 - **No interactive elements**: Points is a static list and does not require focus management, keyboard navigation, or state announcement beyond list semantics.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| points-001 | must-render-list-element, must-apply-base-class | `{entries: [], ordered: false}` | Renders `<ul class="lp-points"></ul>` |
-| points-002 | must-render-list-element, must-apply-ordered-class | `{entries: [], ordered: true}` | Renders `<ol class="lp-points lp-points--ordered"></ol>` |
-| points-003 | must-render-list-items, must-wrap-content-in-span | `{entries: [{detail: "Content"}]}` | Renders `<li><span>Content</span></li>` |
-| points-004 | must-render-term-as-bold, must-space-term-and-detail | `{entries: [{term: "Term", detail: "Description"}]}` | Renders `<li><span><b>Term</b> Description</span></li>` |
-| points-005 | must-omit-term-when-undefined | `{entries: [{detail: "Text"}]}` | Renders `<li><span>Text</span></li>` with no `<b>` element |
-| points-006 | must-handle-empty-entries | `{entries: []}` | Renders empty list with zero items |
-| points-007 | must-apply-ordered-class | `{entries: [{detail: "First"}, {detail: "Second"}], ordered: true}` | Root element has class `lp-points--ordered` |
-| points-008 | must-not-apply-ordered-class-when-unordered | `{entries: [{detail: "Item"}], ordered: false}` | Root element does not have class `lp-points--ordered` |
+| points-001 | list-element, base-class, empty-entries | `{entries: [], ordered: false}` | Renders `<ul class="lp-points"></ul>` |
+| points-002 | list-element, ordered-class | `{entries: [], ordered: true}` | Renders `<ol class="lp-points lp-points--ordered"></ol>` |
+| points-003 | list-items, content-span | `{entries: [{detail: "Content"}]}` | Renders `<li><span>Content</span></li>` |
+| points-004 | term-bold, term-detail-spacing | `{entries: [{term: "Term", detail: "Description"}]}` | Renders `<li><span><b>Term</b> Description</span></li>` |
+| points-005 | list-element | `{entries: [{detail: "First"}]}` (`ordered` prop omitted) | Renders `<ul class="lp-points">…` — omitting `ordered` defaults to unordered |
+| points-006 | term-bold, term-omission, term-detail-spacing | `{entries: [{term: "A", detail: "First"}, {detail: "Second"}]}` | First item: `<li><span><b>A</b> First</span></li>`. Second item: `<li><span>Second</span></li>` with no `<b>` |
+| points-007 | ordered-class | `{entries: [{detail: "First"}, {detail: "Second"}], ordered: true}` | Root element has class `lp-points--ordered` |
+| points-008 | ordered-class-exclusion | `{entries: [{detail: "Item"}], ordered: false}` | Root element does not have class `lp-points--ordered` |
+| points-009 | term-bold, detail-text | `{entries: [{term: <em>Note</em>, detail: <a href="#more">link</a>}]}` | Renders `<li><span><b><em>Note</em></b> <a href="#more">link</a></span></li>` — ReactNode `term`/`detail` render as-is |
 
 ## Edge Cases
 
@@ -111,7 +119,7 @@ Not applicable: The component renders the `term` and `detail` content as-is. Loc
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: Points is a static list with no animations or transitions. |
-| Increase Contrast | Delegated to CSS; the component does not set any color values. Parent styles MUST ensure sufficient contrast. |
+| Increase Contrast | Delegated to CSS; the component does not set any color values. Parent styles SHOULD ensure sufficient contrast (see **compliance/contrast-ratio**). |
 | Differentiate Without Color | Delegated to CSS; the component does not rely on color to distinguish content. The term is marked with bold weight (`<b>` element) and distinct in layout. |
 
 ## Feature Flags
@@ -132,25 +140,38 @@ Not applicable: Points is a presentational component with no state changes, erro
 
 ## Platform Notes
 
-- **Typescript/Web**: Exported as a React functional component from `packages/web/packages/landing/src/blocks/Points.tsx`. Accepts `entries: PointEntry[]` and `ordered?: boolean`. Each entry is a union type with optional `term` (ReactNode) and required `detail` (ReactNode). The component renders `<ul>` or `<ol>` with class `lp-points` and conditionally `lp-points--ordered`. CSS Grid structure assumes two columns (marker, content) via class-based selectors.
-- **SwiftUI**: Use `List` for unordered presentation (bulleted), or `List` with `.listStyle(.numbered)` for ordered. Each item displays a leading marker followed by a two-line vertical stack: the term as a bold Text overlay or separate Text with `.bold()` weight, then the detail text below. No explicit spacing element needed; SwiftUI handles marker rendering. Conditional rendering of term text based on whether it is present.
-- **Compose**: Use `LazyColumn` for the list container; swap to `LazyColumn` with numbered indices when ordered. Each item is a `Row` with a `Text` marker (bullet or number from `Char('•')` or the index), then a `Column` for term and detail. Apply `fontWeight(FontWeight.Bold)` to the term Text. The row enforces horizontal spacing and marker alignment.
-- **AppKit / UIKit**: Use `UITableView` (iOS) or `NSTableView` (macOS) with a custom cell layout. Each cell contains a `UIStackView` (iOS) or `NSStackView` (macOS) in horizontal orientation: a leading `UILabel` or `NSTextField` for the marker, then a vertical stack for term (bold font weight) and detail text. Conditional layout of term view based on whether it exists. Use `UIListContentConfiguration` (iOS 14+) for convenience.
-- **WinUI 3**: Use `ItemsControl` with `ItemsStackPanel` as the ItemsPanel. For ordered lists, replace ItemsControl with `ListView` which provides automatic numbering. Each item template is a `Grid` with two columns (auto, *): first column is a `TextBlock` with the marker (bullet or number), second column is a `StackPanel` (Vertical) containing a bold `TextBlock` for the term (via `FontWeight.Bold`) and a regular `TextBlock` for the detail. Bind the marker to a converter that returns the bullet character or the index. Visibility of the term TextBlock is bound to the presence of a term in the data model.
+- **React/Web**: Exported as a React functional component from `packages/web/packages/landing/src/blocks/Points.tsx`. Accepts `entries: PointEntry[]` and `ordered?: boolean`. `PointEntry` is an object type — not a union — with an optional `term` (`ReactNode`) and a required `detail` (`ReactNode`). The component renders `<ul>` or `<ol>` with class `lp-points` and conditionally `lp-points--ordered`. CSS Grid structure assumes two columns (marker, content) via class-based selectors on each `<li>`.
+- **SwiftUI**: Use a plain `VStack` of rows rather than `List` — a static, non-scrolling claims list doesn't need `List`'s selection/swipe chrome, and SwiftUI has no `.listStyle(.numbered)` variant to lean on. Each row is a two-column `HStack`: a leading marker `Text` (a bullet glyph, or the 1-based index when ordered — computed from the item's position, not a built-in numbered style), then a single `Text`/`AttributedString` built inline with a bold run for the term immediately followed by a space and the detail, matching the web's inline rendering. Build the run without the bold segment when `term` is absent.
+- **Compose**: Use a plain `Column` of rows rather than `LazyColumn` — the list is static and short enough not to need lazy layout. Each row is a `Row` with a marker `Text` (bullet `'•'`, or the 1-based index when ordered), then a single `Text` built from an `AnnotatedString` that applies `SpanStyle(fontWeight = FontWeight.Bold)` to the term span followed by a space and the detail, rendered inline as on the web. `fontWeight` is a parameter of `Text`/`SpanStyle`, not a `Modifier`.
+- **AppKit / UIKit**: Use a plain `NSStackView` (macOS) or `UIStackView` (iOS) of rows rather than `NSTableView`/`UITableView` — a static list doesn't need cell reuse, and `UIListContentConfiguration` is for cell-based lists, not a fit here. Each row is a horizontal stack: a leading `NSTextField`/`UILabel` for the marker (bullet or 1-based index), then a single `NSTextField`/`UILabel` whose attributed string renders the term in bold immediately followed by a space and the detail, inline as on the web. Build the attributed string without the bold run when `term` is absent.
+- **WinUI 3**: Use `ItemsControl` with a plain `StackPanel` (Vertical) as the `ItemsPanel` — `ItemsStackPanel` is designed for `ListViewBase`-derived controls (`ListView`, `GridView`), and `ListView` does not number items automatically, so neither is the right fit for a static templated list. Each item template is a `Grid` with two columns (auto, *): the first column is a `TextBlock` with the marker (bullet or the 1-based index, computed from the item's position in the bound collection), the second column is a single `TextBlock` with a bold `Run` for the term (`FontWeight="Bold"`) immediately followed by a space and a plain `Run` for the detail, inline as on the web. Bind the term `Run`'s presence to whether the entry has a term.
 
 ## Design Decisions
 
-The component wraps all content (term + detail) in a single `<span>` to support a two-column CSS Grid layout where the marker is in the first column and the wrapped content is in the second. This prevents the term text from being laid out as a separate grid item, which would break the intended "marker → lead-in + body" visual structure. The `ordered` prop changes both the HTML element type (ul vs. ol) and the CSS class to signal to styling layers that numbers (from CSS counter) replace the marker glyph.
+**Decision**: Each list item's content (the optional term plus the detail) is wrapped in a single `<span>` (see **content-span**).
+**Rationale**: Each row is a two-column CSS Grid — marker in column one, content in column two. An unwrapped term would land in the grid as its own item and break the intended "marker → lead-in + body" structure instead of flowing inline with the detail.
+**Approved**: pending
+
+**Decision**: The `ordered` prop switches both the HTML element (`<ul>` vs. `<ol>`) and the CSS class (`lp-points--ordered`), rather than the class alone (see **ordered-class**).
+**Rationale**: The sequence is part of the claim itself ("first this, then that"), and only `<ol>` communicates that to assistive technology — a `ul` announces a bullet where an `ol` announces ordered position. The digits come from a CSS counter rather than content, so a re-ordered source can never disagree with the numbers on screen.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Semantic HTML | passed | Accessibility |
-| List element types | passed | Accessibility |
+| [semantic-markup](agenticdevelopertoolkit://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopertoolkit://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopertoolkit://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [string-externalization](agenticdevelopertoolkit://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopertoolkit://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+
+Statuses rest on `Points.tsx`'s render logic (native `<ul>`/`<ol>`/`<li>` elements with no hardcoded user-facing strings, all content passed via props) and `blocks.css`'s use of relative (`rem`) typography, host-supplied CSS custom-property color tokens whose actual contrast the source cannot confirm, and `list-style: none` applied without an explicit `role="list"`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename `must-*` requirements to subject-only names everywhere they're cited; correct Platform Notes APIs (drop nonexistent SwiftUI/WinUI/Compose calls, recommend lightweight stacks, rename Typescript/Web to React/Web, fix PointEntry's type description) and make native term/detail rendering inline to match the web; correct Appearance and Accessibility to match the actual CSS grid structure and screen-reader behavior; reformat Design Decisions into Decision/Rationale/Approved entries; replace redundant test vectors and add compliance links; reword consumer-facing MUSTs as SHOULD guidance; add tags and related recipes. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
+

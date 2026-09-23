@@ -3,11 +3,11 @@ id: e7060a14-3f66-429a-9ea5-288f1fe5a76f
 title: Roadmap
 domain: agenticdevelopertoolkit://recipes/roadmap
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -16,7 +16,10 @@ summary: Container separating planned features visually from shipped ones, with 
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- landing
+- layout
+- roadmap
 depends-on: []
 related: []
 references: []
@@ -32,10 +35,11 @@ A layout container that visually separates a roadmap section (planned or future 
 
 ## Behavioral Requirements
 
-- **must-render-container**: Component MUST render a div with class `lp-roadmap` as the root element.
-- **must-render-eyebrow-when-present**: Component MUST render a span with class `lp-eyebrow` containing the eyebrow prop when eyebrow is not undefined.
-- **must-not-render-eyebrow-span-when-absent**: Component MUST NOT render an eyebrow span element when the eyebrow prop is undefined or not provided.
-- **must-render-children**: Component MUST render all child content within the root container.
+- **render-container**: Component MUST render a div with class `lp-roadmap` as the root element.
+- **render-eyebrow-when-present**: Component MUST render a span with class `lp-eyebrow` containing the `eyebrow` prop's value whenever `eyebrow` is any value other than `undefined` (including `null`, `""`, `false`, or any other ReactNode).
+- **eyebrow-omitted-when-absent**: Component MUST NOT render an eyebrow span element when the `eyebrow` prop is exactly `undefined` (prop omitted).
+- **render-children**: Component MUST render all child content within the root container.
+- **eyebrow-precedes-children**: Component MUST render the eyebrow span (when present) before `children` within the root container.
 
 ## Appearance
 
@@ -50,30 +54,36 @@ Not applicable: Roadmap is a static layout container with no interactive states 
 ## Accessibility
 
 - **Role**: Container (implicit `div` semantics) — no explicit role required for a layout wrapper.
-- **Eyebrow label**: When eyebrow is rendered, it functions as a visual heading for the section; it SHOULD be text content or an accessible ReactNode.
+- **Eyebrow label**: Renders as a bare `<span className="lp-eyebrow">` with no ARIA role or label association (no `role="group"`/`aria-labelledby`) tying it to the children that follow; it is a decorative visual label, not a semantic heading or landmark (see Design Decisions). It SHOULD still be text content or an accessible ReactNode so any text it carries is exposed to assistive technology like adjacent inline text.
 - **Child content**: Component does not impose accessibility requirements on children; children remain independently accessible.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| roadmap-001 | must-render-container | No props (only children) | Root div with class `lp-roadmap` rendered |
-| roadmap-002 | must-render-eyebrow-when-present | eyebrow="Planned Agents" | Span with class `lp-eyebrow` containing "Planned Agents" rendered inside container |
-| roadmap-003 | must-not-render-eyebrow-span-when-absent | eyebrow={undefined} or eyebrow prop omitted | No span element rendered; container div rendered directly with children |
-| roadmap-004 | must-render-children | children={<span>Test content</span>} | Span containing "Test content" rendered inside roadmap container |
-| roadmap-005 | must-render-eyebrow-when-present, must-render-children | eyebrow="Planned", children={<div>List</div>} | Eyebrow span rendered first, then children div, all inside roadmap container |
+| roadmap-001 | render-container | No props (only children) | Root div with class `lp-roadmap` rendered |
+| roadmap-002 | render-eyebrow-when-present | eyebrow="Planned Agents" | Span with class `lp-eyebrow` containing "Planned Agents" rendered inside container |
+| roadmap-003 | eyebrow-omitted-when-absent | eyebrow={undefined} or eyebrow prop omitted | No `.lp-eyebrow` element rendered; container div rendered directly with children |
+| roadmap-004 | render-children | children={<span>Test content</span>} | Span containing "Test content" rendered inside roadmap container |
+| roadmap-005 | render-eyebrow-when-present, render-children, eyebrow-precedes-children | eyebrow="Planned", children={<div>List</div>} | Eyebrow span rendered first, then children div, both inside roadmap container |
+| roadmap-006 | render-eyebrow-when-present | eyebrow={null} | `.lp-eyebrow` span rendered (empty content) because `null` is not `undefined` |
+| roadmap-007 | render-eyebrow-when-present | eyebrow="" | `.lp-eyebrow` span rendered with empty text content |
 
 ## Edge Cases
 
-- **Undefined eyebrow**: When eyebrow is undefined, no span is rendered. This prevents empty markup and unwanted spacing caused by an empty `<span className="lp-eyebrow"></span>`.
-- **Null eyebrow**: When eyebrow is null, behavior matches undefined; no span is rendered.
-- **Empty eyebrow**: When eyebrow is an empty string or ReactNode, the span is still rendered (non-undefined). The span will contain no visible content but occupies markup and applies styling.
+- **Undefined eyebrow**: When eyebrow is `undefined` (or the prop is omitted), no `.lp-eyebrow` span is rendered — see **eyebrow-omitted-when-absent**. This prevents empty markup and unwanted spacing caused by an empty `<span className="lp-eyebrow"></span>`.
+- **Null eyebrow**: When eyebrow is `null`, the span is still rendered — see **render-eyebrow-when-present** — because `null` is not `undefined`. React displays no visible content for a `null` child, so the span appears empty but is present in the markup.
+- **Empty-string eyebrow**: When eyebrow is `""`, the span is rendered — see **render-eyebrow-when-present** — with no visible text content, but the span element and its styling still occupy markup.
+- **Falsy non-undefined eyebrow (e.g. `false`, `0`)**: Same as `null` and `""` — any value other than `undefined` renders the span per **render-eyebrow-when-present**; only `undefined` triggers omission.
 - **Multiple or complex children**: Component renders all children as-is; no validation or transformation is applied.
 - **No children**: Component renders the container and optional eyebrow with no child content inside.
 
 ## Configuration
 
-Not applicable: Component accepts no configurable options; behavior is determined entirely by props (eyebrow and children).
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `eyebrow` | `ReactNode` (optional) | `undefined` | Optional label rendered in a `<span className="lp-eyebrow">` above `children`. Omitted entirely from markup when `undefined`; rendered (possibly empty) for any other value. |
+| `children` | `ReactNode` (required) | — | Content rendered inside the `.lp-roadmap` container, after the eyebrow. |
 
 ## Deep Linking
 
@@ -113,17 +123,31 @@ Not applicable: Component has no internal state, lifecycle events, or error cond
 
 ## Design Decisions
 
-The eyebrow label is omitted from markup entirely when undefined, rather than rendering an empty element. This design choice reflects the layout principle that structural separation should be visible and intentional: a reader who sees the eyebrow knows the section is labeled; absence means there is no label. An invisible empty span would create a layout gap the HTML source cannot explain, making the component harder to debug and test.
+**Decision**: Omit the eyebrow `<span className="lp-eyebrow">` entirely when the `eyebrow` prop is `undefined`, rather than rendering an empty element.
+**Rationale**: Structural separation should be visible and intentional — a reader who sees the eyebrow knows the section is labeled, and its absence means there is no label. An invisible empty span would create a layout gap the HTML source cannot explain, making the component harder to debug and test.
+**Approved**: pending
 
-The component does not validate or transform child content; it simply wraps it. Parent components are responsible for ensuring children are appropriate for a roadmap section.
+**Decision**: The component does not validate or transform child content; it simply wraps `children` as given.
+**Rationale**: Parent components are responsible for ensuring children are appropriate for a roadmap section; adding validation here would duplicate concerns owned by the caller.
+**Approved**: pending
+
+**Decision**: The eyebrow span carries no ARIA role or label association (no `role="group"`/`aria-labelledby`) tying it to the children that follow.
+**Rationale**: The eyebrow is a decorative visual label styled via `.lp-eyebrow`, not a heading or landmark; treating a bare `<span>` as one would overstate its semantics. Screen reader users encounter the eyebrow's own text (when present) and the children as ordinary sibling content within the `.lp-roadmap` div.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Component is a simple layout container with no security, compliance, or regulatory concerns.
+| Check | Status | Category |
+|-------|--------|----------|
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+
+Font scaling and color contrast are governed by the `.lp-roadmap`/`.lp-eyebrow` stylesheet, which `Roadmap.tsx` does not include, so those two checks cannot be confirmed from the source alone, and semantic-markup is partial because the component renders plain `div`/`span` elements with no incorrect ARIA usage but also no role or label association tying the eyebrow to its children, per the eyebrow's decorative-label design decision.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update all citations, add eyebrow-precedes-children requirement, fix null/empty-string eyebrow contradiction and add their test vectors, correct roadmap-003's assertion to check for the eyebrow class rather than any span, document decorative (non-semantic) eyebrow labeling, reformat Design Decisions into Decision/Rationale/Approved blocks, populate the Compliance table with applicable accessibility checks, document the eyebrow/children props under Configuration, add tags, unquote modified date |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-
