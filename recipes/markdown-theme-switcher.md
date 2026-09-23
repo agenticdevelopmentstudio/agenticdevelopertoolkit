@@ -3,11 +3,11 @@ id: 3562bffe-c137-4f4e-91da-f9ef27a5b712
 title: Markdown Theme Switcher
 domain: agenticdevelopertoolkit://recipes/markdown-theme-switcher
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,60 +34,64 @@ The Markdown Theme Switcher is a theme picker component for the MarkdownViewer. 
 
 ## Behavioral Requirements
 
-- **must-accept-active-theme-id**: Component MUST accept a `activeThemeId` prop (string) identifying the currently selected theme.
-- **must-emit-theme-change**: Component MUST call the `onThemeChange` callback with the selected theme's id (string) when the user picks a different theme from the dropdown.
-- **must-render-themed-options**: Component MUST render an `<option>` element for each theme in the available theme registry, with the theme's id as the `value` and the theme's label as the displayed text.
-- **must-mark-active-option**: Component MUST set the `<select>` element's `value` attribute to match the current `activeThemeId`, displaying the active theme as selected in the dropdown.
-- **must-use-unique-ids**: Component MUST generate a unique id for the `<select>` element using `useId()` to ensure no collisions when multiple instances render on the same page.
-- **must-label-select**: Component MUST render a `<label>` element associated with the `<select>` via `htmlFor` attribute, using the generated id.
-- **must-group-elements**: Component MUST render the label and select within a container with `role="group"` to indicate semantic association.
-- **must-provide-accessible-label**: Component MUST set `aria-label="Select reading theme"` on the select element for screen reader users.
+- **active-theme**: The control MUST accept the id of the currently active theme as an input value.
+- **mark-active-selection**: The control MUST display the theme identified by the active theme id as the current selection.
+- **emit-theme-change**: The control MUST invoke a change callback with the newly selected theme's id whenever the user picks a different theme.
+- **render-theme-options**: The control MUST present one selectable option per theme in the available theme registry, showing each theme's label as the visible text and using each theme's id as the underlying value.
+- **unique-control-id**: The control MUST generate a unique identifier for its selection element so that multiple instances on the same page do not collide.
+- **label-control**: The control MUST render a visible label that is programmatically associated with the selection element via the unique identifier.
+- **group-container**: The control MUST wrap the label and selection element in a single container element, associating them as one interaction unit.
+- **accessible-label**: The control MUST expose the accessible name "Select reading theme" on the selection element for screen reader users.
 
 ## Appearance
 
-- **Layout**: Flex row, centered vertically, gap of 2 units between label and select
-- **Label styling**: Whitespace no-wrap, text size extra-small (xs), text color dimmed (apt-text-dim)
-- **Select styling**: Height 8 units, width auto (minimum 28 units), padding vertical 0, text size extra-small (xs)
-- **Background**: Inherits from Select primitive
-- **Border**: Inherits from Select primitive
+- **Layout**: Flex row, items centered vertically, 8px gap between label and select
+- **Label styling**: No text wrapping, 12px (0.75rem) font size, dimmed text color token `apt-text-dim`
+- **Select styling**: 32px height, width auto with a 112px minimum, 0 vertical padding, 12px (0.75rem) font size
+- **Background**: Inherits from the Select primitive
+- **Border**: Inherits from the Select primitive
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Select shows the active theme label; dropdown is closed |
-| Open (focused) | Select expands to show all available options |
-| Option highlighted | Hovering or keyboard-navigating to an option highlights it (browser default) |
-| Disabled | Not implemented in source; would inherit from Select primitive's disabled state |
+| Default | The control shows the active theme's label; the dropdown is closed |
+| Focused | The control shows a visible focus indicator (inherited from the Select primitive); the dropdown stays closed until activated |
+| Open | Activating the focused control (click, Enter, Space, or an arrow key) expands the dropdown to show all available options |
+| Option highlighted | Hovering or keyboard-navigating to an option highlights it (native browser behavior) |
 
 ## Accessibility
 
-- **Role**: The native `<select>` element exposes the `listbox` role; no additional ARIA needed beyond `aria-label`
-- **Label requirement**: Both a visual `<label>` element (via `htmlFor`) and an `aria-label` on the select provide redundant accessible names
+- **Role**: The native `<select>` element exposes the `combobox` role to assistive technology (a single-selection native select maps to ARIA `combobox`, not `listbox`); no additional ARIA role is needed.
+- **Label requirement**: A visual `<label>` element (via `htmlFor`) and an `aria-label` on the select both provide an accessible name; the `aria-label` ("Select reading theme") takes precedence in the computed accessible name. It contains the visible label text ("Theme") as a substring, satisfying WCAG 2.5.3 Label in Name.
+- **Group container**: The wrapping `role="group"` associates the label and control as one interaction unit; it carries no accessible name of its own, so screen readers rely on the control's own accessible name (see **accessible-label**), not the group's.
 - **Keyboard navigation**: The native select supports standard keyboard interaction (arrow keys, Enter/Space to open, arrow keys to navigate options, Enter to select)
 - **Screen reader**: Screen readers announce the select's accessible name ("Select reading theme") and the option text when navigating
-- **Touch/click target**: The select element is at least 32×32px (browser default); the label is adjacent and can be clicked to focus the select
+- **Touch/click target**: The control is 32px tall (the component's `h-8` sizing) with an auto width and a 112px minimum; the label is adjacent and can be clicked to focus the control. See **touch-target-size** in Compliance.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| theme-001 | must-accept-active-theme-id | `activeThemeId="dark"` and three themes in registry (light, dark, high-contrast) | Select element has `value="dark"` |
-| theme-002 | must-mark-active-option | User renders component with `activeThemeId="light"` then changes to `activeThemeId="high-contrast"` | The selected option in the dropdown visibly changes to "high-contrast" |
-| theme-003 | must-emit-theme-change | User selects a different theme from the dropdown | `onThemeChange` callback is invoked with the selected theme's id string |
-| theme-004 | must-render-themed-options | Registry contains three themes: `{id: "light", label: "Light"}`, `{id: "dark", label: "Dark"}`, `{id: "hc", label: "High Contrast"}` | Three `<option>` elements render with matching id values and label text |
-| theme-005 | must-use-unique-ids | Two instances of the component render on the same page | Each has a distinct `selectId` value; no duplicate `id` attributes in the DOM |
-| theme-006 | must-label-select | Component renders | A `<label>` with `htmlFor={selectId}` is present and associated with the select |
-| theme-007 | must-provide-accessible-label | Component renders | Select element has `aria-label="Select reading theme"` |
-| theme-008 | must-group-elements | Component renders | The wrapper div has `role="group"` |
+| theme-001 | active-theme, mark-active-selection | `activeThemeId="dark"` with three themes in the registry (`light`, `dark`, `high-contrast`) | The control's selected value is `"dark"` |
+| theme-002 | mark-active-selection | Component re-rendered with `activeThemeId` changed from `"light"` to `"high-contrast"` | The control's selected value changes to `"high-contrast"`, displaying the label "High Contrast" |
+| theme-003 | emit-theme-change | User selects a different theme from the control | The change callback is invoked once with the selected theme's id string |
+| theme-004 | render-theme-options | Registry contains `{id: "light", label: "Light"}`, `{id: "dark", label: "Dark"}`, `{id: "high-contrast", label: "High Contrast"}` | Three options render, each with the matching id as its value and the matching label as its visible text |
+| theme-005 | unique-control-id | Two instances of the component render on the same page | Each instance's label and selection control share a distinct identifier pair; no duplicate `id` attribute appears in the DOM |
+| theme-006 | label-control | Component renders | A label element is present and programmatically associated with the selection control via its unique identifier |
+| theme-007 | accessible-label | Component renders | The selection control exposes the accessible name "Select reading theme" |
+| theme-008 | group-container | Component renders | The label and selection control are wrapped in a single container exposing a group role |
+| theme-009 | mark-active-selection, emit-theme-change | User selects the theme that is already active | The control's selected value is unchanged; the change callback still fires with that theme's id |
+| theme-010 | render-theme-options | Registry is empty | The control renders with no options; no error is thrown |
+| theme-011 | active-theme | `activeThemeId` does not match any theme id in the registry | The control renders with no option visibly selected; selecting any option still invokes the change callback |
 
 ## Edge Cases
 
-- **Empty theme registry**: If `VIEWER_THEMES` is empty, the select renders with no options. No error is thrown; the select is functional but offers no choices. Behavior: Acceptable (the source does not guard against this).
-- **Invalid activeThemeId**: If `activeThemeId` does not match any theme's id in the registry, the select has no matching option and displays with no value selected. Behavior: The select is still interactive; selecting any option will trigger the callback. This is a configuration error, not a component error.
-- **Theme id or label mutation**: If a theme object in the registry is mutated after render (e.g., `theme.label` changes), the component does not re-render. The label text in the dropdown will not update. Behavior: SHOULD re-render when the registry changes; the source is not immune to stale references.
-- **Rapid onThemeChange calls**: Calling `onThemeChange` in rapid succession (e.g., user clicking multiple options quickly) will trigger multiple callbacks. No debouncing or rate-limiting is applied. Behavior: All callbacks are emitted; the parent must handle multiple rapid changes.
-- **Focus loss on theme change**: Selecting a new theme does not retain focus on the select element. The select returns to the default focus state (browser behavior). Behavior: Acceptable; users can re-focus to make another choice.
+- **Empty theme registry**: If the theme registry is empty, the control MUST render with no options; no error is thrown, and the control remains present but offers no selectable theme.
+- **Unknown active theme id**: If the given active theme id does not match any theme in the registry, the control renders with no option visibly selected; selecting any option still invokes **emit-theme-change**.
+- **Theme registry mutation**: The registry is immutable input. Mutating a theme object's fields in place (e.g., changing a label) after render is a caller error: the control MUST NOT be relied upon to reflect that mutation until the control's own next render (e.g., driven by a change to the active theme id or a parent re-render).
+- **Rapid theme changes**: Each selection closes the dropdown; picking a different theme again requires reopening it. The control MUST NOT debounce or deduplicate **emit-theme-change**: every selection, however rapid the sequence, invokes the callback once per change.
+- **Focus retention on selection**: The native `<select>` element keeps keyboard focus after an option is chosen; focus does not move away from the control.
 
 ## Configuration
 
@@ -99,7 +103,7 @@ Not applicable: This is a local theme switcher UI element with no associated URL
 
 ## Localization
 
-Not applicable: The only user-facing string is "Theme" (the label text), which is hardcoded in the component. To localize this string, the component would need a prop or context-based label key, which is not implemented in the source.
+Not applicable: The only user-facing string is "Theme" (the label text), which is hardcoded in the component. To localize this string, the component would need a prop or context-based label key, which is not implemented in the source. See **no-hardcoded-strings** and **string-externalization** in Compliance.
 
 ## Accessibility Options
 
@@ -123,31 +127,48 @@ Not applicable: The component does not emit any log messages. Debugging theme ch
 
 ## Platform Notes
 
-- **React/Web**: Component imports `useId` from React and the `Select` primitive from the ATK UI package. It renders a flex-layout group containing a label and a native `<select>` element. Each theme from `VIEWER_THEMES` renders as an option with its id and label. The select's `onChange` event reads the new value from `e.currentTarget.value` and passes it to the `onThemeChange` callback.
+- **React/Web**: Component imports `useId` from React and the `Select` primitive from the ATK UI package. `useId()` generates the unique identifier shared by the `<label htmlFor>` and the `<select id>`, satisfying **unique-control-id** and **label-control**. It renders a flex-layout container with `role="group"` (**group-container**) holding the label and a native `<select>`. Each theme in the registry renders as an `<option>` (**render-theme-options**). The select's `onChange` reads the new value from `e.currentTarget.value` and passes it to the change callback (**emit-theme-change**). `aria-label="Select reading theme"` satisfies **accessible-label**.
 - **SwiftUI**: Implement as a `Picker` control with a `Menu` or `.segmented` style (depending on the number of themes), wrapped in an `HStack` with a label. Bind the `selection` parameter to the active theme id. Emit the selected theme id through a closure callback or environment-driven state binding. Apply `.accessibilityLabel()` with "Select reading theme".
-- **Compose**: Implement as an `ExposedDropdownMenuBox` or `DropdownMenu` containing the list of available themes. Use `LazyColumn` or a simple list to render theme options. Bind the selected theme to the `onDismissRequest` callback and emit the selected theme id to the parent. Apply `Modifier.semantics { contentDescription = "Select reading theme" }` for accessibility.
-- **AppKit / UIKit**: On macOS, use `NSPopUpButton` or `NSSegmentedControl` (if the theme count is small) to render theme options. On iOS, use `UIPickerView` in a modal or `UISegmentedControl` inline. Bind the selected theme to the control's target-action callback and invoke the theme-change handler with the selected theme's id. Set an accessibility label on the control with `UIAccessibilityLabel("Select reading theme")`.
-- **WinUI 3**: Implement as a `ComboBox` control within a `StackPanel` (Horizontal orientation) with a `TextBlock` label. Set `ComboBox.ItemsSource` to the list of themes. Bind `ComboBox.SelectedValuePath` to the theme id and bind `ComboBox.SelectionChanged` to emit the selected theme id. Set `AutomationProperties.Name` to "Select reading theme" for screen reader support. Apply `ComboBox.IsEditable="False"` to enforce selection from the predefined list only.
+- **Compose**: Implement as an `ExposedDropdownMenuBox` containing a read-only text field and a `DropdownMenu` listing the available themes. Render each theme as a `DropdownMenuItem`, and emit the selected theme id from that item's `onClick`. Apply `Modifier.semantics { contentDescription = "Select reading theme" }` for accessibility.
+- **AppKit / UIKit**: On macOS, use `NSPopUpButton` (or `NSSegmentedControl` when the theme count is small) to render theme options. On iOS, use a `UIButton` with a `UIMenu` (`showsMenuAsPrimaryAction = true`) listing the themes. Bind the selected theme to the control's target-action callback (or the `UIMenu` item's handler) and invoke the theme-change handler with the selected theme's id. Set the control's `accessibilityLabel` property to "Select reading theme".
+- **WinUI 3**: Implement as a `ComboBox` control within a horizontal `StackPanel` with a `TextBlock` label. Set `ComboBox.ItemsSource` to the list of themes and `ComboBox.SelectedValuePath = "Id"`, and bind `ComboBox.SelectedValue` to the active theme id; handle `ComboBox.SelectionChanged` to emit the selected theme id. Set `AutomationProperties.LabeledBy` to point at the `TextBlock` label for screen reader support.
 
 ## Design Decisions
 
-**Use of native `<select>` instead of custom dropdown**: The component reuses the ATK UI Select primitive, which wraps the native HTML `<select>` element. This ensures cross-browser consistency and automatic accessibility features (ARIA roles, keyboard navigation) without custom implementation. A custom dropdown would offer more visual control but at the cost of re-implementing accessibility and keyboard behavior.
+**Decision**: Reuse the ATK UI `Select` primitive (a styled native `<select>`) instead of building a custom dropdown.
+**Rationale**: This ensures cross-browser consistency and automatic accessibility features (ARIA roles, keyboard navigation) without a custom implementation. A custom dropdown would offer more visual control but at the cost of re-implementing accessibility and keyboard behavior.
+**Approved**: pending
 
-**Hardcoded "Theme" label text**: The label is not localized. This is intentional for a component in an English-primary environment, but limits reuse in multilingual contexts. Localization would require accepting a label prop or deriving it from context.
+**Decision**: Hardcode the "Theme" label text rather than accepting a label prop.
+**Rationale**: This is intentional for a component in an English-primary environment, but it limits reuse in multilingual contexts; localizing it would require accepting a label prop or deriving it from context.
+**Approved**: pending
 
-**No debouncing or deduplication of onThemeChange**: Rapid theme selections trigger multiple callbacks. This design choice allows the parent to handle rapid changes as needed (e.g., for analytics or throttling), rather than constraining the behavior in the component. If rapid changes should be rejected, the parent should implement debouncing in the callback handler.
+**Decision**: Do not debounce or deduplicate the theme-change callback.
+**Rationale**: Rapid theme selections trigger multiple callbacks. This allows the parent to handle rapid changes as needed (e.g., for analytics or throttling) rather than constraining the behavior in the component. If rapid changes should be rejected, the parent should implement debouncing in the callback handler.
+**Approved**: pending
 
-**useId for select id generation**: Using React's `useId()` ensures unique ids without requiring external coordination or props. This is crucial for multiple instances on the same page (e.g., multiple MarkdownViewer + MarkdownThemeSwitcher pairs). The approach is sound for SSR and client-side hydration.
+**Decision**: Generate the selection element's id via `useId()` rather than requiring an id prop.
+**Rationale**: This ensures unique ids without external coordination or props, which is crucial for multiple instances on the same page (e.g., multiple MarkdownViewer + MarkdownThemeSwitcher pairs). The approach is sound for SSR and client-side hydration.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [WCAG 2.1 Form Labels](agenticdevelopercookbook://compliance/a11y#form-labels) | passed | Accessibility |
-| [WCAG 2.1 Keyboard Accessible](agenticdevelopercookbook://compliance/a11y#keyboard-accessible) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+Statuses rest on the source's explicit ARIA and native semantics (`aria-label`, `<label htmlFor>`, native `<select>`) and Tailwind sizing classes (`h-8`, `text-xs`) visible in `MarkdownThemeSwitcher.tsx`; the `Select` primitive's actual color tokens and root font-size behavior are not visible from this file, and the hardcoded "Theme" string has no externalization mechanism in the source.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; platform-neutralized Behavioral Requirements; corrected accessibility, states, and platform-notes technical errors; rebuilt Compliance with real catalog checks; reformatted Design Decisions; fixed Appearance units and Conformance Test Vectors |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
