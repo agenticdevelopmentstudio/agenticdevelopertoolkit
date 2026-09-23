@@ -3,7 +3,7 @@ id: 826184eb-23f0-4ff7-b5f3-dc583fbc8496
 title: View Tab Bar
 domain: agenticdevelopertoolkit://recipes/view-tab-bar
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -12,7 +12,7 @@ author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: A content-area tab strip combining client-state buttons and route navigation
-  links in a unified, horizontally-scrollable row.
+  links in a unified, horizontal row.
 platforms:
 - typescript
 - web
@@ -21,7 +21,8 @@ tags:
 - navigation
 - client-state
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/tabs
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,20 +36,20 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 
 ## Behavioral Requirements
 
-- **must-render-tabs**: Component MUST render a `role="tablist"` when the `tabs` array has length > 0.
-- **must-render-nav-links**: Component MUST render a `<nav aria-label="views">` when the `links` array has length > 0.
-- **must-not-render-empty-tablist**: Component MUST NOT render a `role="tablist"` when the `tabs` array is empty.
-- **must-not-render-empty-nav**: Component MUST NOT render a `<nav>` when the `links` array is empty.
-- **must-mark-active-tab**: Component MUST set `aria-selected="true"` on the tab whose `value` matches the current `value` prop; all other tabs MUST have `aria-selected="false"`.
-- **must-trigger-on-tab-click**: Component MUST call the `onChange` callback with the tab's `value` when a tab button is clicked.
-- **must-mark-active-link**: Component MUST set `aria-current="page"` on the link whose `active` prop is `true`; other links MUST NOT have this attribute.
-- **must-apply-active-style-attribute**: Component MUST set `data-active=""` (empty string) on both tab buttons and links when they are in the active state; the attribute MUST NOT be present on inactive items.
-- **must-use-tab-role**: Component MUST render each tab button with `role="tab"`.
-- **must-use-aria-label-for-icon-tabs**: Component MUST apply the `title` prop as both the `aria-label` and `title` HTML attribute on each tab button to provide accessible labels when the visible label is an icon.
-- **must-respect-container-class**: Component MUST accept a `className` prop and apply it to the outermost container element via the `cn()` utility.
-- **must-apply-layout-spacing**: Component MUST apply `flex items-end gap-4` layout to both the inner tablist row and the nav row; the outer container MUST apply `px-4` horizontal padding.
-- **must-apply-item-styling**: Component MUST apply `tabItemClass` to every tab button and link element for consistent visual styling.
-- **must-accept-reactnode-labels**: Component MUST accept `ReactNode` for both tab and link labels, supporting text, icons, or composed elements.
+- **tablist-rendering**: Component MUST render a `role="tablist"` when the `tabs` array has length > 0.
+- **nav-links-rendering**: Component MUST render a `<nav aria-label="views">` when the `links` array has length > 0.
+- **empty-tabs-omit-tablist**: Component MUST NOT render a `role="tablist"` when the `tabs` array is empty.
+- **empty-links-omit-nav**: Component MUST NOT render a `<nav>` when the `links` array is empty.
+- **active-tab-marking**: Component MUST set `aria-selected="true"` on the tab whose `value` matches the current `value` prop; all other tabs MUST have `aria-selected="false"`.
+- **tab-click-callback**: Component MUST call the `onChange` callback with the tab's `value` when a tab button is clicked.
+- **active-link-marking**: Component MUST set `aria-current="page"` on the link whose `active` prop is `true`; other links MUST NOT have this attribute.
+- **active-state-attribute**: Component MUST set `data-active=""` (empty string) on both tab buttons and links when they are in the active state; the attribute MUST NOT be present on inactive items.
+- **tab-role-attribute**: Component MUST render each tab button with `role="tab"`.
+- **icon-tab-label**: Component MUST apply the `title` prop as both the `aria-label` and `title` HTML attribute on each tab button to provide accessible labels when the visible label is an icon.
+- **container-class-merge**: Component MUST accept a `className` prop and merge it with its own layout classes on the outermost container element via the `cn()` utility.
+- **layout-spacing**: Component MUST lay out both the inner tablist row and the nav row as a flex row with bottom-aligned items and a consistent horizontal gap between them; the outer container MUST apply horizontal padding around the whole strip. (Web implementation: `flex items-end gap-4` on each row, `px-4` on the container — see Appearance.)
+- **item-styling**: Component MUST apply one consistent style class to every tab button and link element so all items render uniformly, distinguished only by the active-state attribute. (Web implementation: `tabItemClass` from the Tabs component — see Appearance.)
+- **reactnode-labels**: Component MUST accept `ReactNode` for both tab and link labels, supporting text, icons, or composed elements.
 
 ## Appearance
 
@@ -74,7 +75,7 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 - **Tab role and state**: Each tab button MUST have `role="tab"` and `aria-selected` reflecting its active state.
 - **Link semantics**: Links MUST be rendered as `<a>` elements with `aria-current="page"` on the active link to indicate current page/location.
 - **Icon label fallback**: When a tab's visible label is an icon, the `title` prop MUST be provided to populate both `aria-label` and `title` attributes.
-- **Keyboard navigation**: Tabs and links MUST be navigable via Tab key (rendered as interactive elements `<button>` and `<a>`) and active tab/link MUST be indicated by `aria-selected` and `aria-current` respectively.
+- **Keyboard navigation**: Tabs and links MUST be navigable via Tab key (rendered as interactive elements `<button>` and `<a>`) and active tab/link MUST be indicated by `aria-selected` and `aria-current` respectively. The component relies on native Tab-key focus order between the button/anchor elements; it does not implement the WAI-ARIA tabs pattern's arrow-key/Home-End roving-tabindex navigation or an `aria-controls` link to a tabpanel (see Compliance).
 - **Screen reader announcement**: The distinction between tabs (client-state buttons) and links (navigation) is preserved in the DOM structure (separate `role="tablist"` and `<nav>`), enabling screen readers to announce the navigation mode correctly.
 - **Minimum touch target**: No explicit touch target size constraint in component; implementors MUST ensure tab and link elements meet platform minimum (44×44pt on iOS per Human Interface Guidelines, 48×48dp on Android per Material Design 3, 44×44px on web per WCAG guidance).
 
@@ -82,38 +83,39 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 
 | ID | Requirement | Input | Expected |
 |----|-------------|-------|----------|
-| view-tab-bar-001 | must-render-tabs | `tabs=[{value:"a",label:"Tab A"}]`, `value="a"`, `onChange=()=>{}` | Rendered `<div role="tablist">` containing one `<button role="tab">` |
-| view-tab-bar-002 | must-not-render-empty-tablist | `tabs=[]`, `links=[]` | No `role="tablist"` element in output |
-| view-tab-bar-003 | must-render-nav-links | `tabs=[]`, `links=[{href:"/a",label:"Link A"}]` | Rendered `<nav aria-label="views">` containing one `<a href="/a">` |
-| view-tab-bar-004 | must-not-render-empty-nav | `tabs=[{value:"a",label:"Tab A"}]`, `links=[]` | No `<nav>` element in output |
-| view-tab-bar-005 | must-mark-active-tab | `tabs=[{value:"a",label:"A"},{value:"b",label:"B"}]`, `value="a"` | First tab has `aria-selected="true"`, second has `aria-selected="false"` |
-| view-tab-bar-006 | must-trigger-on-tab-click | `tabs=[{value:"a",label:"A"}]`, `onChange` spy attached | `onChange("a")` called when tab button is clicked |
-| view-tab-bar-007 | must-mark-active-link | `links=[{href:"/a",label:"A",active:true},{href:"/b",label:"B",active:false}]` | First link has `aria-current="page"`, second does not |
-| view-tab-bar-008 | must-apply-active-style-attribute | `tabs=[{value:"a",label:"A"}]`, `value="a"` | Tab button has `data-active=""` attribute |
-| view-tab-bar-009 | must-apply-active-style-attribute | `tabs=[{value:"a",label:"A"}]`, `value="b"` | Tab button does NOT have `data-active` attribute |
-| view-tab-bar-010 | must-use-tab-role | `tabs=[{value:"a",label:"A"}]` | Each tab button has `role="tab"` attribute |
-| view-tab-bar-011 | must-use-aria-label-for-icon-tabs | `tabs=[{value:"a",label:<Icon/>,title:"Icon Label"}]` | Tab button has both `aria-label="Icon Label"` and `title="Icon Label"` attributes |
-| view-tab-bar-012 | must-respect-container-class | `className="custom-class"` | Outermost container div has class `custom-class` applied (via `cn()`) |
-| view-tab-bar-013 | must-apply-layout-spacing | Any valid props | Rendered output has `flex items-end gap-4` on tablist and nav rows; outer container has `px-4` |
-| view-tab-bar-014 | must-apply-item-styling | Any valid tabs or links | Each tab button and link element has `tabItemClass` applied |
-| view-tab-bar-015 | must-accept-reactnode-labels | `tabs=[{value:"a",label:<span>Custom</span>}]` | Tab renders ReactNode label content correctly |
+| view-tab-bar-001 | tablist-rendering | `tabs=[{value:"a",label:"Tab A"}]`, `value="a"`, `onChange=()=>{}` | Rendered `<div role="tablist">` containing one `<button role="tab">` |
+| view-tab-bar-002 | empty-tabs-omit-tablist | `tabs=[]`, `links=[]` | No `role="tablist"` element in output |
+| view-tab-bar-003 | nav-links-rendering | `tabs=[]`, `links=[{href:"/a",label:"Link A"}]` | Rendered `<nav aria-label="views">` containing one `<a href="/a">` |
+| view-tab-bar-004 | empty-links-omit-nav | `tabs=[{value:"a",label:"Tab A"}]`, `links=[]` | No `<nav>` element in output |
+| view-tab-bar-005 | active-tab-marking | `tabs=[{value:"a",label:"A"},{value:"b",label:"B"}]`, `value="a"` | First tab has `aria-selected="true"`, second has `aria-selected="false"` |
+| view-tab-bar-006 | tab-click-callback | `tabs=[{value:"a",label:"A"}]`, `onChange` spy attached | `onChange("a")` called when tab button is clicked |
+| view-tab-bar-007 | active-link-marking | `links=[{href:"/a",label:"A",active:true},{href:"/b",label:"B",active:false}]` | First link has `aria-current="page"`, second does not |
+| view-tab-bar-008 | active-state-attribute | `tabs=[{value:"a",label:"A"}]`, `value="a"` | Tab button has `data-active=""` attribute |
+| view-tab-bar-009 | active-state-attribute | `tabs=[{value:"a",label:"A"}]`, `value="b"` | Tab button does NOT have `data-active` attribute |
+| view-tab-bar-010 | tab-role-attribute | `tabs=[{value:"a",label:"A"}]` | Each tab button has `role="tab"` attribute |
+| view-tab-bar-011 | icon-tab-label | `tabs=[{value:"a",label:<Icon/>,title:"Icon Label"}]` | Tab button has both `aria-label="Icon Label"` and `title="Icon Label"` attributes |
+| view-tab-bar-012 | container-class-merge | `className="custom-class"` | Outermost container div has class `custom-class` applied (via `cn()`) |
+| view-tab-bar-013 | layout-spacing | Any valid props | Tablist and nav rows each compute `display: flex`, `align-items: flex-end`, and an equal, non-zero horizontal gap between items; the outer container computes non-zero horizontal padding |
+| view-tab-bar-014 | item-styling | Any valid tabs or links | Every tab button and every link resolves to the same style class as each other (identical `className` reference), with only the active item additionally carrying `data-active` |
+| view-tab-bar-015 | reactnode-labels | `tabs=[{value:"a",label:<span>Custom</span>}]` | Tab renders ReactNode label content correctly |
+| view-tab-bar-016 | empty-tabs-omit-tablist, empty-links-omit-nav | `tabs=[]`, `links=[]`, `className="x"` | Outer container renders with `px-4` and the custom class `x`; no `role="tablist"` element and no `<nav>` element are present |
+| view-tab-bar-017 | container-class-merge | `className="custom-class"` | Outer container element has both `px-4` and `custom-class` present simultaneously (merged via `cn()`), not one replacing the other |
 
 ## Edge Cases
 
-- **Empty tabs and empty links**: When both `tabs` and `links` arrays are empty, the component renders only the outer container with the specified `className` and `px-4` padding; no tablist or nav is rendered. This is valid but produces an empty visual bar.
-- **Single tab or link**: A single-item array (one tab or one link) renders correctly; the lone item becomes the active default if its value/active property matches.
-- **Icon-only labels without title**: If a tab's `label` is an icon and no `title` prop is provided, the tab will not have an accessible aria-label; this is a conformance gap that MUST be caught in testing. The component does not validate or warn about this condition.
-- **onChange not provided**: If the `onChange` callback is not provided or is undefined, tab clicks will not trigger errors but will silently fail to update state (caller's responsibility to provide the callback).
-- **Duplicate tab values**: If the `tabs` array contains two items with the same `value`, the first active match wins for styling purposes. React warnings may appear in development due to non-unique keys in the map; source uses `t.value` as the key, which prevents duplicates if values are unique strings.
+- **Empty tabs and empty links**: When both `tabs` and `links` arrays are empty, the component renders only the outer container with the specified `className` and `px-4` padding; no tablist or nav is rendered. This is valid but produces an empty visual bar (see view-tab-bar-016).
+- **Single tab or link**: A single-item array renders correctly. As with any size array, whether the item is active is a controlled matter — it renders active only when the caller's `value` (for a tab) or the item's `active` prop (for a link) says so; the component does not choose an initial active item itself.
+- **Icon-only labels without title**: If a tab's `label` is an icon and no `title` prop is provided, the tab will not have an accessible aria-label; this is a conformance gap that testing MUST catch. The component does not validate or warn about this condition.
+- **No tab matches the current value**: If `value` does not equal any `tabs[].value`, no tab is marked active (`data-active` absent, `aria-selected="false"` on every tab); this is a valid but likely-unintended caller state (see view-tab-bar-009).
+- **Duplicate tab values**: If the `tabs` array contains two items with the same `value`, both are marked active simultaneously when that value equals the current `value` prop (`aria-selected="true"` and `data-active=""` on each) — the component does not deduplicate or pick a single active match. React also emits a duplicate-key warning in development, since the source uses `t.value` as the React `key`.
 - **Very long labels**: Labels that exceed the flex row width will cause the row to overflow horizontally unless the parent container has overflow handling or responsive truncation. The component does not constrain label width.
-- **Mixed valid and invalid links**: If a link has an invalid `href` (e.g., null or undefined), the component will render an `<a>` tag with that href; the browser's default behavior applies (typically no navigation). This is not validated by the component.
 
 ## Configuration
 
 | Option | Type | Default | Required | Description |
 |--------|------|---------|----------|-------------|
 | `tabs` | `ViewTabItem[]` | — | Yes | Array of tab items, each with `value`, `label`, and optional `title` |
-| `value` | `string` | — | Yes | The currently active tab value; MUST match one of the `tabs[].value` entries |
+| `value` | `string` | — | Yes | The currently active tab value. It MUST match one of the `tabs[].value` entries for a tab to render as active; if none match, no tab is marked active (see Edge Cases) |
 | `onChange` | `(value: string) => void` | — | Yes | Callback invoked when a tab button is clicked, receiving the clicked tab's value |
 | `links` | `ViewTabLink[]` | `[]` | No | Array of link items, each with `href`, `label`, and optional `active` boolean |
 | `className` | `string` | — | No | Additional CSS class(es) to apply to the outer container via `cn()` |
@@ -124,7 +126,7 @@ Route links in the component support standard `href` navigation:
 
 | Platform | Behavior |
 |----------|----------|
-| Web | Links render as `<a href>` elements; clicking navigates via browser default behavior or client-side router if configured. The component does not handle routing; it passes through the `href` as provided. |
+| Web | Links render as plain `<a href>` elements with no router integration point (no `renderLink`/`asChild` prop). Clicking triggers the browser's default navigation (a full page load) unless an ancestor of the component intercepts anchor clicks itself. The component does not handle routing; it passes through the `href` as provided. |
 
 ## Localization
 
@@ -135,9 +137,11 @@ Labels are provided as `ReactNode` props (text, icons, or composed elements). Th
 | N/A | Caller-provided `tabs[].label` and `links[].label` | User-facing tab and link text |
 | `aria-label="views"` | Hardcoded in component | Semantic label for the navigation section |
 
+The `aria-label="views"` string above is a literal in the component source (`view-tab-bar.tsx`); it is not exposed as a prop, so callers cannot override or localize it (see Compliance).
+
 ## Accessibility Options
 
-The component uses standard ARIA attributes and does not detect or respond to platform accessibility settings (Rule 15).
+The component uses standard ARIA attributes and does not detect or respond to platform accessibility settings.
 
 | Option | Behavior |
 |--------|----------|
@@ -165,36 +169,53 @@ Not implemented in source. No logging or debug output is emitted.
 
 - **React/Web**: Use this component as provided. Tabs are rendered as `<button role="tab">` elements with `aria-selected` state; links are rendered as `<a>` elements within `<nav aria-label="views">`. The outer container applies `flex items-end gap-4` layout with `px-4` padding. Import `tabListClass` and `tabItemClass` from the shared Tabs component to ensure visual consistency. The source is in `packages/web/packages/ui/src/blocks/view-tab-bar.tsx`.
 
-- **Swift/SwiftUI**: Start with an `HStack` with `.alignment(.bottom)` to match the `items-end` behavior. Create a `Tabs` view with `role = "tablist"` for the button tabs, using `.onTapGesture` to call the equivalent of `onChange`. Create a separate navigation section (e.g., via `Link` elements) with `role = "navigation"` and `accessibilityLabel = "views"`. Apply consistent padding (16pt horizontal) and spacing (gap-4 equivalent, 16pt) via `.padding(.horizontal, 16)` and `.spacing(16)`. Use `tabItemClass` styling (or its SwiftUI equivalent) for active state indication via `data-active` equivalent (e.g., a conditional border or underline).
+- **Swift/SwiftUI**: Build the row with `HStack(alignment: .bottom, spacing: 16)` to match the `items-end` + `gap-4` behavior, and apply `.padding(.horizontal, 16)` to the outer `HStack` to match `px-4`. There is no SwiftUI `role` modifier or `.spacing()` modifier on a view — render the tab buttons as `Button` views wrapped in a container with `.accessibilityElement(children: .contain)`, and mark the active one with `.accessibilityAddTraits(.isSelected)` (SwiftUI's nearest equivalent to `aria-selected`). Render route links with `Link` or `NavigationLink`, each with `.accessibilityLabel` set for the "views" grouping. Apply the platform's equivalent of the shared underline idiom (a conditional border/underline modifier keyed off the active state) in place of `tabItemClass`.
 
-- **Kotlin/Compose**: Use `Row` with `verticalAlignment = Alignment.Bottom` and `horizontalArrangement = Arrangement.spacedBy(16.dp)`. Render tabs as `Button` composables with `role = "tab"` semantics (via `Modifier.semantics { role = Role.Button }`). Use a separate `Row` for links via `BasicText` or `Text` with `role = "navigation"`. Apply consistent padding and spacing (16.dp horizontal padding on the container, 16.dp gap). Use `LazyRow` if the tab/link list is long. For active state, apply `tabItemClass` styling (or equivalent underline/border color based on `active` state).
+- **Kotlin/Compose**: Use `Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(16.dp))` for both the tab row and the link row. Give the tab row `Modifier.selectableGroup()`, and give each tab `Modifier.selectable(selected = ..., role = Role.Tab) { onChange(...) }` — use `Role.Tab`, not `Role.Button`, so accessibility services announce it correctly. Render links as plain `Text`/`ClickableText` composables (no tab role) inside their own `Row`. Use `LazyRow` if the tab/link list can grow long. Apply the platform's equivalent underline/border active-state styling in place of `tabItemClass`.
 
-- **AppKit / UIKit**: On AppKit, use `NSTabView` to render the client-state tabs; migrate link navigation to a separate navigation bar or toolbar section with `NSButtonCell` items. On UIKit, use `UISegmentedControl` for the tab buttons or build a custom `UIScrollView` with tap handlers calling a delegate method equivalent to `onChange`. For links, add `UIButton` items with `UIControlEventTouchUpInside` triggering navigation. Both platforms should maintain visual consistency with the `tabItemClass` underline/border styling and apply `.bottom` alignment to all elements in the row.
+- **AppKit / UIKit**: On AppKit, use an `NSStackView` (`.orientation = .horizontal`, `.alignment = .bottom`, `spacing = 16`) of `NSButton`s — or an `NSSegmentedControl` — for the client-state tabs; avoid `NSTabView`, which owns and switches its own content panes rather than acting as a stateless button row. Put the route links in a second `NSStackView` of link-styled `NSButton`s (or `NSTextField`s with a link attribute). On UIKit, use `UISegmentedControl` or a custom `UIStackView` of `UIButton`s (wrapped in a `UIScrollView` if the row can overflow) for the tabs, wired to a delegate/`UIAction` equivalent to `onChange`; use a second `UIStackView` of `UIButton`s for the links. Both platforms should apply the platform's equivalent underline/border active-state styling in place of `tabItemClass`, and match `.bottom` alignment with 16pt spacing/padding.
 
-- **WinUI 3**: Use the `TabView` control with `TabViewItem` elements for client-state tabs, wiring each tab's `SelectionChanged` event to the equivalent of `onChange`. For route links, add a parallel `NavigationView` or a secondary row of `HyperlinkButton` elements. Apply `Orientation="Horizontal"` and `VerticalAlignment="Bottom"` to match the flex row layout. Use `Spacing = 16` for the gap and `Padding = "16,0"` for the horizontal padding. Style the active tab with the `tabItemClass` equivalent (gold bottom border, set via `ControlTemplate` or a data-driven visual state).
+- **WinUI 3**: Use `SelectorBar` with `SelectorBarItem` elements for the client-state tabs, wiring `SelectorBar.SelectionChanged` to the equivalent of `onChange` — `SelectorBar`, not `TabView`, since `TabView` is built for closable document tabs and its `SelectionChanged` targets the whole control rather than a single stateless item. For route links, use a `NavigationView` in `PaneDisplayMode="Top"` or a row of `HyperlinkButton` elements. Apply `Orientation="Horizontal"` and `VerticalAlignment="Bottom"` on the containing `StackPanel`, with `Spacing="16"` for the gap and `Padding="16,0"` for the horizontal padding. Style the active tab with the platform's equivalent of the gold bottom-border underline idiom, driven off the selected state.
 
 ## Design Decisions
 
-- **Separation of tabs and links in distinct ARIA sections**: Tabs are wrapped in `role="tablist"` and links in `<nav>` because tabs are interactive controls that change application state without navigation, while links perform navigation. Screen readers must distinguish between these two interaction modes. The visual gap-4 spacing and flex alignment make both groups appear as one unified row despite their semantic separation.
+- **Decision**: Tabs are wrapped in `role="tablist"` and links in `<nav>`, as two separate ARIA sections rather than one combined list.
+  **Rationale**: Tabs are interactive controls that change application state without navigation, while links perform navigation; screen readers must distinguish between these two interaction modes. The visual `gap-4` spacing and flex alignment make both groups appear as one unified row despite their semantic separation.
+  **Approved**: pending
 
-- **Optional `title` prop for icon-only tabs**: Icons are common in tab bars, and providing accessible labels for icon-only tabs requires an `aria-label`. The `title` prop is optional because not all tabs are icon-only, but callers MUST provide it for any tab with an icon label to maintain accessibility compliance.
+- **Decision**: The `title` prop for icon-only tabs is optional rather than required.
+  **Rationale**: Icons are common in tab bars, and providing accessible labels for icon-only tabs requires an `aria-label`. Not every tab is icon-only, so the prop is optional, but callers MUST provide it for any tab with an icon label to maintain accessibility compliance.
+  **Approved**: pending
 
-- **data-active attribute for styling**: The component uses `data-active=""` (empty string) rather than `data-active="true"` to match a common CSS convention where the presence of the attribute (regardless of value) indicates the active state. This is consistent with the pattern used in the rest of the Tabs component family.
+- **Decision**: Active state is signaled with `data-active=""` (an empty-string attribute) rather than `data-active="true"`.
+  **Rationale**: The presence of the attribute, regardless of value, indicates the active state — matching the CSS attribute-selector convention (`[data-active]`) used throughout the rest of the Tabs component family.
+  **Approved**: pending
 
-- **No internal state management**: The component is a controlled component; callers MUST manage the `value` state externally and call `onChange` to update it. This design allows the parent to manage complex logic (e.g., unsaved Config drafts that must survive a tab switch) without the component imposing its own state model.
+- **Decision**: The component holds no internal state; it is fully controlled via `value` and `onChange`.
+  **Rationale**: Callers MUST manage the `value` state externally and call `onChange` to update it. This lets the parent manage complex logic (e.g., an unsaved Config draft that must survive a tab switch) without the component imposing its own state model.
+  **Approved**: pending
 
-- **Links array is optional**: Links are an optional feature (defaults to empty array) because not all tab bars include route navigation. Some use cases may have tabs only or links only.
+- **Decision**: `links` is optional and defaults to an empty array.
+  **Rationale**: Route navigation is not needed by every tab bar. Some use cases have tabs only, links only, or both.
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Accessibility via ARIA roles and attributes | Passed | UI/Accessibility |
-| Semantic HTML structure (role="tablist", role="tab", <nav>) | Passed | UI/Accessibility |
-| Controlled component pattern (value + onChange) | Passed | React Patterns |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+Screen-reader-support, keyboard-navigable, and semantic-markup are `partial` because the source provides `role`, `aria-selected`, `aria-current`, and `title`/`aria-label` for icon tabs, but implements only native Tab-key focus (no arrow-key/Home-End roving tabindex, no `aria-controls` linking a tab to a panel) and does not enforce a `title` when a tab's label is icon-only (see Edge Cases); contrast-ratio, touch-target-size, and dynamic-type-support are `partial` because those depend entirely on the externally-defined `tabItemClass`, which this source does not define; no-hardcoded-strings and string-externalization are `failed` because the `aria-label="views"` string is a literal in `view-tab-bar.tsx` with no prop to override or localize it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; reformatted Design Decisions to Decision/Rationale/Approved; rewrote Compliance as a real, linked check table instead of an ad hoc "Passed" list; corrected the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes to real native APIs; resolved the onChange/value contradiction between Configuration and Edge Cases; rewrote the incoherent duplicate-value, single-item, and impossible-null-href edge cases; fixed the Deep Linking claim that contradicted the plain-`<a>` source; added the Tabs recipe to `related`; dropped "scrollable" from the summary (no overflow handling exists); removed the undefined "Rule 15" reference; reworded the layout/item-styling requirements and vectors to assert observable/computed outcomes instead of literal Tailwind class strings; added test vectors for the both-empty-arrays case and for `className`/`px-4` merging. |

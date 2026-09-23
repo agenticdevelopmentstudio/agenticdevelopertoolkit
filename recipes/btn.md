@@ -3,7 +3,7 @@ id: 1675b18e-34d5-4d8e-987f-92697539a5e6
 title: Btn
 domain: agenticdevelopertoolkit://recipes/btn
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -15,7 +15,11 @@ summary: A pill-shaped call-to-action link component with primary and ghost vari
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- button
+- link
+- cta
+- landing
 depends-on: []
 related: []
 references: []
@@ -31,13 +35,14 @@ A pill-shaped call-to-action link component. The `primary` variant (default) is 
 
 ## Behavioral Requirements
 
-- **must-render-anchor**: Component MUST render as an HTML anchor (`<a>`) element.
-- **must-support-href**: Component MUST accept an `href` prop of type `string` and pass it to the anchor element's `href` attribute.
-- **must-support-children**: Component MUST render the `children` prop as the link text content.
-- **must-support-variant-prop**: Component MUST accept a `variant` prop with values `'primary'` or `'ghost'`.
-- **must-default-to-primary**: Component MUST default the `variant` prop to `'primary'` when not specified.
-- **must-apply-btn-classes**: Component MUST apply the CSS class `lp-btn` to the anchor element.
-- **must-apply-variant-class**: Component MUST apply the CSS class `lp-btn--{variant}` corresponding to the selected variant.
+- **renders-anchor**: Component MUST render as an HTML anchor (`<a>`) element.
+- **supports-href**: Component MUST accept an `href` prop of type `string` and pass it to the anchor element's `href` attribute.
+- **supports-children**: Component MUST render the `children` prop as the link text content.
+- **supports-variant-prop**: Component MUST accept a `variant` prop with values `'primary'` or `'ghost'`.
+- **default-variant**: Component MUST default the `variant` prop to `'primary'` when not specified.
+- **applies-btn-class**: Component MUST apply the CSS class `lp-btn` to the anchor element.
+- **applies-variant-class**: Component MUST apply the CSS class `lp-btn--{variant}` corresponding to the selected variant.
+- **no-extra-props**: Component MUST NOT accept or forward any props beyond `href`, `variant`, and `children`.
 
 ## Appearance
 
@@ -55,12 +60,17 @@ Component renders as a semantic HTML link element (`<a>`), which is inherently k
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| btn-001 | must-render-anchor | `<Btn href="/path">Click</Btn>` | DOM element is an `<a>` tag |
-| btn-002 | must-support-href | `href="/signup"` | Rendered `<a>` has `href="/signup"` |
-| btn-003 | must-support-children | `children="Sign up now"` | Anchor text content is "Sign up now" |
-| btn-004 | must-support-variant-prop, must-apply-variant-class | `variant="ghost"` | Anchor `className` includes `lp-btn--ghost` |
-| btn-005 | must-default-to-primary, must-apply-variant-class | No `variant` prop | Anchor `className` includes `lp-btn--primary` |
-| btn-006 | must-apply-btn-classes | Any valid props | Anchor `className` includes `lp-btn` |
+| btn-001 | renders-anchor | `<Btn href="/path">Click</Btn>` | DOM element is an `<a>` tag |
+| btn-002 | supports-href | `href="/signup"` | Rendered `<a>` has `href="/signup"` |
+| btn-003 | supports-children | `children="Sign up now"` | Anchor text content is exactly "Sign up now" |
+| btn-004 | supports-variant-prop, applies-variant-class | `variant="ghost"` | Anchor `className` is exactly `"lp-btn lp-btn--ghost"` |
+| btn-005 | default-variant, applies-variant-class | No `variant` prop | Anchor `className` is exactly `"lp-btn lp-btn--primary"` |
+| btn-006 | applies-btn-class | Any valid props | Anchor `className` includes `lp-btn` |
+| btn-007 | supports-variant-prop, applies-variant-class | `variant="primary"` (explicit) | Anchor `className` is exactly `"lp-btn lp-btn--primary"` |
+| btn-008 | applies-variant-class | `variant` forced past its type to an unsupported string (e.g. `variant={'invalid' as any}`) | Anchor `className` is exactly `"lp-btn lp-btn--invalid"`; no fallback to `primary` occurs |
+| btn-009 | no-extra-props | An unrelated prop forced past the type (e.g. `target="_blank"` cast onto the props object) | Rendered `<a>` has no `target` attribute; only `class` and `href` are present |
+| btn-010 | supports-children | `children=""` | Anchor renders with no visible text content; the anchor element is still present and navigable |
+| btn-011 | supports-href | `href` forced past its type to `undefined` | Anchor's `href` attribute is absent; the link is present but non-functional |
 
 ## Edge Cases
 
@@ -106,32 +116,55 @@ Not applicable: The component does not emit logs or diagnostic messages.
 
 ## Platform Notes
 
-- **React/Web** (`packages/web/packages/landing/src/blocks/Btn.tsx`): Functional component using template literals to construct dynamic class names. The `className` prop joins `'lp-btn'` with the variant class `lp-btn--{variant}` using `.join(' ')`. Styling is external to the component.
+- **React/Web** (`packages/web/packages/landing/src/blocks/Btn.tsx`): Functional component that computes `className` as `['lp-btn', \`lp-btn--${variant}\`].join(' ')`. The rendered `className` attribute is always exactly `lp-btn lp-btn--{variant}` (e.g. `lp-btn lp-btn--primary`, `lp-btn lp-btn--ghost`), built this one way — the component does not accept a `className` prop of its own. Styling is external to the component.
 
-- **SwiftUI**: Use `Link` or `NavigationLink` to provide navigation. Render text via a trailing closure or `.label` modifier. Apply `.buttonStyle()` or custom modifiers to achieve primary (filled accent background) and ghost (outlined) appearance distinctions.
+- **SwiftUI**: Use `Link(destination:)` with the link text as its label content. Apply `.buttonStyle(.borderedProminent)` and `.tint(.accentColor)` for the primary (filled, accent) variant, and `.buttonStyle(.bordered)` for the ghost (outlined) variant.
 
-- **Compose**: Use `ClickableText` or `Text` with `.clickable()` modifier to create a navigable link. Nest text in `Text` or `Row` composable. Apply background or border styling via `.background()` or `.border()` to distinguish primary (filled) from ghost (outlined).
+- **Compose**: Use `Button` for the primary (filled) variant and `OutlinedButton` for the ghost (outlined) variant, calling `LocalUriHandler.current.openUri(href)` from `onClick` to navigate. Place the link text in the composable's `content` lambda.
 
-- **AppKit / UIKit**: Use `NSButton` (macOS) or `UIButton` (iOS) configured as a link-style button. Set button title from text content, configure target and selector for navigation. Use `.bezel`, `.inline`, or custom `.buttonStyle` to render primary (filled) and ghost (outlined) variants.
+- **AppKit / UIKit**: AppKit — use `NSButton` with `bezelStyle` and `bezelColor` set to the accent color for primary, and a borderless/outline bezel for ghost. UIKit — use `UIButton` configured with `UIButton.Configuration.filled()` for primary and `UIButton.Configuration.bordered()` for ghost, setting `configuration.baseBackgroundColor` / `.baseForegroundColor` to the accent color; wire navigation through the button's action/target.
 
-- **WinUI 3**: Use `HyperlinkButton` control with `NavigateUri` property set from the `href` equivalent. Set `Content` to link text. Apply `Foreground` color (accent for primary) and `BorderBrush`/`BorderThickness` (for ghost outline) via `Style` or inline properties. Use `ControlTemplate` if custom appearance is required beyond standard states.
+- **WinUI 3**: Use `HyperlinkButton` with `NavigateUri` set from the `href` equivalent and `Content` set to the link text. For primary, set `Background` to the accent brush (e.g. via `AccentButtonStyle`); for ghost, leave `Background` transparent and set `BorderBrush`/`BorderThickness` to render the outline. Apply a `ControlTemplate` if the pill corner radius requires more than the default style provides.
 
 ## Design Decisions
 
-- **Semantic link element**: The component renders a native `<a>` (anchor) element rather than a `<button>` with JavaScript navigation. This preserves built-in browser affordances (context menus, link preview, history, keyboard shortcuts like Ctrl/Cmd+click, ability to copy or open in new tab) and maintains semantic correctness for screen readers and SEO.
+- **Decision**: Render a native `<a>` (anchor) element rather than a `<button>` with JavaScript navigation.
+  **Rationale**: Preserves built-in browser affordances (context menus, link preview, history, keyboard shortcuts like Ctrl/Cmd+click, ability to copy or open in new tab) and maintains semantic correctness for screen readers and SEO.
+  **Approved**: pending
 
-- **CSS class-driven styling**: Appearance is entirely managed by CSS classes, not component props. This decouples the component from color tokens, theme values, and spacing constants, keeping the component API minimal and allowing styling to live in centralized stylesheets where it can be updated without changing component code.
+- **Decision**: Manage appearance entirely via CSS classes (`lp-btn`, `lp-btn--{variant}`), never via component props or inline styles.
+  **Rationale**: Decouples the component from color tokens, theme values, and spacing constants, keeping the component API minimal and letting styling live in centralized stylesheets that can be updated without changing component code.
+  **Approved**: pending
 
-- **Required props**: Both `href` and `children` are required, enforced by TypeScript. This ensures every link is functional and has meaningful text, preventing common accessibility and usability mistakes at the type level.
+- **Decision**: Require both `href` and `children` props, enforced by TypeScript.
+  **Rationale**: Ensures every call site supplies a destination and content, catching missing-argument mistakes at compile time. This does not guarantee the content is meaningful or non-empty — `children` accepts `null`, `undefined`, or an empty string at runtime (see **supports-children** and Edge Cases); callers remain responsible for providing descriptive link text.
+  **Approved**: pending
 
-- **Variant constraint**: The `variant` prop is constrained to `'primary' | 'ghost'` by TypeScript. This prevents arbitrary class names and signals the available options clearly to consumers.
+- **Decision**: Constrain the `variant` prop to the literal union `'primary' | 'ghost'` via TypeScript.
+  **Rationale**: Prevents arbitrary class names and signals the available options clearly to consumers at the type level.
+  **Approved**: pending
+
+- **Decision**: Accept exactly three named props (`href`, `variant`, `children`), with no prop spreading or rest capture onto the anchor.
+  **Rationale**: Keeps the rendered DOM fully predictable and prevents unvetted attributes (`onClick`, `target`, `rel`, `aria-*`, `className`) from leaking onto the anchor; consumers needing additional anchor behavior should get a dedicated variant or wrapper rather than an open prop surface.
+  **Approved**: pending
 
 ## Compliance
 
-Not applicable: No specific compliance checks (WCAG, legal, or regulatory) are defined for this component at the ingredient level. Compliance with applicable standards (WCAG 2.1 AA for web, Apple HIG for native platforms) is assumed at the implementation and stylesheet levels.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+
+These statuses rest on the source rendering a plain, unmodified `<a>` element whose only attributes are `href` and `className`, with link text supplied verbatim from `children` (never a hardcoded string); color, contrast, and type sizing are delegated entirely to the external `lp-btn`/`lp-btn--{variant}` stylesheet (see Appearance and States), which is outside this recipe's source and cannot be verified here.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added a no-extra-props requirement with vector and design decision; corrected Platform Notes APIs for SwiftUI, Compose, UIKit/AppKit, and WinUI 3; made test vectors assert exact className strings and added explicit-primary, invalid-variant, empty-children, and missing-href vectors; reformatted Design Decisions into Decision/Rationale/Approved form and weakened the required-props claim to match Edge Cases; replaced the prose Compliance section with a checks table; added tags. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

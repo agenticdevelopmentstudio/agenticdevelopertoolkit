@@ -3,7 +3,7 @@ id: db6178e1-c613-4358-a0b4-8c6f5bfaaff9
 title: UserCard
 domain: agenticdevelopertoolkit://recipes/user-card
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: '2026-06-26'
@@ -20,7 +20,13 @@ tags:
   - user-card
   - profile
   - ui
-depends-on: []
+depends-on:
+  - agenticdevelopertoolkit://recipes/avatar
+  - agenticdevelopertoolkit://recipes/skeleton
+  - agenticdevelopertoolkit://recipes/separator
+  - agenticdevelopertoolkit://recipes/badge
+  - agenticdevelopertoolkit://recipes/external-link
+  - agenticdevelopertoolkit://recipes/section-label
 related: []
 references: []
 approved-by: ''
@@ -31,10 +37,9 @@ approved-date: ''
 
 ## Overview
 
-`UserCard` is the shared profile card component used on the Agentic Developer
-Hub public profile route (`/<slug>`) and in the profile-settings live preview.
-It accepts a `UserCardDto` — a structural mirror of the backend's
-`PublicUserProfile` schema — and renders whatever fields are present.
+`UserCard` is a shared profile card component that accepts a `UserCardDto` —
+a structural mirror of a backend's `PublicUserProfile`-shaped schema — and
+renders whatever fields are present.
 
 All privacy gating is enforced server-side before the DTO is produced. The
 component never hides or filters fields on its own; it simply suppresses
@@ -45,32 +50,44 @@ authenticated hub members (HUB+PUBLIC card with more fields).
 Two exports are provided: `UserCard` (the main card) and `UserCardSkeleton`
 (a placeholder for the loading state).
 
+**Known consumers**: the Agentic Developer Hub (ADH) uses this component on
+its public profile route (`/<slug>`) and in its profile-settings live
+preview; ADH's social-links settings editor also imports `PLATFORM_LABELS`
+from this module for its own platform picker.
+
 ## Behavioral Requirements
 
-- **must-render-identity-header**: The component MUST always render the
-  identity header (avatar, display name, @slug, member-since date) regardless
-  of which optional sections are populated.
-- **must-suppress-empty-sections**: Each of the five gated sections (Social,
+- **render-identity-header**: The component MUST always render the identity
+  header (avatar, display name, @slug) regardless of which optional sections
+  are populated. The member-since date is part of the header only when
+  `createdAt` is present; it is omitted when `createdAt` is null or
+  undefined.
+- **suppress-empty-sections**: Each of the five gated sections (Social,
   Email, Phone, Address, Personas) MUST be omitted from the DOM when its
   corresponding collection is empty.
-- **must-show-separator-when-gated**: A `<Separator>` MUST appear between the
+- **show-separator-when-gated**: A `<Separator>` MUST appear between the
   identity header and the gated sections when at least one gated section is
   populated, and MUST be absent when all collections are empty.
-- **must-link-social-externally**: Each social link MUST open in a new tab
+- **link-social-externally**: Each social link MUST open in a new tab
   (`target="_blank" rel="noopener noreferrer"`) with the platform label and
   handle displayed.
-- **must-show-initials-fallback**: When `avatarUrl` is null or the image fails
-  to load, the `AvatarFallback` MUST show two-letter initials derived from
-  `displayName`, falling back to the slug, falling back to a generic `UserIcon`.
-- **must-use-displayname-or-slug**: The heading MUST display `displayName` when
-  non-null, and `slug` otherwise; callers MUST NOT strip or transform the value.
-- **must-label-article**: The `<article>` MUST carry `aria-label` of
+- **native-contact-links**: Each email MUST render as an
+  `<a href="mailto:...">` link and each phone number MUST render as an
+  `<a href="tel:...">` link.
+- **show-initials-fallback**: When `avatarUrl` is null or the image fails
+  to load, the `AvatarFallback` MUST show up to two initials derived from
+  `displayName`, falling back to the slug, falling back to a generic
+  `UserIcon`.
+- **use-displayname-or-slug**: The heading MUST display `displayName` when
+  non-null, and `slug` otherwise. (See **Edge Cases** for the empty-string
+  `displayName` case — the check is for null/undefined, not emptiness.)
+- **label-article**: The `<article>` MUST carry `aria-label` of
   `"<displayName>'s profile"` (or `"<slug>'s profile"` when no display name).
-- **must-not-filter-fields**: The component MUST NOT hide fields based on its
+- **field-passthrough**: The component MUST NOT hide fields based on its
   own privacy logic; it renders only what the DTO provides.
-- **must-accept-optional-classname**: The component MUST accept a `className`
+- **accept-optional-classname**: The component MUST accept a `className`
   prop and apply it to the root `<article>`.
-- **skeleton-must-declare-busy**: `UserCardSkeleton` MUST carry
+- **skeleton-busy-state**: `UserCardSkeleton` MUST carry
   `role="status" aria-busy="true" aria-label="Loading profile…"` on its root
   element.
 
@@ -114,12 +131,17 @@ Two exports are provided: `UserCard` (the main card) and `UserCardSkeleton`
 ## Accessibility
 
 - Root element is `<article>` with `aria-label="<displayName>'s profile"`.
-  Screen readers announce this as a landmark.
+  `<article>` is not one of the ARIA landmark roles (banner, complementary,
+  contentinfo, form, main, navigation, region, search), so screen readers do
+  not announce it as a landmark; the `aria-label` is exposed as the
+  accessible name of the article element when it's reached, not as a
+  landmark heading. A consumer that wants this card reachable via landmark
+  navigation should add `role="region"` alongside the existing `aria-label`.
 - Social links are native `<a>` elements; `rel="noopener noreferrer"` is set for
   security; they do NOT carry additional `aria-label` because the visible text
   (platform + handle) is already descriptive.
 - Email links use `mailto:` scheme; phone links use `tel:` scheme — native
-  controls, no custom ARIA needed.
+  controls, no custom ARIA needed (see **native-contact-links**).
 - Addresses use `<address>` element with `not-italic` (the browser default
   italic style for address is suppressed via CSS).
 - `UserCardSkeleton` declares `role="status" aria-busy="true"` so assistive
@@ -132,23 +154,45 @@ Two exports are provided: `UserCard` (the main card) and `UserCardSkeleton`
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | must-suppress-empty-sections, must-show-separator-when-gated | DTO with all empty collections | No separator, no section headings |
-| T2 | must-show-separator-when-gated | DTO with one social link | Separator rendered between header and social section |
-| T3 | must-link-social-externally | DTO with a GitHub link | `<a>` has `target="_blank"` + `rel="noopener noreferrer"`, displays "GitHub" + "@handle" |
-| T4 | must-show-initials-fallback | `avatarUrl: null`, `displayName: "Ada Lovelace"` | AvatarFallback shows "AL" |
-| T5 | must-show-initials-fallback | `avatarUrl: null`, `displayName: null`, `slug: "ada"` | AvatarFallback shows "A" (first char of slug, uppercased) |
-| T6 | must-use-displayname-or-slug | `displayName: null`, `slug: "ada"` | Heading text is "ada" |
-| T7 | must-label-article | `displayName: "Ada Lovelace"` | `<article aria-label="Ada Lovelace's profile">` |
-| T8 | skeleton-must-declare-busy | render `UserCardSkeleton` | DOM has `role="status"`, `aria-busy="true"`, `aria-label="Loading profile…"` |
-| T9 | must-accept-optional-classname | `className="my-custom"` | root `<article>` includes `my-custom` in classList |
-| T10 | must-render-identity-header | any valid DTO | Identity header always rendered; slug always present |
+| T1 | suppress-empty-sections, show-separator-when-gated | DTO with all empty collections | No separator, no section headings |
+| T2 | show-separator-when-gated | DTO with one social link | Separator rendered between header and social section |
+| T3 | link-social-externally | DTO with a GitHub link | `<a>` has `target="_blank"` + `rel="noopener noreferrer"`, displays "GitHub" + "@handle" |
+| T4 | show-initials-fallback | `avatarUrl: null`, `displayName: "Ada Lovelace"` | AvatarFallback shows "AL" |
+| T5 | show-initials-fallback | `avatarUrl: null`, `displayName: null`, `slug: "ada"` | AvatarFallback shows "A" (first char of slug, uppercased) |
+| T6 | use-displayname-or-slug | `displayName: null`, `slug: "ada"` | Heading text is "ada" |
+| T7 | label-article | `displayName: "Ada Lovelace"` | `<article aria-label="Ada Lovelace's profile">` |
+| T8 | skeleton-busy-state | render `UserCardSkeleton` | DOM has `role="status"`, `aria-busy="true"`, `aria-label="Loading profile…"` |
+| T9 | accept-optional-classname | `className="my-custom"` | root `<article>` includes `my-custom` in classList |
+| T10 | render-identity-header | any valid DTO | Identity header always rendered; slug always present |
+| T11 | render-identity-header | `createdAt: null` (or omitted) | Identity header renders (avatar, display name, @slug); no member-since line present |
+| T12 | use-displayname-or-slug, show-initials-fallback | `displayName: ""`, `slug: ""` | Heading text is empty; `AvatarFallback` renders the generic `UserIcon`, not initials |
+| T13 | field-passthrough | DTO with `emails`, `phones`, and `addresses` all populated | All three sections render every item in their collections; none are filtered out by the component |
+| T14 | suppress-empty-sections | DTO with only `socialLinks` populated | Only the Social section renders; Email, Phone, Address, and Personas sections are absent |
+| T15 | suppress-empty-sections | DTO with only `emails` populated | Only the Email section renders |
+| T16 | suppress-empty-sections | DTO with only `phones` populated | Only the Phone section renders |
+| T17 | suppress-empty-sections | DTO with only `addresses` populated | Only the Address section renders |
+| T18 | suppress-empty-sections | DTO with only `personas` populated | Only the Personas section renders |
+| T19 | show-initials-fallback | `avatarUrl` set to a URL whose image fails to load | `AvatarImage` transitions to its error state and `AvatarFallback` renders, resolving through the same initials-then-slug-then-`UserIcon` chain as a null `avatarUrl` |
+| T20 | native-contact-links | DTO with one email | `<a href="mailto:<email>">` rendered with the email as link text |
+| T21 | native-contact-links | DTO with one phone | `<a href="tel:<phone>">` rendered with the phone number as link text |
 
 ## Edge Cases
 
-- **Single-word display name**: `initialsOf("Alice")` returns "A" (one initial).
+- **Single-word display name**: `initialsOf("Alice")` returns "A" (one initial; see **show-initials-fallback**, "up to two initials").
 - **Slug with no spaces**: initials fallback uses the first character of the slug, uppercased.
 - **Null displayName**: falls back to slug for the heading AND initials.
-- **Avatar URL from arbitrary origin**: images use Base UI's `Avatar.Image` (via the shared `AvatarImage`; browser-native lazy load) rather than `<Image />` because arbitrary URLs can't be whitelisted in `next.config.ts`'s `images.remotePatterns`. The component comment documents this explicitly.
+- **Empty-string displayName**: `use-displayname-or-slug` reads
+  `user.displayName ?? user.slug`, which only falls back on `null`/`undefined`;
+  an empty string `""` is neither, so the heading renders empty. If `slug` is
+  also an empty string (violates the DTO's implied non-empty contract but
+  isn't type-enforced), `initialsOf` also returns `""` for both the
+  displayName- and slug-derived initials, and `AvatarFallback` renders the
+  generic `UserIcon` placeholder instead of initials.
+- **Avatar URL from arbitrary origin**: images use Base UI's `Avatar.Image` (via the shared `AvatarImage`; browser-native lazy load) rather than a Next.js `<Image />`, because arbitrary user-supplied origins can't be enumerated in a consuming app's image-optimizer allowlist. The component comment documents this explicitly.
+- **Avatar image fails to load**: on an image error, Base UI's `Avatar.Image`
+  transitions to its error state and reveals `AvatarFallback`, which resolves
+  through the same fallback chain (initials, then slug, then `UserIcon`) as a
+  null `avatarUrl` (see **show-initials-fallback**).
 - **Large persona list**: each persona item wraps text; no truncation; the `<ul>` is scrollable by the parent container.
 - **createdAt edge case**: `formatMemberSince` returns the locale-specific month+year. An invalid date string renders as "Invalid Date" — callers should validate upstream.
 
@@ -192,7 +236,18 @@ Not applicable: The component is a pure presentational render with no integrated
 
 ## Localization
 
-Not applicable: The component does not render user-facing translatable strings beyond fixed labels (`Social`, `Email`, `Phone`, `Address`, `Personas`, `Member since`) and platform names drawn from `PLATFORM_LABELS`. The platform names are static in the source and localization would be managed by consumers at the call site if needed.
+Applicable: the component renders fixed English strings directly in its
+JSX — the five section labels (`Social`, `Email`, `Phone`, `Address`,
+`Personas`), the `Member since` prefix, `UserCardSkeleton`'s
+`Loading profile…` label, and the `"<name>'s profile"` article `aria-label` —
+plus the platform display names in `PLATFORM_LABELS`. None of these are
+externalized to a resource file or accepted as a prop; there is currently no
+mechanism (for example, a labels prop) for a consumer to override or
+translate them, so localizing this component today requires forking it or
+replacing the rendered text after the fact. `formatMemberSince` itself is
+locale-aware — it calls `toLocaleDateString(undefined, …)`, which follows
+the runtime's locale for month/year formatting (this casing/format choice is
+locale-sensitive by design, not an invariant-culture call).
 
 ## Accessibility Options
 
@@ -208,7 +263,12 @@ Not applicable: `UserCard` is a pure presentational component with no built-in i
 
 ## Privacy
 
-Not applicable: The component does not collect, store, or transmit any data. All privacy filtering is enforced server-side before the DTO is constructed; the component simply renders what it receives.
+Applicable: the DTO can include email addresses, phone numbers, and physical
+addresses, all personal data. All privacy gating — deciding which of these
+fields a given viewer may see — is enforced server-side before the DTO is
+constructed (see **No client-side privacy gating** in Design Decisions).
+`UserCard` itself does not collect, store, or transmit this data; it only
+renders whatever fields are present in the DTO it receives.
 
 ## Logging
 
@@ -219,42 +279,71 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 
 ## Platform Notes
 
-- **SwiftUI**: Build a view composition from `VStack` + `HStack`, using `AsyncImage` for the avatar with a fallback symbol (`Image(systemName: "person.circle")`). Render sections conditionally based on collection emptiness. Use SwiftUI's `@Environment` to access design token colors. Member since date formatting uses `Date.FormatStyle(date: .abbreviated)`.
-- **Compose**: Use `Column` for the layout with `AsyncImage` from Coil for avatar loading. Conditional rendering via Kotlin's `if` within the composable. Social links render as `ClickableText` or `Surface` with `navigateToExternalUrl()`. Section visibility determined by collection checks.
+- **SwiftUI**: Build a view composition from `VStack` + `HStack`, using `AsyncImage` for the avatar with a fallback symbol (`Image(systemName: "person.circle")`). Render sections conditionally based on collection emptiness. Use SwiftUI's `@Environment` to access design token colors. Member since date formatting uses `Date.FormatStyle.dateTime.month(.wide).year()`, not `.abbreviated` — `.abbreviated` produces a full month/day/year date, not month and year alone.
+- **Compose**: Use `Column` for the layout with `AsyncImage` from Coil for avatar loading. Conditional rendering via Kotlin's `if` within the composable. Social links render as an `AnnotatedString` carrying a `LinkAnnotation.Url`, opened via the composition-local `LocalUriHandler` (`ClickableText` is deprecated, and there is no `navigateToExternalUrl()` API in Compose). Section visibility determined by collection checks.
 - **React/Web**: Source is `packages/web/packages/ui/src/blocks/user-card.tsx` using Base UI's `@base-ui/react/avatar`, Lucide React icons, and Tailwind CSS (`apt-*` tokens). Conditional rendering suppresses empty sections. `UserCardSkeleton` uses the `Skeleton` component from the same package for the loading state.
-- **AppKit / UIKit**: Implement as a `UIViewController` (or SwiftUI `UIViewControllerRepresentable`) with `NSImageView`/`UIImageView` + `NSTextField`/`UILabel` composition. Use URLSession or a third-party image cache (e.g., Kingfisher) for async avatar loading. Render sections as `NSTableView`/`UITableView` or stacked views. Focus ring via `NSAppearance.currentAccentColor` / `UIColor.systemBlue`.
-- **WinUI 3**: Implement using WinUI `Grid` for layout, `Image` control with fallback `Glyph` (e.g., from Segoe MDL2 Assets) for the avatar. Use `TextBlock` for text with automatic wrapping. Section visibility via `Visibility` property (Collapsed/Visible). Apply Fluent 2 theme resources for colors and spacing. Social links use `HyperlinkButton` with `NavigateUri` binding.
+- **AppKit / UIKit**: Implement as a `UIViewController` on iOS (wrapped in a SwiftUI `UIViewControllerRepresentable` only when hosted from SwiftUI) or an `NSViewController` on macOS, with `NSImageView`/`UIImageView` + `NSTextField`/`UILabel` composition. Use `URLSession` or the system's own image-loading facilities for async avatar loading — no third-party dependency is needed. Render the fixed set of static sections as a vertical stack view (`NSStackView`/`UIStackView`), not a table view, since the section list isn't a dynamically scrolling collection. Focus ring uses the system focus appearance rather than a hardcoded `UIColor.systemBlue`.
+- **WinUI 3**: Implement using WinUI `Grid` for layout, and the built-in `PersonPicture` control for the avatar — it already handles the image/initials/fallback-glyph chain in one control, instead of hand-building an `Image` plus a Segoe MDL2 glyph. Use `TextBlock` for text with automatic wrapping. Section visibility via `Visibility` property (Collapsed/Visible). Apply Fluent 2 theme resources for colors and spacing. Social links use `HyperlinkButton` with `NavigateUri` binding.
 
 ## Design Decisions
 
-- **No client-side privacy gating**: The component renders exactly what the DTO
-  contains. Privacy logic lives entirely in the backend. This keeps the component
-  simple and ensures the two card variants (PUBLIC, HUB+PUBLIC) share one render path.
-- **`AvatarImage` over `<Image />`**: Avatar URLs come from arbitrary user-supplied
-  origins that can't be enumerated in `next.config.ts`. Base UI's `Avatar.Image`
-  gives browser-native lazy loading and a clean fallback via `AvatarFallback`
-  (the image transitions to error and reveals `AvatarFallback`), without
-  requiring an allowlist.
-- **Structural DTO duplicate, not an import**: `UserCardDto` mirrors the
-  backend's public-profile schema rather than importing a generated type,
-  keeping `@agenticdevelopertoolkit/ui` free of any API-types dependency. The structural
-  match is enforced at the call site by the TypeScript compiler.
-- **`PLATFORM_LABELS` exported**: The platform label map is exported so the social-
-  links settings editor can import it, making this file the single source of truth
-  for platform display names.
+**Decision**: The component renders exactly what the DTO contains; privacy
+logic lives entirely in the backend.
+**Rationale**: Keeps the component simple and ensures the two card variants
+(PUBLIC, HUB+PUBLIC) share one render path.
+**Approved**: pending
+
+**Decision**: Use Base UI's `Avatar.Image` (via the shared `AvatarImage`)
+instead of a Next.js `<Image />` for the avatar.
+**Rationale**: Avatar URLs come from arbitrary user-supplied origins that
+can't be enumerated in a consuming Next.js app's image-optimizer allowlist.
+`Avatar.Image` gives browser-native lazy loading and a clean fallback via
+`AvatarFallback` (the image transitions to error and reveals
+`AvatarFallback`) without requiring an allowlist.
+**Approved**: pending
+
+**Decision**: `UserCardDto` structurally mirrors the backend's public-profile
+schema rather than importing a generated type.
+**Rationale**: Keeps `@agenticdevelopertoolkit/ui` free of any API-types
+dependency; the structural match is enforced at the call site by the
+TypeScript compiler.
+**Approved**: pending
+
+**Decision**: Export the `PLATFORM_LABELS` platform-label map from this
+module.
+**Rationale**: Makes this file the single source of truth for platform
+display names, so a consumer's social-links settings editor (e.g. ADH's) can
+import the same map instead of duplicating it.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex colors | Compliant | adh-ui-guidelines |
-| No `!important` | Compliant | adh-ui-guidelines |
-| `apt-*` tokens only | Compliant | adh-ui-guidelines |
-| Loading state present | Compliant (`UserCardSkeleton`) | adh-ui-guidelines |
-| Accessible article landmark | Compliant | WCAG 2.1 AA |
-| Keyboard-navigable links | Compliant (native `<a>`) | WCAG 2.1 AA |
-| Focus-visible ring | Compliant (`focus-visible:ring-2`) | WCAG 2.1 AA |
-| Live demo in ui-showcase | Compliant | adh-recipe |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy & Data |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | passed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | partial | Internationalization |
+
+These statuses rest on the source's native `<a>`/`<address>` elements and
+rem-based Tailwind text sizes for the passed accessibility checks, the
+`apt-*` design tokens whose actual color values live outside this file for
+the partial `contrast-ratio`, the total absence of any logging call for the
+passed `no-pii-in-logs`, the hardcoded `Social`/`Email`/`Phone`/`Address`/
+`Personas`/`Member since` strings and the `PLATFORM_LABELS` map for the
+failed internationalization checks, `formatMemberSince`'s use of
+`toLocaleDateString` plus the non-truncating wrapping layout for the passed
+internationalization checks, and the untested RTL flex ordering together
+with `initialsOf`'s single-UTF-16-code-unit character slicing for the
+partial internationalization checks.
 
 ## Change History
 
@@ -263,3 +352,4 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe authoring for existing shared component. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Reattribute the avatar image engine from Radix to Base UI (`@base-ui/react/avatar`), matching `avatar.tsx`; behavior (load/error → initials fallback) unchanged. |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with proper "not applicable" explanations; restructure Platform Notes into five-platform format with concrete implementation guidance for each platform; correct domain URI; set status to review. |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case (no `must-` prefix); fix the member-since and initials-count requirement/vector contradictions; formalize `native-contact-links` and add vectors for field-passthrough, per-section suppression, avatar load failure, contact links, and the empty-slug/displayName edge case; correct Platform Notes APIs (WinUI `PersonPicture`, Compose `LinkAnnotation`/`LocalUriHandler`, AppKit/UIKit stack view + `URLSession`, SwiftUI `.dateTime.month(.wide).year()`); mark Localization and Privacy applicable; reformat Design Decisions and rebuild Compliance from the actual catalog; add `depends-on` for the composed avatar/skeleton/separator/badge/external-link/section-label pieces; generalize ADH-specific wording into a Known Consumers note. |

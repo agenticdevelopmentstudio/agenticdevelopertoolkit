@@ -3,7 +3,7 @@ id: feee183a-6488-489e-8e20-c7150bb3e914
 title: Bleed
 domain: agenticdevelopertoolkit://recipes/bleed
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -20,7 +20,8 @@ tags:
 - layout
 - positioning
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/band
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,17 +35,20 @@ Bleed extends a child element past the content column boundary toward one page e
 
 ## Behavioral Requirements
 
-- **must-render-div**: Component MUST render a single `div` element.
-- **must-accept-children**: Component MUST render all content passed via the `children` prop into the `div`.
-- **must-accept-side-prop**: Component MUST accept a `side` prop with string values `"left"` or `"right"`, defaulting to `"right"`.
-- **must-apply-base-class**: Component MUST apply the class `lp-bleed` to the rendered `div`.
-- **must-apply-side-class**: Component MUST apply a class `lp-bleed--{side}` to the rendered `div`, where `{side}` is the value of the `side` prop.
-- **must-accept-className-prop**: Component MUST accept an optional `className` prop and append it to the rendered `div`.
-- **must-filter-falsy-classes**: Component MUST not output empty strings or undefined values in the class list; falsy class names MUST be filtered before joining.
+- **render-div**: Component MUST render a single `div` element.
+- **accept-children**: Component MUST render all content passed via the `children` prop into the `div`.
+- **accept-side-prop**: Component MUST accept a `side` prop with string values `"left"` or `"right"`, defaulting to `"right"`.
+- **apply-base-class**: Component MUST apply the class `lp-bleed` to the rendered `div`.
+- **side-class**: Component MUST apply a class `lp-bleed--{side}` to the rendered `div`, where `{side}` is the value of the `side` prop.
+- **accept-class-name-prop**: Component MUST accept an optional `className` prop and append it to the rendered `div`.
+- **falsy-class-filter**: Component MUST NOT output empty strings or undefined values in the class list; falsy class names MUST be filtered before joining.
+- **side-passthrough**: `side` is typed `'left' | 'right'`; the component performs no runtime check, so a value outside that type (reachable only by a caller that bypasses TypeScript) MUST still render as `lp-bleed--{value}` verbatim. This is unenforced, undefined-by-the-type-system behavior, not a supported input.
 
 ## Appearance
 
-Not applicable: Bleed is a layout wrapper and does not define visual styling. All appearance comes from CSS classes applied to the rendered `div`. The component is responsible only for structure and class application.
+- **Layout mechanism**: The component applies no inline styling itself; the crop's margin, direction, and distance are entirely defined by the `lp-bleed` and `lp-bleed--{side}` CSS classes (declared in the landing package's stylesheet, not in `Bleed.tsx`).
+- **Mechanism, not magnitude**: Per the **Margin over transform** design decision, the crop is achieved with `margin`, not `transform`, so the neighboring column surrenders space. The component's own contract stops at applying the class names; the exact margin distance and any narrow-width behavior belong to those CSS classes, not to this component.
+- **Clipping dependency**: The overhang only reads as "cropped" rather than "widening the page" when rendered inside an ancestor with `overflow-x: clip` — see the **Missing clipping parent** edge case and the `Band` ingredient (`agenticdevelopertoolkit://recipes/band`).
 
 ## States
 
@@ -52,29 +56,35 @@ Not applicable: Bleed is a static layout component with no interactive states (p
 
 ## Accessibility
 
-Not applicable: Bleed is a transparent layout wrapper. It renders a generic `div` with no semantic role and does not create interactive elements. Accessibility properties (labels, roles, announcements) are determined by the content passed via `children` and do not apply to the Bleed wrapper itself.
+Bleed itself renders a generic, role-less `div` and makes no accessibility-tree changes; assistive-technology behavior is otherwise inherited entirely from `children`. However, because the component's purpose is to let content run into a visually clipped page edge:
+
+- **No essential content in the crop**: Content placed in the bled region SHOULD be decorative only. Because the overhang is cropped by the ancestor's `overflow-x: clip`, essential text or an interactive control placed there risks being visually cut off, even where it may remain present in the accessibility tree.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| bleed-001 | must-render-div | `<Bleed>Content</Bleed>` | Renders a `div` element containing "Content" |
-| bleed-002 | must-apply-base-class | `<Bleed>Content</Bleed>` | Rendered `div` has class `lp-bleed` |
-| bleed-003 | must-apply-side-class, must-accept-side-prop | `<Bleed side="left">Content</Bleed>` | Rendered `div` has class `lp-bleed--left` |
-| bleed-004 | must-apply-side-class, must-accept-side-prop | `<Bleed side="right">Content</Bleed>` | Rendered `div` has class `lp-bleed--right` |
-| bleed-005 | must-accept-side-prop | `<Bleed>Content</Bleed>` (no side prop) | Rendered `div` has class `lp-bleed--right` (default) |
-| bleed-006 | must-accept-className-prop | `<Bleed className="custom">Content</Bleed>` | Rendered `div` has classes `lp-bleed`, `lp-bleed--right`, `custom` |
-| bleed-007 | must-filter-falsy-classes, must-accept-className-prop | `<Bleed className="">Content</Bleed>` | Rendered `div` has classes `lp-bleed`, `lp-bleed--right` (empty className excluded) |
-| bleed-008 | must-accept-children | `<Bleed><span>Text</span><button>Click</button></Bleed>` | Rendered `div` contains both `span` and `button` elements |
-| bleed-009 | must-accept-children | `<Bleed>null</Bleed>` | Renders successfully with `null` child |
+| bleed-001 | render-div | `<Bleed>Content</Bleed>` | Renders a `div` element containing "Content" |
+| bleed-002 | apply-base-class | `<Bleed>Content</Bleed>` | Rendered `div` has class `lp-bleed` |
+| bleed-003 | side-class, accept-side-prop | `<Bleed side="left">Content</Bleed>` | Rendered `div` has class `lp-bleed--left` |
+| bleed-004 | side-class, accept-side-prop | `<Bleed side="right">Content</Bleed>` | Rendered `div` has class `lp-bleed--right` |
+| bleed-005 | accept-side-prop | `<Bleed>Content</Bleed>` (no side prop) | Rendered `div` has class `lp-bleed--right` (default) |
+| bleed-006 | accept-class-name-prop | `<Bleed className="custom">Content</Bleed>` | Rendered `div` has classes `lp-bleed`, `lp-bleed--right`, `custom` |
+| bleed-007 | falsy-class-filter, accept-class-name-prop | `<Bleed className="">Content</Bleed>` | Rendered `div` has classes `lp-bleed`, `lp-bleed--right` (empty className excluded) |
+| bleed-008 | accept-children | `<Bleed><span>Text</span><button>Click</button></Bleed>` | Rendered `div` contains both `span` and `button` elements |
+| bleed-009 | accept-children | `<Bleed>{null}</Bleed>` | Renders successfully with no content (`null` child) |
+| bleed-010 | side-passthrough | `<Bleed side={'center' as unknown as 'left' \| 'right'}>Content</Bleed>` | Rendered `div` has class `lp-bleed--center` |
+| bleed-011 | accept-class-name-prop | `<Bleed className="custom-one custom-two">Content</Bleed>` | Rendered `div` has classes `lp-bleed`, `lp-bleed--right`, `custom-one custom-two` (space-separated value appended as-is) |
+| bleed-012 | accept-children | `<Bleed><>Content</></Bleed>` | Rendered `div` contains "Content" (fragment's children render inside the `div`) |
 
 ## Edge Cases
 
-- **Empty children**: Rendering `<Bleed />` with no children produces a rendered `div` with no content. Behavior is a MUST.
-- **Null or undefined className**: When `className` is `undefined` or `null`, the component MUST not add empty class names to the output. Falsy values MUST be filtered before joining class strings.
-- **Invalid side values**: The component source only handles `"left"` and `"right"` values. If an invalid value is passed, the component MUST render with a class name `lp-bleed--{value}` as passed (e.g., `lp-bleed--center`). Validation of the `side` prop is the responsibility of the caller, not the component. Behavior is a MUST.
-- **Multiple class names in className prop**: When `className` contains multiple space-separated class names (e.g., `"custom-one custom-two"`), the component MUST append them as-is to the class list without modification. Behavior is a MUST.
-- **React.Fragment as child**: Rendering `<Bleed><>Content</></Bleed>` is valid; the fragment is rendered as children inside the `div`.
+- **Empty children**: `<Bleed>{null}</Bleed>` renders the `div` with no content; see **accept-children** (bleed-009).
+- **Null or undefined `className`**: excluded from the class list before joining; see **falsy-class-filter** (bleed-007).
+- **Side values outside the typed union**: the component renders whatever string is passed with no validation; see **side-passthrough** (bleed-010).
+- **Multiple class names in `className`**: a space-separated value (e.g. `"custom-one custom-two"`) is appended as-is, unmodified; see **accept-class-name-prop** (bleed-011).
+- **React.Fragment as child**: `<Bleed><>Content</></Bleed>` is valid; the fragment's children render inside the `div`; see **accept-children** (bleed-012).
+- **Missing clipping parent**: if Bleed is not rendered inside an ancestor with `overflow-x: clip` (e.g. `.lp-band`; see the `Band` ingredient, `agenticdevelopertoolkit://recipes/band`), the overhang widens the document instead of appearing cropped. This is an environmental prerequisite that Bleed cannot detect or enforce on its own.
 
 ## Configuration
 
@@ -116,30 +126,44 @@ Not applicable: The component source contains no logging or debug output.
 
 - **Web (React/TypeScript)**: Source file is `Bleed.tsx` in the landing package. The component renders a `div` with class names joined from `['lp-bleed', `lp-bleed--${side}`, className]` after filtering falsy values. It accepts `side`, `children`, and `className` as props. The component relies on a parent container with `overflow-x: clip` (e.g., `.lp-band`) to prevent the overhang from widening the document.
 
-- **SwiftUI**: On Apple platforms, implement a custom layout container (e.g., a `ZStack` or `GeometryReader` overlay) that positions the child view outside the standard content margin. Use `.offset()` or `.frame(alignment:)` to shift content toward one edge. Apply clipping to the parent container to crop the overhang, equivalent to the CSS `overflow-x: clip`. SwiftUI does not have a native "bleed" layout, so the positioning must be explicit.
+- **SwiftUI**: Implement a custom `Layout` (the `Layout` protocol) that reports extra width toward the bleed edge, or apply a negative `.padding()` on the given side so the child pushes into the neighboring column the way CSS `margin` does. Do not use `.offset()`: it repositions the view visually without reclaiming layout space from siblings, which is exactly the transform-based approach the **Margin over transform** design decision rejects. Clip the ancestor with `.clipped()` to match `overflow-x: clip`.
 
-- **Compose**: On Android, implement with a `Box` or custom `Layout` composable that positions the child outside the standard content padding. Use `offset()` or `absoluteOffset()` to shift the child toward one edge. Wrap the parent in a `Box(modifier = Modifier.clip(...))` to apply the crop effect. The `side` parameter maps to left or right offset direction.
+- **Compose**: Implement with a custom `Layout` composable (or `Modifier.layout`) that measures the child wider than its slot and places it offset toward the bleed edge, so the sibling composables are actually pushed aside. `Modifier.offset()` / `absoluteOffset()` alone only repositions the child without affecting the measured layout, so it does not reproduce the effect. Clip the ancestor with `Modifier.clipToBounds()` to match `overflow-x: clip`. The `side` parameter maps to which edge the extra measured width is added toward.
 
-- **AppKit / UIKit**: On macOS and iOS, implement a custom view (subclass of `NSView` or `UIView`) that applies negative margins or positioning transforms to move the child view outside the content area. Use `NSClipView` or `UIView.clipsToBounds` on the parent to crop the overhang. Layout should be managed via Auto Layout constraints or frame-based positioning, achieving the same visual effect as the web component.
+- **AppKit / UIKit**: Implement a custom view (subclass of `NSView` or `UIView`) that uses a negative leading/trailing Auto Layout constraint (or a negative frame margin) on the given side so the child's layout genuinely extends past the content column — the same role CSS `margin` plays. A positioning transform would move the view visually without giving up the space, so it does not qualify. Use `clipsToBounds` on the parent to crop the overhang, equivalent to `overflow-x: clip`.
 
-- **WinUI 3**: On Windows, implement using a `Grid` or custom `Panel` with `Margin` adjustments on the child element to extend it past the content area. Set `Clip` on the parent container to `RectangleGeometry` or use `Clipping` to crop the overhang. The `side` parameter maps to positive or negative `Margin.Left` or `Margin.Right`. UWP `Grid.Column` and negative margins provide the equivalent mechanic.
+- **WinUI 3**: Implement using a `Grid` or custom `Panel` with a negative `Margin` on the given side (`Margin.Left` or `Margin.Right`) so the child's layout slot genuinely extends past the content column. Set `UIElement.Clip` to a `RectangleGeometry` on the parent to crop the overhang, equivalent to `overflow-x: clip`. WinUI 3 has no `Clipping` property, and `Grid.Column` is unrelated to this effect — `UIElement.Clip` plus a negative `Margin` is the real mechanism.
 
 ## Design Decisions
 
-- **Margin over transform**: The component uses CSS `margin` rather than CSS `transform` to extend the child element past the content column. This approach forces the neighboring column to surrender space, creating the intended visual hierarchy. A transform would move the element visually without affecting layout, leaving space in the neighboring column and defeating the "crop by viewport" effect.
+**Decision**: Use CSS `margin` rather than CSS `transform` to extend the child element past the content column.
+**Rationale**: `margin` forces the neighboring column to surrender space, creating the intended visual hierarchy; a `transform` would move the element visually without affecting layout, leaving space in the neighboring column and defeating the "crop by viewport" effect.
+**Approved**: pending
 
-- **Class filtering**: The component filters out falsy class names (empty strings, `null`, `undefined`) before joining them. This prevents unintended class concatenation (e.g., `"lp-bleed  lp-bleed--right"` with double spaces) and keeps the output clean.
+**Decision**: Filter out falsy class names (empty strings, `null`, `undefined`) before joining the class list.
+**Rationale**: Prevents unintended class concatenation (e.g., a stray double space from an empty `className`) and keeps the rendered class list clean.
+**Approved**: pending
 
-- **No validation of side prop**: The component does not validate that `side` is one of the expected values (`'left'` or `'right'`). Passing an invalid value results in a class like `lp-bleed--invalid`, which is rendered as-is. This delegates validation to the caller and keeps the component simple.
+**Decision**: Do not validate that `side` is one of the expected values (`'left'` or `'right'`).
+**Rationale**: Passing an invalid value renders a class like `lp-bleed--invalid` as-is (see **side-passthrough**). This delegates validation to the caller and keeps the component simple; TypeScript's `'left' | 'right'` type covers the supported surface, and a value outside it means the caller has bypassed the type.
+**Approved**: pending
 
-- **Parent container responsibility**: The component assumes it is rendered inside a container with `overflow-x: clip` (e.g., `.lp-band` on the web). Without this clipping, the overhang will widen the document, defeating the visual intent. This constraint is documented in the Overview but not enforced by the component.
+**Decision**: Assume Bleed is rendered inside a container with `overflow-x: clip` (e.g. `.lp-band`, see the `Band` ingredient).
+**Rationale**: Without that ancestor clipping, the overhang widens the document instead of appearing cropped, defeating the visual intent; enforcing it inside Bleed itself is not possible without coupling Bleed to a specific parent component.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Bleed is a layout wrapper with no security, privacy, or compliance concerns. It does not handle sensitive data, authenticate users, or make external requests.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+
+The source renders a plain, role-less `div` with no ARIA misuse (semantic-markup); it performs no check on whether the region it crops still leaves focusable content reachable, so that depends entirely on the caller keeping the bled area decorative-only (keyboard-navigable, see **Accessibility**).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added a `side-passthrough` requirement documenting the unvalidated `side` passthrough as undefined-by-the-type behavior; filled in Appearance and Accessibility with real content; fixed the `bleed-009` test-vector bug and added vectors for previously uncovered edge cases; replaced the Compliance section with a real check table; corrected the Platform Notes to layout-affecting mechanisms consistent with the margin-over-transform decision and fixed the WinUI 3 API citation; reformatted Design Decisions into the three-line form; linked the `Band` ingredient in `related`. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
