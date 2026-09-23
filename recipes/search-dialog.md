@@ -3,7 +3,7 @@ id: 88dc87c9-8058-446d-9513-acfa618c950f
 title: Search Dialog
 domain: agenticdevelopertoolkit://recipes/search-dialog
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -22,8 +22,12 @@ tags:
 - modal
 - form
 depends-on: []
-related: []
-references: []
+related:
+- agenticdevelopertoolkit://recipes/dialog
+- agenticdevelopertoolkit://recipes/search-dialog-connected
+references:
+- https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html
+- https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html
 approved-by: ''
 approved-date: ''
 ---
@@ -36,30 +40,30 @@ Search Dialog is a modal component that presents a full-screen search interface 
 
 ## Behavioral Requirements
 
-- **must-render-closed-by-default**: The component MUST NOT render to the DOM when `open` prop is `false`. The entire component tree MUST return `null`.
-- **must-open-as-modal**: When `open` prop is `true`, the component MUST render as a modal dialog with `role="dialog"` and `aria-modal="true"` on the root container.
-- **must-have-dismissible-backdrop**: The component MUST render a full-screen backdrop element. Clicking the backdrop MUST invoke the `onClose` callback.
-- **must-focus-input-on-open**: When the `open` prop transitions from `false` to `true`, the input field MUST receive focus using `requestAnimationFrame` to defer until next paint.
-- **must-reset-query-on-open**: When the `open` prop transitions from `false` to `true`, the component MUST reset the search state by calling `state.reset()`.
-- **must-show-input-with-search-icon**: The input row MUST render as a form element with `role="search"`. It MUST display a search icon (magnifying glass SVG) and an input field with placeholder text.
-- **must-render-escape-hint**: The input row MUST display a keyboard hint showing "Esc" to indicate the escape key can dismiss the dialog.
-- **must-accept-placeholder-prop**: The component MUST accept an optional `placeholder` prop. If not provided, it MUST default to `"Search documentation..."`.
-- **must-handle-escape-key**: When the user presses the Escape key in the input field, the component MUST immediately invoke `onClose()`.
-- **must-handle-enter-key**: When the user presses Enter in the input field, if there is a selected result (by index), the component MUST invoke `onSelect()` with the selected entry and MUST NOT submit the form.
-- **must-delegate-other-keys**: When the user presses any key other than Escape or Enter, the component MUST delegate handling to `state.handleKey(e)`.
-- **must-update-query-on-input**: As the user types in the input field, the component MUST update the search state by calling `state.setQuery(e.target.value)` for each change event.
-- **must-show-results-only-when-querying**: Results section MUST only render when `state.query` is truthy (non-empty string).
-- **must-limit-results-to-twenty**: The component MUST slice results to display at most 20 entries from `state.results`.
-- **must-group-results-by-section**: The component MUST group the top 20 results by `entry.section` property. Entries without a section MUST be grouped under `"other"`.
-- **must-translate-section-labels**: For each section, the component MUST display the label from `sectionLabels[section]` if provided, otherwise MUST display the section key as-is.
-- **must-render-empty-state**: When `state.query` is truthy but no results exist (top 20 is empty), the component MUST display "No results for "{query}"" message.
-- **must-show-result-title-and-summary**: Each result MUST display the `entry.frontmatter.title`. If `entry.frontmatter.summary` exists, it MUST also be displayed below the title.
-- **must-render-result-as-button**: Each result MUST be rendered as a `<button>` element with `type="button"`. Clicking a result MUST invoke `onSelect(entry)`.
-- **must-highlight-selected-result**: The currently selected result (by `state.selectedIndex`) MUST be visually distinguished by applying the `awt-search-dialog__result--selected` CSS class modifier.
-- **must-use-slug-as-result-key**: Each result button MUST use `entry.slug` as its React `key` prop.
-- **must-prevent-form-submission**: The search form wrapper MUST have an `onSubmit` handler that calls `e.preventDefault()` to prevent page navigation on implicit form submission.
-- **must-include-search-role**: The form element containing the input field MUST have `role="search"` to declare its semantic purpose.
-- **must-apply-no-autofill-props**: The input field MUST apply the `noAutofillProps` to prevent browser autofill features.
+- **closed-by-default**: The component MUST NOT render to the DOM when the `open` prop is `false`. The entire component tree MUST return `null`.
+- **open-as-modal**: When the `open` prop is `true`, the component MUST render as a modal dialog with `role="dialog"` and `aria-modal="true"` on the root container.
+- **dismissible-backdrop**: The component MUST render a full-screen backdrop element. Clicking the backdrop MUST invoke the `onClose` callback.
+- **focus-input-on-open**: When the `open` prop transitions from `false` to `true`, the input field MUST receive focus once the dialog has rendered. (See **requestAnimationFrame for focus** under Design Decisions for the timing mechanism.)
+- **reset-search-state-on-open**: When the `open` prop transitions from `false` to `true`, the component MUST reset the search state to its initial values (empty query, no results, no selection).
+- **input-row-with-search-icon**: The input row MUST render as a form element containing a search icon (magnifying glass SVG) and an input field with placeholder text. (For the form's `role="search"`, see **search-role-on-form**.)
+- **escape-hint**: The input row MUST display a keyboard hint showing "Esc" to indicate the escape key can dismiss the dialog.
+- **placeholder-prop**: The component MUST accept an optional `placeholder` prop. If not provided, it MUST default to `"Search documentation..."`.
+- **escape-dismisses**: When the user presses the Escape key in the input field, the component MUST immediately invoke `onClose()`.
+- **enter-selects-highlighted-result**: When the user presses Enter in the input field, if there is a selected result (by index), the component MUST invoke `onSelect()` with the selected entry. If no result is selected, Enter MUST have no other effect. Enter never submits the form (see **prevent-form-submission**).
+- **delegate-other-keys**: When the user presses any key other than Escape or Enter, the component MUST delegate handling to `state.handleKey(e)`.
+- **update-query-on-input**: As the user types in the input field, the component MUST update the search state by calling `state.setQuery(e.target.value)` for each change event.
+- **show-results-only-when-querying**: The results section MUST only render when `state.query` is truthy (non-empty string).
+- **limit-results-to-twenty**: The component MUST slice results to display at most 20 entries from `state.results`.
+- **group-results-by-section**: The component MUST group the top 20 results by `entry.section`. Entries without a section MUST be grouped under `"other"`. Section order follows first appearance among the top 20 results, not alphabetical or any other sort.
+- **translate-section-labels**: For each section, the component MUST display the label from `sectionLabels[section]` if provided, otherwise MUST display the section key as-is.
+- **empty-state-when-no-results**: When `state.query` is truthy but no results exist (top 20 is empty), the component MUST display a `No results for "{query}"` message.
+- **result-title-and-summary**: Each result MUST display `entry.frontmatter.title`. If `entry.frontmatter.summary` exists, it MUST also be displayed below the title.
+- **result-as-button**: Each result MUST be rendered as a `<button>` element with `type="button"`. Clicking a result MUST invoke `onSelect(entry)`.
+- **highlight-selected-result**: The currently selected result (by `state.selectedIndex`) MUST be visually distinguished by applying the `awt-search-dialog__result--selected` CSS class modifier.
+- **stable-result-identity**: Each rendered result MUST derive a stable identity from `entry.slug`, so reconciliation stays correct if the same entries reorder or reappear across renders. (Implemented as the React `key` prop; see **Slug as React key** under Design Decisions.)
+- **prevent-form-submission**: The search form wrapper MUST have an `onSubmit` handler that calls `e.preventDefault()`, so an implicit form submission never navigates the page.
+- **search-role-on-form**: The form element containing the input field MUST have `role="search"` to declare its semantic purpose.
+- **suppress-autofill-suggestions**: The input field MUST NOT trigger the browser's autofill suggestion UI (for example, iOS Safari's "AutoFill Contact" prompt). (See **Form wrapper for autofill suppression** under Design Decisions for the mechanism.)
 
 ## Appearance
 
@@ -88,62 +92,62 @@ Search Dialog is a modal component that presents a full-screen search interface 
 - **Role/trait**: Dialog (`role="dialog"`); form with search role (`role="search"`); results are buttons (`type="button"`).
 - **Label requirements**: Input has `aria-label="Search"`. Section headings and result buttons derive meaning from text content; no explicit ARIA labels on results.
 - **Announce state changes**: NEEDS REVIEW: Live region announcements not implemented. Component should announce result count and selected result changes to screen reader users as the user navigates results and performs searches. What evidence would settle this: implementation of `aria-live="polite"` regions or `aria-atomic` attributes on the results container to communicate dynamic content changes.
-- **Minimum tap target**: Not specified in source. Result buttons and input field target sizes are stylesheet-driven and MUST meet platform guidelines (44×44pt minimum on iOS, 48×48dp on Android, 44px on web per WCAG).
+- **Minimum tap target**: Not specified in source; result buttons and input field target sizes are stylesheet-driven. WCAG 2.5.8 Target Size (Minimum, Level AA) requires 24×24 CSS px; WCAG 2.5.5 Target Size (Enhanced, Level AAA) requires 44×44 CSS px. Platform guidance: 44×44pt minimum on iOS, 48×48dp on Android.
 - **Keyboard navigation**: Fully keyboard operable. Input accepts focus; arrow keys (via `state.handleKey`) navigate results; Enter selects; Escape dismisses.
-- **Modal semantics**: `aria-modal="true"` signals focus trap; backdrop click and Escape dismiss.
+- **Modal semantics**: `aria-modal="true"` tells assistive technology that content outside the dialog is inert; it does not by itself trap focus. The source implements neither a focus trap nor focus restoration to the previously focused element on close (see **Announce state changes** for the related, still-open screen-reader gap). Backdrop click and Escape dismiss the dialog (see **dismissible-backdrop**, **escape-dismisses**).
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| search-dialog-001 | must-render-closed-by-default | `open: false` | Component returns `null`; nothing renders. |
-| search-dialog-002 | must-open-as-modal | `open: true` | Root div has `role="dialog"` and `aria-modal="true"`. |
-| search-dialog-003 | must-have-dismissible-backdrop | `open: true`, click backdrop | `onClose()` callback is invoked. |
-| search-dialog-004 | must-focus-input-on-open | `open: false` → `true` | Input field receives focus after paint (via `requestAnimationFrame`). |
-| search-dialog-005 | must-reset-query-on-open | `open: false` → `true` | `state.reset()` is called (query state clears). |
-| search-dialog-006 | must-show-input-with-search-icon | `open: true` | Form with `role="search"` renders; SVG search icon and input are visible. |
-| search-dialog-007 | must-render-escape-hint | `open: true` | Keyboard hint element displaying "Esc" is rendered. |
-| search-dialog-008 | must-accept-placeholder-prop | `open: true`, no `placeholder` prop | Input field displays "Search documentation..." placeholder. |
-| search-dialog-009 | must-accept-placeholder-prop | `open: true`, `placeholder: "Find items"` | Input field displays "Find items" placeholder. |
-| search-dialog-010 | must-handle-escape-key | `open: true`, user presses Escape in input | `onClose()` is invoked immediately. |
-| search-dialog-011 | must-handle-enter-key | `open: true`, result selected, user presses Enter | `onSelect(selectedEntry)` is invoked; form does not submit. |
-| search-dialog-012 | must-handle-enter-key | `open: true`, no result selected, user presses Enter | No action; form does not submit. |
-| search-dialog-013 | must-delegate-other-keys | `open: true`, user presses ArrowDown | `state.handleKey(e)` is called with the keyboard event. |
-| search-dialog-014 | must-update-query-on-input | `open: true`, user types "test" | `state.setQuery()` is called for each keystroke; input value updates. |
-| search-dialog-015 | must-show-results-only-when-querying | `open: true`, `state.query: ""` | Results section is not rendered. |
-| search-dialog-016 | must-show-results-only-when-querying | `open: true`, `state.query: "docs"` | Results section is rendered (or empty state if no results). |
-| search-dialog-017 | must-limit-results-to-twenty | `open: true`, 50 results in `state.results` | Only top 20 results are processed and displayed. |
-| search-dialog-018 | must-group-results-by-section | `open: true`, results with sections `["guides", "api", "api", "guides"]` | Results are grouped into two sections; order preserves first occurrence. |
-| search-dialog-019 | must-group-results-by-section | `open: true`, result without section property | Result is grouped under `"other"`. |
-| search-dialog-020 | must-translate-section-labels | `open: true`, `sectionLabels: { guides: "How-To Guides" }` | Section displays as "How-To Guides", not "guides". |
-| search-dialog-021 | must-translate-section-labels | `open: true`, `sectionLabels: {}`, section is "api" | Section displays as "api" (no translation provided). |
-| search-dialog-022 | must-render-empty-state | `open: true`, `state.query: "xyzabc"`, no results | Message displays: `No results for "xyzabc"`. |
-| search-dialog-023 | must-show-result-title-and-summary | `open: true`, results present | Each result displays `entry.frontmatter.title`. |
-| search-dialog-024 | must-show-result-title-and-summary | `open: true`, result with summary | Result displays both title and summary below it. |
-| search-dialog-025 | must-show-result-title-and-summary | `open: true`, result without summary | Result displays title only; summary section not rendered. |
-| search-dialog-026 | must-render-result-as-button | `open: true`, result visible | Result is a `<button type="button">` element. |
-| search-dialog-027 | must-render-result-as-button | `open: true`, user clicks result | `onSelect(entry)` is invoked with that result's entry. |
-| search-dialog-028 | must-highlight-selected-result | `open: true`, `state.selectedIndex: 2` | Third result (index 2) has class `awt-search-dialog__result--selected`. |
-| search-dialog-029 | must-highlight-selected-result | `open: true`, `state.selectedIndex: 999` (out of range) | No result is highlighted; index-based selection may skip bounds check. |
-| search-dialog-030 | must-use-slug-as-result-key | `open: true`, results rendered | Each result button has `key` prop set to `entry.slug`. |
-| search-dialog-031 | must-prevent-form-submission | `open: true`, user presses Enter with form focused | Form's `onSubmit` prevents default; no page navigation. |
-| search-dialog-032 | must-include-search-role | `open: true` | Form element has `role="search"`. |
-| search-dialog-033 | must-apply-no-autofill-props | `open: true` | Input field has `noAutofillProps` applied (spread operator). |
+| search-dialog-001 | closed-by-default | `open: false` | Component returns `null`; nothing renders. |
+| search-dialog-002 | open-as-modal | `open: true` | Root div has `role="dialog"` and `aria-modal="true"`. |
+| search-dialog-003 | dismissible-backdrop | `open: true`, click backdrop | `onClose()` callback is invoked. |
+| search-dialog-004 | focus-input-on-open | `open: false` → `true` | Input field is focused after the dialog renders (implementation defers via `requestAnimationFrame`; see Design Decisions). |
+| search-dialog-005 | reset-search-state-on-open | `open: false` → `true` | Search state is reset to its initial values (query cleared, no results, no selection). |
+| search-dialog-006 | input-row-with-search-icon | `open: true` | Form renders containing the SVG search icon and the input field (form's `role="search"` verified in search-dialog-032). |
+| search-dialog-007 | escape-hint | `open: true` | Keyboard hint element displaying "Esc" is rendered. |
+| search-dialog-008 | placeholder-prop | `open: true`, no `placeholder` prop | Input field displays "Search documentation..." placeholder. |
+| search-dialog-009 | placeholder-prop | `open: true`, `placeholder: "Find items"` | Input field displays "Find items" placeholder. |
+| search-dialog-010 | escape-dismisses | `open: true`, user presses Escape in input | `onClose()` is invoked immediately. |
+| search-dialog-011 | enter-selects-highlighted-result | `open: true`, result selected, user presses Enter | `onSelect(selectedEntry)` is invoked; page does not navigate. |
+| search-dialog-012 | enter-selects-highlighted-result | `open: true`, `state.selectedIndex: -1` (no result selected), user presses Enter | No callback is invoked; page does not navigate. |
+| search-dialog-013 | delegate-other-keys | `open: true`, user presses ArrowDown | `state.handleKey(e)` is called with the keyboard event. |
+| search-dialog-014 | update-query-on-input | `open: true`, user types "test" | `state.setQuery()` is called for each keystroke; input value updates. |
+| search-dialog-015 | show-results-only-when-querying | `open: true`, `state.query: ""` | Results section is not rendered. |
+| search-dialog-016 | show-results-only-when-querying | `open: true`, `state.query: "docs"` | Results section is rendered (or empty state if no results). |
+| search-dialog-017 | limit-results-to-twenty | `open: true`, 50 results in `state.results` | Only top 20 results are processed and displayed. |
+| search-dialog-018 | group-results-by-section | `open: true`, results with sections `["guides", "api", "api", "guides"]` | Results render as two section groups, in first-occurrence order: `guides`, then `api`. |
+| search-dialog-019 | group-results-by-section | `open: true`, result without section property | Result is grouped under `"other"`. |
+| search-dialog-020 | translate-section-labels | `open: true`, `sectionLabels: { guides: "How-To Guides" }` | Section displays as "How-To Guides", not "guides". |
+| search-dialog-021 | translate-section-labels | `open: true`, `sectionLabels: {}`, section is "api" | Section displays as "api" (no translation provided). |
+| search-dialog-022 | empty-state-when-no-results | `open: true`, `state.query: "xyzabc"`, no results | Message displays: `No results for "xyzabc"`. |
+| search-dialog-023 | result-title-and-summary | `open: true`, results present | Each result displays `entry.frontmatter.title`. |
+| search-dialog-024 | result-title-and-summary | `open: true`, result with summary | Result displays both title and summary below it. |
+| search-dialog-025 | result-title-and-summary | `open: true`, result without summary | Result displays title only; summary section not rendered. |
+| search-dialog-026 | result-as-button | `open: true`, result visible | Result is a `<button type="button">` element. |
+| search-dialog-027 | result-as-button | `open: true`, user clicks result | `onSelect(entry)` is invoked with that result's entry. |
+| search-dialog-028 | highlight-selected-result | `open: true`, `state.selectedIndex: 2` | Third result (index 2) has class `awt-search-dialog__result--selected`. |
+| search-dialog-029 | highlight-selected-result | `open: true`, `state.selectedIndex: 999` (≥ number of rendered results) | No result is highlighted. |
+| search-dialog-030 | stable-result-identity | `open: true`, results rendered, then re-rendered with the same entries reordered | Each result's identity stays tied to its `slug` rather than its position (implementation detail: React `key`; verified via reconciliation, not a DOM attribute). |
+| search-dialog-031 | prevent-form-submission | `open: true`, user presses Enter with form focused | Form's `onSubmit` prevents default; no page navigation. |
+| search-dialog-032 | search-role-on-form | `open: true` | Form element has `role="search"`. |
+| search-dialog-033 | suppress-autofill-suggestions | `open: true` | Input field carries the attributes needed to suppress the browser's autofill suggestion UI (`noAutofillProps` in source; see Design Decisions). |
 
 ## Edge Cases
 
 - **Empty or null query**: When `state.query` is empty string or not set, results section does not render. Results are generated only when query is truthy. **MUST**.
 - **Zero results from search**: When top 20 results array is empty but query is truthy, "No results" message is shown. **MUST**.
 - **Large result set**: Component slices to top 20 results; remaining results are discarded and never rendered. Implementor should verify that `state.results` provides results in descending relevance order. **MUST**.
-- **Out-of-bounds selectedIndex**: If `state.selectedIndex` is greater than the number of rendered results, no result is highlighted. Source does not bounds-check selection. Caller is responsible for keeping index in range. **MUST**.
-- **Rapid open/close toggle**: Each `open: false → true` transition calls `state.reset()`. Multiple rapid toggles will reset state multiple times. Intended behavior per source comment. **MUST**.
-- **Focus loss and regain**: When dialog closes and `open` prop changes to `false`, component returns `null`. Focus management on reopening is handled by `requestAnimationFrame` on the input ref. **MUST**.
-- **Missing entry.slug**: Result rendering uses `entry.slug` as React `key`. If slug is missing or null, React warnings will occur. Caller MUST provide valid slug for each entry. **MUST**.
+- **Out-of-bounds selectedIndex**: If `state.selectedIndex` is greater than or equal to the number of rendered results, no result is highlighted. Source does not bounds-check selection. Caller is responsible for keeping index in range. **MUST**.
+- **Rapid open/close toggle**: Each `open: false → true` transition resets the search state (see **reset-search-state-on-open**). Multiple rapid toggles will reset state multiple times. Intended behavior per source comment. **MUST**.
+- **Focus loss and regain**: When dialog closes and `open` prop changes to `false`, component returns `null`. Focus management on reopening is handled per **focus-input-on-open**. **MUST**.
+- **Missing entry.slug**: Result rendering derives each item's stable identity from `entry.slug` (see **stable-result-identity**). Caller MUST provide a valid, unique slug for every entry; a missing or duplicate slug is a caller precondition violation, not a supported input.
 - **Missing entry.frontmatter.title**: Result displays `entry.frontmatter.title` without defensive checks. If title is missing, undefined or null renders as empty string. **MUST**.
 - **Missing section property**: Entries without `entry.section` are grouped under `"other"`. This is explicit behavior per source code. **MUST**.
-- **Simultaneous selection and key press**: If user clicks a result while pressing Enter, the Enter key event handler runs first (via `onKeyDown`), selects at current `selectedIndex`, and stops. Click handler does not fire. Order is: keydown → click in React's synthetic event ordering. **MUST**.
+- **Clicking a result while pressing Enter**: The result button's `onClick` and the input's `onKeyDown` are handlers on different elements. The source implements no cross-element ordering guarantee between them beyond whatever the browser's own event dispatch does; this recipe makes no claim about which fires first.
 - **Input type not text**: Source hardcodes `type="text"` on the input element. Caller cannot override input type. **MUST**.
-- **Null state object**: Source assumes `state` prop is always provided and calls methods on it without null checks. If state is null or undefined, component will throw. **MUST**.
+- **Null state object**: Source assumes the `state` prop is always provided and calls its methods directly, without null checks. Caller MUST supply a valid `SearchState` instance; passing `null`/`undefined` is a precondition violation the component does not guard against.
 - **Section label not a string**: `sectionLabels` values should be strings. If a value is an object or non-string, it will render via string coercion. Behavior is undefined for non-string values. **SHOULD** provide strings.
 
 ## Configuration
@@ -167,16 +171,16 @@ Not applicable: component is a modal dialog overlay and does not define its own 
 |-----------|-------------|---------|
 | aria-label | `"Search"` | Accessible label for the input field. |
 | placeholder | `"Search documentation..."` | Default placeholder text in input field; can be overridden by `placeholder` prop. |
-| empty-state | `"No results for "{query}""` | Message shown when user has typed a query but no results are found. Includes user-entered query string. |
+| empty-state | `No results for “{query}”` | Message shown when user has typed a query but no results are found. Includes user-entered query string. |
 | escape-hint | `"Esc"` | Text displayed in keyboard hint showing how to close the dialog. |
 
-Each string value is hardcoded in the component. To support multiple languages, wrap strings in a localization function at the call site or fork the component to accept a `strings` configuration prop.
+Each string value is hardcoded in the component. To support multiple languages, accept a `strings` (or `labels`) prop mapping each key above to its localized text at the call site, rather than forking the component.
 
 ## Accessibility Options
 
 - **Reduce Motion**: Not applicable. Dialog appears immediately without fade-in or transition. If `prefers-reduced-motion` is desired, CSS media query can suppress animations. Component itself does not check the setting.
 - **Increase Contrast**: Not applicable. Text color and background contrast are stylesheet-driven. Component does not expose a contrast mode setting. Stylesheet can provide high-contrast variant via CSS media query or theme class.
-- **Differentiate Without Color**: Not applicable. Visual distinction of selected result is CSS-driven and may rely on color. Component does not implement a non-color marker (e.g., outline, checkmark) for selected state. Stylesheet SHOULD add non-color indicator.
+- **Differentiate Without Color**: Visual distinction of the selected result is CSS-driven, via the `awt-search-dialog__result--selected` class, and may rely on color alone in the current stylesheet. The component does not implement a non-color marker itself. Stylesheet SHOULD add a non-color indicator (for example, a border or a checkmark) so the selected result stays visible without relying on color perception.
 
 ## Feature Flags
 
@@ -193,14 +197,14 @@ Not applicable: component does not include conditional logic for feature flags. 
 | `search-dialog.result_selected` | `{ slug: string, section: string, index: number }` | User selects a result via click or Enter. |
 | `search-dialog.selection_navigated` | `{ from_index: number, to_index: number }` | User presses arrow key and `state.handleKey()` changes `selectedIndex`. |
 
-Analytics emission is not implemented in the component source. Call site MUST hook `onClose`, `onChange` (via state mutation observation), and `onSelect` to emit events. This is a data collection contract, not a component implementation.
+Analytics emission is not implemented in the component source. The events above describe integration points a call site MAY wire up around `onClose`, `onSelect`, and `state` mutations — they document a possible data collection contract, not one the component enforces.
 
 ## Privacy
 
 - **Data collected**: Query strings entered by the user. Result titles and summaries selected or viewed.
-- **Storage**: Query and selection data are ephemeral and stored only in React state (`SearchState` object). No persistence to storage, cookies, or local cache.
+- **Storage**: Query and selection data live only in the caller-owned `SearchState` object, held in React state. No persistence to storage, cookies, or local cache.
 - **Transmission**: The `SearchState` object is responsible for making search queries to a backend or index. Component itself does not transmit data; `state.setQuery()` and `state.results` handle the exchange. Call site MUST ensure search backend is privacy-compliant.
-- **Retention**: Search state is reset when the dialog opens (via `state.reset()`) and lost when the dialog closes (`open: false` unmounts the component). No historical log is kept.
+- **Retention**: `state` is owned and held by the caller, not by `SearchDialog` — closing the dialog (`open: false`) unmounts the component but does not destroy the caller's `SearchState` instance. The component itself resets query and selection each time `open` transitions from `false` to `true` (see **reset-search-state-on-open**); it keeps no history of its own.
 
 Note: This component is a UI container. Privacy compliance depends entirely on the `SearchState` implementation and the backend search service. The component itself is privacy-neutral.
 
@@ -217,7 +221,7 @@ Subsystem: `awt` | Category: `SearchDialog`
 | Keyboard navigation | debug | `SearchDialog: Arrow key navigation; selected index now {index}.` |
 | Dialog dismissed | debug | `SearchDialog: Dialog dismissed via {reason} (escape/backdrop).` |
 
-Logging is not implemented in the component source. Call site or wrapper MUST add logging hooks at event boundaries (open, setQuery, onSelect, onClose, state updates) to emit these messages.
+Logging is not implemented in the component source. The events above describe suggested log points a call site or wrapper MAY add around open/close, query changes, and selection — they document a possible logging contract, not one the component enforces.
 
 ## Platform Notes
 
@@ -225,42 +229,64 @@ Logging is not implemented in the component source. Call site or wrapper MUST ad
 
 - **SwiftUI**: Adapt using SwiftUI's `.searchable()` modifier combined with a `Sheet` for modal presentation. Use `@FocusState` to manage input focus on open. Implement keyboard navigation via `.onKeyPress()` or `onSubmit()`. Group results using a `List` with `Section`. Adapt selection highlighting by binding `selectedIndex` to row state. Replace CSS class modifiers with conditional view properties (e.g., `.background()` conditional on selection).
 
-- **Compose**: Adapt using Compose's `Dialog` composable with `Modifier.fillMaxSize()` for backdrop. Use `BasicTextField` with `Material3` styling for the input. Implement result grouping with `LazyColumn` and section headers via `stickyHeader`. Keyboard navigation is handled by Compose's focus system and `onKeyEvent`. Selected result highlighting uses Compose state (`selectedIndex`). Meet Material Design 3 minimum touch target of 48dp for results and input field. Use `Material3.Icon` for the search icon, sized to Material specifications.
+- **Compose**: Adapt using Compose's `Dialog` composable with `Modifier.fillMaxSize()` for backdrop. Use `BasicTextField` with `Material3` styling for the input. Implement result grouping with `LazyColumn` and section headers via `stickyHeader`. Keyboard navigation is handled by Compose's focus system and `onKeyEvent`. Selected result highlighting uses Compose state (`selectedIndex`). Meet Material Design 3 minimum touch target of 48dp for results and input field. Use Compose Material3's `Icon` composable for the search icon, sized to Material specifications.
 
-- **AppKit / UIKit**: Adapt using `UISearchController` (UIKit) or `.searchable()` modifier (SwiftUI). SwiftUI's `SearchController` provides similar modal presentation with built-in backdrop and dismissal. Implement keyboard navigation via `UITableViewDelegate` arrow key handling. Group results using a sectioned list or table view with headers. Manage focus transition to search field on open using `becomeFirstResponder()`. Adapt the "No results" empty state to `ContentUnavailableView` or a custom placeholder. Replace CSS class modifiers with view state (isSelected flag on each row).
+- **AppKit / UIKit**: On UIKit, adapt using `UISearchController` or a custom modally-presented view controller, with the presentation providing the backdrop and dismissal. Manage focus transition to the search field on open via `becomeFirstResponder()`. Implement keyboard navigation (arrow keys, Enter, Escape) with `UIKeyCommand` on the presenting view controller — `UITableViewDelegate` does not receive key events. Group results using a sectioned `UITableView` or `UICollectionView` with section headers. Adapt the "No results" empty state to `UIContentUnavailableConfiguration` (iOS 17+) or a custom placeholder view. Replace CSS class modifiers with an `isSelected` flag driving cell appearance. On AppKit, adapt using `NSSearchField` inside an `NSPanel` or a sheet presented via `NSWindow.beginSheet(_:completionHandler:)`; handle Escape and arrow-key navigation in `NSResponder.keyDown(with:)`, group results in an `NSOutlineView` or `NSTableView` with section rows, and drive selection highlighting from `NSTableViewDelegate` row selection.
 
-- **WinUI 3**: Adapt using `SearchBox` control for the input field; WinUI provides built-in search styling and icon. Render the backdrop using a semi-transparent `Canvas` or `Border` behind the dialog. Implement result grouping using `ListView.GroupStyle` with `CollectionViewSource` binding. Keyboard navigation is handled by WinUI's focus engine; Escape dismissal is automatic on modal dialogs. Selected result highlighting is data-driven via `SelectedItem` binding and a `ControlTemplate` with alternate style. Minimum touch target on WinUI is 40×40px; use `MinHeight="48"` and `MinWidth="48"` for results and input.
+- **WinUI 3**: Adapt using `AutoSuggestBox` for the input field, presented inside a `ContentDialog` for modal presentation; `ContentDialog` provides the backdrop and dismisses on Escape automatically. Implement result grouping using `ListView.GroupStyle` with `CollectionViewSource` binding. Keyboard navigation (arrow keys) is handled by WinUI's focus engine together with `AutoSuggestBox`'s built-in suggestion list. Selected result highlighting is data-driven via `SelectedItem` binding and a `ControlTemplate` with an alternate style. Minimum touch target on WinUI is 40×40px; use `MinHeight="48"` and `MinWidth="48"` for results and input.
 
 ## Design Decisions
 
-- **Top 20 results limit**: Results are sliced to the first 20 entries before grouping. This design balances display performance (avoiding massive lists) with relevance (assuming results are pre-sorted by rank). Implementors MUST ensure the backing search state provides results in descending relevance order. Rationale: prevents DOM explosion on large result sets and keeps interaction smooth.
+- **Top 20 results limit**
+  **Decision**: Results are sliced to the first 20 entries (`state.results.slice(0, 20)`) before grouping.
+  **Rationale**: Bounds DOM size for display performance while assuming the backing search state returns results in descending relevance order, keeping interaction smooth on large result sets (see **limit-results-to-twenty**). Implementors MUST ensure `state.results` is pre-sorted by relevance.
+  **Approved**: pending
 
-- **Reset on open, not on close**: The component resets the search state (`state.reset()`) when `open` transitions to `false → true`, not on close. This allows state mutations during the dialog lifecycle to be observed if the dialog is reopened before being fully unmounted. Rationale: matches the documented comment that resetting on every state change would clobber user input mid-typing.
+- **Reset on open, not on close**
+  **Decision**: The search state is reset (`state.reset()`) when `open` transitions from `false` to `true`, not when it transitions from `true` to `false`.
+  **Rationale**: `state` is a caller-owned object that persists for as long as the caller keeps it, independent of the dialog's own mount lifecycle. The reset effect depends only on `open` so that typing does not retrigger a reset on every keystroke — resetting on every state change would clobber the user's in-progress query, per the source comment. Resetting on open guarantees a clean slate each time the dialog reappears.
+  **Approved**: pending
 
-- **requestAnimationFrame for focus**: Input focus is deferred to `requestAnimationFrame()` rather than synchronous `.focus()` on open. This ensures focus occurs after the browser has painted the input to the DOM. Rationale: some browsers do not allow focus on display:none or off-screen elements; deferring to the next frame guarantees the input is renderable.
+- **requestAnimationFrame for focus**
+  **Decision**: Input focus is deferred to `requestAnimationFrame()` rather than called synchronously on open.
+  **Rationale**: Deferring to the next animation frame ensures the input element has been painted to the DOM before focus is requested, since focusing an element before it has rendered can silently fail.
+  **Approved**: pending
 
-- **Form wrapper for autofill suppression**: The input is wrapped in a `<form>` element (not a div) to suppress iOS Safari's "AutoFill Contact" suggestion. The form has `role="search"` to maintain semantic intent and `onSubmit` handler to prevent navigation on implicit submission. Rationale: tested on iOS 26 against production chat inputs; this is the only reliable pattern to stop Safari's autofill menu from appearing.
+- **Form wrapper for autofill suppression**
+  **Decision**: The input is wrapped in a `<form role="search">` element, not a `<div>`, with an `onSubmit` handler that calls `preventDefault()`.
+  **Rationale**: Per the source comment, a field with no form ancestor is scoped for autofill against the whole document, so Safari classifies it from whatever else the page happens to say; giving the field a form of its own is what stopped iOS Safari's "AutoFill Contact" suggestion from appearing above the keyboard, measured on iOS 26 against a production chat input. `role="search"` preserves semantic intent, and `onSubmit` only blocks the navigation an implicit submit would trigger, since Enter is already handled by the input's `onKeyDown` (see **enter-selects-highlighted-result**, **prevent-form-submission**).
+  **Approved**: pending
 
-- **Slug as React key**: Each result uses `entry.slug` as its `key` prop rather than the array index. This is safer for list reconciliation if results reorder or if the same results are displayed in different contexts. Rationale: slug is assumed to be a stable identifier for each entry.
+- **Slug as React key**
+  **Decision**: Each result uses `entry.slug` as its list-reconciliation key (React's `key` prop) rather than the array index.
+  **Rationale**: `entry.slug` is assumed to be a stable identifier per entry, so reconciliation stays correct if results reorder or the same entries reappear across renders (see **stable-result-identity**). This is a rendering-library detail, not a claim any other platform's list view is required to replicate.
+  **Approved**: pending
 
-- **Selected index highlighting via CSS class, not inline style**: The selected result applies the `awt-search-dialog__result--selected` class modifier via a ternary. No inline styles are used for selection appearance. Rationale: decouples visual design from component code; allows CSS to drive appearance and theme variation.
+- **Selected index highlighting via CSS class, not inline style**
+  **Decision**: The selected result applies the `awt-search-dialog__result--selected` class modifier via a ternary; no inline styles are used for selection appearance.
+  **Rationale**: Decouples visual design from component code and lets CSS drive appearance and theme variation (see **highlight-selected-result**).
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Keyboard operable (Escape, Enter, arrow keys) | passed | Accessibility |
-| Accessible modal semantics (role, aria-modal) | passed | Accessibility |
-| Input has accessible label (aria-label) | passed | Accessibility |
-| Supports search role on form | passed | Accessibility |
-| No hardcoded colors; CSS-driven styling | passed | Theming |
-| Autofill prevention on iOS | passed | Platform-specific quirk handling |
-| Focus management on open/close | passed | User experience |
-| Result grouping and localization | passed | UX |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | partial | Privacy and Data |
+
+Statuses rest on `SearchDialog.tsx`: keyboard handling (Escape, Enter, arrow-key delegation) and the ARIA attributes present in the source (`role="dialog"`, `aria-modal`, `role="search"`, `aria-label`) give keyboard-navigable and semantic-markup a pass; screen-reader-support and focus-management are partial because the source has no live-region announcements (see **Announce state changes**) and implements neither a focus trap nor focus restoration on close; touch-target-size is partial because sizing is stylesheet-driven and absent from the source; string-externalization fails because every user-facing string (placeholder, empty-state message, escape hint, aria-label) is a hardcoded literal in the component; unicode-support passes because result text renders through standard React text nodes with no encoding restriction; data-minimization passes because the only data handled is the query string the search needs; and no-pii-in-logs is partial because logging is not implemented in the source, so the query-containing message template documented under Logging would need redaction if it were ever wired up.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case and cross-referenced the duplicates it removed; corrected the focus-trap and WCAG tap-target claims in Accessibility; converted Design Decisions to the Decision/Rationale/Approved form and softened unsupported claims within them; rebuilt Compliance as canonical linked checks with partial status where the source can't confirm; corrected Platform Notes API names (WinUI 3, AppKit/UIKit, Compose) and added the missing AppKit mapping; fixed the localization empty-state quoting and its forking advice; reworded the caller-owned state's retention and reset rationale to remove the contradiction; marked Analytics and Logging as unimplemented documentation rather than a caller MUST contract; fixed edge-case bound precision and restated defect-flavored edge cases as caller preconditions; and linked the related dialog and search-dialog-connected recipes. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Clarify review marker with evidence criteria; relabel Platform Notes Windows bullet to WinUI 3; clarify "Not applicable" sections; remove implementation-specific language from Accessibility Options |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

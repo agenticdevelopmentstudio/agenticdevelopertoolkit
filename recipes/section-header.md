@@ -3,7 +3,7 @@ id: 5e401b96-7157-4c5b-a623-b90dde372231
 title: Section Header
 domain: agenticdevelopertoolkit://recipes/section-header
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -20,8 +20,10 @@ tags:
 - layout
 - header
 - structure
-depends-on: []
-related: []
+depends-on:
+- agenticdevelopertoolkit://recipes/popover
+related:
+- agenticdevelopertoolkit://recipes/popover
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,18 +37,20 @@ A section header is a layout component that anchors a content area with a promin
 
 ## Behavioral Requirements
 
-- **must-render-title**: The component MUST render the `title` prop content as an h2 heading.
-- **must-support-eyebrow**: The component MUST render the `eyebrow` prop if provided; if not provided or empty, the eyebrow slot MUST NOT be rendered.
-- **must-support-help**: The component MUST render a help trigger button if the `help` prop is provided; if not provided or empty, the help trigger button MUST NOT be rendered.
-- **must-support-actions**: The component MUST render the `actions` prop content if provided; if not provided or empty, the actions slot MUST NOT be rendered.
-- **must-apply-custom-class**: The component MUST apply the `className` prop to the root container if provided.
-- **must-display-help-popover**: When the help trigger button is activated (click or keyboard Enter), the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge).
-- **must-label-help-trigger**: The help trigger button MUST have an accessible label "About this section" via `aria-label` attribute.
-- **must-maintain-layout-order**: Left section (title area) MUST be positioned before right section (actions and help) in visual and DOM order.
+"Empty," for the `eyebrow`, `help`, and `actions` props below, means any JavaScript falsy value — `undefined`, `null`, `false`, or the empty string `""` — since each slot is guarded by a truthy check (`{prop && ...}`) in the source. This definition is also used by the Configuration table below.
+
+- **render-title**: The component MUST render the `title` prop content as an h2 heading.
+- **support-eyebrow**: The component MUST render the `eyebrow` prop when it is provided and non-empty; when `eyebrow` is empty, the eyebrow slot MUST NOT be rendered.
+- **support-help**: The component MUST render a help trigger button when the `help` prop is provided and non-empty; when `help` is empty, the help trigger button MUST NOT be rendered.
+- **support-actions**: The component MUST render the `actions` prop content when it is provided and non-empty; when `actions` is empty, the actions slot MUST NOT be rendered.
+- **apply-custom-class**: The component MUST apply the `className` prop to the root container if provided.
+- **display-help-popover**: When the help trigger button is activated — by click, or by keyboard Enter or Space while focused — the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge). See agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and #accessibility/return-focus-on-close for how the popover closes and returns focus, and #accessibility/aria-expanded for its open/closed toggle state.
+- **label-help-trigger**: The help trigger button MUST have an accessible label "About this section" via the `aria-label` attribute.
+- **maintain-layout-order**: Left section (title area) MUST be positioned before right section (actions and help) in visual and DOM order.
 
 ## Appearance
 
-- **Layout**: Flex container with `items-start justify-between gap-4`, allowing left section to grow and right section to shrink without wrapping.
+- **Layout**: Flex container (`flex items-start justify-between gap-4`). The left section (title/eyebrow) has no flex-shrink override, so by default it may shrink and its content may wrap; the right section (actions/help) is `shrink-0` and never shrinks, so actions and the help trigger are never compressed.
 - **Left section spacing**: Vertical stack with `space-y-1` between eyebrow and title.
 - **Eyebrow font**: Monospace, 0.65rem (10.4px), uppercase, tracking-wider, color uses `apt-text-dim` semantic token.
 - **Title font**: Monospace, text-sm (14px), font-medium (500 weight), tracking-wide, color uses `apt-gold` semantic token.
@@ -62,14 +66,14 @@ A section header is a layout component that anchors a content area with a promin
 | With eyebrow | Eyebrow rendered above title in dim monospace. |
 | With help | Help trigger button displayed in right section; interactive. |
 | With actions | Actions rendered in right section before help button. |
-| Help popover open | Popover appears below help trigger with content; overlay covers page. |
+| Help popover open | Popover appears below the help trigger, aligned to the end (right edge), with the `help` content visible. |
 | Custom className | Additional classes merged with root container. |
 
 ## Accessibility
 
 - **Semantic heading**: Title is rendered as an `<h2>` to establish document outline hierarchy.
 - **Help button label**: `aria-label="About this section"` describes the button purpose for screen readers.
-- **Popover keyboard**: Help button is activated by click or Enter/Space keys; popover receives focus management per Popover component implementation (trapFocus, dismissOnEscape).
+- **Popover keyboard**: The help trigger is activated by click, Enter, or Space. Opening, closing (Escape or an outside interaction), and returning focus to the trigger are the underlying Popover component's behavior — see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and #accessibility/return-focus-on-close.
 - **Text content**: Eyebrow and title content are read as-is; no additional aria-labels required if text is meaningful.
 - **Icon-only button**: Help button contains only an icon; `aria-label` is REQUIRED to provide accessible name.
 
@@ -77,27 +81,30 @@ A section header is a layout component that anchors a content area with a promin
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| section-header-001 | must-render-title | `title="All ecosystems"` | h2 heading with text "All ecosystems" rendered in left section |
-| section-header-002 | must-support-eyebrow | `eyebrow="Section"`, `title="Title"` | Eyebrow text rendered above title in dim monospace; title rendered below in gold monospace |
-| section-header-003 | must-support-eyebrow | `title="Title"` (no eyebrow) | Only title rendered; eyebrow slot absent from DOM |
-| section-header-004 | must-support-help | `help={<div>Help content</div>}`, `title="Title"` | Help button visible in right section |
-| section-header-005 | must-support-help | `title="Title"` (no help) | Help button not rendered |
-| section-header-006 | must-display-help-popover | Help button present, user clicks help trigger | Popover appears; popover content (help prop) is visible; popover positioned below trigger, aligned right |
-| section-header-007 | must-display-help-popover | Help button present, user presses Enter on focused help trigger | Popover opens (same as click) |
-| section-header-008 | must-label-help-trigger | Help button rendered | Button has `aria-label="About this section"` |
-| section-header-009 | must-support-actions | `actions={<button>Action</button>}`, `title="Title"` | Actions content rendered in right section, before help button |
-| section-header-010 | must-support-actions | `title="Title"` (no actions) | Actions slot absent from DOM |
-| section-header-011 | must-apply-custom-class | `className="my-custom-class"`, `title="Title"` | Root container has both default flex classes and "my-custom-class" |
-| section-header-012 | must-maintain-layout-order | All props provided | Left section (title area) precedes right section (actions + help) in visual layout; justified to opposite edges |
+| section-header-001 | render-title | `title="All ecosystems"` | h2 heading with text "All ecosystems" rendered in left section |
+| section-header-002 | support-eyebrow | `eyebrow="Section"`, `title="Title"` | Eyebrow text rendered above title in dim monospace; title rendered below in gold monospace |
+| section-header-003 | support-eyebrow | `title="Title"` (no eyebrow) | Only title rendered; eyebrow slot absent from DOM |
+| section-header-004 | support-help | `help={<div>Help content</div>}`, `title="Title"` | Help button visible in right section |
+| section-header-005 | support-help | `title="Title"` (no help) | Help button not rendered |
+| section-header-006 | display-help-popover | Help button present, user clicks help trigger | Popover appears; popover content (help prop) is visible; popover positioned below trigger, aligned right |
+| section-header-007 | display-help-popover | Help button present, user presses Enter on focused help trigger | Popover opens (same as click) |
+| section-header-008 | label-help-trigger | Help button rendered | Button has `aria-label="About this section"` |
+| section-header-009 | support-actions | `actions={<button>Action</button>}`, `title="Title"` | Actions content rendered in right section, before help button |
+| section-header-010 | support-actions | `title="Title"` (no actions) | Actions slot absent from DOM |
+| section-header-011 | apply-custom-class | `className="my-custom-class"`, `title="Title"` | Root container has both default flex classes and "my-custom-class" |
+| section-header-012 | maintain-layout-order | All props provided | Left section (title area) precedes right section (actions + help) in visual layout; justified to opposite edges |
+| section-header-013 | display-help-popover | Help button present, user presses Space on focused help trigger | Popover opens (same as click/Enter) |
+| section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per popover#accessibility/escape-closes, #accessibility/return-focus-on-close) |
+| section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per popover#accessibility/aria-expanded) |
 
 ## Edge Cases
 
-- **Empty title string**: Title MUST still render as an h2; h2 will be empty but semantically present.
-- **Very long title**: Title renders without constraint; text may wrap if container width allows.
-- **Very long help content**: Popover has fixed width (288px); content may scroll vertically if overflows height; no max-height constraint in source.
-- **Help button focus during popover open**: Focus remains in popover; pressing Escape SHOULD close popover and return focus to trigger (Popover component handles this).
-- **Multiple rapid help button activations**: Popover opens on first activation; subsequent activations toggle state (Popover component manages state).
-- **Actions slot too wide**: Actions element shares right section with help button; if actions exceed available space, layout depends on actions' own flex properties. Component applies `shrink-0` to right section container, preventing flex shrinking.
+- **Empty title string**: The component does not validate `title`; passing an empty string still renders an `<h2>`, which is present in the DOM but conveys no accessible name to screen reader users. Callers MUST supply non-empty `title` content — Section Header itself performs no such check.
+- **Very long title**: Title renders without an explicit wrap constraint. Because the left section has no flex-shrink override while the right section is `shrink-0`, the left section shrinks first as available width tightens, so a long title wraps onto multiple lines once space is insufficient.
+- **Very long help content**: The popover has a fixed width (288px) and no max-height constraint in the source, so the panel grows to fit the content rather than scrolling.
+- **Help button focus during popover open**: Escape closes the popover and returns focus to the trigger (agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes, #accessibility/return-focus-on-close).
+- **Multiple rapid help button activations**: The Popover trigger toggles open/closed state on activation, reflected via `aria-expanded` (agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded).
+- **Actions slot too wide**: Actions element shares right section with help button; if actions exceed available space, layout depends on actions' own flex properties. The right section container applies `shrink-0`, so it does not shrink to accommodate overflow.
 - **Custom className conflicts**: If `className` prop contains flex or positioning classes, they merge via `cn()` utility; later classes may override defaults (standard Tailwind precedence).
 
 ## Configuration
@@ -105,9 +112,9 @@ A section header is a layout component that anchors a content area with a promin
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `title` | ReactNode | (required) | Content displayed as section heading; rendered as h2 |
-| `eyebrow` | ReactNode \| undefined | undefined | Optional label above title; not rendered if undefined |
-| `help` | ReactNode \| undefined | undefined | Optional help content displayed in popover; help button not rendered if undefined |
-| `actions` | ReactNode \| undefined | undefined | Optional action controls rendered in right section; not rendered if undefined |
+| `eyebrow` | ReactNode \| undefined | undefined | Optional label above title; not rendered when empty (see Behavioral Requirements) |
+| `help` | ReactNode \| undefined | undefined | Optional help content displayed in popover; help button not rendered when empty (see Behavioral Requirements) |
+| `actions` | ReactNode \| undefined | undefined | Optional action controls rendered in right section; not rendered when empty (see Behavioral Requirements) |
 | `className` | string \| undefined | undefined | Additional CSS classes merged with root container |
 
 ## Deep Linking
@@ -116,15 +123,15 @@ Not applicable: Section Header is a layout primitive without associated routes o
 
 ## Localization
 
-Not applicable: Section Header contains no user-facing strings; all content is passed via props and localized by parent component.
+The `title`, `eyebrow`, `help`, and `actions` props accept content supplied — and localized — by the calling component; Section Header performs no text lookup of its own. The one exception is the help trigger's accessible name, which is hardcoded in the source as `aria-label="About this section"` (English only, not externalized to a resource file) — see Compliance. The eyebrow's `uppercase` CSS text-transform is also a locale-sensitive display transform (it can mis-case characters such as German "ß" or Turkish dotted/dotless "i"), not a locale-invariant operation.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Help popover open/close animation respects `prefers-reduced-motion` (handled by Popover component) |
-| Increase Contrast | No component-specific support; parent theme applies contrast adjustments to `apt-gold` and `apt-text-dim` tokens |
-| Differentiate Without Color | Eyebrow and title rely on monospace font weight and size for differentiation, not color alone |
+| Reduce Motion | Popover open/close transitions, if any, are the underlying Popover component's concern — see agenticdevelopertoolkit://recipes/popover#accessibility-options/reduce-motion. |
+| Increase Contrast | No component-specific support; parent theme applies contrast adjustments to `apt-gold` and `apt-text-dim` tokens. |
+| Differentiate Without Color | Eyebrow and title rely on monospace font weight and size for differentiation, not color alone. |
 
 ## Feature Flags
 
@@ -144,33 +151,71 @@ Not applicable: Section Header does not emit application logs.
 
 ## Platform Notes
 
-- **SwiftUI**: Use a `VStack` for the left section (eyebrow above title as Text/Label components), and an `HStack` for the right section (actions leading, help PopoverButton trailing). Title should use `.font(.system(.body, design: .monospaced))` with gold semantic color; eyebrow uses dim secondary text color. Spacing mirrors the Tailwind gap tokens. PopoverButton triggers a popover modifier on the top-level HStack.
+- **SwiftUI**: Use a `VStack` for the left section (eyebrow above title as `Text` views) and an `HStack` for the right section (actions leading, help button trailing), with a `Spacer()` between the two sections inside the outer `HStack` so they are pushed to opposite edges, matching `justify-between`. Title uses `.font(.system(.body, design: .monospaced))` with the gold semantic color; eyebrow uses the dim secondary text color. The help trigger is a `Button` — not a `PopoverButton`, which is not a SwiftUI type — with a `.popover(isPresented:)` modifier attached to that button (not to the top-level `HStack`), so the popover anchors to the trigger.
 
-- **Compose**: Use a `Row` (horizontal flex) as root container with `verticalAlignment = Alignment.Top` and `modifier = Modifier.fillMaxWidth()`. Left section is a `Column` (vertical stack) with title and optional eyebrow as Text components, using monospace font (default serif family or explicit monospace typeface) and semantic gold color. Right section is a `Row` for actions and help button. Help button uses `IconButton` wrapping a CircleHelpIcon (24dp or Material Icons equivalent); clicking opens a PopupMenu or Dialog for help content.
+- **Compose**: Use a `Row` (horizontal flex) as the root container with `verticalAlignment = Alignment.Top` and `modifier = Modifier.fillMaxWidth()`. The left section is a `Column` with title and optional eyebrow `Text` composables, using `FontFamily.Monospace` (not a "default serif family") and the semantic gold color; give the left `Column` `Modifier.weight(1f)` so it takes the remaining space, matching `justify-between`. The right section is a `Row` for actions and the help button. The help button uses an `IconButton` wrapping a CircleHelp icon; clicking it opens a `Popup` or `DropdownMenu` — not `PopupMenu`, which is not a Compose API — anchored to the button, showing the help content.
 
-- **React/Web**: Component implemented in `packages/web/packages/ui/src/blocks/section-header.tsx`. Props: `eyebrow` (ReactNode), `title` (ReactNode, required), `help` (ReactNode), `actions` (ReactNode), `className` (string). Title rendered as `<h2>` with monospace font and gold color. Help button uses Lucide's `CircleHelp` icon (16px) wrapped in a Popover trigger; popover content positioned via `side="bottom" align="end"` with fixed width `w-72`. Uses Tailwind utility classes for styling; no inline styles.
+- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `axis = .horizontal`, `alignment = .top`, `distribution = .fill`. Give the left stack a lower content-hugging priority than the right stack so the two sections are pushed apart, matching `justify-between`. The left stack contains the title `NSTextField` (AppKit) or `UILabel` (UIKit) and optional eyebrow label, both using the system monospace font (`.monospacedSystemFont(ofSize:weight:)`) and the gold semantic color. The right stack contains optional actions and the help button (`NSButton` / `UIButton`). The help button uses the SF Symbol `questionmark.circle` (not `circle.fill.badge.questionmark`, which does not exist) and triggers a popover with the help text via `NSPopover` (AppKit) or a `UIPopoverPresentationController` (UIKit).
 
-- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `axis = .horizontal`, `alignment = .top`, `distribution = .fill`. Left stack contains title `NSTextField` (AppKit) or `UILabel` (UIKit) and optional eyebrow label, both using system monospace font (`.monospacedSystemFont(ofSize:weight:)`) and gold semantic color. Right stack contains optional actions and help button (`NSButton` / `UIButton`). Help button uses a system symbol image (`circle.fill.badge.questionmark` or equivalent) and triggers a popover with help text via `NSPopover` (AppKit) or a `UIPopoverPresentationController` (UIKit).
-
-- **WinUI 3**: Use a `StackPanel` with `Orientation="Horizontal"` and `VerticalAlignment="Top"` as root. Left section is a `StackPanel` with `Orientation="Vertical"` containing a `TextBlock` for title (`FontFamily="Courier New"` or system monospace, `Foreground="{StaticResource GoldBrush}"`) and optional eyebrow `TextBlock` with secondary text color. Right section is a `StackPanel` with `Orientation="Horizontal"` for actions and help button. Help button uses `AppBarButton` or standard `Button` with a `SymbolIcon` (CircleQuestion or equivalent); clicking opens a `TeachingTip` or custom popup to display help content at the same position. Popover behavior (dismiss on outside click, trap focus) configured via `TeachingTip.IsOpen` and event handlers.
+- **WinUI 3**: Use a `Grid` with two columns (`*` for the left section, `Auto` for the right) as root, rather than a horizontal `StackPanel`, which cannot push its two sections apart. The left column is a `StackPanel` with `Orientation="Vertical"` containing a `TextBlock` for the title (a theme monospace resource such as Cascadia Mono, not a hardcoded `"Courier New"`, so it respects the active theme; `Foreground="{StaticResource GoldBrush}"`) and an optional eyebrow `TextBlock` with secondary text color. The right column is a `StackPanel` with `Orientation="Horizontal"` for actions and the help button. The help button uses an `AppBarButton` or standard `Button` with a `SymbolIcon` (question-mark glyph or equivalent) and sets `AutomationProperties.Name` so assistive technology announces its purpose; clicking it opens a `Flyout` or `TeachingTip` to display the help content at the trigger's position — note that `TeachingTip` does not by itself trap focus, so an explicit `Flyout` with its own focus handling may be required where trapping matters.
 
 ## Design Decisions
 
-- **Monospace typography**: Title and eyebrow use monospace font to create visual distinction and hierarchy, aligned with a technical/data-focused design system. This reinforces the component's use in dashboards and structured content.
-- **Gold semantic color for title**: Gold conveys prominence and primary hierarchy. The `apt-gold` token is reserved for the section title, distinguishing it from standard text.
-- **Subtle help button styling**: The `quietControlClass` keeps the help button visually subordinate to content, preventing distraction while remaining discoverable for users who need help.
-- **Fixed popover width (288px)**: The `w-72` constraint ensures readability of help text without forcing unnecessary wrapping; help content longer than ~300 characters may wrap or require scrolling.
-- **Help popover position (bottom, end)**: Positioning below and aligned to the right follows standard popover conventions; this placement avoids overlap with title and keeps the trigger button visible.
-- **Left-justified title, right-justified help/actions**: The `justify-between` flex property creates a clear visual separation between content (left) and controls (right).
-- **Required title prop**: Title is not optional because the component's purpose is to introduce a section; a section header without a title is meaningless.
-- **Optional slots for flexibility**: Eyebrow, help, and actions are optional to accommodate simple use cases (title-only headers) without requiring conditional rendering at call sites.
+**Decision**: Title and eyebrow use a monospace font.
+**Rationale**: Creates visual distinction and hierarchy, aligned with a technical/data-focused design system; reinforces the component's use in dashboards and structured content.
+**Approved**: pending
+
+**Decision**: The section title uses the `apt-gold` semantic color token.
+**Rationale**: Gold conveys prominence and primary hierarchy, distinguishing the title from standard text.
+**Approved**: pending
+
+**Decision**: The help trigger uses `quietControlClass` for muted styling.
+**Rationale**: Keeps the help button visually subordinate to content, preventing distraction while remaining discoverable for users who need it.
+**Approved**: pending
+
+**Decision**: The help popover has a fixed width of 288px (`w-72`).
+**Rationale**: Ensures readability of help text without forcing unnecessary wrapping.
+**Approved**: pending
+
+**Decision**: The help popover is positioned below and aligned to the end (right edge) of the trigger.
+**Rationale**: Follows standard popover conventions, avoids overlap with the title, and keeps the trigger button visible.
+**Approved**: pending
+
+**Decision**: The root container uses `justify-between` to left-justify the title area and right-justify actions/help.
+**Rationale**: Creates a clear visual separation between content (left) and controls (right).
+**Approved**: pending
+
+**Decision**: `title` is a required prop.
+**Rationale**: Title is not optional because the component's purpose is to introduce a section; a section header without a title is meaningless.
+**Approved**: pending
+
+**Decision**: `eyebrow`, `help`, and `actions` are optional.
+**Rationale**: Accommodates simple use cases (title-only headers) without requiring conditional rendering at call sites.
+**Approved**: pending
+
+**Decision**: The title's heading level is fixed at `<h2>`; there is no `level` or `as` prop to change it.
+**Rationale**: The source hardcodes `<h2>` in every usage. This is a known limitation: nesting a Section Header inside content that already has an `<h2>` ancestor will produce an incorrect document outline. A future revision could add a `level`/`as` prop; until then, callers are responsible for keeping Section Header at a consistent outline depth.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Section Header is a foundational layout component without direct compliance concerns; parent application handles compliance for help content and actions.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; cited the popover ingredient by requirement fragment instead of crediting behavior to "the Popover component" and added it to depends-on/related; reformatted Design Decisions into Decision/Rationale/Approved triplets and added one for the fixed h2 heading level; rewrote Compliance from "Not applicable" into a real table; fixed the flex-shrink/wrap contradiction between Appearance and Edge Cases; expanded help-popover keyboard coverage (Space, Escape, focus return, toggle) with new test vectors; corrected nonexistent APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; rewrote Localization to name the hardcoded aria-label and the locale-sensitive uppercase transform; defined "empty" once for the optional ReactNode props and reused it in Configuration; clarified how an empty title is actually handled. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
