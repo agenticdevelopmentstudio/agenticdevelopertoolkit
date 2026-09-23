@@ -3,7 +3,7 @@ id: 3ec6618a-03a4-4740-9655-e6e47c05cf2b
 title: WindowFooterBar
 domain: agenticdevelopertoolkit://recipes/window-footer-bar
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -34,20 +34,21 @@ A fixed-height status bar component positioned at the bottom edge of a document 
 
 ## Behavioral Requirements
 
-- **must-render-hairline**: Component MUST render a hairline separator at its top edge using the border theme role.
-- **must-display-status-text**: Component MUST display the status string at the leading edge in caption text role with secondary text theme.
-- **must-truncate-status-middle**: Component MUST truncate status text by the middle when it exceeds available width.
-- **must-provide-tooltip**: Component MUST display the full status text as a tooltip when not empty; when status is empty, tooltip MUST be cleared.
-- **must-maintain-height**: Component MUST maintain a fixed height of 22pt.
-- **must-center-status-vertically**: Component MUST center-align the status label vertically within the bar.
-- **must-support-trailing-accessories**: Component MUST accept an array of NSView objects for the trailing slot and render them in horizontal order.
-- **must-center-trailing-vertically**: Component MUST center-align trailing accessory views vertically within the bar.
-- **must-apply-trailing-spacing**: Component MUST apply 6pt spacing between trailing accessory views.
-- **must-maintain-margins**: Component MUST maintain 10pt leading and trailing margins from the bar edges.
-- **must-ensure-minimum-gap**: Component MUST maintain at least 8pt minimum gap between status label and trailing accessories when both are present.
-- **must-support-theme**: Component MUST apply theme-aware colors: elevated surface background, border-role hairline, and secondary text.
-- **must-accept-accessibility-prefix**: Component MUST require an accessibility prefix string during initialization.
-- **must-set-status-accessibility-id**: Component MUST assign an accessibility identifier to the status label using the provided prefix (formatted as `{prefix}.status`).
+- **top-hairline**: Component MUST render a hairline separator at its top edge using the border theme role.
+- **status-text-leading**: Component MUST display the status string at the leading edge of the bar.
+- **middle-truncation**: Component MUST truncate status text by the middle when it exceeds available width.
+- **hover-tooltip**: Component MUST display the full status text as a tooltip on pointer-capable platforms when not empty; when status is empty, tooltip MUST be cleared. On touch-only platforms, the full text remains available via the accessible label instead (see **full-text-accessible-label**).
+- **full-text-accessible-label**: Component MUST expose the complete, untruncated status string as the status label's accessibility value, independent of visual truncation.
+- **fixed-height**: Component MUST maintain a fixed height of 22pt.
+- **status-vertical-centering**: Component MUST center-align the status label vertically within the bar.
+- **trailing-accessories**: Component MUST accept an ordered list of accessory views for the trailing slot and render them in that order.
+- **trailing-vertical-centering**: Component MUST center-align trailing accessory views vertically within the bar.
+- **trailing-spacing**: Component MUST apply 6pt spacing between trailing accessory views.
+- **edge-margins**: Component MUST maintain 10pt leading and trailing margins from the bar edges.
+- **minimum-gap**: Component MUST maintain at least 8pt minimum gap between status label and trailing accessories when both are present.
+- **theme-support**: Component MUST apply theme-aware colors: elevated surface background, border-role hairline, and secondary text.
+- **accessibility-prefix**: Component MUST require an accessibility prefix string during initialization.
+- **status-accessibility-id**: Component MUST assign an accessibility identifier to the status label using the provided prefix (formatted as `{prefix}.status`).
 
 ## Appearance
 
@@ -66,15 +67,15 @@ A fixed-height status bar component positioned at the bottom edge of a document 
 | State | Appearance change |
 |-------|------------------|
 | Default | Status text visible; hairline and background applied; trailing accessories visible if present |
-| Status truncated | Status text truncated by middle; full text available in tooltip on hover |
-| Empty status | Tooltip cleared; label space available for trailing accessories |
+| Status truncated | Status text truncated by middle; full text available via tooltip on pointer platforms and via the accessible label (**full-text-accessible-label**) on all platforms |
+| Empty status | Tooltip cleared; the 8pt minimum gap (**minimum-gap**) applies only when both status text and accessories are present, so trailing accessories may use the full available width |
 | Empty accessories | Trailing slot hidden; status text uses available horizontal space |
 
 ## Accessibility
 
 - **Role**: Container (NSView subclass; does not have an interactive role itself)
-- **Status label**: Assigned accessibility ID using provided prefix
-- **Label requirements**: Status text serves as the accessible content; full untruncated text is available via tooltip
+- **Status label**: Assigned accessibility ID using provided prefix (**status-accessibility-id**)
+- **Label requirements**: The status label's accessibility value always carries the complete, untruncated status string (**full-text-accessible-label**), independent of the visually truncated, middle-ellipsized text; the tooltip (**hover-tooltip**) is a supplementary affordance for pointer platforms only.
 - **State changes**: Status text updates are reflected in accessibility element content
 - **Minimum tap target**: Not applicable; component is not interactive
 
@@ -82,28 +83,34 @@ A fixed-height status bar component positioned at the bottom edge of a document 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| window-footer-001 | must-maintain-height | Component instantiated with any status | Bar height equals 22pt |
-| window-footer-002 | must-render-hairline | Component rendered | Hairline separator visible at top edge |
-| window-footer-003 | must-display-status-text | `status = "File.txt"` | Text "File.txt" visible at leading edge |
-| window-footer-004 | must-truncate-status-middle | `status = "very/long/file/path/that/exceeds/available/width.txt"` | Text truncated in middle with ellipsis; full path accessible via tooltip |
-| window-footer-005 | must-provide-tooltip | `status = "example text"` | Hovering over status displays full "example text" |
-| window-footer-006 | must-provide-tooltip | `status = ""` | No tooltip displayed |
-| window-footer-007 | must-center-status-vertically | Component rendered | Status label vertically centered within 22pt height |
-| window-footer-008 | must-support-trailing-accessories | `trailingAccessories = [view1, view2]` | Both views rendered horizontally in trailing slot |
-| window-footer-009 | must-apply-trailing-spacing | `trailingAccessories = [view1, view2]` | 6pt horizontal space between view1 and view2 |
-| window-footer-010 | must-center-trailing-vertically | `trailingAccessories = [view1, view2]` | Accessory views vertically centered within bar |
-| window-footer-011 | must-support-trailing-accessories | `trailingAccessories = []` then `trailingAccessories = [newView]` | Previous accessory removed; newView rendered in its place |
-| window-footer-012 | must-set-status-accessibility-id | `init(accessibilityPrefix: "project.footer")` | Status label accessibility ID is "project.footer.status" |
+| window-footer-001 | fixed-height | Component instantiated with any status | Bar height equals 22pt |
+| window-footer-002 | top-hairline | Component rendered | Hairline separator visible at top edge |
+| window-footer-003 | status-text-leading | `status = "File.txt"` | Text "File.txt" visible at leading edge |
+| window-footer-004 | middle-truncation | `status = "very/long/file/path/that/exceeds/available/width.txt"` | Text truncated in middle with ellipsis; full path accessible via tooltip |
+| window-footer-005 | hover-tooltip | `status = "example text"` | Hovering over status displays full "example text" |
+| window-footer-006 | hover-tooltip | `status = ""` | No tooltip displayed |
+| window-footer-007 | status-vertical-centering | Component rendered | Status label vertically centered within 22pt height |
+| window-footer-008 | trailing-accessories | `trailingAccessories = [view1, view2]` | Both views rendered horizontally in trailing slot |
+| window-footer-009 | trailing-spacing | `trailingAccessories = [view1, view2]` | 6pt horizontal space between view1 and view2 |
+| window-footer-010 | trailing-vertical-centering | `trailingAccessories = [view1, view2]` | Accessory views vertically centered within bar |
+| window-footer-011 | trailing-accessories | `trailingAccessories = [view1]` then `trailingAccessories = []` | view1 is detached from the view hierarchy (removed as arranged subview and from its superview); trailing slot is empty |
+| window-footer-012 | status-accessibility-id | `init(accessibilityPrefix: "project.footer")` | Status label accessibility ID is "project.footer.status" |
+| window-footer-013 | full-text-accessible-label | `status` set to a long path that is visually truncated | Status label's accessibility value equals the full, untruncated string |
+| window-footer-014 | edge-margins | Component rendered | Status label leading edge is 10pt from the bar's leading edge; trailing accessory stack's trailing edge is 10pt from the bar's trailing edge |
+| window-footer-015 | minimum-gap | `status` long enough to approach the trailing edge, `trailingAccessories = [view1]` | Gap between status label's trailing edge and trailing stack's leading edge is at least 8pt |
+| window-footer-016 | theme-support | Component rendered under light and dark appearance | Background uses the elevated-surface role, hairline uses the border role, and status text uses the secondary-text role in both appearances |
+| window-footer-017 | accessibility-prefix | `init(accessibilityPrefix: "project.footer")` | Component initializes; child identifiers are derived from `"project.footer"` (see **status-accessibility-id**) |
 
 ## Edge Cases
 
-- **Empty status string**: Status label renders as empty; tooltip is nil; trailing accessories have full trailing slot width.
-- **Very long status string**: Text is truncated by middle; tooltip preserves full string; no horizontal scroll occurs.
+- **Empty status string**: Status label renders as empty; tooltip is nil (see **hover-tooltip**); trailing accessories have the full trailing slot width available since the minimum gap (**minimum-gap**) applies only when both status text and accessories are present.
+- **Very long status string**: Text is truncated by middle (**middle-truncation**); the full string remains available via tooltip on pointer platforms and via the accessible label (**full-text-accessible-label**) on all platforms; no horizontal scroll occurs.
 - **Empty trailing accessories array**: Trailing slot is empty; no layout errors occur; status label can expand to available width.
 - **Rapid status updates**: Status text and tooltip update without layout thrashing; component remains at fixed 22pt height.
-- **Trailing accessories with varying heights**: All accessories center-aligned vertically to bar center; no clipping or overflow.
-- **Accessory replacement**: Existing accessories removed from view hierarchy and replaced with new array; no memory leaks or dangling views.
-- **Long accessory list**: Accessories squeeze toward trailing edge; 6pt spacing maintained; minimum gap (8pt) from status preserved until width exhausted.
+- **Trailing accessories with varying heights**: All accessories center-aligned vertically to bar center (**trailing-vertical-centering**); no clipping or overflow.
+- **Accessory replacement**: Existing accessories removed from the view hierarchy and replaced with the new array; no memory leaks or dangling views.
+- **Long accessory list**: Accessories squeeze toward the trailing edge; 6pt spacing (**trailing-spacing**) maintained; minimum gap (**minimum-gap**, 8pt) from status preserved until width is exhausted.
+- **Large system text size**: Bar height remains fixed at 22pt (`WindowFooterBar.height` is a constant, not derived from font metrics); at very large caption text sizes (Dynamic Type or a platform text scale) the status label's text may be vertically clipped rather than the bar growing to fit it.
 
 ## Configuration
 
@@ -145,26 +152,46 @@ Not applicable: No logging instrumentation defined in component source.
 
 ## Platform Notes
 
-- **AppKit** (source): `WindowFooterBar` in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowFooterBar.swift`. Composed of `NSStackView` for trailing accessories and `NSView` constraints for layout. Uses `ThemedLabel`, `ThemedBackgroundView`, and `ThemedSeparatorView` for theme integration. Accessibility requires string prefix at init time.
-- **SwiftUI**: Implement as a view container with a ZStack or VStack. Leading edge contains a Text view with `lineLimit(1)` and `.truncationMode(.middle)`. Trailing edge uses HStack with 6pt spacing for accessories. Apply a Divider at top. Use `@Environment(\.colorScheme)` for theme-aware colors. Set accessibility identifier via `.accessibilityIdentifier()` modifier.
-- **Compose**: Use Row layout with `horizontalArrangement = Arrangement.SpaceBetween`. Leading slot: Text with `maxLines = 1`, `overflow = TextOverflow.Ellipsis`. Divider at top with border. Trailing slot: Row with 6dp spacing for accessories. Apply Material 3 surface colors. Accessibility ID via `testTag()` or `semantics()`.
-- **UIKit**: Implement as UIView subclass. Use UIStackView (horizontal) for layout. Leading: UILabel with `lineBreakMode = .byTruncatingMiddle`. Add UIView separator at top via CALayer. Trailing: UIStackView (horizontal) with 6pt spacing. Apply UIColor semantic colors for elevated surface and border. Set accessibilityIdentifier on label.
-- **WinUI 3**: Implement as a UserControl containing a Grid. Top row: Border with 1pt stroke for hairline. Content row: StackPanel (Horizontal). Leading cell: TextBlock with `TextTrimming="CharacterEllipsis"` and tooltip via ToolTipService.SetToolTip. Trailing cell: StackPanel (Horizontal) with 6pt spacing for Buttons or other controls. Use Fluent 2 SurfaceAlt and Divider tokens. Set `AutomationProperties.AutomationId` with prefix.
+- **AppKit** (source): `WindowFooterBar` in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowFooterBar.swift`. Composed of `NSStackView` for trailing accessories and `NSView` constraints for layout. Uses `ThemedLabel`, `ThemedBackgroundView`, and `ThemedSeparatorView` for theme integration. `NSTextField`'s accessibility value is backed by `stringValue`, so the full status string remains the accessible value regardless of the label's visual middle-truncation (**full-text-accessible-label**). Accessibility requires a string prefix at init time.
+- **SwiftUI**: `VStack(spacing: 0) { Divider(); HStack { Text(status).lineLimit(1).truncationMode(.middle); Spacer(minLength: 8); HStack(spacing: 6) { accessories } } }`. Apply `.help(status)` for the pointer-platform tooltip and `.accessibilityLabel(status)` so the full string remains the accessible value on all platforms (**full-text-accessible-label**). Map colors to the toolkit's theme roles (elevated surface, border, secondary text) rather than raw `@Environment(\.colorScheme)`. Set the identifier via `.accessibilityIdentifier()`.
+- **Compose**: `Row` with a top `Divider`. Leading: `Text(status, maxLines = 1, overflow = TextOverflow.MiddleEllipsis, modifier = Modifier.weight(1f))` — `Arrangement.SpaceBetween` does not guarantee the 8dp minimum gap, so pair the weighted leading `Text` with an explicit `Spacer(Modifier.width(8.dp))` before the trailing `Row`. Trailing: `Row` with 6dp spacing for accessories. Apply Material 3 surface colors mapped to the toolkit's theme roles. Compose has no hover tooltip, so set `Modifier.semantics { contentDescription = status }` on the leading `Text` as the full-text fallback (**full-text-accessible-label**); accessibility ID via `testTag()`.
+- **UIKit**: `UIView` subclass using a horizontal `UIStackView`. Leading: `UILabel` with `lineBreakMode = .byTruncatingMiddle`. Add a hairline `UIView` separator at the top via `CALayer`. Trailing: horizontal `UIStackView` with 6pt spacing. Apply `UIColor` semantic colors mapped to the toolkit's elevated-surface and border roles. iOS has no hover tooltip, so explicitly set `accessibilityLabel = status` (the full string) on the leading label rather than relying on the truncated `text` (**full-text-accessible-label**); set `accessibilityIdentifier` on the label.
+- **WinUI 3**: `UserControl` containing a `Grid`. Top row: a `Border` with a 1px stroke for the hairline. Content row: horizontal `StackPanel`. WinUI's `TextTrimming="CharacterEllipsis"` only trims from the end, so it cannot express middle truncation (**middle-truncation**); compute the middle-truncated display string with a value converter or a custom measure pass and bind it to the `TextBlock`, while keeping the full string in `AutomationProperties.Name` (**full-text-accessible-label**) and its `ToolTipService.SetToolTip` (**hover-tooltip**). Trailing cell: horizontal `StackPanel` with 6pt spacing for buttons or other controls. Use Fluent 2 SurfaceAlt and Divider tokens.
 
 ## Design Decisions
 
-- **Fixed height of 22pt**: Designed to visually balance with macOS tab bar height, ensuring windows with both elements appear compositionally stable rather than bottom-heavy.
-- **Truncation by middle**: Status strings are typically paths or identifiers where the end (filename or key identifier) is more important than the beginning (directory structure). Middle truncation preserves both ends, maximizing user recognition when text is clipped.
-- **Required accessibility prefix**: Window contexts vary (multiple window types sharing footer bar code); requiring a prefix ensures accessibility identifiers are unique per window type and testable in UI automation, avoiding ambiguity.
-- **Margin consistency (10pt leading/trailing)**: Matches standard macOS window chrome margin conventions; 8pt inter-element gap ensures breathing room between status text and accessories without excessive waste.
-- **Trailing accessory array over slot builder**: Fixed array property is simpler for callers to manage than a closure; removal and replacement are explicit and obvious, reducing layout surprises.
+- **Decision**: Fixed height of 22pt.
+  **Rationale**: Sized to match the visual weight of this toolkit's own macOS tab bar height so a window using both elements does not read as bottom-heavy; this is an internal consistency choice for the toolkit's chrome components, not a cited platform guideline.
+  **Approved**: pending
+
+- **Decision**: Truncate the status string by the middle rather than the end.
+  **Rationale**: Status strings are typically paths or identifiers where the end (filename or key identifier) is more important than the beginning (directory structure); middle truncation preserves both ends, maximizing recognizability when the text is clipped.
+  **Approved**: pending
+
+- **Decision**: Require an accessibility prefix string at initialization rather than defaulting one.
+  **Rationale**: The bar is meant to sit under more than one kind of window; requiring a prefix keeps accessibility identifiers unique per window type and avoids a UI test addressing "the footer" ambiguously matching whichever instance came first.
+  **Approved**: pending
+
+- **Decision**: 10pt leading/trailing margins with an 8pt minimum inter-element gap.
+  **Rationale**: An internal consistency choice for this toolkit's chrome components rather than a cited platform guideline; the 8pt gap keeps breathing room between the status text and accessories without wasting space.
+  **Approved**: pending
+
+- **Decision**: Expose trailing accessories as a settable array property rather than a slot builder/closure.
+  **Rationale**: A fixed array is simpler for callers to manage than a closure; removal and replacement are explicit and obvious, reducing layout surprises.
+  **Approved**: pending
 
 ## Compliance
 
-Not applicable: No compliance checks defined for this ingredient.
+| Check | Status | Category |
+|-------|--------|----------|
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+
+Statuses rest on the source: `dynamic-type-support` fails because `WindowFooterBar.height` is a hardcoded 22pt constant with no logic that grows the bar or the label for larger text (see the **Large system text size** edge case); `contrast-ratio` is partial because the source applies theme-role colors (elevated surface, border, secondary text) but the actual color values behind those roles are defined outside this file, so the resulting contrast cannot be confirmed here.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added full-text-accessible-label requirement, accessibility text, and test vector so screen-reader/keyboard/touch users get the untruncated string without relying on hover; reworded platform-tied requirement text to be platform-neutral; added a Dynamic Type edge case; fixed test vector 011 and added vectors for edge-margins, minimum-gap, theme-support, and accessibility-prefix; corrected the WinUI and Compose platform notes' truncation/spacing claims and tightened the SwiftUI note; reformatted Design Decisions into the Decision/Rationale/Approved form and removed unsourced platform-convention citations; filled in the Compliance table |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from WindowFooterBar.swift source |

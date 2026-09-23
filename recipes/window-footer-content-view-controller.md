@@ -1,13 +1,13 @@
 ---
 id: 44544cfb-39e5-419d-81b9-8e1c504c6e64
-title: WindowFooterContentViewController
+title: Window Footer Content Container
 domain: agenticdevelopertoolkit://recipes/window-footer-content-view-controller
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,8 @@ tags:
 - window-chrome
 - view-controller
 - layout
-depends-on: []
+depends-on:
+- agenticdevelopertoolkit://recipes/window-footer-bar
 related: []
 references: []
 approved-by: ''
@@ -33,15 +34,24 @@ approved-date: ''
 
 A view controller that composes an arbitrary content view controller with a fixed footer bar (`WindowFooterBar`) at the bottom of a window. The footer remains visible and stationary while the content fills the remaining space. This container allows windows to gain a footer without restructuring their content hierarchy—the content view controller is adopted as a child and participates in the responder chain and appearance inheritance as if the window contained it directly.
 
+**Public API**:
+
+| Member | Type | Notes |
+|--------|------|-------|
+| `init(contentViewController:accessibilityPrefix:)` | `(NSViewController, String) -> WindowFooterContentViewController` | Both parameters are required; neither has a default. |
+| `contentViewController` | `NSViewController` (read-only) | What the window is for; adopted as a child in `init`. |
+| `footer` | `WindowFooterBar` (read-only) | Exposed directly for footer-specific API (e.g. `trailingAccessories`) beyond `status`. |
+| `status` | `String` (computed) | Forwards to `footer.status`. |
+
 ## Behavioral Requirements
 
-- **must-adopt-content-child**: The container MUST adopt the provided `contentViewController` as a child view controller, ensuring it participates in the responder chain and inherits appearance settings from the parent window.
-- **must-stack-layout**: The container MUST position the content view controller's view above the `WindowFooterBar` in the view hierarchy, with the footer anchored to the bottom.
-- **must-fill-content-space**: The content view controller's view MUST expand to fill all available space in the container except the space occupied by the footer bar.
-- **must-position-footer-bottom**: The `WindowFooterBar` MUST be anchored to the bottom edge of the container and stretch to the full width.
-- **must-forward-status**: The `status` property MUST forward all getter and setter calls to the footer's `status` property, allowing callers to set the footer's leading status text through a single reference.
-- **must-require-accessibility-prefix**: The initializer MUST require an `accessibilityPrefix` parameter (no default) to namespace the footer's accessibility controls, ensuring that multiple windows with footers do not share accessibility identifiers.
-- **must-prevent-nscoder-init**: Initialization from an `NSCoder` (e.g., from Interface Builder) MUST not be supported and MUST raise a fatal error if attempted.
+- **content-child**: The container MUST adopt the provided `contentViewController` as a child view controller, ensuring it participates in the responder chain and inherits appearance settings from the parent window.
+- **stacked-layout**: The container MUST position the content view controller's view above the `WindowFooterBar` in the view hierarchy, with the footer anchored to the bottom.
+- **content-space-fill**: The content view controller's view MUST expand to fill all available space in the container except the space occupied by the footer bar.
+- **footer-bottom-position**: The `WindowFooterBar` MUST be anchored to the bottom edge of the container and stretch to the full width.
+- **status-forwarding**: The `status` property MUST forward all getter and setter calls to the footer's `status` property, allowing callers to set the footer's leading status text through a single reference.
+- **accessibility-prefix-required**: The initializer MUST require an `accessibilityPrefix` parameter (no default) to namespace the footer's accessibility controls, ensuring that multiple windows with footers do not share accessibility identifiers.
+- **nscoder-init-unsupported**: Initialization from an `NSCoder` (e.g., from Interface Builder) MUST NOT be supported and MUST raise a fatal error if attempted.
 
 ## Appearance
 
@@ -59,26 +69,26 @@ A view controller that composes an arbitrary content view controller with a fixe
 ## Accessibility
 
 - **Accessibility inheritance**: The content view controller's accessibility hierarchy is preserved; elements in the content remain discoverable with their original accessibility attributes.
-- **Footer accessibility namespacing**: The `accessibilityPrefix` parameter MUST be passed to `WindowFooterBar` to ensure its controls are named under a namespace unique to this window instance (e.g., `project.footer.button`). This prevents conflicts when multiple windows with footers exist in the application.
-- **Example prefix usage**: If `accessibilityPrefix` is `"project.footer"`, the footer's controls receive accessibility identifiers rooted at `project.footer.*`.
+- **Footer accessibility namespacing**: The `accessibilityPrefix` parameter MUST be passed to `WindowFooterBar` to ensure its controls are named under a namespace unique to this window instance (e.g., `project.footer.status`, matching the `<prefix>.status` identifier `WindowFooterBar` assigns to its status label). This prevents conflicts when multiple windows with footers exist in the application.
+- **Example prefix usage**: If `accessibilityPrefix` is `"project.footer"`, the footer's status label receives the accessibility identifier `project.footer.status`, per `WindowFooterBar`'s own identifier scheme.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| cvc-001 | must-adopt-content-child | Create with valid content VC and prefix | `contentViewController` is accessible; VC is a child of the container |
-| cvc-002 | must-stack-layout | Render container with content and footer | Content view's top is at container's top; footer view's bottom is at container's bottom |
-| cvc-003 | must-fill-content-space | Set container's frame to 400×300; footer height is 40px | Content view occupies 400×260; footer occupies 400×40 |
-| cvc-004 | must-position-footer-bottom | Render and check constraints | Footer's leading and trailing anchors equal container's; footer's bottom anchor equals container's bottom |
-| cvc-005 | must-forward-status | Set `container.status = "Ready"` | `container.footer.status` equals `"Ready"` |
-| cvc-006 | must-forward-status | Read `container.status` when footer's status is `"Idle"` | Getter returns `"Idle"` |
-| cvc-007 | must-require-accessibility-prefix | Initialize with two parameters: content VC and prefix `"test.footer"` | Initialization succeeds; `container.footer` receives prefix `"test.footer"` |
-| cvc-008 | must-prevent-nscoder-init | Attempt `init(coder:)` via archival or Interface Builder | Fatal error is raised; application terminates |
+| cvc-001 | content-child | Create with valid content VC and prefix | `contentViewController` is accessible; VC is a child of the container |
+| cvc-002 | stacked-layout | Render container with content and footer | Content view's top is at container's top; footer view's bottom is at container's bottom |
+| cvc-003 | content-space-fill | Set container's frame to 400×300 | Content view's frame height equals 300 minus `WindowFooterBar.height`; footer's frame height equals `WindowFooterBar.height`; both span the full 400pt width |
+| cvc-004 | footer-bottom-position | Render and check constraints | Footer's leading and trailing anchors equal container's; footer's bottom anchor equals container's bottom |
+| cvc-005 | status-forwarding | Set `container.status = "Ready"` | `container.footer.status` equals `"Ready"` |
+| cvc-006 | status-forwarding | Read `container.status` when footer's status is `"Idle"` | Getter returns `"Idle"` |
+| cvc-007 | accessibility-prefix-required | Initialize with a content VC and prefix `"test.footer"` | The footer's status label's accessibility identifier equals `"test.footer.status"`, confirming the prefix was threaded through with no default value available |
+| cvc-008 | nscoder-init-unsupported | Attempt `init(coder:)` via archival or Interface Builder | Verified by inspection: the initializer is annotated `@available(*, unavailable)`, so any call site fails to compile; the runtime `fatalError` is defense in depth and is not exercised by a normal XCTest process |
 
 ## Edge Cases
 
-- **Empty accessibility prefix**: A prefix of empty string (`""`) is syntactically valid but results in footer controls being named with empty namespaces. This behavior is not prevented by the component but SHOULD NOT be used in practice. Recommendation: Always provide a non-empty, unique prefix.
-- **Content view controller with existing parent**: If the passed `contentViewController` is already a child of another view controller, Swift's view controller hierarchy rules apply; the operation may fail or produce undefined behavior. This MUST be prevented at the call site by the caller.
+- **Empty accessibility prefix**: A prefix of empty string (`""`) is syntactically valid; the resulting footer status identifier is `.status` with no namespace segment ahead of it (see `WindowFooterBar`'s `accessibilityID("\(accessibilityPrefix).status")` construction). The component does not validate or reject this input. Callers wanting collision-safe identifiers across multiple windows should supply a non-empty, unique prefix.
+- **Content view controller with existing parent**: If the passed `contentViewController` is already a child of another view controller, AppKit's `addChild(_:)` removes it from its previous parent before adding it to this container—the reparenting happens automatically, with no fatal error or undefined behavior. This container does not clean up state the previous parent held about the relationship (e.g., layout constraints the old parent anchored to the child's view); that remains the caller's responsibility.
 - **Footer state changes**: The footer (`WindowFooterBar`) may have its own internal state (e.g., button presses, text updates). This container does not modify or constrain the footer's behavior; it only manages layout. Any footer state changes propagate normally through the footer's own interface.
 - **Responder chain during initialization**: During `loadView()`, the content view controller's view is added to the hierarchy and the child relationship is established. The responder chain is set up by AppKit's standard view controller adoption mechanics; this container does not alter that flow.
 
@@ -118,25 +128,42 @@ Not applicable. This component performs no logging.
 
 ## Platform Notes
 
-- **Swift**: Reference implementation. Located in `SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` in AgenticDeveloperToolkit. Uses `NSViewController` adoption via `addChild(_:)` and Auto Layout with `NSLayoutConstraint`. The `@MainActor` annotation ensures thread-safe access to AppKit objects.
-- **SwiftUI**: Wrap this `NSViewController` in a `NSViewControllerRepresentable` conformer to use in SwiftUI views. Bind the `status` property to SwiftUI state if dynamic updates are needed. The content view controller's view will be rendered within the SwiftUI view hierarchy.
-- **Compose**: Create a vertical `Column` with `Modifier.weight(1f)` on the content area and a fixed-height footer below. The `Column` layout primitive maps to the vertical stacking behavior. Pass a `modifier` through composition to configure namespacing if an accessibility equivalent exists.
-- **React/Web**: Use a vertical flexbox container (`display: flex; flex-direction: column`). Set `flex: 1` on the content element so it expands; set a fixed `height` on the footer. Use a `ref` or state callback to forward a `status` prop to the footer component, mimicking the property forwarding behavior.
-- **WinUI 3**: Use a `Grid` with two `RowDefinition` entries: one with `Height="*"` (star sizing) for content and one with a fixed height for the footer. Place the content in row 0, footer in row 1. Use `Grid.Row="0"` and `Grid.Row="1"` attached properties to assign views to rows. A `StackPanel` with `Orientation="Vertical"` provides an alternative if automatic row sizing is preferred.
+- **AppKit / UIKit**: Reference implementation. Located in `SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` in AgenticDeveloperToolkit. Uses `NSViewController` adoption via `addChild(_:)` and Auto Layout with `NSLayoutConstraint`. The `@MainActor` annotation ensures thread-safe access to AppKit objects. No UIKit port exists in this codebase; a UIKit implementation would follow the same `addChild(_:)` pattern, anchoring the footer to the safe area's bottom edge instead of the window's bottom edge.
+- **SwiftUI**: For a from-scratch SwiftUI implementation, use a `VStack` with the content view above a native footer view below, or `.safeAreaInset(edge: .bottom)` if the footer should stay pinned while content scrolls beneath it; bind `status` to `@State` for dynamic updates. Wrapping this `NSViewController` in an `NSViewControllerRepresentable` conformer is available as an interop fallback for reusing the AppKit implementation as-is, but is not the native SwiftUI idiom.
+- **Compose**: Create a vertical `Column` with `Modifier.weight(1f)` on the content area and a fixed-height footer below. The `Column` layout primitive maps to the vertical stacking behavior. Apply `Modifier.testTag("$namespacePrefix.status")` to the footer's status text, mirroring the prefix-based namespacing `WindowFooterBar` uses for its accessibility identifier.
+- **React/Web**: Use a vertical flexbox container (`display: flex; flex-direction: column`). Set `flex: 1` on the content element so it expands; set a fixed `height` on the footer. Pass `status` straight through as a prop to the footer component—no ref or state callback is needed, since forwarding a prop down is the plain React equivalent of the property-forwarding behavior.
+- **WinUI 3**: Use a `Grid` with two `RowDefinition` entries: one with `Height="*"` (star sizing) for the content and one with `Height="Auto"` for the footer, sized to its content. Place the content in row 0, footer in row 1, using the `Grid.Row="0"` and `Grid.Row="1"` attached properties.
 
 ## Design Decisions
 
-- **Child adoption over containment**: The component adopts `contentViewController` as a child rather than simply adding its view. This preserves the content controller's participation in the responder chain and appearance propagation, allowing it to behave as if the window contained it directly. This is a separation of concerns: the window does not know about the footer; the footer is added transparently.
-- **Explicit accessibility prefix**: The `accessibilityPrefix` parameter is required (not defaulted) because multiple windows with footers in the same app would otherwise share accessibility identifiers, breaking UI testing and assistive technology. Explicit naming requires developers to think about uniqueness.
-- **No NSCoder support**: Initialization from `NSCoder` is explicitly forbidden because the component cannot be configured via Interface Builder (requires a content view controller reference at runtime, not at build time). A fatal error is more transparent than a silent failure.
-- **Status forwarding**: The `status` property is exposed on the container itself so callers hold a single reference rather than reaching through two layers (`container.footer.status`). This reduces coupling and makes the interface simpler.
+**Decision**: Adopt `contentViewController` as a child view controller rather than simply adding its view.
+**Rationale**: This preserves the content controller's participation in the responder chain and appearance propagation, letting it behave as if the window contained it directly. It is a separation of concerns: the window does not know about the footer; the footer is added transparently.
+**Approved**: pending
+
+**Decision**: Require the `accessibilityPrefix` parameter, with no default.
+**Rationale**: Multiple windows with footers in the same app would otherwise share accessibility identifiers, breaking UI testing and other identifier-based automation. Explicit naming requires developers to think about uniqueness.
+**Approved**: pending
+
+**Decision**: Forbid initialization from `NSCoder`.
+**Rationale**: The component cannot be configured via Interface Builder—it requires a content view controller reference at runtime, not at build time. A fatal error is more transparent than a silent failure.
+**Approved**: pending
+
+**Decision**: Expose `status` on the container itself, forwarding to `footer.status`, while also keeping `footer` public.
+**Rationale**: `status` is the single most common thing a host sets, so forwarding it lets callers hold one reference instead of reaching through two layers. `footer` stays public too, because `WindowFooterBar` has its own API surface this container doesn't forward—for example `trailingAccessories`—so callers needing that still have a way in without the container growing a forwarding property for every future addition to `WindowFooterBar`.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+
+Both statuses rest on `init` calling `addChild(contentViewController)` and `loadView()` composing the content and footer views via plain Auto Layout, without intercepting the responder chain or focus order—so the content view controller's own screen-reader exposure and keyboard navigability carry through unchanged.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; corrected the AppKit `addChild` reparenting and NSCoder-unavailable edge cases; retitled Platform Notes to AppKit / UIKit and fixed factual errors in SwiftUI, Compose, React/Web, and WinUI 3 guidance; reformatted Design Decisions to Decision/Rationale/Approved; added a Compliance table and a public API surface; added the `WindowFooterBar` dependency; fixed frontmatter date quoting |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
