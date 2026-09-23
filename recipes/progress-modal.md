@@ -3,7 +3,7 @@ id: d9b07d1e-b53c-4efa-86f1-82a31ad9f02f
 title: Progress Modal
 domain: agenticdevelopertoolkit://recipes/progress-modal
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -20,7 +20,9 @@ tags:
 - modal
 - progress
 - batch-operations
-depends-on: []
+depends-on:
+- agenticdevelopertoolkit://recipes/dialog
+- agenticdevelopertoolkit://recipes/progress
 related: []
 references: []
 approved-by: ''
@@ -33,36 +35,56 @@ approved-date: ''
 
 A modal dialog that displays the real-time progress of a batch operation. It shows a progress bar, the current item being processed, a log of completed items, and handles error states by halting the operation and offering the user a choice to continue or stop. The modal does not close itself—the host owns the operation loop and decides when to dismiss. The modal cannot be dismissed mid-run, preventing accidental loss of visibility into background operations.
 
+| Prop | Type | Required | Default |
+|------|------|----------|---------|
+| `open` | `boolean` | required | — |
+| `title` | `React.ReactNode` | required | — |
+| `description` | `React.ReactNode` | optional | — |
+| `done` | `number` | required | — |
+| `total` | `number` | required | — |
+| `currentLabel` | `React.ReactNode` | optional | — |
+| `error` | `ProgressError \| null` | optional | `null` |
+| `finished` | `boolean` | optional | `false` |
+| `onContinue` | `() => void` | optional | — |
+| `onStop` | `() => void` | optional | — |
+| `onClose` | `() => void` | optional | — |
+| `results` | `ReadonlyArray<ProgressResult>` | optional | `[]` |
+| `okLabel` | `React.ReactNode` | optional | `"done"` |
+| `failedLabel` | `React.ReactNode` | optional | `"failed"` |
+
 ## Behavioral Requirements
 
-- **must-render-as-dialog**: Component MUST render as a modal dialog that can be opened and closed via the `open` prop.
-- **must-show-progress-bar**: Component MUST display a progress bar whose value is calculated as `(done / total) * 100` when total is greater than zero, or zero when total is zero.
-- **must-display-completion-count**: Component MUST display the count as "done of total" in monospace font.
-- **must-display-status-or-current-label**: Component MUST display `currentLabel` when provided. When `currentLabel` is omitted and the run is finished, MUST display "Finished". When omitted and the run is halted (error set), MUST display "Paused". When omitted and the run is in progress, MUST display "Working…".
-- **must-halt-on-error**: When `error` prop is set and `finished` is false, the component MUST halt the progress display and show an error block.
-- **must-show-error-block-when-halted**: When halted, component MUST render an error block containing the error message. If `error.itemLabel` is present, it MUST appear above the error message.
-- **must-show-results-log-when-provided**: When `results` array has items, component MUST render them as a scrollable list with maximum height constraint.
-- **must-render-result-label-and-status**: Each result item MUST display the result's label followed by a status indicator. For failed results, MUST display the result message or `failedLabel` in red. For successful results, MUST display the result message or `okLabel` in muted text.
-- **must-show-continue-and-stop-when-halted**: When halted (error set and not finished), component MUST display Continue and Stop buttons if their respective callbacks are provided.
-- **must-show-close-when-finished**: When finished is true, component MUST display a Close button if `onClose` callback is provided.
-- **must-hide-buttons-during-progress**: When the run is in progress (no error and not finished), component MUST not display any action buttons.
-- **must-prevent-dismiss-mid-run**: When the run is not finished, the component MUST ignore requests to dismiss (via Escape key or close button). Dismiss is only allowed when `finished` is true.
-- **must-calculate-percentage-safely**: Component MUST handle zero total by setting percentage to zero instead of NaN.
+- **render-as-dialog**: Component MUST render as a modal dialog that can be opened and closed via the `open` prop.
+- **show-progress-bar**: Component MUST display a progress bar whose value is calculated as `(done / total) * 100` when total is greater than zero, or zero when total is zero.
+- **display-completion-count**: Component MUST display the count as "done of total" in monospace font.
+- **display-status-or-current-label**: Component MUST display `currentLabel` when provided. When `currentLabel` is omitted and the run is finished, MUST display "Finished". When omitted and the run is halted (error set and not finished), MUST display "Paused". When omitted and the run is in progress (no error, not finished), MUST display "Working…".
+- **halt-on-error**: When `error` is set and `finished` is false (halted), the component MUST render the error block and, instead of the in-progress button state, show the Continue/Stop buttons (see **show-continue-and-stop-when-halted**). The progress bar continues to reflect `done`/`total` exactly as supplied by the host — the component does not itself pause any operation.
+- **show-error-block-when-halted**: When halted, component MUST render an error block containing the error message. If `error.itemLabel` is present, it MUST appear above the error message.
+- **show-results-log-when-provided**: When `results` array has items, component MUST render them as a scrollable list with maximum height constraint, regardless of whether the run is running, halted, or finished.
+- **render-result-label-and-status**: Each result item MUST display the result's label followed by a status indicator. For failed results, MUST display the result message or `failedLabel` in red. For successful results, MUST display the result message or `okLabel` in muted text.
+- **show-continue-and-stop-when-halted**: When halted (error set and not finished), component MUST display Continue and Stop buttons if their respective callbacks are provided.
+- **show-close-when-finished**: When finished is true, component MUST display a Close button if `onClose` callback is provided.
+- **finished-overrides-halt**: When `finished` is true, the component MUST NOT render the error block or the Continue/Stop buttons, even if `error` is still set; only the Close button (per **show-close-when-finished**) may render.
+- **hide-buttons-during-progress**: When the run is in progress (no error and not finished), component MUST not display any action buttons.
+- **prevent-dismiss-mid-run**: When `finished` is false, the component MUST swallow Escape and close-button dismiss requests internally and MUST NOT call `onClose`. When `finished` is true, the component MUST call `onClose` in response to Escape or the close button.
+- **calculate-percentage-safely**: Component MUST handle zero total by setting percentage to zero instead of NaN.
 
 ## Appearance
 
+Spacing values below use the Tailwind spacing scale (1 unit = 0.25rem).
+
 - **Container**: Dialog with maximum width of 32rem (512px).
 - **Progress bar**: Full width, default height per Progress component spec.
-- **Status section**: Flex row with baseline alignment, gap of 3 units.
+- **Status section**: Flex row with baseline alignment, gap of 3 units (0.75rem).
 - **Status text**: Extra-small font size, muted text color. Item label truncated on overflow.
 - **Count text**: Monospace font, extra-small size, muted text color, no shrink.
-- **Error box**: Rounded border, border color red at 40% opacity, background red at 5% opacity, padding 2 units, text extra-small.
+- **Error box**: Rounded border, `apt-red` border color at 40% opacity, `apt-red` background at 5% opacity, padding 2 units (0.5rem), text extra-small.
 - **Error item label**: Medium font weight, normal text color.
-- **Error message**: Red text color.
-- **Results list**: Scrollable container with maximum height 12rem (192px), rounded border, border color default, padding 2 units, vertical gap 1 unit.
+- **Error message**: `apt-red` text color.
+- **Results list**: Scrollable container with maximum height 12rem (192px), rounded border, `apt-border` border color, padding 2 units (0.5rem), vertical gap 1 unit (0.25rem).
 - **Result row**: Extra-small font size.
 - **Result label**: Medium font weight, normal text color.
-- **Result status**: Muted or red text depending on status, separated by " — " from label.
+- **Result status**: Muted or `apt-red` text depending on status, separated by " — " from label.
 - **Dialog header**: Displays title and optional description via DialogHeader, DialogTitle, and DialogDescription components.
 - **Dialog footer**: Contains action buttons with small size variant.
 
@@ -70,37 +92,40 @@ A modal dialog that displays the real-time progress of a batch operation. It sho
 
 | State | Appearance change | Behavior |
 |-------|-------------------|----------|
-| Running | Progress bar animates, status shows "Working…" or current label, no buttons visible | Modal is open, dismiss blocked, progress updates as `done` increases |
-| Halted | Progress bar frozen, status shows "Paused", error block visible, Continue and Stop buttons visible | Modal remains open, dismiss blocked, awaiting user decision |
-| Finished | Progress bar at 100%, status shows "Finished", results log visible if any, Close button visible | Modal is open, dismiss allowed, user must close via Close button |
+| Running | Progress bar reflects `done`/`total`; status shows `currentLabel` if provided, otherwise "Working…"; no action buttons visible | Modal is open; Escape/× dismiss requests are swallowed internally (no `onClose` call); `done` updates as the host advances the batch |
+| Halted | Progress bar unchanged from the last render; status shows `currentLabel` if provided, otherwise "Paused"; error block visible; Continue and Stop buttons visible | Modal remains open; Escape/× dismiss requests are swallowed internally (no `onClose` call); awaiting a Continue/Stop decision |
+| Finished | Progress bar reflects `done`/`total` as provided — not necessarily 100%, since a Stop can finish the run early; status shows `currentLabel` if provided, otherwise "Finished"; error block and halted buttons are hidden even if `error` is still set; Close button visible if `onClose` is provided | Modal is open; Escape, ×, or the Close button all call `onClose` |
 | Closed | — | Modal is not rendered (`open` prop is false) |
+
+The results log renders whenever `results` has items, independent of the state above — it is not exclusive to Finished.
 
 ## Accessibility
 
-Accessibility is delegated to the composed Dialog and Progress components, which are built on Radix UI primitives and implement ARIA roles, keyboard navigation, focus management, and live region announcements for state changes.
+Accessibility is delegated to the composed `Dialog` and `Progress` components. `Dialog` (Base UI primitives — see `agenticdevelopertoolkit://recipes/dialog`) provides the ARIA dialog role, backdrop, and keyboard handling (Escape, focus trapped while open). `Progress` (see `agenticdevelopertoolkit://recipes/progress`) is a self-contained element with `role="progressbar"` and `aria-valuemin`/`aria-valuemax`/`aria-valuenow`. Neither component announces state changes via a live region in the current source: there is no `aria-live` region on the status text, no `role="alert"` on the error block, and no explicit focus movement when the run halts or finishes — focus stays wherever the user last left it inside the trapped dialog.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| progress-001 | must-show-progress-bar | `open={true}, done={3}, total={10}` | Progress bar shows 30% width |
-| progress-002 | must-calculate-percentage-safely | `open={true}, done={0}, total={0}` | Progress bar shows 0%, no NaN displayed |
-| progress-003 | must-display-completion-count | `open={true}, done={5}, total={20}` | Text displays "5 of 20" in monospace |
-| progress-004 | must-display-status-or-current-label | `open={true}, currentLabel={"Uploading file.txt"}, finished={false}, error={null}` | Status text shows "Uploading file.txt" |
-| progress-005 | must-display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={true}` | Status text shows "Finished" |
-| progress-006 | must-display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={false}, error={…}` | Status text shows "Paused" |
-| progress-007 | must-display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={false}, error={null}` | Status text shows "Working…" |
-| progress-008 | must-halt-on-error, must-show-error-block-when-halted | `open={true}, error={message: "Upload failed"}, finished={false}` | Error block visible with message "Upload failed" |
-| progress-009 | must-show-error-block-when-halted | `open={true}, error={message: "Failed", itemLabel: "photo.jpg"}, finished={false}` | Error block shows "photo.jpg" above "Failed" message |
-| progress-010 | must-show-results-log-when-provided | `open={true}, results=[{id: "1", label: "file1.txt", status: "ok"}]` | Results list renders with one item |
-| progress-011 | must-render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "ok", message: "moved"}]` | Result shows "file.txt — moved" in muted text |
-| progress-012 | must-render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "failed", message: "Not found"}]` | Result shows "file.txt — Not found" in red text |
-| progress-013 | must-render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "ok"}], okLabel={"synced"}` | Result shows "file.txt — synced" (no message provided, uses okLabel) |
-| progress-014 | must-show-continue-and-stop-when-halted | `open={true}, error={…}, finished={false}, onContinue={fn}, onStop={fn}` | Continue and Stop buttons are visible and clickable |
-| progress-015 | must-show-close-when-finished | `open={true}, finished={true}, onClose={fn}` | Close button is visible and clickable |
-| progress-016 | must-hide-buttons-during-progress | `open={true}, finished={false}, error={null}` | No action buttons are visible |
-| progress-017 | must-prevent-dismiss-mid-run | `open={true}, finished={false}, onOpenChange={fn} triggered by Escape` | `onOpenChange` receives false but `onClose` is NOT called |
-| progress-018 | must-prevent-dismiss-mid-run | `open={true}, finished={true}, onOpenChange={fn} triggered by Escape` | `onOpenChange` receives false and `onClose` IS called |
+| progress-001 | show-progress-bar | `open={true}, done={3}, total={10}` | Progress bar shows 30% width |
+| progress-002 | calculate-percentage-safely | `open={true}, done={0}, total={0}` | Progress bar shows 0%, no NaN displayed |
+| progress-003 | display-completion-count | `open={true}, done={5}, total={20}` | Text displays "5 of 20" in monospace |
+| progress-004 | display-status-or-current-label | `open={true}, currentLabel={"Uploading file.txt"}, finished={false}, error={null}` | Status text shows "Uploading file.txt" |
+| progress-005 | display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={true}` | Status text shows "Finished" |
+| progress-006 | display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={false}, error={…}` | Status text shows "Paused" |
+| progress-007 | display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={false}, error={null}` | Status text shows "Working…" |
+| progress-008 | halt-on-error, show-error-block-when-halted | `open={true}, error={message: "Upload failed"}, finished={false}` | Error block visible with message "Upload failed" |
+| progress-009 | show-error-block-when-halted | `open={true}, error={message: "Failed", itemLabel: "photo.jpg"}, finished={false}` | Error block shows "photo.jpg" above "Failed" message |
+| progress-010 | show-results-log-when-provided | `open={true}, results=[{id: "1", label: "file1.txt", status: "ok"}]` | Results list renders with one item |
+| progress-011 | render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "ok", message: "moved"}]` | Result shows "file.txt — moved" in muted text |
+| progress-012 | render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "failed", message: "Not found"}]` | Result shows "file.txt — Not found" in red text |
+| progress-013 | render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "ok"}], okLabel={"synced"}` | Result shows "file.txt — synced" (no message provided, uses okLabel) |
+| progress-014 | show-continue-and-stop-when-halted | `open={true}, error={…}, finished={false}, onContinue={fn}, onStop={fn}` | Continue and Stop buttons are visible and clickable |
+| progress-015 | show-close-when-finished | `open={true}, finished={true}, onClose={fn}` | Close button is visible and clickable |
+| progress-016 | hide-buttons-during-progress | `open={true}, finished={false}, error={null}` | No action buttons are visible |
+| progress-017 | prevent-dismiss-mid-run | `open={true}, finished={false}` triggered by Escape | `onClose` is NOT called; modal remains open |
+| progress-018 | prevent-dismiss-mid-run | `open={true}, finished={true}, onClose={fn}` triggered by Escape | `onClose` IS called |
+| progress-019 | finished-overrides-halt | `open={true}, error={message: "Upload failed"}, finished={true}, onClose={fn}` | Error block and Continue/Stop buttons are NOT rendered; only Close is visible |
 
 ## Edge Cases
 
@@ -109,13 +134,17 @@ Accessibility is delegated to the composed Dialog and Progress components, which
 - **No error**: When `error` prop is null or undefined, error block does not render.
 - **Missing itemLabel in error**: When `error.itemLabel` is null or undefined, only the error message renders in the error block.
 - **Missing message in result**: When a result has no `message` property, the component uses `okLabel` (for "ok" status) or `failedLabel` (for "failed" status) as the displayed text.
+- **Error present at finish**: When `error` is set and `finished` is also true, `finished` takes precedence — the error block and Continue/Stop buttons do not render; only Close renders (see **finished-overrides-halt**).
 - **Stop action while processing**: When `onStop` is invoked, the host owns the batch loop and decides when to set `finished={true}`. The modal does not stop the underlying operation.
 - **Continue after error**: When `onContinue` is invoked, the host resumes the batch loop. The `error` prop is expected to be cleared by the host in the next render.
-- **Dismiss attempt mid-run**: Pressing Escape or clicking the close button while `finished={false}` triggers `onOpenChange(false)` but does not call `onClose`. The modal remains open.
+- **Dismiss attempt mid-run**: Pressing Escape or clicking the close button while `finished={false}` is swallowed internally — the component does not call `onClose` and the modal remains open. `ProgressModal` has no host-facing `onOpenChange` prop; the swallowing happens inside the component's own wiring to the underlying `Dialog`.
 
 ## Configuration
 
-Not applicable: This component receives no user-configurable options beyond its props, which define behavior dynamically per operation instance.
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `okLabel` | `React.ReactNode` | `"done"` | Text shown for a result with `status: "ok"` and no `message`. |
+| `failedLabel` | `React.ReactNode` | `"failed"` | Text shown for a result with `status: "failed"` and no `message`. |
 
 ## Deep Linking
 
@@ -125,14 +154,17 @@ Not applicable: This component is a modal overlay managed by its host and is not
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| `status.working` | "Working…" | Displayed when run is in progress and no currentLabel is provided |
-| `status.paused` | "Paused" | Displayed when run is halted on error and no currentLabel is provided |
-| `status.finished` | "Finished" | Displayed when run is complete and no currentLabel is provided |
-| `action.continue` | "Continue" | Button label when halted |
-| `action.stop` | "Stop" | Button label when halted |
-| `action.close` | "Close" | Button label when finished |
-| `result.ok` | "done" | Default status text when result status is "ok" and no message provided (customizable via okLabel prop) |
-| `result.failed` | "failed" | Default status text when result status is "failed" and no message provided (customizable via failedLabel prop) |
+| `status.working` | "Working…" | Displayed when run is in progress and no `currentLabel` is provided. Hardcoded in the component; not exposed as a prop. |
+| `status.paused` | "Paused" | Displayed when run is halted on error and no `currentLabel` is provided. Hardcoded; not exposed as a prop. |
+| `status.finished` | "Finished" | Displayed when run is complete and no `currentLabel` is provided. Hardcoded; not exposed as a prop. |
+| `action.continue` | "Continue" | Button label when halted. Hardcoded; not exposed as a prop. |
+| `action.stop` | "Stop" | Button label when halted. Hardcoded; not exposed as a prop. |
+| `action.close` | "Close" | Button label when finished. Hardcoded; not exposed as a prop. |
+| `progress.count` | "{done} of {total}" | Count text. Word order is locale-dependent — a translation MUST be able to reorder the `{done}`/`{total}` placeholders, not just substitute the numbers. Hardcoded; not exposed as a prop. |
+| `result.ok` | "done" | Default status text when result status is "ok" and no message provided (overridable via `okLabel` prop). |
+| `result.failed` | "failed" | Default status text when result status is "failed" and no message provided (overridable via `failedLabel` prop). |
+
+Only `result.ok` and `result.failed` are host-overridable (`okLabel`/`failedLabel`); every other string above is a hardcoded JSX literal in the component.
 
 ## Accessibility Options
 
@@ -156,33 +188,64 @@ Not applicable: This component does not perform logging. Debug information about
 
 ## Platform Notes
 
-- **React/Web**: Implemented using shadcn/ui `Dialog` and `Progress` components. Dialog is not dismissible mid-run by swallowing dismiss events in `onOpenChange` until `finished` is true. Progress percentage is calculated client-side. Results are rendered as a flex column with overflow constraints.
-- **SwiftUI**: Start with a `.sheet()` or `.fullScreenCover()` modifier bound to the `open` state. Use `ProgressView()` for the progress bar. For blocking mid-run dismissal, use `.interactiveDismissDisabled(!finished)`. Render error block conditionally with `if error != nil`. Use a `List` or `ScrollView` for the results log with a frame height constraint.
-- **Compose**: Build on `AlertDialog` or `Dialog` composable. Use `LinearProgressIndicator` for the progress bar. Set `onDismissRequest` to a callback that only closes if `finished` is true. Render error and results sections conditionally. Use `LazyColumn` for the scrollable results list.
-- **AppKit / UIKit**: For macOS, use `NSAlert` or a custom window controller. For iOS, use `UIAlertController` or a custom view controller. `UIProgressView` (iOS) or `NSProgressIndicator` (macOS) for the progress bar. Prevent dismissal by disabling the close button or intercepting dismissal attempts until `finished` is true. Render error and results in custom views.
-- **WinUI 3**: Use `ContentDialog` as the container. `ProgressBar` control for the progress display. Set `IsPrimaryButtonEnabled = false` and `IsSecondaryButtonEnabled = false` during progress, then enable the appropriate buttons (Close, Continue/Stop) based on state. Use a `ScrollViewer` containing an `ItemsControl` or `ListView` for the results log. Prevent dismissal by handling the `Closing` event and only allowing close when operation is finished.
+- **React/Web**: Implemented using the shared `Dialog` (Base UI primitives, `agenticdevelopertoolkit://recipes/dialog`) and `Progress` (self-contained `role="progressbar"` element, `agenticdevelopertoolkit://recipes/progress`) components. `Dialog`'s `onOpenChange` swallows Escape/× internally and only calls `onClose` once `finished` is true. Progress percentage is calculated client-side (`Math.round((done / total) * 100)`, or `0` when `total` is `0`). Results are rendered as a flex column with overflow constraints.
+- **SwiftUI**: Present with `.sheet()` or `.fullScreenCover()` bound to the `open` state. Use the determinate initializer `ProgressView(value: Double(done), total: Double(total))` — the bare `ProgressView()` initializer is indeterminate and would not reflect `done`/`total`. Block mid-run dismissal with `.interactiveDismissDisabled(!finished)`. Render the error block conditionally on `error != nil && !finished`. Use a `List` or `ScrollView` with a frame height constraint for the results log.
+- **Compose**: Build on `AlertDialog` or `Dialog`. Use `LinearProgressIndicator(progress = { done / total.toFloat() })` for a determinate bar. Set `onDismissRequest` to a callback that only closes if `finished` is true. Render the error and results sections conditionally on the same `error`/`finished` state used on other platforms. Use `LazyColumn` for the scrollable results list.
+- **AppKit / UIKit**: `NSAlert` (macOS) and `UIAlertController` (iOS) cannot host a progress bar plus a scrollable results list, so use a custom window or view controller instead. Add `NSProgressIndicator` (style `.bar`, `isIndeterminate = false`) on macOS or `UIProgressView` on iOS as a subview, driven by `done`/`total`. Prevent dismissal by disabling or intercepting the window/controller's close action until `finished` is true. Render the error and results sections in custom subviews.
+- **WinUI 3**: Use `ContentDialog` as the container and a `ProgressBar` for the progress display. To *hide* the action buttons during progress (not merely disable them), leave `PrimaryButtonText`/`SecondaryButtonText` empty — an empty button text hides that button — and set them only once halted or finished. Use a `ScrollViewer` containing an `ItemsControl` or `ListView` for the results log. Prevent dismissal by handling the `Closing` event and only letting the close proceed once `finished` is true.
 
 ## Design Decisions
 
-1. **Halt on error rather than power through**: The component halts the batch on the first error and requires the user to decide whether to continue or stop, rather than completing all items and presenting a summary at the end. This respects the principle that a failure in one item often indicates all remaining items will fail the same way (e.g., a wrong destination path), so the user should make an informed decision before proceeding.
+1. **Decision**: Halt the batch on the first error and require the user to decide whether to continue or stop, rather than completing all items and presenting a summary at the end.
+**Rationale**: Assumes that a failure in one item often indicates a systemic cause (e.g., a wrong destination path) that will recur for the remaining items, so continuing unattended risks repeating a preventable failure across the rest of the batch. This is a heuristic the host applies by setting `error`, not a guarantee the component enforces.
+**Approved**: pending
 
-2. **Component does not dismiss itself**: The modal does not close automatically on completion. Instead, it swaps the action buttons for a Close button, making the user responsible for dismissal. This preserves the record of what happened—the completed results are visible until the user explicitly closes the dialog.
+2. **Decision**: The component does not dismiss itself on completion. Instead, it swaps the action buttons for a Close button, making the user responsible for dismissal.
+**Rationale**: This preserves the record of what happened—the completed results are visible until the user explicitly closes the dialog.
+**Approved**: pending
 
-3. **Progress is item-count, not time or bytes**: The progress bar tracks `done / total` items, not elapsed time or bytes transferred. The host controls the loop and reports completion for each discrete operation. This provides accurate progress rather than a guess based on throughput.
+3. **Decision**: Progress is tracked as an item count (`done` / `total`), not elapsed time or bytes transferred.
+**Rationale**: The host controls the loop and reports completion for each discrete operation, so an item count is an accurate fact rather than a throughput-based guess.
+**Approved**: pending
 
-4. **Transport-agnostic composition**: The component is intentionally independent of the underlying operation type. It renders state and emits decisions (Continue, Stop, Close) without knowing whether the batch is uploading, deleting, moving, or any other operation. Any host can drive it without specialized knowledge.
+4. **Decision**: The component is transport-agnostic — it renders state and emits decisions (Continue, Stop, Close) without knowing whether the batch is uploading, deleting, moving, or any other operation.
+**Rationale**: Any host can drive it without specialized knowledge of the underlying operation.
+**Approved**: pending
 
-5. **Default labels for results**: `okLabel` and `failedLabel` are deliberately generic ("done", "failed") because the component runs any batch. A host with domain-specific knowledge can pass better verbs (e.g., "moved", "deleted") to override the defaults.
+5. **Decision**: `okLabel` and `failedLabel` default to deliberately generic values ("done", "failed").
+**Rationale**: The component runs any batch, so a hardcoded verb like "moved" would be a lie in a delete run. A host with domain-specific knowledge can pass a better verb.
+**Approved**: pending
 
-6. **Dismiss blocking during progress**: Escape and the × button are swallowed until the run ends because closing the dialog does not stop the background requests. A dialog that vanishes on a stray keystroke would leave the batch running invisibly, losing visibility into the operation.
+6. **Decision**: Escape and the × button are swallowed until the run ends (`finished` is true).
+**Rationale**: Closing the dialog does not stop the background requests; a dialog that vanished on a stray keystroke would leave the batch running invisibly, losing visibility into the operation.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: This component does not involve authentication, authorization, sensitive data transmission, network requests, or data persistence—these are concerns of the host operation loop. No compliance checks are defined at the component level.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+
+Statuses rest on the source: `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to drop `must-` prefix; correct the Accessibility section's false live-region claim to match Base UI Dialog/self-contained Progress; add a props table; unify the dismiss contract across the requirement, vectors, and edge case (no host-facing `onOpenChange`); add the finished-overrides-halted-error requirement and vector; fix the Finished/Halted rows in States and the results-log condition; reword halt-on-error as an observable outcome; replace literal "red"/"units" with token names and a spacing-scale note; add a `progress.count` localization key and mark which strings are hardcoded vs. overridable; fill in Configuration and Compliance tables; correct Platform Notes for AppKit/UIKit, SwiftUI, and WinUI 3; reframe design decision 1 as an assumption; add `depends-on` for Dialog and Progress; note the Change History author discrepancy is a generator attribution, not a frontmatter conflict. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise accessibility section: document delegation to composed components rather than mark as unimplemented |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code analysis |
+
+Earlier rows were generated by Claude Haiku 4.5; frontmatter `author` reflects the accountable human author, not the generator.
