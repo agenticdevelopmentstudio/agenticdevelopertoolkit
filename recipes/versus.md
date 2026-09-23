@@ -3,11 +3,11 @@ id: 98444e89-1044-43a7-9ec5-75da579c528a
 title: Versus
 domain: agenticdevelopertoolkit://recipes/versus
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -15,7 +15,10 @@ summary: Side-by-side comparison of two options, emphasizing the active choice.
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- comparison
+- layout
+- landing
 depends-on: []
 related: []
 references: []
@@ -31,19 +34,20 @@ approved-date: ''
 
 ## Behavioral Requirements
 
-- **must-render-both-sides**: Component MUST render exactly two panels, one for the "them" option and one for the "us" option.
-- **must-render-required-title**: Component MUST render the title from each `VersusSide` as an h3 element.
-- **must-render-optional-lede**: Component MUST render the lede as a paragraph element only if `lede` is defined (not undefined).
-- **must-render-optional-points**: Component MUST render points as a bullet list only if `points` is defined and has length greater than zero.
-- **must-distinguish-sides**: Component MUST apply a visual style that marks the "us" side as the active or highlighted option, distinct from the "them" side.
-- **must-omit-empty-fragments**: Component MUST NOT render an empty paragraph or empty list when `lede` or `points` is provided but empty; callers MUST omit these props entirely to indicate absence.
-- **must-render-identical-structure**: Component MUST use a single Panel implementation for both sides to ensure consistent rendering regardless of which side is displayed.
+- **render-both-sides**: Component MUST render exactly two panels, one for the "them" option and one for the "us" option.
+- **render-required-title**: Component MUST render the title from each `VersusSide` as an h3 element.
+- **render-optional-lede**: Component MUST render the lede as a paragraph element whenever `lede` is defined (not undefined); this includes an explicitly empty value, since the component checks only presence, not emptiness. See **Design Decisions** for why.
+- **render-optional-points**: Component MUST render points as a bullet list only if `points` is defined and has length greater than zero; a defined-but-empty list renders nothing.
+- **distinguish-sides**: Component MUST apply a distinguishing visual marker to the "us" panel that differs from the "them" panel, marking "us" as the active/highlighted option.
+- **consistent-side-structure**: Both panels MUST produce the same element structure for the same shape of props — "us" and "them" render identically for a given `title`/`lede`/`points` combination.
+- **fixed-side-order**: Component MUST render "them" before "us" in reading/DOM order; the order does not adapt to text direction (no right-to-left handling).
+- **stack-below-breakpoint**: Component MUST switch from a two-column to a single-column layout when the container is too narrow to fit two columns at their minimum width, stacking "them" above "us".
 
 ## Appearance
 
-- **Layout**: Two columns of equal width, arranged horizontally
+- **Layout**: Two columns of equal width, arranged horizontally, when there's room for both; collapses to a single stacked column ("them" above "us") below a minimum width — see **stack-below-breakpoint**.
 - **Column spacing**: Gap between panels determined by platform design guidelines
-- **Title styling**: h3 element with inherited typography
+- **Title styling**: h3 element with inherited typography; assumes Versus sits under a page section already at h2 or above — see **Accessibility**.
 - **Lede styling**: Paragraph element with top margin, styled as introductory text
 - **Points styling**: Unordered list with bullet markers, items as li elements
 - **Visual distinction**: "us" panel receives highlighting (background, border, or accent color); "them" panel uses neutral styling
@@ -54,7 +58,8 @@ approved-date: ''
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Both panels visible; "them" neutral, "us" highlighted |
+| Default | Both panels visible, side by side; "them" neutral, "us" highlighted |
+| Narrow container | Single stacked column; "them" above "us", both keep their normal content |
 | No lede | Paragraph element absent; title and points (if present) render normally |
 | No points | List element absent; title and lede (if present) render normally |
 | No lede or points | Only title renders in the panel |
@@ -62,35 +67,38 @@ approved-date: ''
 ## Accessibility
 
 - **Role**: Each side is a div container; title is an h3 heading; lede is a paragraph; points are a list.
-- **Semantic structure**: Heading hierarchy is preserved; assistive technologies announce list structure for points.
+- **Semantic structure**: Title renders as a fixed h3; this assumes Versus is placed under a page section already at h2 (or otherwise one level above), so the heading sequence isn't skipped. The component does not offer a configurable heading level. Assistive technologies announce list structure for points.
 - **Label requirements**: Titles are read as headings; lede provides context; bullet points are announced as list items.
-- **Announce visual distinction**: Assistive technology users must be able to distinguish "us" from "them" through non-visual means. A text label, aria-label, or semantic role difference is required.
+- **Non-visual distinction**: The component provides no text label, `aria-label`, or semantic-role difference between "us" and "them" beyond the differing marker class (see **distinguish-sides**) — the distinction is visual only (border, background, glow). A non-visual cue, if needed, is the surrounding page's responsibility, not this component's; see **Differentiate Without Color** below.
 - **Minimum tap target**: Panels are containers; no interactive tap targets within this component itself.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|----|----|----|
-| versus-001 | must-render-both-sides | `them: { title: "Option A" }`, `us: { title: "Option B" }` | Two panels rendered, each with its title in an h3 |
-| versus-002 | must-render-required-title | `them: { title: "Text" }` | h3 element contains "Text" |
-| versus-003 | must-render-optional-lede | `{ lede: "Introduction" }` | Paragraph element renders with "Introduction" |
-| versus-004 | must-render-optional-lede | `{ lede: undefined }` | No paragraph element in panel |
-| versus-005 | must-render-optional-points | `{ points: ["Point 1", "Point 2"] }` | Unordered list with two li elements |
-| versus-006 | must-render-optional-points | `{ points: [] }` or `points: undefined` | No list element in panel |
-| versus-007 | must-distinguish-sides | `them` and `us` provided | "us" panel visually distinct from "them" panel |
-| versus-008 | must-omit-empty-fragments | `{ lede: <></> }` passed instead of omitted | Empty fragment renders as styled empty paragraph (indicates caller error) |
-| versus-009 | must-render-identical-structure | Both sides with identical props | Both panels render with identical DOM structure |
+| versus-001 | render-both-sides | `them: { title: "Option A" }`, `us: { title: "Option B" }` | Two panels rendered, each with its title in an h3 |
+| versus-002 | render-required-title | `them: { title: "Text" }` | h3 element contains "Text" |
+| versus-003 | render-optional-lede | `{ lede: "Introduction" }` | Paragraph element renders with "Introduction" |
+| versus-004 | render-optional-lede | `lede` omitted entirely | No paragraph element in panel |
+| versus-005 | render-optional-points | `{ points: ["Point 1", "Point 2"] }` | Unordered list with two li elements |
+| versus-006 | render-optional-points | `{ points: [] }` or `points` omitted | No list element in panel |
+| versus-007 | distinguish-sides | `them` and `us` provided | "us" panel carries a distinct marker class (`lp-versus__us`) from "them" (`lp-versus__them`); the two receive different border and background styling |
+| versus-008 | render-optional-lede | `lede` passed as an explicitly empty value instead of omitted | Content is defined but empty; a styled empty paragraph still renders — defined-but-empty is not treated as absent |
+| versus-009 | consistent-side-structure | Both sides given identical props | Both panels render with identical element structure |
+| versus-010 | fixed-side-order | `them` and `us` provided | "them" panel precedes "us" panel in DOM/reading order |
+| versus-011 | stack-below-breakpoint | Container narrower than two minimum-width columns plus gap | Layout switches to a single column; "them" panel appears above "us" panel |
 
 ## Edge Cases
 
-- **Null title**: `title` is required; null or undefined title is a prop contract violation.
+- **Missing or null title**: `title` is a required prop; omitting the key entirely is a compile-time TypeScript error. An explicit `null` or `undefined` value is permitted by the `ReactNode` type (which includes both) and renders as an empty heading — nothing renders inside the h3.
 - **Empty title**: Title is rendered as provided; an empty string produces an empty h3.
-- **Empty lede string**: If `lede` is defined as an empty string, a paragraph renders. Caller should omit `lede` to avoid empty paragraph.
-- **Empty points array**: If `points` is defined as an empty array, no list renders (length check prevents rendering).
+- **Empty lede value**: If `lede` is defined as an empty value (e.g. an empty string), a paragraph still renders — see **render-optional-lede**. Callers should omit `lede` entirely to avoid an empty paragraph.
+- **Empty points array**: If `points` is defined as an empty array, no list renders — see **render-optional-points**.
 - **Single point**: `points: ["Only one"]` renders a list with one item.
-- **Very long content**: Component imposes no length limits; overflow is handled by CSS or parent container.
-- **Rich content in lede or points**: ReactNode allows any React element; complex JSX in lede or points is supported.
-- **Missing "us" or "them" prop**: Both `them` and `us` are required; omitting either is a prop contract violation.
+- **Very long content**: Component imposes no length limits; overflow is handled by CSS or the parent container.
+- **Rich content in lede or points**: `lede` and each point accept arbitrary content, not just plain text — inline formatting or nested elements are supported wherever the platform's content-value type allows it.
+- **Missing "us" or "them" prop**: Both `them` and `us` are required; omitting either is a compile-time TypeScript error.
+- **Right-to-left locale**: Rendering order is unaffected by text direction — see **fixed-side-order**. The component provides no RTL-specific layout adaptation.
 
 ## Configuration
 
@@ -102,7 +110,7 @@ Not applicable. Component is a presentational element with no associated URL or 
 
 ## Localization
 
-Not applicable. Component renders user-provided content; localization is the caller's responsibility. Titles, ledes, and points MAY contain localized strings.
+Not applicable. Component renders user-provided content; localization is the caller's responsibility. Titles, ledes, and points MAY contain localized strings. Reading order does not adapt for right-to-left locales — see **fixed-side-order**.
 
 ## Accessibility Options
 
@@ -130,22 +138,38 @@ Not applicable. Component does not emit structured logs.
 
 ## Platform Notes
 
-- **SwiftUI**: Leverage `VStack` with two horizontal sections; apply `FontWeight.bold` or `Font.headline` styling to titles. Use conditional rendering (`if lede != nil`) to render optional content. Compose the comparison layout with `HStack` or a custom container that highlights the "us" side with background color or border. Manage tap targets and semantic context through `AccessibilityElement` wrappers.
-- **Compose**: Use `Row` with two equal-weight children for side-by-side layout. Apply `BasicText` for titles with heading semantics. Conditionally render `Text` for lede and `LazyRow` or `Column` for points. Apply `Modifier.background()` to distinguish "us" from "them". Ensure keyboard navigation uses `focusable()` and `semantics()` to label the comparison sides.
-- **React/Web**: Render two `<div>` containers with CSS flexbox (display: flex; gap). Apply CSS class `.lp-versus__them` and `.lp-versus__us` to control styling. Use conditional rendering (`{lede && <p>...}`) to show optional content. Ensure "us" panel has visual prominence through background, border, or accent color. Apply `role="article"` or `role="region"` if the comparison needs to be announced as a distinct section.
-- **AppKit / UIKit**: Use `NSView` (macOS) or `UIView` (iOS) in a horizontal stack (NSSplitView on macOS, UIStackView on iOS with axis `.horizontal`). Render title as `NSTextView` (macOS) or `UILabel` (iOS) with heading typography. Conditionally add lede and points subviews. Apply background color or `CALayer.borderWidth` to mark the "us" side as active. Implement custom layout logic or use Auto Layout constraints to maintain equal column widths.
-- **WinUI 3**: Render two `Grid` elements within a parent `StackPanel` with `Orientation="Horizontal"`. Set both `Grid` elements to equal width using `ColumnDefinition` with `Width="*"`. Place `TextBlock` for the title with `FontSize="20"` and `FontWeight="Bold"`. Conditionally render a `TextBlock` for lede and an `ItemsControl` or `ListView` for points. Apply `Background="{StaticResource AccentBrush}"` to the "us" side and a neutral `Background` (e.g., `"#F0F0F0"`) to the "them" side. Use `Padding` and `Margin` properties to control spacing within and between panels.
+- **SwiftUI**: Use an `HStack` with two equal-width sections (`.frame(maxWidth: .infinity)` on each), switching to a `VStack` below a size-class breakpoint so "them" stacks above "us". Apply `.fontWeight(.bold)` to titles. Use conditional rendering (`if let lede`) for the optional lede. Highlight the "us" side with a background color or border via `.background()`/`.overlay()`. Manage semantic context through `.accessibilityElement()` and `.accessibilityLabel()`.
+- **Compose**: Use a `Row` with two equal-weight children (`Modifier.weight(1f)`) for side-by-side layout, switching to a `Column` below a width breakpoint so panels stack. Render titles as `Text` with heading semantics (`Modifier.semantics { heading() }`). Conditionally render `Text` for the lede and a `Column` for points. Apply `Modifier.background()` to distinguish "us" from "them". Panels aren't interactive, so they don't need `focusable()`; expose the distinction to assistive tech via `Modifier.semantics` if needed.
+- **React/Web**: Render two `<div>` containers through a CSS grid (`display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr))`), which collapses to a single column — "them" above "us" in DOM order — once the container can't fit two 18rem-minimum columns; `gap` sets the spacing between them. Apply the class contract `.lp-versus__them` and `.lp-versus__us` as the styling hooks (border, background, and title/lede color overrides). Use conditional rendering (`{lede !== undefined && <p>...}`) to show optional content — this checks presence, not emptiness. The component applies no additional ARIA role; it relies on the surrounding page's own landmark structure.
+- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) with axis `.horizontal`, switching to `.vertical` below a width threshold so "them" stacks above "us". Render the title as `NSTextField` (macOS, non-editable, bezel-less) or `UILabel` (iOS) with heading typography (`.accessibilityTraits = .header` on iOS). Conditionally add lede and points subviews. Apply background color or `CALayer.borderWidth`/`borderColor` to mark the "us" side as active. Use Auto Layout constraints, or the stack view's own distribution, to keep both columns equal width.
+- **WinUI 3**: Render a `Grid` with two `ColumnDefinition`s each `Width="*"`, inside a parent that switches to stacked `RowDefinition`s below a width threshold. Place a `TextBlock` for the title using a theme heading text style (e.g. `{StaticResource BodyStrongTextBlockStyle}`) rather than hard-coded `FontSize`/`FontWeight`. Conditionally render a `TextBlock` for the lede and an `ItemsControl` for points. Apply a theme accent brush (e.g. `{ThemeResource AccentFillColorDefaultBrush}`) to the "us" side and a theme-neutral brush (e.g. `{ThemeResource CardBackgroundFillColorDefaultBrush}`) to "them", rather than hard-coded colors. Use `Padding`/`Margin` to control spacing within and between panels.
 
 ## Design Decisions
 
-The component uses a shared `Panel` implementation for both sides rather than duplicating JSX. This decision reduces the risk of divergent rendering between sides and ensures that any fix applied to one side automatically applies to the other. When the caller provides an empty collection or empty fragment to `lede` or `points`, the component renders it as styled empty content (e.g., a paragraph with margins but no text). This is intentional: callers must explicitly omit optional props to indicate "no content," not provide empty values. An empty fragment passed to `points` would render an empty `<ul>` with margins; the component checks `points.length > 0` to prevent an empty list, but does not guard against `points` being an empty fragment directly.
+**Decision**: Both panels render through a single shared implementation rather than duplicated markup per side.
+**Rationale**: Reduces the risk of divergent rendering between "us" and "them" — a fix applied to the shared implementation automatically applies to both sides, and both panels are guaranteed identical structure for the same props (see **consistent-side-structure**).
+**Approved**: pending
+
+**Decision**: `lede` is checked only for presence (`!== undefined`), not emptiness; `points` is checked for both presence and non-zero length. An explicitly empty `lede` (e.g. an empty string) still renders a styled empty paragraph; an explicitly empty `points` array renders nothing.
+**Rationale**: The component can't distinguish an intentionally empty value from a caller mistake, so it renders whatever is defined. Callers who want no lede or no points must omit the prop entirely rather than pass an empty value (see **render-optional-lede**, **render-optional-points**).
+**Approved**: pending
 
 ## Compliance
 
-Not applicable. Component is a presentational element; no security, data-handling, or regulatory compliance concerns apply.
+| Check | Status | Category |
+|-------|--------|----------|
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+
+`dynamic-type-support` and `semantic-markup` rest on the component rendering title/lede/points through semantic `h3`/`p`/`ul`/`li` elements sized in `rem`; `contrast-ratio` is partial because panel colors resolve from CSS custom properties whose final contrast depends on the consuming theme; `string-externalization` and `unicode-support` pass because the component defines no string literals of its own and renders whatever content it's given; `rtl-layout-support` fails because the component always renders "them" before "us" with no direction-aware logic (see **fixed-side-order**).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: resolved the empty-content contradiction into one rule under render-optional-lede; moved caller guidance for omitting empty props out of Behavioral Requirements; rewrote the non-visual-distinction and identical-structure claims to match source; added fixed-side-order and stack-below-breakpoint requirements with vectors; corrected the SwiftUI/Compose/AppKit/WinUI platform notes and named the React/Web class contract; filled in the Compliance table; reformatted Design Decisions; removed React-specific jargon; added tags; fixed modified-date quoting |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

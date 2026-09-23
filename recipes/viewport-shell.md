@@ -3,7 +3,7 @@ id: 960a1577-bf48-4d56-a93f-aa690853f64f
 title: ViewportShell
 domain: agenticdevelopertoolkit://recipes/viewport-shell
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -19,7 +19,9 @@ tags:
 - viewport
 - layout
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/viewport-composer
+- agenticdevelopertoolkit://recipes/viewport-spacer
 references: []
 approved-by: ''
 approved-date: ''
@@ -33,21 +35,21 @@ ViewportShell is a top-level page shell component that locks the document to the
 
 ## Behavioral Requirements
 
-- **must-lock-page**: Component MUST prevent html and body from scrolling by maintaining `overflow:hidden` on the page itself.
-- **must-render-children**: Component MUST render its children prop as the content of a flex container.
-- **must-mount-keyboard-hook**: Component MUST call `useKeyboardInset()` on render to establish keyboard inset tracking.
-- **must-apply-viewport-shell-class**: Component MUST apply the CSS class `viewport-shell` to its root element.
-- **must-support-clip-prop**: Component MUST accept a `clip` boolean prop that defaults to `true` and controls whether the shell clips its own overflow.
-- **must-apply-open-class-when-clip-false**: When `clip` prop is `false`, component MUST apply the CSS class `vp-shell--open` to its root element in addition to `viewport-shell`.
-- **must-support-classname-prop**: Component MUST accept an optional `className` prop and append it to the root element's class list.
-- **must-ignore-null-classname**: When `className` prop is `undefined` or empty string, component MUST not add it to the class list.
+- **page-lock**: The component MUST prevent `html` and `body` from scrolling. This is provided by the package's `base.css` (`html, body { overflow: hidden; overscroll-behavior: none }`), imported once at the app root — the shell does not set or restore this style itself, so mounting, unmounting, or nesting multiple `<ViewportShell>` instances has no effect on it.
+- **render-children**: The component MUST render its `children` prop as the content of a flex container.
+- **keyboard-inset**: The component MUST call `useKeyboardInset()` on render. The hook MUST write the `--kb-inset` CSS custom property, in pixels, onto `document.documentElement`, computed from `window.visualViewport`'s `height` and `offsetTop` on every `resize` and `scroll` event; descendants read the current inset via `var(--kb-inset)` (e.g. `ViewportComposer`'s `.vp-composer` bottom padding).
+- **root-class**: The component MUST apply the CSS class `viewport-shell` to its root element.
+- **clip-prop**: The component MUST accept a `clip` boolean prop that defaults to `true`. `.viewport-shell` sets `overflow: hidden`, so the default clips the shell's own overflow.
+- **open-class**: When `clip` is `false`, the component MUST also apply the CSS class `vp-shell--open` to its root element. `.viewport-shell.vp-shell--open` sets `overflow: visible`.
+- **class-name-merge**: The component MUST accept an optional `className` prop and append it to the root element's class list.
+- **ignore-empty-class-name**: When `className` is `undefined` or the empty string `''`, the component MUST NOT add it to the class list. Any other string — including one that is only whitespace — is added as-is, since the implementation filters with `Array.prototype.filter(Boolean)`, which only removes falsy values.
 
 ## Appearance
 
-- **Container**: Vertical flex container (flex-direction: column implied by usage context)
-- **Background**: Transparent (inherits from parent)
-- **Overflow behavior**: Controlled by `clip` prop — when `true`, overflow is clipped; when `false`, content may overhang the shell's box
-- **Sizing**: Fills available space (positioned to lock to viewport)
+- **Container**: Vertical flex container — `.viewport-shell` sets `display: flex; flex-direction: column`.
+- **Background**: Transparent (inherits from parent; no background is set)
+- **Overflow behavior**: Controlled by `clip` prop — `.viewport-shell` sets `overflow: hidden`; `clip={false}` adds `.vp-shell--open`, which sets `overflow: visible`.
+- **Sizing**: `.viewport-shell` sets `height: 100dvh`, filling the visible viewport height.
 
 ## States
 
@@ -58,28 +60,38 @@ ViewportShell is a top-level page shell component that locks the document to the
 
 ## Accessibility
 
-Not applicable: ViewportShell is a container component with no direct interactive or textual content. All accessibility concerns are owned by child components.
+ViewportShell itself renders no text, interactive elements, or ARIA roles: it is a plain `<div>` wrapper, and accessibility for slotted content is owned by whatever children are placed inside it. Two page-level effects are still the shell's own responsibility:
+
+- It renders a plain, non-interactive `div` with no ARIA attributes, so it introduces nothing for a screen reader or keyboard user to trip over (see **semantic-markup** and **screen-reader-support** in Compliance).
+- Locking `html`/`body` to `overflow: hidden` (see **page-lock**) means content taller than the viewport is only reachable if something inside the shell provides its own scrollable region. Neither `ViewportShell` nor `ViewportSpacer` sets `overflow: auto` anywhere in `base.css` — a scrollable child region, if the slotted content needs one, is the consumer's (or a child component's) responsibility to provide (see **keyboard-navigable** in Compliance, `partial`).
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| viewport-001 | must-render-children | `<ViewportShell><div>Content</div></ViewportShell>` | Rendered div with text "Content" appears in the DOM as a child of the shell |
-| viewport-002 | must-apply-viewport-shell-class | `<ViewportShell />` | Root element has class `viewport-shell` |
-| viewport-003 | must-apply-open-class-when-clip-false | `<ViewportShell clip={false} />` | Root element has classes `viewport-shell` and `vp-shell--open` |
-| viewport-004 | must-support-classname-prop | `<ViewportShell className="custom-class" />` | Root element has classes `viewport-shell` and `custom-class` |
-| viewport-005 | must-ignore-null-classname | `<ViewportShell className="" />` | Root element has class `viewport-shell` only; empty string is not added to class list |
-| viewport-006 | must-support-clip-prop | `<ViewportShell clip={true} />` | Root element does not have `vp-shell--open` class |
-| viewport-007 | must-mount-keyboard-hook | `<ViewportShell />` mounted | `useKeyboardInset()` hook is invoked during render |
+| viewport-001 | render-children | `<ViewportShell><div>Content</div></ViewportShell>` | Rendered div with text "Content" appears in the DOM as a child of the shell |
+| viewport-002 | root-class | `<ViewportShell />` | Root element has class `viewport-shell` |
+| viewport-003 | open-class, clip-prop | `<ViewportShell clip={false} />` | Root element has classes `viewport-shell` and `vp-shell--open`; computed `overflow` of the root element is `visible` |
+| viewport-004 | class-name-merge | `<ViewportShell className="custom-class" />` | Root element has classes `viewport-shell` and `custom-class` |
+| viewport-005 | ignore-empty-class-name | `<ViewportShell className="" />` | Root element has class `viewport-shell` only; empty string is not added to class list |
+| viewport-006 | clip-prop | `<ViewportShell />` (clip omitted) | Root element does not have `vp-shell--open` class; computed `overflow` of the root element is `hidden` |
+| viewport-007 | keyboard-inset | `<ViewportShell />` mounted, then `visualViewport` dispatches a `resize` event such that `innerHeight - visualViewport.height - visualViewport.offsetTop` equals 300 | `document.documentElement.style.getPropertyValue('--kb-inset')` equals `"300px"` |
+| viewport-008 | page-lock | `<ViewportShell />` mounted with the package's `base.css` loaded | `getComputedStyle(document.documentElement).overflow` and `getComputedStyle(document.body).overflow` are both `"hidden"` |
+| viewport-009 | page-lock | Two `<ViewportShell>` instances mounted at once, then one is unmounted | `document.documentElement`'s computed `overflow` stays `"hidden"` throughout; neither shell's mount nor unmount changes it |
+| viewport-010 | render-children | `<ViewportShell>{null}</ViewportShell>` | Root element renders with no child content |
+| viewport-011 | render-children | `<ViewportShell>{[]}</ViewportShell>` | Root element renders with no child elements |
+| viewport-012 | render-children | `<ViewportShell><span>A</span><span>B</span></ViewportShell>` | Both children appear in the DOM as siblings, in the order provided |
+| viewport-013 | class-name-merge | `<ViewportShell className="  " />` | The whitespace-only string is included verbatim in the joined class attribute; it is not trimmed or filtered out |
+| viewport-014 | clip-prop, open-class | `<ViewportShell clip={true} />` re-rendered with `clip={false}`, then back to `clip={true}` | Class list and computed `overflow` update synchronously on each render; the same children instance is preserved, not remounted |
 
 ## Edge Cases
 
-- **Null children**: When `children` is `null`, component renders an empty div with no content. Behavior is MUST.
-- **Empty children array**: When `children` is an empty array, component renders with no child elements. Behavior is MUST.
-- **Multiple children**: Component correctly renders all children in the order provided. Behavior is MUST.
-- **clip prop is undefined**: When `clip` is not provided, it defaults to `true` and `vp-shell--open` is not applied. Behavior is MUST.
-- **className with whitespace**: When `className` contains only whitespace, component filters it out and does not add to class list. Behavior is MUST.
-- **Rapid clip prop changes**: When `clip` prop changes between `true` and `false`, component updates class list synchronously; children are preserved. Behavior is MUST.
+- **Null children**: When `children` is `null`, the component MUST render its root element with no child content.
+- **Empty children array**: When `children` is an empty array, the component MUST render its root element with no child elements.
+- **Multiple children**: The component MUST render all children in the order provided.
+- **clip prop is undefined**: When `clip` is not provided, the component MUST default to `true` and MUST NOT apply the `vp-shell--open` class.
+- **className with whitespace**: A whitespace-only `className` (e.g. `"  "`) MUST NOT be trimmed or rejected — `Array.prototype.filter(Boolean)` only removes falsy values, so it is joined into the class list as-is, alongside `viewport-shell`.
+- **Rapid clip prop changes**: When `clip` changes between `true` and `false` across renders, the component MUST update its class list and computed overflow synchronously, and MUST preserve `children` without remounting them.
 
 ## Configuration
 
@@ -119,24 +131,35 @@ Not applicable: ViewportShell has no logging requirements.
 
 ## Platform Notes
 
-- **Web (React)**: ViewportShell.tsx uses a `div` with `useKeyboardInset()` hook. Classes are managed via array filtering and join. The component is a simple stateless wrapper around `useKeyboardInset()` and CSS class composition.
-- **SwiftUI**: Implement as a `ZStack` or `VStack` that sets `edgesIgnoringSafeArea(.all)` to lock to the viewport. Mount a keyboard-inset observation via `@State` or `@Environment` key path equivalent to trap virtual keyboard visibility and adjust padding on a contained container.
-- **Compose**: Use a `Box` modifier with `Modifier.fillMaxSize()` and `Modifier.verticalScroll(rememberScrollState(), enabled = false)` to lock vertical scroll. Observe keyboard visibility via `WindowInsets.ime` and compose the keyboard-inset effect into the layout tree.
-- **AppKit / UIKit**: On iOS, use a `UIView` with `autoresizingMaskIntoConstraints` set to fill the safe area or `edgesIgnoringSafeArea()` equivalent. Observe keyboard notifications (`UIKeyboardWillShow`, `UIKeyboardWillHide`) and adjust the view's bottom constraint or padding. On macOS, a `NSView` filling the window's content area is sufficient; keyboard handling is not applicable.
-- **WinUI 3**: Implement as a `Grid` with `VerticalAlignment="Stretch"` and `HorizontalAlignment="Stretch"`. Set `Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"` to inherit system colors. Observe `InputPane` events (`InputPane.GetForCurrentView().Showing` and `.Hiding`) to track virtual keyboard state. The `clip` flag controls whether child content is clipped by a `ClipToBounds="True/False"` property or by the Grid's `Clip` setting.
+- **React/Web**: `ViewportShell.tsx` renders a `div` and calls `useKeyboardInset()` unconditionally. Classes are built with `['viewport-shell', clip ? '' : 'vp-shell--open', className].filter(Boolean).join(' ')`. `useKeyboardInset()` writes `--kb-inset` onto `document.documentElement` from `window.visualViewport`'s `resize`/`scroll` events.
+- **SwiftUI**: Use `.ignoresSafeArea(.container)` on the root container to lock it to the viewport, and rely on SwiftUI's automatic keyboard avoidance (or read the keyboard safe-area inset directly) instead of ignoring the keyboard safe area — `edgesIgnoringSafeArea` is deprecated, and ignoring the keyboard inset would undo the behavior this component exists to provide.
+- **Compose**: Use `Modifier.fillMaxSize().imePadding()` (or observe `WindowInsets.ime` directly) to lock the layout to the viewport and react to the keyboard. `Modifier.verticalScroll(enabled = false)` is meaningless — Compose layouts don't scroll unless scrolling is explicitly added — so it implements nothing.
+- **AppKit / UIKit**: On iOS, pin the view to its superview with Auto Layout constraints and use `view.keyboardLayoutGuide` (iOS 15+) to react to keyboard visibility; the `UIKeyboardWillShow`/`UIKeyboardWillHide` notification pair is outdated, and `autoresizingMaskIntoConstraints` is for opting a view *out* of Auto Layout, not for filling a safe area. On macOS, an `NSView` filling the window's content area is sufficient; keyboard handling is not applicable.
+- **WinUI 3**: Implement as a `Grid` with `VerticalAlignment="Stretch"` and `HorizontalAlignment="Stretch"`, and leave `Background` unset so the shell stays transparent, matching the Appearance section. Observe `InputPaneInterop.GetForWindow(hwnd)` to track virtual keyboard state — `InputPane.GetForCurrentView()` is UWP-only and does not work in a desktop WinUI 3 app. The `clip` flag controls whether child content is clipped via `UIElement.Clip` (a `RectangleGeometry`) — `ClipToBounds` is a WPF property and doesn't exist on WinUI's `FrameworkElement`.
 
 ## Design Decisions
 
-The `clip` prop defaults to `true` because most page layouts should constrain overflow to prevent unintended visual overflow and layout shifts. The exception — when content deliberately overhangs (e.g., a corner badge) — is opt-in via `clip={false}`. The page itself remains locked (`overflow:hidden` on html/body) regardless of the `clip` setting to prevent secondary scroll bars at the document level.
+**Decision**: `clip` defaults to `true`, which keeps `.viewport-shell`'s own `overflow: hidden`; passing `clip={false}` adds `vp-shell--open` (`overflow: visible`) for content that must deliberately overhang the shell's box, such as a corner badge.
+**Rationale**: Most page layouts should constrain overflow to avoid unintended visual overflow and layout shift, so the overhang case is opt-in. The page itself stays locked (`overflow: hidden` on `html`/`body`, via `base.css`) regardless of `clip`, so opening the shell can never introduce a document-level scrollbar.
+**Approved**: pending
 
-The keyboard-inset hook is mounted unconditionally because virtual keyboard tracking is a foundational concern for any page-level shell. Keyboard inset state is managed globally and can be accessed by descendant components via a context or hook without requiring explicit prop threading.
+**Decision**: `useKeyboardInset()` is mounted unconditionally rather than made opt-in.
+**Rationale**: Virtual-keyboard tracking is a foundational concern for any page-level shell. The hook writes the `--kb-inset` CSS custom property onto `document.documentElement`, so any descendant can read `var(--kb-inset)` in its own CSS — as `ViewportComposer`'s `.vp-composer` bottom padding does — without prop threading or a React context.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: ViewportShell is a foundational component with no compliance-specific requirements beyond rendering children and managing keyboard state.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+
+These statuses rest on `ViewportShell.tsx` rendering a plain `<div>` with only class-list attributes and no ARIA overrides (`semantic-markup`, `screen-reader-support`), and on `base.css` locking `html`/`body` scroll while declaring no `overflow: auto` anywhere in the `viewport` package's own CSS, leaving reachability of tall content dependent on a scrollable region the consumer supplies (`keyboard-navigable`, partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; grounded keyboard-inset, page-lock, and clip/open-class semantics in source; reformatted Design Decisions; replaced Accessibility and Compliance with real content; corrected className-whitespace behavior and Edge Cases RFC 2119 phrasing; rewrote Platform Notes APIs and relabeled React/Web; expanded Conformance Test Vectors; added related recipes |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
