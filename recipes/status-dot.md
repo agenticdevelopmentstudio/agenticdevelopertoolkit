@@ -3,7 +3,7 @@ id: 1a044d34-d585-46b4-b703-dea3fb9b9642
 title: StatusDot
 domain: agenticdevelopertoolkit://recipes/status-dot
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-07-03'
@@ -11,7 +11,7 @@ modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A glowing status dot — one cva tone class drives both fill and soft glow via currentColor; px-sized, labeled → role=img, unlabeled → decorative."
+summary: "A small glowing status dot — one tone colors both fill and glow; sized in px, optionally labeled for screen readers."
 platforms:
 - typescript
 - web
@@ -23,7 +23,8 @@ tags:
 depends-on: []
 related:
 - agenticdevelopertoolkit://recipes/stat-card
-references: []
+references:
+- https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix
 approved-by: ''
 approved-date: ''
 ---
@@ -62,7 +63,9 @@ presentational span with no internal state and no `"use client"` directive.
 - **scales-glow-with-size**: The component MUST set the glow radius to `max(6, round(size * 0.55))` px so the glow grows with the dot but never falls below 6 px.
 - **labeled-is-accessible-image**: Given a `label`, the component MUST expose `role="img"` and `aria-label` set to that label.
 - **unlabeled-is-decorative**: With no `label`, the component MUST render `aria-hidden="true"` and no `role`, so it is skipped by assistive technology.
+- **passes-label-through-verbatim**: The component MUST render a provided `label` verbatim as `aria-label`, without concatenating, translating, or otherwise transforming it — the consumer MUST supply an already-localized string.
 - **merges-classname**: The component MUST merge any `className` after the tone class via `cn()`, so a consumer MAY add layout classes without losing the tone.
+- **memoizes-render**: Since every prop is a primitive, the component SHOULD be wrapped in a memoization boundary (`React.memo`) so an unchanged dot skips re-render on a frequently-updating parent.
 
 ## Appearance
 
@@ -90,7 +93,7 @@ size=8   ·      size=12   ●      size=18   ⬤   (glow radius grows with size
 |---|---|
 | Default (`neutral`) | `apt-text-muted` fill + muted glow |
 | Tinted (`success`/`error`/`accent`/`blue`/`orange`/`muted`) | Fill and glow both recolor to the tone's `apt-*` color |
-| Small (`size` ≤ ~11) | Dot shrinks; glow clamps to a 6 px floor so it stays visible |
+| Small (`size` < 10) | Dot shrinks; glow clamps to a 6 px floor so it stays visible |
 | Large (`size` big) | Dot grows; glow radius scales to `round(size * 0.55)` px |
 | Labeled | Announced as an image named `label` (`role="img"`) |
 | Decorative (no `label`) | `aria-hidden`; ignored by AT |
@@ -120,10 +123,16 @@ size=8   ·      size=12   ●      size=18   ⬤   (glow radius grows with size
 | T6 | defaults-to-neutral-tone | render `<StatusDot />` (no tone) | className contains `text-apt-text-muted` |
 | T7 | sizes-in-px | `size={18}` | inline `width` and `height` are `18px` |
 | T8 | merges-classname | `className="ml-1"` | className contains both `ml-1` and the tone class |
+| T9 | tone-sets-currentcolor | render `<StatusDot tone="muted" />` | className contains `text-apt-text-dim` |
+| T10 | tone-sets-currentcolor | render `<StatusDot tone="accent" />` | className contains `text-apt-gold` |
+| T11 | tone-sets-currentcolor | render `<StatusDot tone="blue" />` | className contains `text-apt-blue` |
+| T12 | tone-sets-currentcolor | render `<StatusDot tone="orange" />` | className contains `text-apt-orange` |
+| T13 | unlabeled-is-decorative, passes-label-through-verbatim | `<StatusDot tone="success" label="" />` | span has `aria-hidden="true"` and no `role` attribute (empty string is falsy) |
+| T14 | scales-glow-with-size | `size={10}` | inline `boxShadow` contains `6px` (round(10 × 0.55) = 6, exactly at the floor) |
 
 ## Edge Cases
 
-- **Tiny sizes.** For `size` ≤ ~10, `round(size * 0.55)` is below 6, so the glow
+- **Tiny sizes.** For `size` < 10, `round(size * 0.55)` is below 6, so the glow
   clamps to the 6 px floor — a small dot still shows a visible halo rather than
   vanishing to a flat point.
 - **Fractional size.** `size` is applied verbatim to `width`/`height`; only the
@@ -151,7 +160,11 @@ Not applicable: StatusDot is a pure presentational component with no navigation 
 
 ## Localization
 
-Not applicable: StatusDot contains no text or UI strings; the `label` prop is provided by the consumer and is a fully localized value.
+StatusDot renders no strings of its own — the only text-bearing surface is the
+consumer-supplied `label`, exposed verbatim as `aria-label`
+(**passes-label-through-verbatim**). The consumer MUST supply `label` already
+localized; the component MUST NOT concatenate, translate, or otherwise
+transform it before setting `aria-label`.
 
 ## Accessibility Options
 
@@ -177,41 +190,54 @@ tone, not the dot.
 
 ## Platform Notes
 
-- **Web/TypeScript**: File `packages/web/packages/ui/src/components/status-dot.tsx`. React functional component, memoized for re-render prevention. No `"use client"` directive — it is a stateless span with inline style and renders in server components. Uses CSS `color-mix(in srgb, …)` for the glow; supported by evergreen browsers. The `cn()` utility for className merging comes from `../lib/utils`.
-- **SwiftUI**: Start from a capsule shape with a computed shadow modifier. Map `tone` to SwiftUI's color system (equivalent to the `apt-*` palette). Use `max(6, round(size * 0.55))` for shadow blur radius. The `label` parameter determines whether the capsule carries `accessibilityElement(children: .ignore)` + `accessibilityLabel()` (labeled) or `.hidden` (unlabeled).
-- **Compose**: Use a `Canvas` composable or `Box` with `Modifier.shadow()`. The `tone` maps to the Material 3 color system or custom palette. Glow radius scales identically. Semantics: with `label`, add `semantics { contentDescription = label }` and mark as an image; without, mark as `decorative`.
-- **AppKit / UIKit**: Use `NSView`/`UIView` with `CALayer` shadow. Fill is `layer.backgroundColor = UIColor(named: "apt-<tone>")`. Glow is `layer.shadowColor` and `layer.shadowRadius` using `max(6, round(size * 0.55))`. `label` drives accessibility: if present, set `accessibilityRole = .image` + `accessibilityLabel`; if absent, set `isAccessibilityElement = false`.
-- **WinUI 3**: A `Border` with `CornerRadius="<size>"` and `Background` bound to a tone-based brush. Use a `ThemeShadow` with computed blur radius (`max(6, round(size * 0.55))`) and 40%-opacity color derived from the brush. Automation ID from the `label` parameter: set `AutomationProperties.Name` if present, otherwise omit. Pair with a `ContentPresenter` or inline text for the status word; color alone is insufficient.
+- **SwiftUI**: Start from `Circle()` rather than a capsule, sized via `.frame(width: size, height: size)`. Apply `.shadow(color:radius:)` with a tone-mapped `Color` at 40% opacity and radius `max(6, round(size * 0.55))`. Accessibility: with `label`, apply `.accessibilityLabel(label)` and `.accessibilityAddTraits(.isImage)`; without, apply `.accessibilityHidden(true)` (`.hidden` is a view-visibility modifier, not an accessibility API).
+- **Compose**: `Modifier.shadow()` is elevation-based and cannot take an arbitrary tone-colored glow radius, so draw the halo by hand with `Modifier.drawBehind { }` (or a blur `RenderEffect`), sized `max(6, round(size * 0.55))` dp; fill with `Modifier.size(size.dp).background(toneColor, CircleShape)`. Semantics: with `label`, `Modifier.semantics { contentDescription = label; role = Role.Image }`; without, `Modifier.clearAndSetSemantics {}` ("mark as decorative" is not itself an API).
+- **Web/TypeScript**: File `packages/web/packages/ui/src/components/status-dot.tsx`. React functional component wrapped in `React.memo` (see **memoizes-render**) — all props are primitives, so an unchanged dot skips re-render on a ticking parent. No `"use client"` directive — it is a stateless span with inline style and renders in server components. Uses CSS `color-mix(in srgb, …)` for the glow; supported by all evergreen browsers ([MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix)). The `cn()` utility for className merging comes from `../lib/utils`.
+- **AppKit / UIKit**: A layer-backed `NSView` (AppKit) or `UIView` (UIKit) with a `CALayer` glow. Fill: AppKit sets `layer.backgroundColor` from an `NSColor` derived from the tone on a layer-backed view; UIKit sets it from `UIColor(named: "apt-<tone>")`. Glow: both set `layer.shadowColor`, `layer.shadowRadius = max(6, round(size * 0.55))`, and `layer.shadowOpacity = 0.4` for the tone-colored halo. Accessibility: with `label`, AppKit sets `accessibilityRole = .image` + `accessibilityLabel`; UIKit sets `accessibilityTraits = .image` + `accessibilityLabel`. Without `label`, both set `isAccessibilityElement = false`.
+- **WinUI 3**: A `Border` with `CornerRadius="{size/2}"` (half the diameter, so it reads as a circle rather than a rounded square) and `Background` bound to a tone-based brush. `ThemeShadow` cannot take a color or blur radius, so use a Composition `DropShadow` via `ElementCompositionPreview`, with `BlurRadius = max(6, round(size * 0.55))` and `Color` at 40% opacity of the tone brush. Accessibility: with `label`, set `AutomationProperties.Name`; without, set `AutomationProperties.AccessibilityView="Raw"` so it is excluded from the accessibility tree rather than merely left unnamed. Pair with a `ContentPresenter` or inline text for the status word; color alone is insufficient.
 
 ## Design Decisions
 
-- **One class, whole treatment.** Both the fill (`background: currentColor`) and
-  the glow (`color-mix` of `currentColor`) derive from the tone's text color, so
-  a single `text-apt-*` class recolors the entire dot. This avoids a parallel set
-  of per-tone shadow classes that could drift out of sync with the fill.
-- **Sized in px, not a scale step.** A status dot must optically match mono text
-  at whatever size it appears next to (row label, hero figure, inline word), so
-  `size` is a raw px number rather than a `sm/md/lg` token — the caller tunes it
-  to the neighbouring text.
-- **Glow floor at 6 px.** `max(6, round(size*0.55))` keeps small dots from losing
-  their halo entirely, preserving the "soft light" read even at `size={8}`.
-- **Label toggles the a11y role.** Rather than always announcing, the dot is
-  decorative by default and becomes a `role="img"` only when given a `label` —
-  matching the common case where visible text already carries the status and a
-  second announcement would be noise.
+**Decision**: Both the fill (`background: currentColor`) and the glow
+(`color-mix` of `currentColor`) derive from the tone's text color, so a single
+`text-apt-*` class recolors the entire dot.
+**Rationale**: This avoids a parallel set of per-tone shadow classes that
+could drift out of sync with the fill.
+**Approved**: pending
+
+**Decision**: `size` is a raw px number rather than a `sm/md/lg` token.
+**Rationale**: A status dot must optically match mono text at whatever size it
+appears next to (row label, hero figure, inline word), so the caller tunes it
+to the neighbouring text.
+**Approved**: pending
+
+**Decision**: The glow radius floors at 6 px (`max(6, round(size*0.55))`).
+**Rationale**: This keeps small dots from losing their halo entirely,
+preserving the "soft light" read even at `size={8}`.
+**Approved**: pending
+
+**Decision**: The dot is decorative (`aria-hidden`) by default and becomes
+`role="img"` only when given a `label`.
+**Rationale**: This matches the common case where visible text already
+carries the status and a second announcement would be noise.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` (tones are `apt-*`, glow is `color-mix` of `currentColor`) | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Standalone indicator can carry an accessible name (`label` → `role=img`) | pass | accessibility |
-| Decorative-by-default avoids redundant AT announcements | pass | accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+
+Statuses rest on the source's conditional `role="img"` / `aria-label` /
+`aria-hidden="true"` rendering (`semantic-markup`), and on the fact that the
+component never embeds a literal user-facing string — `label` is always a
+value the consumer passes in (`no-hardcoded-strings`).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix the small-size threshold to `size < 10` in States and Edge Cases, cite MDN for `color-mix` support, rewrite Compliance as a real catalog-check table, reformat Design Decisions to the Decision/Rationale/Approved form, reorder Platform Notes and correct the SwiftUI/Compose/AppKit-UIKit/WinUI 3 APIs, add `passes-label-through-verbatim` and `memoizes-render` requirements with new test vectors and a rewritten Localization section, add missing tone/empty-label/boundary conformance vectors, fix the 1.0.0 Change History summary, and trim the frontmatter summary. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise: fix domain (cookbook), add missing "not applicable" sections, complete Platform Notes for all platforms, set status to review. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the currentColor-driven glowing StatusDot. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the currentColor-driven glowing StatusDot. |

@@ -3,7 +3,7 @@ id: bba42d5f-8a52-487f-88c5-4f988dfa714b
 title: Stat
 domain: agenticdevelopertoolkit://recipes/stat
 type: ingredient
-version: 1.0.2
+version: 1.1.0
 status: review
 language: en
 created: '2026-07-03'
@@ -57,7 +57,7 @@ holds. Extracted from the status board so every site's dashboard figures share o
 - **renders-label-and-value**: The component MUST render both the `label` and the `value`.
 - **tints-value-by-tone**: The component MUST color the value from the `tone`'s family status token — `neutral`→`text-apt-text`, `muted`→`text-apt-text-dim`, `accent`→`text-apt-gold`, `blue`→`text-apt-blue`, `orange`→`text-apt-orange`, `success`→`text-apt-green`, `error`→`text-apt-red`.
 - **defaults-neutral-tone**: With no `tone`, the component MUST render the value in the neutral text token (`text-apt-text`).
-- **value-class-overrides-tone**: The component MUST apply `valueClassName` to the value merged after (winning over) the tone class, so a caller MAY override the tone hue.
+- **value-class-overrides-tone**: The component MUST apply `valueClassName` to the value merged after the tone class through `cn()`'s `tailwind-merge` de-confliction, so a caller MAY override the tone hue. (Plain class concatenation would leave both `text-*` classes in the string and let CSS source order — not merge order — decide the winner.)
 - **label-uses-micro-caption**: The component MUST render the label in the micro uppercase-mono caption treatment (small, letter-spaced, dimmed).
 - **value-uses-figure-type**: The component MUST render the value in the big mono-bold figure treatment (`font-mono text-lg font-bold leading-none`).
 - **row-lays-out-on-baseline**: `StatRow` MUST place the label at the left and the value at the right on a shared baseline (`items-baseline justify-between`).
@@ -112,6 +112,12 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 - Both `label` and `value` render as plain text spans, so assistive tech announces
   them in DOM order: label-then-value for `StatRow`, and value-then-label for `Stat`
   (the value leads the column form visually and in the reading order).
+- In the column form (`Stat`), that reading order means a screen reader hears the
+  value before it has the label's context (e.g. "3" before "failures · 24h").
+  Callers SHOULD group the two for assistive tech when that would be confusing on
+  its own — e.g. an `aria-label` on the wrapper combining label and value, or the
+  platform's accessibility-element-grouping equivalent — rather than relying on
+  reading order alone.
 - Tone is conveyed by color only — it carries no ARIA and adds no accessible name;
   the `label` is the sole textual meaning, so callers SHOULD keep the label
   descriptive (e.g. "failures · 24h") rather than leaning on the red tint alone.
@@ -127,17 +133,22 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 | T3 | value-class-overrides-tone | `<StatRow label="env" value="PROD" tone="error" valueClassName="text-apt-blue" />` | value carries `text-apt-blue` and NOT `text-apt-red` |
 | T4 | tints-value-by-tone, column-right-aligns | `<Stat label="failures · 24h" value="3" tone="error" />` | value "3" carries `text-apt-red`; label present; wrapper `flex-col items-end` |
 | T5 | row-lays-out-on-baseline | `<StatRow label="x" value="1" />` | wrapper carries `items-baseline justify-between` |
-| T6 | label-uses-micro-caption | any StatRow/Stat | label span carries `text-[10px] uppercase tracking-[0.06em] text-apt-text-dim` |
+| T6 | label-uses-micro-caption | `<Stat label="uptime" value="99.98%" />` | label span carries `text-[10px] uppercase tracking-[0.06em] text-apt-text-dim` |
 | T7 | forwards-classname | `<StatRow className="pt-1" .../>` | wrapper carries `pt-1` |
 | T8 | renders-label-and-value | `label={<b>N</b>} value={0}` | node label rendered; value `0` rendered (not dropped) |
+| T9 | forwards-classname | `<Stat className="pb-2" label="x" value="1" />` | wrapper carries `pb-2` |
 
 ## Edge Cases
 
 - `label` and `value` are `ReactNode`: a value of `0` renders as "0" (not treated as
   falsy/blank), and either slot MAY hold a fragment, number, or icon+text.
-- `valueClassName` that sets a `text-*` color wins over the tone token (last class in
-  the `cn()` merge); a class touching only non-color properties leaves the tone hue.
-- An unknown/undefined `tone` falls back to the cva default (`neutral`).
+- `valueClassName` that sets a `text-*` color wins over the tone token because `cn()`
+  runs `tailwind-merge`, which drops the earlier conflicting `text-*` class instead of
+  leaving both in the string; a class touching only non-color properties leaves the
+  tone hue untouched.
+- With `tone` left `undefined`, the cva default applies (`neutral`). `StatTone` is a
+  closed union of the seven tones, so passing any other string is a compile-time type
+  error, not a runtime fallback.
 - No truncation or wrapping is imposed — a very long value in `StatRow` competes with
   the label across `justify-between`; the host sizes the container.
 - The two forms are separate exports on one grammar: pick `StatRow` inside cards,
@@ -163,39 +174,59 @@ and any telemetry around it belong to the host, not the display element.
 
 ## Platform Notes
 
-- **Web/TypeScript**: File `packages/web/packages/ui/src/components/stat.tsx`. No `"use client"` directive — renders static spans with no state or effects, works as a server component. Styled with `apt-*` token utilities registered centrally via `@source`. Demo in `ui-showcase` Topic `stat` (group "Primitives — display"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
-- **SwiftUI**: Start with `VStack(alignment: .trailing, spacing: 4)` containing `Text(value)` with `.font(.title2).fontWeight(.bold).monospaced()` and `Text(label)` with `.font(.caption2).tracking(0.06).foregroundStyle(.secondary)`. This mirrors the column form: value (large, bold, monospaced) over label (small, dimmed, tracked).
-- **Compose**: Use `Column(horizontalAlignment = Alignment.End, modifier = Modifier.gap(4.dp))` with `Text(value, style = MaterialTheme.typography.bodyLarge, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)` and `Text(label, style = MaterialTheme.typography.labelSmall)` with dimmed foreground. This mirrors the column form: right-aligned value and label with monospace, bold emphasis.
-- **AppKit / UIKit**: Compose with `NSStackView` / `UIStackView` (vertical orientation) arranging `NSTextField` / `UILabel` instances for value and label. Apply `.font(.systemFont(ofSize: 18, weight: .bold))` and `.setMonospaced()` to the value, and `.font(.systemFont(ofSize: 11, weight: .regular))` with dimmed foreground to the label. Set `alignment: .right` to mirror the column form.
-- **WinUI 3**: Compose `TextBlock` elements within a `StackPanel` with `Orientation="Vertical"`. Apply `HorizontalAlignment="Right"` and appropriate `Margin` (4pt spacing). Set `FontFamily="Consolas"`, `FontWeight="Bold"`, `FontSize="18"` for the value and `FontSize="10"`, `FontWeight="Regular"` with dimmed foreground for the label. This mirrors the column form.
+- **React/Web**: File `packages/web/packages/ui/src/components/stat.tsx`. No `"use client"` directive — renders static spans with no state or effects, works as a server component. Styled with `apt-*` token utilities registered centrally via `@source`. Demo in `ui-showcase` Topic `stat` (group "Primitives — display"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
+- **SwiftUI**: Column form (`Stat`) — `VStack(alignment: .trailing, spacing: 4)` with `Text(value).font(.title2).fontWeight(.bold).monospaced()` over `Text(label).font(.caption2).tracking(0.6).textCase(.uppercase).foregroundStyle(.secondary)`; `.tracking` is in points, so 0.6pt approximates the web's `0.06em` at a 10pt label (`.tracking(0.06)` would be roughly 10× too small). Row form (`StatRow`) — `HStack(alignment: .firstTextBaseline) { Text(label)...; Spacer(); Text(value)... }` with the same two text styles. Map `tone` to `Color`: `neutral`→`.primary`, `muted`→`.secondary`, `accent`→a shared gold `Color`, `blue`→`.blue`, `orange`→`.orange`, `success`→`.green`, `error`→`.red`, mirroring the `apt-*` token table rather than hardcoding per view.
+- **Compose**: Column form — `Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp))` (`Modifier.gap` does not exist; a `Column`'s spacing is `verticalArrangement`) with `Text(value, style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))` over `Text(label.uppercase(), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)`. `String.uppercase()` takes the current `Locale` by default — never call it with an invariant/root locale for user-facing text. Row form — `Row(verticalAlignment = Alignment.Bottom) { Text(label, modifier = Modifier.alignByBaseline()); Spacer(Modifier.weight(1f)); Text(value, modifier = Modifier.alignByBaseline()) }`. Material3's `colorScheme` ships only `error` as a semantic status color, so `neutral`/`muted`/`accent`/`blue`/`orange`/`success` need a small custom tone-color extension mirroring the `apt-*` table; only `error`→`colorScheme.error` is built in.
+- **AppKit / UIKit**: Column form — vertical `NSStackView` / `UIStackView` (`alignment: .trailing`) holding value and label `NSTextField` / `UILabel` instances. `.font(.systemFont(ofSize: 18, weight: .bold))` is SwiftUI syntax, not AppKit/UIKit, and `.setMonospaced()` is not an API — instead assign `label.font = NSFont.monospacedSystemFont(ofSize: 18, weight: .bold)` / `UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)` directly to the value's font property. Give the label `.font = .systemFont(ofSize: 11, weight: .regular)`, a dimmed `.textColor`, and uppercase its string with `.uppercased(with: Locale.current)` before assigning it — locale-sensitive, never bare `.uppercased()` for user-facing text. Row form — a horizontal stack view with `alignment: .firstBaseline` (a real `NSStackView.Alignment` / `UIStackView.Alignment` case) instead of vertical. Map `tone` to `NSColor`/`UIColor`: `neutral`→`.labelColor`/`.label`, `muted`→`.secondaryLabelColor`/`.secondaryLabel`, `accent`→a shared gold color asset, `blue`→`.systemBlue`, `orange`→`.systemOrange`, `success`→`.systemGreen`, `error`→`.systemRed`.
+- **WinUI 3**: Column form — a `StackPanel` with `Orientation="Vertical"`, `HorizontalAlignment="Right"`, and `Spacing="4"` (the built-in gap property — not `Margin` on each child) holding value and label `TextBlock`s. Set the value's `FontWeight="Bold"`, `FontSize="18"`, and a shared monospace `FontFamily` resource (not a hardcoded `Consolas`, which skips the app's theme); set the label's `FontSize="10"` with a dimmed foreground brush and its text uppercased via `text.ToUpper(CultureInfo.CurrentCulture)` — locale-sensitive, never `ToUpperInvariant()` for user-facing text. Row form — a two-column `Grid` (`Auto`,`*`) with the label in column 0 and the value, `HorizontalAlignment="Right"`, in column 1. Map `tone` to a `Brush`: `neutral`→`TextFillColorPrimaryBrush`, `muted`→`TextFillColorSecondaryBrush`, `accent`→a shared gold brush resource, `blue`→`SystemFillColorAttentionBrush`, `orange`→`SystemFillColorCautionBrush`, `success`→`SystemFillColorSuccessBrush`, `error`→`SystemFillColorCriticalBrush`.
 
 ## Design Decisions
 
-- **Two forms, one grammar.** `StatRow` (baseline row) and `Stat` (right-aligned
-  column) are separate exports sharing one `StatProps` + `statValueVariants`, so a
-  dashboard card and a hero strip render the same figure look without a mode prop.
-- **Tone as a bounded cva, `valueClassName` as the escape hatch.** The `tone` variant
-  is limited to the seven family status tokens (the common, themable cases); a caller
-  needing a categorical hue outside that set uses `valueClassName`, which merges after
-  the tone class — avoiding a variant explosion.
-- **A distinct micro-caption for the label.** The label class is intentionally smaller
-  and dimmer than the form-field caption: this is a display label under/beside a
-  figure, not a field name, so it reads as chrome around the number.
-- **Big mono-bold value, `leading-none`.** The value uses monospace, bold, large,
-  tight leading so columns of figures align and the number is the visual anchor.
+**Decision**: Ship `StatRow` (baseline row) and `Stat` (right-aligned column) as two
+separate exports sharing one `StatProps` and `statValueVariants`.
+**Rationale**: A dashboard card and a hero strip render the same figure look without a
+mode prop.
+**Approved**: pending
+
+**Decision**: Bound `tone` to a cva with the seven family status tokens, and give
+`valueClassName` as the escape hatch for anything outside that set.
+**Rationale**: The `tone` variant covers the common, themable cases; a caller needing
+a categorical hue outside that set uses `valueClassName`, which merges after the tone
+class — avoiding a variant explosion.
+**Approved**: pending
+
+**Decision**: Give the label a distinct micro-caption class instead of reusing the
+form-field caption.
+**Rationale**: This is a display label under/beside a figure, not a field name, so it
+should read as chrome around the number — intentionally smaller and dimmer than the
+form-field caption.
+**Approved**: pending
+
+**Decision**: Render the value in a big, mono, bold weight with `leading-none`.
+**Rationale**: Monospace, bold, large, tight leading keeps columns of figures aligned
+and makes the number the visual anchor.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` (uses `apt-*` tokens) | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Meaning carried by the text label, not tone color alone | pass | accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+
+`contrast-ratio` is partial because `stat.tsx` colors the value and label only
+through `apt-*` tokens — no raw hex, no `!important` — without itself asserting a
+measured ratio. `semantic-markup` passes because the component renders plain,
+non-interactive `<span>`/`<div>` elements with no ARIA misuse. `platform-theming`
+passes because every color comes from the shared `apt-*` theme tokens, which the
+Appearance section states resolve consistently in light and dark.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: ground `value-class-overrides-tone` and its Edge Case in `tailwind-merge`, and limit the tone fallback claim to `undefined`; rename the web Platform Notes bullet to `React/Web`, fix inaccurate Compose/AppKit-UIKit/WinUI APIs, add row-form/uppercase-label/tone-color guidance for every native platform, and correct the SwiftUI tracking unit and hardcoded WinUI font; add a SHOULD on grouping value/label for assistive tech; give T6 a concrete input and add a `Stat`+`className` test vector; rewrite Design Decisions in the Decision/Rationale/Approved form; replace the Compliance table's circular/misnamed checks with linked catalog checks. |
 | 1.0.2 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes non-web bullets; sharpen translation guidance. |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Move to review; fix domain URIs and expand Platform Notes to cover all platforms. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents StatRow/Stat, the tone grammar, and the label/value treatment. |

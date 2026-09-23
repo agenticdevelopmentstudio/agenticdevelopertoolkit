@@ -3,7 +3,7 @@ id: dffc1431-7386-4acf-94bc-6043c5c7eebc
 title: ToggleGroup
 domain: agenticdevelopertoolkit://recipes/toggle-group
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-07-03'
@@ -11,7 +11,7 @@ modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A segmented control — mutually-exclusive option buttons on the field shell, gold fill on the pressed item; single-select via value={[selected]}."
+summary: "A segmented control — mutually-exclusive option buttons on the field shell; gold fill marks the pressed item."
 platforms:
 - typescript
 - web
@@ -65,8 +65,9 @@ and/or `defaultValue`.
 - **single-select-via-value-array**: When driven single-select (`value={[selected]}`, `multiple` unset), the component MUST reflect exactly the one item in that array as pressed.
 - **keyboard-operable**: A focused item MUST be operable by keyboard (arrow-key roving focus between items and Enter/Space activation), per the Base UI ToggleGroup primitive.
 - **focus-visible-ring**: A keyboard-focused item MUST show a visible focus ring (`focus-visible:ring-2 ring-apt-gold/40`).
-- **disabled-item-inert**: A disabled item MUST NOT respond to pointer input and MUST render dimmed (`opacity-50`, `pointer-events-none`).
+- **disabled-item-inert**: A disabled item MUST NOT respond to pointer input, MUST be skipped during roving keyboard navigation, and MUST render dimmed (`opacity-50`, `pointer-events-none`).
 - **forwards-group-and-item-props**: The component MUST forward arbitrary props (incl. `aria-label`, `className`, `multiple`, `defaultValue`) to the underlying Base UI group and item primitives.
+- **single-select-keeps-selection**: When driven single-select (`value={[selected]}`, `multiple` unset), the consumer MUST ignore the empty array from `onValueChange` (the deselect case) so the group keeps exactly one item pressed at all times.
 
 ## Appearance
 
@@ -96,6 +97,7 @@ and/or `defaultValue`.
 | Hover | Text brightens to `text-apt-text` |
 | Focus-visible | Gold focus ring (`ring-2 ring-apt-gold/40`) |
 | Pressed (selected) | Gold fill: `bg-apt-gold` + `text-apt-bg` |
+| Pressed + hover | Pressed treatment holds: `data-[pressed]:text-apt-bg` wins over `hover:text-apt-text`, so hovering a pressed item keeps legible text on the gold fill |
 | Disabled | `opacity-50`, `pointer-events-none` |
 
 ## Accessibility
@@ -123,6 +125,8 @@ and/or `defaultValue`.
 | T6 | keyboard-operable (Playwright) | focus first item, press ArrowRight then Enter | focus moves to next item; that item activates |
 | T7 | focus-visible-ring (Playwright) | tab focus onto an item | item shows `ring-2 ring-apt-gold/40` |
 | T8 | disabled-item-inert | render an item with `disabled` and click it | no `onValueChange`; item renders `opacity-50` |
+| T9 | single-select-keeps-selection | in the demo, click the already-pressed `right` item | `onValueChange` is called with `[]`; the single-select consumer ignores the empty array and its selection stays at `right` |
+| T10 | disabled-item-inert, keyboard-operable | render `left`/`center` (disabled)/`right`, focus `left`, press ArrowRight | focus moves to `right`, skipping the disabled `center` item |
 
 ## Edge Cases
 
@@ -163,11 +167,19 @@ Not applicable: ToggleGroup is a shared component within a React library, not a 
 
 ## Localization
 
-Not applicable: ToggleGroup is a presentational control; it contains no user-facing strings.
+ToggleGroup itself defines no user-facing strings, but it forwards whatever text a consumer
+passes straight through with no translation layer of its own. Consumers MUST pass localized
+item labels (the `children` of each `ToggleGroupItem`) and a localized `aria-label` (or
+`aria-labelledby`) on the group, per **forwards-group-and-item-props**.
 
 ## Accessibility Options
 
-Not applicable: ToggleGroup responds to the underlying platform's reduce-motion and contrast settings via Base UI's native defaults; the component does not expose separate accessibility option handling.
+ToggleGroup does not implement dedicated Reduce Motion, Increase Contrast, or Differentiate
+Without Color handling of its own. The rest/hover/pressed treatments in the source
+(`hover:text-apt-text`, `data-[pressed]:bg-apt-gold`, `transition-colors`) are plain color and
+transition utilities with no `prefers-reduced-motion` or `forced-colors` media query, so their
+behavior under those OS settings is whatever the browser applies by default, not an
+accommodation Base UI or the component makes.
 
 ## Feature Flags
 
@@ -189,38 +201,47 @@ any telemetry belong to the consumer's `onValueChange` handler, not the control.
 ## Platform Notes
 
 - **React/Web**: File: `packages/web/packages/ui/src/components/toggle-group.tsx`. Built on `@base-ui/react/toggle-group` + `@base-ui/react/toggle`; the group sits on `fieldShellClass` exported from `./input`, keeping it visually aligned with the other field-shell inputs. Carries `"use client"` (Base UI interactivity). Demo: `ui-showcase` Topic `toggle-group` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). Token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
-- **SwiftUI**: Start from `Picker` with `.pickerStyle(.segmented)` or compose a button row with `@State`-managed selection. Apply a border using `.border()`, style the selected item with `.background(Color.gold)`, and implement keyboard navigation with `.keyboardShortcut()` modifiers on each button.
-- **Compose**: Start from Material's `SegmentedButton` row or compose `Button` components in a `Row` with `Modifier.border()`. Track selection in a `mutableStateOf`, apply gold background to the selected item, and route focus via `Modifier.focusable()` with arrow-key handlers.
-- **AppKit / UIKit**: Use `NSSegmentedControl` (macOS) or `UISegmentedControl` (iOS) with a custom appearance proxy to apply gold fills and focus rings. Implement disabled state via the control's built-in `isEnabled` property. For keyboard support on iOS, use `UIKeyCommand` on the view controller.
-- **WinUI 3**: Compose a `ItemsControl` with `Button` items in a `StackPanel` (Horizontal). Bind to a view-model property for selection state. Apply `ControlTemplate` styling to show the gold fill on pressed state and use `VisualState` for the focus ring. Handle keyboard navigation via `KeyDown` event handlers.
+- **SwiftUI**: Start from `Picker` with `.pickerStyle(.segmented)`, which already supplies roving keyboard focus and accessibility for free — do not reach for `.keyboardShortcut()`, which binds a specific key/character shortcut, not arrow-key navigation. Apply a border using `.border()`, and tint the selected segment from the toolkit's gold accent token (its Apple theme equivalent of `apt-gold`) rather than a hardcoded `Color` literal.
+- **Compose**: Start from Material 3's `SingleChoiceSegmentedButtonRow` with `SegmentedButton` children, which supply pressed/selected state, focus, and arrow-key handling out of the box — drop manual `Modifier.focusable()` + key handlers. Track selection in a `mutableStateOf` and apply the toolkit's gold accent token to the selected button instead of a literal gold background.
+- **AppKit / UIKit**: Use `NSSegmentedControl` (macOS) or `UISegmentedControl` (iOS), which already provide roving keyboard focus, activation, and a built-in pressed/selected state — no `UIKeyCommand` or custom appearance proxy needed (`NSSegmentedControl` has none). Tint the selected segment via `selectedSegmentBezelColor` (AppKit) or `selectedSegmentTintColor` (UIKit), set from the toolkit's gold accent token. Implement disabled state via the control's built-in `isEnabled` property.
+- **WinUI 3**: Use the Windows Community Toolkit `Segmented` control, or `RadioButtons`/`ListView` with `SelectionMode="Single"` — each already supplies pressed/selected items with roving keyboard focus built in. Avoid composing an `ItemsControl` with plain `Button` items, which has no pressed/selected visual state and would need manual `KeyDown` handling. Bind to a view-model property for selection and apply the toolkit's gold accent token to the selected item via a `VisualState` or resource override.
 
 ## Design Decisions
 
-- **Base UI ToggleGroup, not a bespoke button row.** Reusing the Base UI primitive
-  gives correct pressed semantics and roving-focus keyboard support for free and keeps
-  the control consistent with the family's other base-ui primitives (radio/switch).
-- **Field shell for the container.** The group borrows `fieldShellClass` so a
-  segmented control reads as a peer of the other form fields rather than a loose row
-  of buttons.
-- **Single-select is a convention, not a separate component.** Base UI's value is
-  always `string[]`; rather than fork a single-select variant, the recipe documents
-  the `value={[selected]}` + `next[0]` + ignore-empty pattern so one component covers
-  both single- and multi-select.
-- **Gold fill for the pressed item.** The selected item takes the family `apt-gold`
-  fill with `apt-bg` text — a single, token-only pressed treatment that reads clearly
-  against the muted rest state without per-item color rules.
+**Decision**: Use Base UI's `ToggleGroup` + `Toggle` primitives rather than a bespoke button row.
+**Rationale**: Reusing the Base UI primitive gives correct pressed semantics and roving-focus keyboard support for free and keeps the control consistent with the family's other base-ui primitives (radio/switch).
+**Approved**: pending
+
+**Decision**: Build the group container on the shared `fieldShellClass`.
+**Rationale**: Borrowing the field shell lets a segmented control read as a peer of the other form fields rather than a loose row of buttons.
+**Approved**: pending
+
+**Decision**: Treat single-select as a `value={[selected]}` convention on the same component rather than a separate variant.
+**Rationale**: Base UI's value is always `string[]`; documenting the `value={[selected]}` + `next[0]` + ignore-empty pattern lets one component cover both single- and multi-select instead of forking a single-select variant.
+**Approved**: pending
+
+**Decision**: Give the pressed item a single gold fill treatment (`bg-apt-gold` + `text-apt-bg`).
+**Rationale**: A single, token-only pressed treatment reads clearly against the muted rest state without per-item color rules.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Keyboard operable (roving focus + activation) + visible focus | pass | accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | partial | Platform Compliance |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+
+Passed and partial rest on the source: Base UI's `ToggleGroupPrimitive`/`TogglePrimitive` give real button semantics, pressed state, and roving keyboard focus (screen-reader-support, keyboard-navigable, native-controls-preference); the `apt-*` token classes theme light/dark but carry no `forced-colors` rule or verified contrast ratio (contrast-ratio, platform-theming partial); the item's `h-8 min-w-8` size is below the 44×44 this check names (touch-target-size partial); and the component's own source defines no literal user-facing strings (no-hardcoded-strings).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: point platform notes at native segmented controls and theme tokens instead of hand-rolled widgets and literal colors; correct the accessibility-options contrast claim; rewrite Compliance with real catalog checks; reformat Design Decisions as Decision/Rationale/Approved triplets; add single-select-keeps-selection and extend disabled-item-inert; add a Pressed+hover state and two conformance vectors; clarify Localization for consumer-supplied labels; trim the summary. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Complete recipe with all template sections; add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark non-applicable sections. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the Base UI segmented control and its single-select convention. |
