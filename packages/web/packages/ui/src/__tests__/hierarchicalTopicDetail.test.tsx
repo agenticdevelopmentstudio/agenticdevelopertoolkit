@@ -1045,3 +1045,59 @@ describe('HierarchicalTopicDetail — the viewport-filling claim', () => {
     expect(container.firstElementChild).toHaveAttribute('data-fills-viewport')
   })
 })
+
+describe('HierarchicalTopicDetail — narrow, persistentSelection', () => {
+  // Settings always has a section selected, and its onClear re-selects the default. Without
+  // persistentSelection, narrow Back therefore bounced straight back to a detail and a phone could
+  // never reach the section list.
+  const nextFrame = () =>
+    act(async () => {
+      await new Promise((r) => requestAnimationFrame(() => r(null)))
+    })
+
+  function sections(onClear: () => void, onSelect: (id: string) => void = () => {}): TopicLevel[] {
+    return [
+      {
+        id: `settings-${++surfaceSeq}`,
+        title: 'Settings',
+        items: TOPICS,
+        selectedId: 'apps',
+        onSelect,
+        onClear,
+        persistentSelection: true,
+      },
+    ]
+  }
+
+  it('Back reveals the list without clearing, and tapping the current row pushes its detail again', async () => {
+    const onClear = vi.fn()
+    render(
+      <HierarchicalTopicDetail layoutMode="narrow" levels={sections(onClear)}>
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    expect(col(1).style.transform).toBe('translateX(0)') // the detail is on top
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await nextFrame()
+    expect(onClear).not.toHaveBeenCalled()
+    expect(col(0).style.transform).toBe('translateX(0)') // the section list is the whole view
+
+    fireEvent.click(within(col(0)).getByRole('button', { name: /Applications/ }))
+    await nextFrame()
+    expect(onClear).not.toHaveBeenCalled()
+    expect(col(1).style.transform).toBe('translateX(0)') // back on the detail
+  })
+
+  it('a different row on the revealed list selects it', async () => {
+    const onSelect = vi.fn()
+    render(
+      <HierarchicalTopicDetail layoutMode="narrow" levels={sections(() => {}, onSelect)}>
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await nextFrame()
+    fireEvent.click(within(col(0)).getByRole('button', { name: /Users/ }))
+    expect(onSelect).toHaveBeenCalledWith('users')
+  })
+})

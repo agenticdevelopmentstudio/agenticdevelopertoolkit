@@ -127,6 +127,14 @@ export interface TopicLevel {
   /** Clear THIS level and everything below it, keeping ancestors. Pure navigation. The
    *  package calls it for re-click-deselect, breadcrumb up-navigation, and Back. */
   onClear: () => void
+  /** This level ALWAYS has a selection — its `onClear` lands on a default row rather than on
+   *  nothing (Settings: there is no "no section" pane). In the NARROW stack that made the list
+   *  unreachable: Back cleared the level, the host re-selected the default, and the detail came
+   *  straight back — a phone could never see the section list. With this set, narrow Back
+   *  REVEALS this level's list without calling `onClear` (the current row stays marked), and
+   *  tapping any row — the current one included — pushes its detail again. Wide layouts are
+   *  unaffected: the list is on screen there anyway. */
+  persistentSelection?: boolean
   emptyLabel?: string
   /** A read is in flight for this level — its rows, or the item selected in it. Draws a spinner
    *  immediately before the level's title, without moving it. */
@@ -2350,9 +2358,19 @@ function NarrowStack({
   detailSlot,
   detailSeed,
 }: StackProps & { levels: TopicLevel[] }) {
+  // A `persistentSelection` level Back has popped to its list (see TopicLevel.persistentSelection):
+  // the selection is still there, so the stack is told to show that list instead of the detail.
+  // Dropped whenever the selection itself moves — a pick pushes the detail like any other.
+  const [revealed, setRevealed] = useState<number | null>(null)
+  const selectionSig = levels.map((l) => l.selectedId ?? "").join("\u0000")
+  const lastSelectionSig = useRef(selectionSig)
+  if (lastSelectionSig.current !== selectionSig) {
+    lastSelectionSig.current = selectionSig
+    if (revealed !== null) setRevealed(null)
+  }
   // The top of the navigation stack: the detail (index `levels.length`) once every level is selected,
   // else the frontier list — the one with nothing chosen in it yet.
-  const top = firstUnselected === -1 ? levels.length : frontier
+  const top = revealed ?? (firstUnselected === -1 ? levels.length : frontier)
   // The position the panes are RENDERED at. It catches up to `top` one frame later, so the pane being
   // pushed is painted off-screen FIRST and its move to centre is a transition rather than a jump — an
   // element that mounts at its final transform has nothing to animate from.
@@ -2385,8 +2403,19 @@ function NarrowStack({
     })
   })
 
-  // Back pops one pane: clear the deepest SELECTED level (exit-guarded, like every other clear).
-  const onBack = () => attemptExit(() => levels[deepestSelected]?.onClear())
+  // Back pops one pane: clear the deepest SELECTED level (exit-guarded, like every other clear) —
+  // or, for a `persistentSelection` level, just reveal its list. From a revealed list, Back goes
+  // one level further up the ordinary way.
+  const onBack = () => {
+    if (revealed !== null) {
+      const parent = levels[revealed - 1]
+      if (parent) attemptExit(() => parent.onClear())
+      return
+    }
+    const level = levels[deepestSelected]
+    if (level?.persistentSelection) attemptExit(() => setRevealed(deepestSelected))
+    else attemptExit(() => level?.onClear())
+  }
   const backButton = deepestSelected >= 0 && (
     <button
       type="button"
@@ -2450,7 +2479,13 @@ function NarrowStack({
             rowDisclosure
             items={level.items}
             selectedId={level.selectedId}
-            onSelect={railOnSelect(level, attemptExit, levels[i + 1])}
+            // A revealed persistent list's CURRENT row pushes its detail back in; re-click-deselect
+            // would only re-select the default, which is not what a tap on a visible row means.
+            onSelect={
+              revealed === i
+                ? (id) => (id === level.selectedId ? setRevealed(null) : railOnSelect(level, attemptExit)(id))
+                : railOnSelect(level, attemptExit, levels[i + 1])
+            }
             emptyLabel={level.emptyLabel ?? "Nothing here yet."}
             onNew={level.onNew}
             newLabel={level.newLabel}
