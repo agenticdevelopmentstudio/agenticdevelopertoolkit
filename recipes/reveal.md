@@ -3,16 +3,15 @@ id: b5b27bc2-99b2-469e-9dd4-e446b0157444
 title: Reveal
 domain: agenticdevelopertoolkit://recipes/reveal
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
-created: '2026-09-22'
-modified: '2026-09-22'
+created: 2026-09-22
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: Fades and lifts content into place as it enters the viewport, improving perceived
-  performance and visual flow for scrollable layouts.
+summary: Fades and lifts content into place as it enters the viewport.
 platforms:
 - typescript
 - web
@@ -21,7 +20,13 @@ tags:
 - viewport
 - scroll
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/band
+- agenticdevelopertoolkit://recipes/bleed
+- agenticdevelopertoolkit://recipes/flow
+- agenticdevelopertoolkit://recipes/flow-hero
+- agenticdevelopertoolkit://recipes/site-footer
+- agenticdevelopertoolkit://recipes/site-header
 references:
 - https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
 approved-by: ''
@@ -36,14 +41,15 @@ Reveal is a wrapper component that fades and lifts its children into place as th
 
 ## Behavioral Requirements
 
-- **must-render-visible-by-default**: The component MUST render its children in the visible, resting state initially. If JavaScript is disabled or the Intersection Observer fires before mount, content remains visible and is never hidden.
-- **must-detect-viewport-entry**: The component MUST use the Intersection Observer API to detect when the wrapped element enters the viewport.
-- **must-arm-after-mount**: The component MUST not arm the observe state on initial mount if the element is already visible on screen at that time (top offset less than window height).
-- **must-disconnect-on-first-intersection**: The component MUST disconnect the Intersection Observer immediately after the first intersection is detected; a reveal is a one-way transition and the element MUST NOT re-hide when scrolled past.
-- **must-apply-hidden-state-class**: When armed (observing but not yet shown), the component MUST apply the `lp-reveal--armed` CSS class to the wrapper element.
-- **must-apply-base-class**: The component MUST always apply the base `lp-reveal` CSS class to the wrapper.
-- **may-accept-classname-prop**: The component MAY accept an optional `className` prop to allow consumers to add custom classes to the wrapper element.
-- **must-forward-children**: The component MUST render its children as-is within the wrapper element.
+- **visible-by-default**: The initial render MUST be the resting (visible) state. Arming only happens after mount, so a reader with JavaScript disabled never sees a hidden state.
+- **viewport-entry-detection**: The component MUST use the Intersection Observer API to detect when the wrapped element enters the viewport.
+- **arm-below-fold**: On mount, the component MUST check whether the element's top offset is already less than `window.innerHeight`. If so, the component MUST NOT create an Intersection Observer and MUST NOT apply the armed indicator — the element is treated as already revealed. Otherwise the component arms and creates the observer.
+- **early-reveal-margin**: The Intersection Observer MUST be configured with a root margin that fires 12% before the element's bottom edge would otherwise cross into the viewport (`rootMargin: '0px 0px -12% 0px'`).
+- **one-way-reveal**: The component MUST disconnect the Intersection Observer immediately after the first intersection is detected; the element MUST NOT re-arm or re-hide when scrolled past.
+- **armed-state-indicator**: While armed (observing but not yet shown), the wrapper MUST carry an observable marker distinguishing it from the resting state (see Platform Notes for the web implementation).
+- **base-state-indicator**: The wrapper MUST always carry an observable base-state marker, independent of armed/revealed state (see Platform Notes for the web implementation).
+- **classname-prop**: The component MAY accept an optional prop to let consumers add custom classes to the wrapper element.
+- **children-forwarding**: The component MUST render its children as-is within the wrapper element.
 
 ## Appearance
 
@@ -55,14 +61,17 @@ Reveal is a wrapper component that fades and lifts its children into place as th
 - **Border**: None
 - **Shadow**: None
 - **Min/Max size**: None (size determined by children)
+- **Resting state**: opacity 1, no transform
+- **Armed state**: opacity 0, `translateY(22px)`
+- **Transition**: opacity and transform, 0.7s, `cubic-bezier(0.2, 0.7, 0.3, 1)`
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
-| Default (visible on page load) | Children render in full opacity and normal vertical position; no animation occurs |
-| Armed (below viewport, observing) | Children render with hidden state defined in CSS (transform and opacity reduced); awaiting intersection |
-| Revealed (intersected viewport) | Transition from armed to visible state occurs via CSS animation; observer disconnects |
+| Default (visible on page load) | Opacity 1, no transform; no animation occurs |
+| Armed (below viewport, observing) | Opacity 0, `translateY(22px)`; awaiting intersection |
+| Revealed (intersected viewport) | Transitions from armed to resting values over 0.7s (`cubic-bezier(0.2, 0.7, 0.3, 1)`, opacity and transform); observer disconnects |
 
 ## Accessibility
 
@@ -70,26 +79,27 @@ Reveal is a wrapper component that fades and lifts its children into place as th
 - **Label requirements**: No label needed; the wrapper carries no semantic role.
 - **Announce state changes**: Not applicable; state transitions are visual only and do not affect assistive technology.
 - **Minimum tap target**: Not applicable; the component itself is not interactive.
-- **Graceful degradation**: With JavaScript disabled or if the Intersection Observer is unavailable, content remains visible in its resting state, ensuring no content loss.
+- **Graceful degradation**: With JavaScript disabled, the server-rendered resting state is what ships, so content is never lost. The component does not guard against a missing `IntersectionObserver` global before constructing one in **arm-below-fold**; see Compliance.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| reveal-001 | must-render-visible-by-default | Component with children, JavaScript enabled, no observer fired | Children render immediately in visible state (no fade or lift) |
-| reveal-002 | must-arm-after-mount | Component with children initially below viewport, mounted | After mount, `lp-reveal--armed` class is added to wrapper; children are in hidden state (per CSS) |
-| reveal-003 | must-detect-viewport-entry | Component with armed state, user scrolls element into viewport | Intersection Observer fires; observer disconnects; `lp-reveal--armed` class is removed; animation to visible state occurs |
-| reveal-004 | must-disconnect-on-first-intersection | Component revealed, user scrolls past element out of viewport | Observer remains disconnected; element stays visible; no re-hiding occurs |
-| reveal-005 | must-apply-hidden-state-class | Component mounted below viewport | `lp-reveal--armed` class is present on wrapper div |
-| reveal-006 | must-apply-base-class | Component at any state | `lp-reveal` class is always present on wrapper div |
-| reveal-007 | may-accept-classname-prop | Component with `className="custom-class"` | Custom class is included in wrapper's class list alongside `lp-reveal` and `lp-reveal--armed` |
-| reveal-008 | must-forward-children | Component with children `<img src="..." />`, `<p>Text</p>` | Children are rendered as-is within the wrapper |
-| reveal-009 | must-render-visible-by-default | Component already on screen at mount (top offset < window.innerHeight) | `lp-reveal--armed` is not applied; observer is not created; children remain visible throughout session |
+| reveal-001 | visible-by-default | Component with children, JavaScript enabled, mounted but before any observer fires | Children render immediately in the resting state (full opacity, no transform) |
+| reveal-002 | arm-below-fold | Component with children initially below viewport (top offset ≥ `window.innerHeight`), mounted | Armed indicator is applied to the wrapper (web: `lp-reveal--armed`); children are in the hidden state defined for the platform |
+| reveal-003 | viewport-entry-detection, one-way-reveal | Component in armed state, user scrolls element into viewport | Intersection Observer fires; observer disconnects; armed indicator is removed (web: `lp-reveal--armed` removed); transition to the resting/visible state occurs |
+| reveal-004 | one-way-reveal | Component revealed, user scrolls element out of viewport | Observer stays disconnected; element remains visible; no re-arming or re-hiding occurs |
+| reveal-005 | armed-state-indicator | Component mounted below viewport | Armed indicator (web: `lp-reveal--armed` class) is present on the wrapper |
+| reveal-006 | base-state-indicator | Component at any state | Base indicator (web: `lp-reveal` class) is always present on the wrapper |
+| reveal-007 | classname-prop | Component below viewport at mount, with a custom class supplied | Custom class is included in the wrapper's class list alongside the base indicator and, while armed, the armed indicator |
+| reveal-008 | children-forwarding | Component with children `<img src="..." />`, `<p>Text</p>` | Children are rendered as-is within the wrapper |
+| reveal-009 | arm-below-fold | Component already on screen at mount (top offset less than `window.innerHeight`) | No Intersection Observer is created; no armed indicator is applied; children remain visible throughout the session |
+| reveal-010 | early-reveal-margin | Component armed, user scrolls until the element is 12% of the viewport height above the bottom edge | Intersection Observer fires at that point rather than waiting for the element to fully enter the unmodified viewport bounds |
 
 ## Edge Cases
 
-- **Already on screen at mount**: If the wrapped element's top offset is less than `window.innerHeight` at mount time, it is considered already visible. The component sets `shown: true` immediately and does not create an Intersection Observer. This prevents the blank-out flicker that would occur if the element were armed and then immediately intersected.
-- **Root margin offset**: The Intersection Observer is configured with `rootMargin: '0px 0px -12% 0px'`, meaning intersection is triggered 12% above the bottom of the viewport. This provides an early reveal for visual smoothness as the user approaches the element.
+- **Already on screen at mount**: see **arm-below-fold**. This prevents the blank-out flicker that would occur if the element were armed and then immediately intersected.
+- **Root margin offset**: see **early-reveal-margin**.
 - **Null ref**: If the ref is null when the effect runs (component was unmounted before effect execution), the effect returns early and does not proceed with observation.
 - **Multiple child updates**: The component re-renders if children change. The ref to the wrapper element is stable; the observer (if created) remains active unless already disconnected by intersection.
 - **Window resize**: The Intersection Observer automatically adapts to viewport changes; no resize listener is needed.
@@ -136,26 +146,42 @@ Not applicable: Reveal does not emit diagnostic events or logs.
 
 ## Platform Notes
 
-- **TypeScript/React (source)**: Implemented in `packages/web/packages/landing/src/flow/Reveal.tsx`. Wraps children in a `div` with ref forwarding, uses `useState` for armed/shown flags, and `useEffect` with Intersection Observer API. Class names are assembled dynamically and concatenated with filter. The resting (visible) state is the default; the armed (hidden) state is added only after mount if the element is below the fold.
-- **SwiftUI**: Create a view modifier that applies a fade and scale animation using `.transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.95)), removal: .identity))` or similar. Trigger the transition via a `@State` boolean that toggles when a scroll reader (using `GeometryReader` and coordinate space tracking) detects the view entering the visible area. Ensure the view renders in its visible state by default to preserve content for VoiceOver users.
-- **Compose**: Implement using a `Box` composable that tracks its scroll position via `BoxWithConstraints` and `Modifier.onSizeChanged`. Apply fade and translate animations using `AnimatedVisibility` with `enterTransition` set to `fadeIn() + slideInVertically()` and `exitTransition = ExitTransition.None` (one-way). Render children in the visible state initially; apply hidden state after composition only if needed.
-- **AppKit / UIKit**: Create an NSView or UIView subclass that observes scroll position through the responder chain or KVO on a parent scroll view. Apply fade and transform animations via `CABasicAnimation` on the layer when the view's frame moves into the visible region. Alternatively, use a `UIViewController` with scroll view delegation to detect content offset and trigger Core Animation transitions.
-- **WinUI 3**: Create a UserControl with a StackPanel or Grid containing children. Bind an `IsArmed` dependency property to track whether the control is visible on screen. In code-behind, attach a `ScrollViewer.ViewChanged` event handler (or poll `ActualHeight` and parent scroll position) to detect viewport entry. Apply a Storyboard animation with `DoubleAnimation` on `Opacity` and `TranslateTransform.Y` when visibility is detected. Set `Visibility = Visibility.Visible` by default to ensure content appears before the component initializes; only add the hidden state class/template after load if the element is below the fold.
+- **TypeScript/React (source)**: Implemented in `packages/web/packages/landing/src/flow/Reveal.tsx`. Wraps children in a `div` with ref forwarding; `useState` tracks the armed/shown flags; `useEffect` runs the Intersection Observer logic described above. The wrapper always carries the `lp-reveal` base class, and while armed it also carries `lp-reveal--armed`. Custom classes from the `className` prop are merged with the base classes by filtering out empty strings and joining, producing a clean class list for CSS selectors. The animation values (opacity, translate, duration, easing) live in `flow.css`, not in the component.
+- **SwiftUI**: Track the armed/shown state with `@State`, driven by the `onScrollVisibilityChange(threshold:)` modifier rather than manual `GeometryReader` polling. Render children in the resting state by default; apply the fade-plus-vertical-offset transition (matching the values in Appearance) only once armed and only after the modifier reports the view has become visible.
+- **Compose**: Track position with `Modifier.onGloballyPositioned`, comparing the reported bounds against the viewport to decide whether to arm. Do not use `AnimatedVisibility` for the resting state, since its default `enterTransition` starts hidden and would violate **visible-by-default**; instead drive `Modifier.graphicsLayer` (alpha and translationY) from the same armed/shown state, defaulting to the visible values.
+- **AppKit / UIKit**: Observe scroll position via the same intersection-style check (element bounds against the enclosing scroll view's visible rect), evaluated on scroll and on layout. Apply the fade-plus-vertical-offset transition with `CABasicAnimation` on `opacity`/`transform`, matching the web timing values. Render the view in the resting (visible) state by default; only add the hidden/armed state after the check determines it starts below the fold.
+- **WinUI 3**: Use `FrameworkElement.EffectiveViewportChanged` to detect when the element's effective viewport changes, rather than polling `ActualHeight` or the parent scroll position. Apply a `Storyboard` with `DoubleAnimation` on `Opacity` and `TranslateTransform.Y`, matching the web timing values. Set the control's default state to fully visible (`Opacity="1"`, no translate) so it appears immediately; apply the hidden/armed state only if `EffectiveViewportChanged` reports the element starts below the fold.
 
 ## Design Decisions
 
-- **Render visible by default**: Content is rendered in the visible, resting state on initial render. This follows the accessibility principle that hiding content by default and revealing it conditionally is a content-loss bug if JavaScript fails. A reader with JS disabled sees the finished page, not a blank one.
-- **Disconnect after first intersection**: The observer disconnects immediately after the first intersection. Re-hiding content that has scrolled past is a well-known anti-pattern that makes pages feel broken. Reveal is intended as a one-way visual enhancement, not a repeating animation.
-- **CSS handles prefers-reduced-motion**: The preference is read from a CSS media query rather than JavaScript. This ensures a single source of truth: if the media query in the stylesheet says to omit animation, the browser's preference is respected without needing to re-read it in code. The component still arms and unarms, but the transition is instant.
-- **Root margin of -12%**: The Intersection Observer is configured with a bottom margin of -12% of the viewport height. This triggers intersection detection when the element is 12% above the bottom of the viewport, providing a smooth reveal as the user scrolls toward it rather than waiting for it to fully enter the viewport.
-- **Class concatenation with filter**: Custom classes are merged with base classes by filtering out empty strings and joining. This avoids conditional class application and produces a clean class list suitable for CSS selectors.
+**Decision**: Render children in the visible, resting state on initial render.
+**Rationale**: Hiding content by default and revealing it conditionally is a content-loss bug if JavaScript fails; a reader with JS disabled sees the finished page, not a blank one. See **visible-by-default**.
+**Approved**: pending
+
+**Decision**: Disconnect the Intersection Observer immediately after the first intersection; a reveal is a one-way transition.
+**Rationale**: Re-hiding content that has scrolled past is a well-known anti-pattern that makes pages feel broken. See **one-way-reveal**.
+**Approved**: pending
+
+**Decision**: Read `prefers-reduced-motion` from a CSS media query rather than in JavaScript.
+**Rationale**: This keeps a single source of truth: if the media query in the stylesheet omits animation, the browser's preference is respected without re-reading it in code. The component still arms and unarms; the transition is neutralized.
+**Approved**: pending
+
+**Decision**: Configure the Intersection Observer with a bottom root margin of -12% of the viewport height.
+**Rationale**: This triggers intersection when the element is 12% above the bottom of the viewport, providing a smooth reveal as the reader scrolls toward it rather than waiting for it to fully enter the viewport. See **early-reveal-margin**.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: Reveal is a visual enhancement component that defers all behavioral and accessibility requirements to its children. It does not introduce new compliance obligations beyond standard web platform practices (e.g., Event loop management, memory cleanup).
+| Check | Status | Category |
+|-------|--------|----------|
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
+| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | partial | Reliability |
+
+`reduced-motion` is grounded in the `prefers-reduced-motion` media query in `flow.css`, which neutralizes both the opacity and the transform of the armed state; `graceful-degradation` is partial because `Reveal.tsx` always renders the resting state when JavaScript never runs, but constructs a new `IntersectionObserver` unconditionally once armed, with no guard for an environment where the API is undefined.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and fixed RFC-2119 casing, promoted edge-case details (arm-below-fold, early-reveal-margin) into named requirements with test vectors and corrected two test-vector mappings, added concrete Appearance values from `flow.css`, made requirements platform-neutral and moved web class names into the React/Web platform note, aligned native platform notes to real viewport APIs and a consistent fade-plus-translate animation, reformatted Design Decisions and dropped the implementation-detail entry, replaced the Compliance section with a real table, filled `related` with sibling landing/flow recipes and switched frontmatter dates to bare ISO values, corrected the summary's unsupported performance claim, and corrected an Accessibility claim that contradicted the source's lack of an IntersectionObserver-availability guard |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

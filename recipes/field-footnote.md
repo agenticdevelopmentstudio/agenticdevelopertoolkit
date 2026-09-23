@@ -172,4 +172,4 @@ Statuses rest on the source directly: it renders arbitrary caller-supplied `Reac
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and reworded the class-merge and ReactNode requirements platform-neutrally; unified the font size to one logical 11.2 across platforms and replaced the hardcoded WinUI font; named semantic color tokens in place of raw Tailwind class names; reformatted Design Decisions and separated the layout-shift cause from the role="alert" consequence; corrected the hint accessible-description claim and the color-dependence description; replaced the made-up Compliance checks with real accessibility and internationalization checks; fixed test vectors to assert observable outcomes instead of raw class strings; added the errorId/hint edge case; added tags and related links |
-| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from field-footnote.tsx source (drafted by Claude Haiku 4.5) |
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from field-footnote.tsx source (drafted by Claude Haiku 4.5) |

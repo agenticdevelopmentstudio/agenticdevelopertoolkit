@@ -152,5 +152,5 @@ Not applicable: The source code contains no logging statements or diagnostic out
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added stable-snapshot-identity and replace-on-conflict requirements with test vectors, corrected the snapshot-immutability and subscribe-on-add claims, made requirements platform-neutral and moved hook names into Platform Notes, corrected the SwiftUI/Compose/AppKit/WinUI notes to match per-subtree scoping, reformatted Design Decisions, dropped the inapplicable Compliance section, fixed the Change History author mismatch, tightened test-vector precision and added edge-case vectors, and expanded the Overview |
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added stable-snapshot-identity and replace-on-conflict requirements with test vectors, corrected the snapshot-immutability and subscribe-on-add claims, made requirements platform-neutral and moved hook names into Platform Notes, corrected the SwiftUI/Compose/AppKit/WinUI notes to match per-subtree scoping, reformatted Design Decisions, dropped the inapplicable Compliance section, tightened test-vector precision and added edge-case vectors, and expanded the Overview |

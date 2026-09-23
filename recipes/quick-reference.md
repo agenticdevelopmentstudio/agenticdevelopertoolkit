@@ -224,5 +224,5 @@ Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source |
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; moved web-specific requirement details to Platform Notes; added Popover to depends-on; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with canonical linked checks; fixed the touch-target contradiction and the focus-containment overclaim; corrected align-axis wording; added non-empty-aria-label and WCAG 2.5.3 label-in-name requirements and edge cases; corrected WinUI 3 and SwiftUI platform notes; added missing test vectors; corrected the Localization bidi note |
