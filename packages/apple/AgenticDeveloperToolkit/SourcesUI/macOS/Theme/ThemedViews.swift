@@ -622,8 +622,8 @@ public final class ThemedOutlineView: NSOutlineView, Themeable {
 /// theme so reused row instances repaint live; without this, an AppKit-pooled row
 /// keeps the palette captured at creation and draws stale selection after a swap.
 @MainActor
-public final class ThemedTableRowView: NSTableRowView, Themeable {
-    private(set) var palette: SemanticPalette = ThemePaletteObserver.currentPalette
+open class ThemedTableRowView: NSTableRowView, Themeable {
+    public private(set) var palette: SemanticPalette = ThemePaletteObserver.currentPalette
     private var observer: ThemePaletteObserver?
 
     public override init(frame frameRect: NSRect) {
