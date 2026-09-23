@@ -3,7 +3,7 @@ id: 16e99364-8af3-40cb-beaf-d5a66a2fa2c0
 title: View Source Disclosure
 domain: agenticdevelopertoolkit://recipes/view-source-disclosure
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,7 +16,11 @@ summary: Collapsible disclosure component that reveals raw document source text 
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- disclosure
+- source
+- chrome
+- accessibility
 depends-on: []
 related: []
 references: []
@@ -32,33 +36,34 @@ A footer disclosure component that permits readers to view and copy the raw sour
 
 ## Behavioral Requirements
 
-- **must-render-trigger-button**: Component MUST render a button element that acts as the disclosure trigger.
-- **must-render-label**: The trigger MUST render the provided `label` prop (defaults to "View source").
-- **must-render-chevron-icon**: The trigger MUST render a chevron-right icon that visually indicates the disclosure state.
-- **must-toggle-on-click**: Clicking the trigger MUST toggle the disclosure between open and closed states.
-- **must-start-closed-by-default**: The disclosure MUST start in the closed state unless the `defaultOpen` prop is explicitly set to `true`.
-- **must-render-source-verbatim**: When open, the component MUST render the `source` prop text exactly as provided, without parsing or transformation.
-- **must-not-parse-markdown**: The component MUST NOT interpret, parse, or render the source text as markdown or any other format.
-- **must-render-source-in-pre-tag**: The source text MUST be rendered within a `<pre>` element to preserve whitespace and line breaks.
-- **must-rotate-chevron-on-open**: The chevron icon MUST rotate 90 degrees when the disclosure is open and return to its default angle when closed.
-- **must-wrap-text-not-truncate**: Text in the revealed source MUST wrap to the container width rather than truncate.
-- **must-scroll-horizontally-for-long-lines**: When a single unbreakable token (long URL, table rule) exceeds the container width, the source area MUST scroll horizontally without wrapping that token.
-- **must-accept-className-prop**: The component MUST accept and apply a `className` prop to customize styling.
-- **must-accept-html-attributes**: The component MUST accept and pass through standard HTML `div` attributes (via spread `...rest`).
-- **must-set-aria-expanded**: The trigger button MUST set `aria-expanded` to `true` when open and `false` when closed.
-- **must-conditionally-set-aria-controls**: When the disclosure is open, the trigger MUST set `aria-controls` to the panel's ID; when closed, `aria-controls` MUST NOT be set.
+- **render-trigger-button**: Component MUST render a button element that acts as the disclosure trigger.
+- **render-label**: The trigger MUST render the provided `label` prop (defaults to "View source").
+- **render-chevron-icon**: The trigger MUST render a chevron-right icon that visually indicates the disclosure state.
+- **toggle-on-click**: Clicking the trigger MUST toggle the disclosure between open and closed states.
+- **start-closed-by-default**: The disclosure MUST start in the closed state unless the `defaultOpen` prop is explicitly set to `true`.
+- **render-source-verbatim**: When open, the component MUST render the `source` prop text exactly as provided, as a plain text node (escaped by the rendering framework), without parsing or transformation. The component MUST NOT inject the source via `innerHTML`, `dangerouslySetInnerHTML`, or any other HTML-parsing API.
+- **not-parse-markdown**: The component MUST NOT interpret, parse, or render the source text as markdown or any other format.
+- **render-source-in-pre-tag**: The source text MUST be rendered within a `<pre>` element to preserve whitespace and line breaks.
+- **rotate-chevron-on-open**: The chevron icon MUST rotate 90 degrees when the disclosure is open and return to its default angle when closed.
+- **wrap-text-not-truncate**: Text in the revealed source MUST wrap to the container width rather than truncate.
+- **scroll-horizontally-for-long-lines**: When a single unbreakable token (long URL, table rule) exceeds the container width, the source area MUST scroll horizontally without wrapping that token.
+- **source-selectable**: The revealed source text MUST be selectable using native text selection, so the reader can copy it.
+- **accept-classname-prop**: The component MUST accept and apply a `className` prop to customize styling.
+- **accept-html-attributes**: The component MUST accept and pass through standard HTML `div` attributes (via spread `...rest`).
+- **set-aria-expanded**: The trigger button MUST set `aria-expanded` to `true` when open and `false` when closed.
+- **conditionally-set-aria-controls**: When the disclosure is open, the trigger MUST set `aria-controls` to the panel's ID; when closed, `aria-controls` MUST NOT be set.
 
 ## Appearance
 
-- **Container margin**: Top margin of 8 units, top border as a hairline rule in subtle border color, padding-top of 4 units
+- **Container margin**: Top margin 32px (2rem); top border as a hairline rule in subtle border color; padding-top 16px (1rem)
 - **Container border**: Top border only; width 1px; color `var(--color-border-subtle)`
-- **Trigger styling**: Inline flex layout, items centered, gap of 1.5 units; monospace font, font-size extra small (xs), text color `var(--color-text-dim)` at default, `var(--color-text-secondary)` on hover
+- **Trigger styling**: Inline flex layout, items centered, gap 6px (0.375rem); monospace font, extra-small font size (~12px); text color `var(--color-text-dim)` at default, `var(--color-text-secondary)` on hover
 - **Trigger button type**: `type="button"` (not submit or reset)
-- **Chevron icon size**: 3 units × 3 units (h-3 w-3)
-- **Chevron stroke width**: 2.5 units
+- **Chevron icon size**: 12px × 12px
+- **Chevron stroke width**: 2.5 (SVG stroke-width units)
 - **Chevron rotation**: 90 degrees when open; transition duration 150ms
-- **Source panel styling**: Top margin 3 units, padding 4 units, border-radius medium (md), background `var(--color-surface-raised)`, border 1px `var(--color-border-subtle)`, font monospace, font-size extra small, text color `var(--color-text-secondary)`, line-height relaxed
-- **Source panel overflow**: Horizontal scroll when needed (`overflow-x-auto`), text wraps by default (`whitespace-pre-wrap`)
+- **Source panel styling**: Top margin 12px (0.75rem), padding 16px (1rem), border-radius medium (~6px), background `var(--color-surface-raised)`, border 1px `var(--color-border-subtle)`, monospace font, extra-small font size, text color `var(--color-text-secondary)`, relaxed line-height
+- **Source panel overflow**: Horizontal scroll when needed, text wraps by default
 
 ## States
 
@@ -67,10 +72,11 @@ A footer disclosure component that permits readers to view and copy the raw sour
 | Default (closed) | Chevron points right (0°), source panel not rendered |
 | Open | Chevron rotates 90° to point down, source panel visible below trigger |
 | Hover (on trigger) | Trigger text color changes from dim to secondary |
+| Focus (keyboard, on trigger) | Default browser focus ring is shown; the component applies no custom focus style |
 
 ## Accessibility
 
-- **Role**: The trigger is a native button element; the source panel is a `<pre>` element (implicit code role).
+- **Role**: The trigger is a native button element; the `<pre>` element holding the source has no special ARIA role (it exposes as a generic element, not a code role), so assistive technology reads its content as plain text.
 - **Expanded state**: The button MUST announce expanded/collapsed state via `aria-expanded`.
 - **Panel association**: The button MUST associate the panel via `aria-controls` (only when open, per source implementation).
 - **Label**: The trigger text serves as the button's accessible label via its text content.
@@ -81,27 +87,29 @@ A footer disclosure component that permits readers to view and copy the raw sour
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| disclosure-001 | must-render-trigger-button, must-render-label | No props (defaults) | Trigger button renders with text "View source" |
-| disclosure-002 | must-render-chevron-icon | No props | Chevron-right icon renders inside trigger |
-| disclosure-003 | must-start-closed-by-default | No props | Disclosure starts closed; source panel is not in DOM |
-| disclosure-004 | must-start-closed-by-default, must-render-source-in-pre-tag | `defaultOpen={true}` | Disclosure starts open; source panel is in DOM and visible |
-| disclosure-005 | must-toggle-on-click, must-render-source-verbatim, must-not-parse-markdown | Click trigger when closed; `source="# Heading\n\n- List item"` | Panel appears showing raw text "#Heading" and "-List item", not parsed as markdown |
-| disclosure-006 | must-toggle-on-click | Click trigger when open | Panel closes and is removed from DOM |
-| disclosure-007 | must-rotate-chevron-on-open | Click trigger to open | Chevron rotates to 90° with 150ms transition |
-| disclosure-008 | must-rotate-chevron-on-open | Click trigger to close | Chevron rotates back to 0° with 150ms transition |
-| disclosure-009 | must-wrap-text-not-truncate | `source="Short line\nVery long line that would exceed container width"` in narrow viewport | Long line wraps to multiple lines within container; does not overflow or truncate |
-| disclosure-010 | must-scroll-horizontally-for-long-lines | `source="https://example.com/path/to/very/long/url/that/is/one/unbreakable/token"` in narrow viewport | Source area allows horizontal scroll; the URL does not wrap |
-| disclosure-011 | must-accept-className-prop | `className="custom-class"` | Custom class is applied to outer div alongside default classes |
-| disclosure-012 | must-accept-html-attributes, must-accept-className-prop | `data-testid="source-disclosure"` | data attribute is present on outer div |
-| disclosure-013 | must-set-aria-expanded | Click trigger to open, inspect button | `aria-expanded="true"` on button |
-| disclosure-014 | must-set-aria-expanded | Click trigger to close, inspect button | `aria-expanded="false"` on button |
-| disclosure-015 | must-conditionally-set-aria-controls | Trigger closed, inspect button | `aria-controls` attribute is absent |
-| disclosure-016 | must-conditionally-set-aria-controls | Trigger open, inspect button and panel | `aria-controls` matches the panel's `id` |
+| disclosure-001 | render-trigger-button, render-label | No props (defaults) | Trigger button renders with text "View source" |
+| disclosure-002 | render-chevron-icon | No props | Chevron-right icon renders inside trigger |
+| disclosure-003 | start-closed-by-default | No props | Disclosure starts closed; source panel is not in DOM |
+| disclosure-004 | start-closed-by-default, render-source-in-pre-tag | `defaultOpen={true}` | Disclosure starts open; source panel is in DOM and visible |
+| disclosure-005 | toggle-on-click, render-source-verbatim, not-parse-markdown | Click trigger when closed; `source="# Heading\n\n- List item"` | Panel appears showing raw text exactly as `"# Heading"` and `"- List item"`, not parsed as markdown |
+| disclosure-006 | toggle-on-click | Click trigger when open | Panel closes and is removed from DOM |
+| disclosure-007 | rotate-chevron-on-open | Click trigger to open | Chevron rotates to 90° with 150ms transition |
+| disclosure-008 | rotate-chevron-on-open | Click trigger to close | Chevron rotates back to 0° with 150ms transition |
+| disclosure-009 | wrap-text-not-truncate | `source="Short line\nVery long line that would exceed container width"` in narrow viewport | Long line wraps to multiple lines within container; does not overflow or truncate |
+| disclosure-010 | scroll-horizontally-for-long-lines | `source="https://example.com/path/to/very/long/url/that/is/one/unbreakable/token"` in narrow viewport | Source area allows horizontal scroll; the URL does not wrap |
+| disclosure-011 | accept-classname-prop | `className="custom-class"` | Custom class is applied to outer div alongside default classes |
+| disclosure-012 | accept-html-attributes | `data-testid="source-disclosure"` | data attribute is present on outer div |
+| disclosure-013 | set-aria-expanded | Click trigger to open, inspect button | `aria-expanded="true"` on button |
+| disclosure-014 | set-aria-expanded | Click trigger to close, inspect button | `aria-expanded="false"` on button |
+| disclosure-015 | conditionally-set-aria-controls | Trigger closed, inspect button | `aria-controls` attribute is absent |
+| disclosure-016 | conditionally-set-aria-controls | Trigger open, inspect button and panel | `aria-controls` matches the panel's `id` |
+| disclosure-017 | render-source-verbatim, not-parse-markdown | Click trigger to open; `source="<script>alert(1)</script>"` | Panel shows the literal text `<script>alert(1)</script>`; no `<script>` element is created and no code executes |
+| disclosure-018 | source-selectable | Trigger open; select text within the source panel | Source text can be selected and copied via native text selection |
 
 ## Edge Cases
 
 - **Empty source string**: If `source=""`, the component MUST render an empty `<pre>` element; the button remains functional and toggles the empty panel open/close.
-- **Very long source**: If `source` contains many thousands of lines, all must be rendered in the `<pre>` without truncation or lazy loading; scrolling performance depends on browser capability.
+- **Very long source**: If `source` contains many thousands of lines, all MUST be rendered in the `<pre>` without truncation or lazy loading; scrolling performance depends on browser capability.
 - **Whitespace-only source**: If `source` contains only whitespace (spaces, tabs, newlines), it MUST be rendered exactly as provided within the `<pre>`.
 - **Special characters in label**: If `label` is a string containing HTML special characters (e.g., `"<test>"`), it MUST be rendered as text, not parsed as HTML.
 - **ReactNode label**: If `label` is a ReactNode (e.g., a component), it MUST be rendered as such within the button.
@@ -154,26 +162,51 @@ Not applicable: this component does not emit logs.
 
 ## Platform Notes
 
-- **React/Web**: Implemented using React hooks (`useState`, `useId`). Uses Lucide icon (`ChevronRight`) for the arrow. Styling via Tailwind utility classes with CSS variable references (`var(--color-*)`) for theme integration. The component is a function component with uncontrolled state.
-- **Compose**: On Android, implement using `var Box` for layout, `Button` for the trigger, `Icon` for the chevron, and `Text` for the source. Use a mutable state holder or `remember { mutableStateOf(defaultOpen) }` for open/close state. Use `Modifier.border()`, `Modifier.padding()`, and `Modifier.clip()` to match the appearance. The chevron rotation can be animated with `animateFloatAsState()`.
-- **SwiftUI**: On iOS/macOS, implement using `DisclosureGroup` or a custom `VStack` with a `Button` trigger and conditional `Text` or `ScrollView` containing `Text(.monospaced())` for the source. Use `@State` for the open/close binding. Apply frame, padding, and border modifiers to match appearance. Use `scaleEffect()` and `.rotation3DEffect()` or a rotation gesture modifier to animate the chevron.
-- **AppKit / UIKit**: On older macOS or iOS targets, implement using `NSButton` (AppKit) or `UIButton` (UIKit) for the trigger, and `NSTextView` (AppKit) or `UITextView` (UIKit) with monospace font for the source display. Manage state with a boolean property and toggle it on button action. Use `CABasicAnimation` or `UIView.animate()` to rotate the chevron icon by 90°. Use `NSStackView` (AppKit) or `UIStackView` (UIKit) to manage layout.
-- **WinUI 3**: On Windows, implement using `Button` from the Windows.UI.Xaml.Controls namespace as the trigger, with a `FontIcon` (Segoe MDL2 Assets glyph code U+E70B for chevron-right) rotated via a `RotateTransform`. Use `TextBlock` with `FontFamily="Cascadia Code"` and `FontSize="10"` for monospace source display. Place both in a `StackPanel` with `Orientation="Vertical"`. Use a `VisualState` or `StoryBoard` with a `DoubleAnimation` to animate the chevron's `Angle` property (0° to 90°) over 150ms. Bind the button's `Click` event to toggle `IsOpen`, and conditionally render the `TextBlock` based on that state using a `Visibility` converter.
+- **React/Web**: Implemented using React hooks (`useState`, `useId`). Uses Lucide icon (`ChevronRight`) for the arrow. Styling via Tailwind utility classes with CSS variable references (`var(--color-*)`) for theme integration — see the `VIEW_SOURCE_DISCLOSURE_CLASS`, `VIEW_SOURCE_TRIGGER_CLASS`, and `VIEW_SOURCE_PRE_CLASS` exports for the exact classes (`mt-8`/`pt-4` for container spacing, `gap-1.5`/`text-xs` for the trigger, `h-3 w-3` for the chevron, `mt-3`/`p-4`/`rounded-md` for the panel, `duration-150` for the chevron transition). The component is a function component with uncontrolled state; the source text renders as a JSX text-node child of `<pre>`, which React escapes automatically.
+- **Compose**: On Android, prefer a lightweight `Row(Modifier.clickable { ... })` or `TextButton` for the trigger rather than a filled `Button`, since the design calls for quiet inline chrome, not a prominent control; retain open/close state with `rememberSaveable { mutableStateOf(defaultOpen) }` so it survives configuration changes. Use an `Icon` for the chevron, animated with `animateFloatAsState()` and `Modifier.rotate()`. Wrap the revealed source `Text` in a `SelectionContainer` so it can be copied, and apply `Modifier.horizontalScroll(rememberScrollState())` so an unbreakable token scrolls instead of wrapping. Use `Modifier.border()`, `Modifier.padding()`, and `Modifier.clip()` to match the appearance.
+- **SwiftUI**: On iOS/macOS, prefer `DisclosureGroup` as the native disclosure control, restyling its label and content to match the quiet chrome (no card frame); fall back to a custom `VStack` with a `Button` trigger only if `DisclosureGroup`'s built-in chrome cannot be suppressed for a given target. Use `@State` for the open/closed binding. Animate the chevron with `.rotationEffect(.degrees(isOpen ? 90 : 0))` inside `withAnimation(.easeInOut(duration: 0.15))`. Render the source in `Text(source).font(.system(.caption, design: .monospaced))` with `.textSelection(.enabled)` inside a horizontal `ScrollView` so long tokens scroll instead of wrapping.
+- **AppKit / UIKit**: On older macOS or iOS targets, implement using `NSButton` (AppKit) or `UIButton` (UIKit) for the trigger, and `NSTextView` (AppKit) or `UITextView` (UIKit) with a monospace font for the source display. The text view MUST be non-editable and selectable, and MUST sit inside a scroll view that scrolls horizontally so a long unbreakable token can be reached without wrapping. Manage state with a boolean property and toggle it on the button's action. Use `CABasicAnimation` or `UIView.animate()` to rotate the chevron icon by 90°. Use `NSStackView` (AppKit) or `UIStackView` (UIKit) to manage layout.
+- **WinUI 3**: On Windows, prefer the native `Expander` control (`Microsoft.UI.Xaml.Controls.Expander`) as the disclosure, restyling its header and content presenter to remove its default framed chrome; fall back to a hand-built trigger only if `Expander`'s chrome cannot be suppressed. If hand-building, use a `Button` with a `FontIcon` for the chevron (Segoe Fluent Icons glyph U+E76C, chevron-right) rotated via a `RotateTransform`, and a `TextBlock` with a monospace `FontFamily` (e.g. `Cascadia Code`) sized from a theme font-size resource rather than a hard-coded value, wrapped in a horizontally-scrolling `ScrollViewer` so long tokens scroll instead of wrapping. Place the trigger and content in a `StackPanel` with `Orientation="Vertical"`. Animate the chevron's `Angle` (0° to 90°) over 150ms with a `Storyboard`/`DoubleAnimation`. Bind the trigger's `Click` event to toggle `IsOpen`, and set `TextBlock.IsTextSelectionEnabled="True"` so the source can be copied.
 
 ## Design Decisions
 
-- **No composition of framed `Disclosure` component**: The comment in the source explains that composing a reusable `Disclosure` component (which provides a framed card, rounded border, header styling, chevron styling, and content frame) would require nine visual overrides to suppress its styling to achieve this look. Maintaining two disclosures avoids a standing coupling that could silently break this component if the reusable one is restyled. Source fidelity: this encoding of the decision preserves the separation of concerns.
-- **Uncontrolled state**: The component does not accept `open` and `onOpenChange` props; state is managed internally via `useState`. Once opened, the reader owns the state. This design reflects the component's role as a low-priority reader convenience, not a controlled UI element in a host form or flow.
-- **Conditional `aria-controls`**: The implementation sets `aria-controls` only when the panel exists (open state) to avoid the axe accessibility violation "aria-valid-attr-value" (a reference to a nonexistent element is an authoring error, not a harmless no-op). `aria-expanded` alone announces the state to assistive technology.
-- **Verbatim rendering**: The source text is rendered exactly as provided; no escaping of HTML entities, no markdown parsing, no syntax highlighting. This is intentional: the component is a raw-text viewer, and the host owns syntax highlighting or transformation if needed.
-- **Quiet styling**: Deliberately muted colors and small type size position this as chrome, not content. A reader seeking the markdown will look for it; one who doesn't should not notice the disclosure.
+**Decision**: Do not compose the toolkit's shared `Disclosure` component; keep this as a separate, self-contained disclosure.
+**Rationale**: `Disclosure` renders a framed card — a rounded border, a raised surface, a `text-sm font-medium` title, and a ruled content box — for a host that wants that shape. Reaching this component's quiet inline look through `Disclosure` would mean cancelling nine of its visual decisions: the card chrome, the header padding, the chevron's size and colour, the title's family/size/weight/colour, and the content frame — to keep roughly 20 lines of open/close state. That is a standing coupling that would let a future `Disclosure` restyle silently break this component. The two disclosures encode different knowledge (a framed section vs. an inline text toggle), so duplicating the open/close mechanics is not a DRY violation.
+**Approved**: pending
+
+**Decision**: Keep the component uncontrolled — no `open`/`onOpenChange` props; state lives in an internal `useState`.
+**Rationale**: Once opened, the reader owns the state. This reflects the component's role as a low-priority reader convenience, not a controlled UI element that a host form or flow needs to drive.
+**Approved**: pending
+
+**Decision**: Set `aria-controls` on the trigger only while the panel exists (open state).
+**Rationale**: `aria-controls` is an IDREF; pointing it at a nonexistent element is an authoring error (axe: `aria-valid-attr-value`), not a harmless no-op. `aria-expanded` alone already announces the open/closed state to assistive technology, so nothing is lost by omitting `aria-controls` while the panel is absent.
+**Approved**: pending
+
+**Decision**: Render the source text as a plain text node — interpolated as a JSX child of `<pre>`, never assigned via `innerHTML`, `dangerouslySetInnerHTML`, or any other HTML-parsing API — with no markdown parsing or syntax highlighting.
+**Rationale**: The rendering framework escapes text-node content automatically, so arbitrary source text (including strings that look like HTML or script tags) is always displayed literally and never interpreted as markup. The component is a raw-text viewer; the host owns syntax highlighting or transformation if it wants either.
+**Approved**: pending
+
+**Decision**: Use deliberately muted colors and small monospace type so the trigger reads as chrome, not content.
+**Rationale**: A reader seeking the raw markdown will look for the disclosure; a reader who doesn't need it should not be visually drawn to notice it.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: this component does not require compliance audit beyond standard accessibility checks (aria-expanded, aria-controls, keyboard navigation, color contrast), which are already defined in the Accessibility section.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+
+The source grounds the passed rows: a native `button` with `aria-expanded` and conditional `aria-controls`, and a source panel rendered as a JSX text-node child of `<pre>` (never `innerHTML`). The `partial` rows rest on things the source does not itself control — the `--color-*` token values, whether `prefers-reduced-motion` is honored, and whether text sizing scales with system font settings are all defined outside this component.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; reworded verbatim-rendering to rule out HTML injection and added a script-payload test vector; added a `source-selectable` requirement and vector; fixed the disclosure-005 test-vector text and the disclosure-012 requirement mapping; corrected the `<pre>` role claim; converted Design Decisions to the Decision/Rationale/Approved format and removed source-referential phrasing; expressed Appearance in generic units and moved Tailwind classes to the React/Web platform note; added a keyboard-focus state; corrected the SwiftUI, Compose, WinUI 3, and AppKit/UIKit platform notes and led each with its native disclosure control; added tags and a Compliance table; fixed the lowercase "must" in the very-long-source edge case |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

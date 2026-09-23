@@ -3,7 +3,7 @@ id: 37b7b456-790f-4b2d-8f3a-a364016ce389
 title: StatList
 domain: agenticdevelopertoolkit://recipes/stat-list
 type: recipe
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: '2026-07-03'
@@ -11,7 +11,7 @@ modified: '2026-09-22'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A stack of tone-dotted status rows — StatusDot + truncating label + trailing figure — the fleet/telemetry idiom (down sites, top error issues), assembled from StatusDot."
+summary: "A stack of tone-dotted status rows — StatusDot + truncating label + trailing figure — the fleet/telemetry idiom (down sites, top error issues)."
 platforms:
 - typescript
 - web
@@ -55,19 +55,23 @@ primitive is the shared `StatusDot`; everything else is layout + the caller's te
 |---|---|---|---|---|
 | StatusDot | agenticdevelopertoolkit://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
 
+In this toolkit, leaf UI components are themselves recipes rather than a
+separate `ingredient` type, so `StatusDot` is cited here by its recipe domain.
+
 `StatListRow`'s label and trailing content are caller-supplied `ReactNode`s, not
 components this block owns; `StatList` is a bare wrapper element.
 
 ## Integration Requirements
 
-- **must-render-a-dot-per-row**: `StatListRow` MUST render a decorative `StatusDot` (size 7, no accessible label) at its `tone` as the row's leading glyph.
-- **must-truncate-the-label**: `StatListRow` MUST render `label` as a `min-w-0 flex-1 truncate` element and MUST set its native `title` to `labelTitle` when provided, so a clipped label is still readable on hover.
-- **must-right-align-trailing**: When `trailing` is provided, `StatListRow` MUST render it right-aligned and non-shrinking after the label; when absent, it MUST render no trailing slot.
-- **must-honor-row-element**: `StatListRow` MUST render as a `li` when `as="li"` and a `div` otherwise, so a semantic list uses `ul`/`li`.
-- **must-stack-rows**: `StatList` MUST arrange its children in a single vertical `gap-1.5` column with `list-none`.
-- **must-divide-when-asked**: `StatList` MUST add a top border + padding when `divided` is set (the list sits under card content) and MUST omit them otherwise.
-- **must-honor-list-element**: `StatList` MUST render as a `ul` when `as="ul"` and a `div` otherwise.
-- **must-spread-host-attributes**: Both MUST spread remaining host attributes (`data-*`, `id`, handlers) onto their root element so hosts can tag them (e.g. the fleet `data-testid="down-list"`).
+- **render-a-dot-per-row**: `StatListRow` MUST render a decorative `StatusDot` (size 7, no accessible label) at its `tone` as the row's leading glyph.
+- **truncate-the-label**: `StatListRow` MUST render `label` so it clips with an ellipsis when it overflows the row's available width, flexing to claim the remaining space, and MUST set its native `title` to `labelTitle` when provided, so a clipped label is still readable on hover.
+- **right-align-trailing**: When `trailing` is not `null`/`undefined` — a falsy-but-present value such as `0` still counts as provided — `StatListRow` MUST render it right-aligned and non-shrinking after the label; when `trailing` is `null` or `undefined`, it MUST render no trailing slot.
+- **honor-row-element**: `StatListRow` MUST render as a `li` when `as="li"` and a `div` otherwise, so a semantic list uses `ul`/`li`.
+- **stack-rows**: `StatList` MUST arrange its children in a single vertical column with consistent spacing between rows and no list-marker bullets.
+- **divide-when-asked**: `StatList` MUST add a top divider (border + padding) when `divided` is set (the list sits under card content) and MUST omit it otherwise.
+- **honor-list-element**: `StatList` MUST render as a `ul` when `as="ul"` and a `div` otherwise.
+- **spread-host-attributes**: Both MUST spread remaining host attributes (`data-*`, `id`, handlers) onto their root element so hosts can tag them (e.g. the fleet `data-testid="down-list"`).
+- **as-consistency**: Neither component checks the other's `as`, so a caller SHOULD use `as="li"` rows only inside an `as="ul"` StatList (and `as="div"` rows only inside an `as="div"` StatList) to keep list semantics valid; see also **honor-row-element** and **honor-list-element**.
 
 ## Layout
 
@@ -104,13 +108,18 @@ composed `StatusDot`; nothing flows back up.
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | must-render-a-dot-per-row, must-truncate-the-label, must-right-align-trailing | `<StatListRow tone="error" label="app" labelTitle="app" trailing={<span>1h</span>} />` | a decorative dot, a truncating label with `title="app"`, and "1h" in a shrink-0 trailing slot |
-| T2 | must-truncate-the-label | label longer than its box | label carries `min-w-0 flex-1 truncate` |
-| T3 | must-right-align-trailing | `StatListRow` with no `trailing` | no trailing slot element rendered |
-| T4 | must-honor-row-element | `as="li"` | the row is an `li` |
-| T5 | must-stack-rows, must-divide-when-asked, must-honor-list-element | `<StatList as="ul" divided>` | a `ul` with `flex-col gap-1.5` and a `border-t`/`pt-2.5` divider |
-| T6 | must-divide-when-asked | `<StatList>` (no `divided`) | no `border-t` on the list |
-| T7 | must-spread-host-attributes | `<StatList data-testid="down-list">` | the root carries `data-testid="down-list"` |
+| T1 | render-a-dot-per-row, truncate-the-label, right-align-trailing | `<StatListRow tone="error" label="app" labelTitle="app" trailing={<span>1h</span>} />` | a decorative dot, a label that clips with an ellipsis and carries `title="app"`, and "1h" rendered right-aligned and non-shrinking after the label |
+| T2 | truncate-the-label | label longer than its box | the label clips with an ellipsis instead of wrapping or overflowing |
+| T3 | right-align-trailing | `StatListRow` with no `trailing` | no trailing slot element rendered |
+| T4 | right-align-trailing | `<StatListRow trailing={0} />` | the trailing slot renders (containing `0`) — a falsy-but-non-null value is not treated as absent |
+| T5 | honor-row-element | `as="li"` | the row is an `li` |
+| T6 | honor-row-element | `StatListRow` with no `as` | the row is a `div` |
+| T7 | stack-rows, divide-when-asked, honor-list-element | `<StatList as="ul" divided>` | a `ul` arranged as a single vertical column with row spacing, no list-marker bullets, and a top divider (border + padding) |
+| T8 | divide-when-asked | `<StatList>` (no `divided`) | no top divider rendered |
+| T9 | honor-list-element | `StatList` with no `as` | the list is a `div` |
+| T10 | spread-host-attributes | `<StatList data-testid="down-list">` | the root carries `data-testid="down-list"` |
+| T11 | spread-host-attributes | `<StatListRow data-testid="row-1">` | the root carries `data-testid="row-1"` |
+| T12 | as-consistency | `<StatListRow as="li" />` rendered outside any `StatList` | still renders as an `li` — the component does not check its parent, so the caller alone keeps the `as="li"`/`as="ul"` pairing valid |
 
 ## Edge Cases
 
@@ -118,53 +127,74 @@ composed `StatusDot`; nothing flows back up.
   slot is omitted entirely.
 - **Decorative dots**: the dot never carries an aria label — the row's own text
   (label + trailing) is the accessible content, so a screen reader reads the item
-  once, not "status" twice.
+  once, not "status" twice, the same pattern StatusDot's own
+  `agenticdevelopertoolkit://recipes/status-dot#requirements/unlabeled-is-decorative`
+  requirement documents for an unlabeled dot.
 - **`labelTitle` vs `label`**: pass the plain-text form as `labelTitle` so the native
   tooltip works even when `label` is rich `ReactNode`.
 - **Multiple trailing bits**: wrap them in the `trailing` prop (a fragment); the
-  block's `inline-flex gap-2` trailing wrapper spaces them (e.g. `24×` + a deep link).
-- **`as` mismatch**: use `as="li"` rows only inside an `as="ul"` StatList to keep the
-  list semantics valid.
+  block's trailing wrapper spaces them with a consistent gap (e.g. `24×` + a deep link).
+- **`as` mismatch**: see **as-consistency** — neither component enforces the pairing,
+  so a caller-side mistake renders without error but breaks list semantics.
 
 ## Platform Notes
 
-- **SwiftUI**: Not applicable — this is a web/React component. On Apple platforms, build an equivalent using a vertical `VStack` of rows, each with an `HStack` containing a decorative status indicator (via `Circle` or a custom view), a truncating text label with `.lineLimit(1)` and `.truncationMode(.tail)`, and a trailing value view.
-- **Compose**: Not applicable — this is a web/React component. On Android, compose rows using a `Column` with `verticalArrangement = Arrangement.spacedBy()`, each row a `Row` containing a leading status dot, a `Text` with `maxLines = 1` and `overflow = TextOverflow.Ellipsis`, and a trailing value.
+- **SwiftUI**: This is a web/React component; on Apple platforms, build an equivalent using a vertical `VStack` of rows, each an `HStack` containing a decorative status indicator (via `Circle` or a custom view), a text label with `.lineLimit(1)` and `.truncationMode(.tail)`, and a trailing value view pinned after a `Spacer()` with `.layoutPriority(1)` so it stays fully visible while the label clips.
+- **Compose**: This is a web/React component; on Android, compose rows using a `Column` with `verticalArrangement = Arrangement.spacedBy()`, each row a `Row` containing a leading status dot, a `Text` with `maxLines = 1`, `overflow = TextOverflow.Ellipsis`, and `Modifier.weight(1f)` so it claims the remaining width and clips before a trailing value composable placed after it.
 - **React/Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-list.tsx`, exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-list`). Composes `StatusDot` (`../components/status-dot`). Exports `StatList`, `StatListRow`, `StatListProps`, `StatListRowProps`. Demo in `ui-showcase` Topic `stat-list` (group "Blocks — cards & sections"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Rows truncate their label to fit any width; verify at 375 / 768 / 1440 that the trailing figure stays visible while the label clips.
-- **AppKit / UIKit**: Not applicable — this is a web/React component. On macOS and iOS, build an equivalent using `NSStackView` (AppKit) or `UIStackView` (UIKit) with vertical axis, each row a horizontal stack containing a decorative status badge, a truncating label with `lineBreakMode = .byTruncatingTail`, and a trailing value.
-- **WinUI 3**: Build the list using a vertical `StackPanel` (Orientation="Vertical"); each row is a horizontal `StackPanel` containing a status indicator (`Ellipse` or custom control), a `TextBlock` with `TextTrimming="CharacterEllipsis"` for label truncation, and a right-aligned trailing content region. Ensure the label container has `TextWrapping="NoWrap"` and constrained width to force ellipsis behavior; place trailing content in a `StackPanel` with Orientation="Horizontal" and HorizontalAlignment="Right".
+- **AppKit / UIKit**: This is a web/React component; on macOS and iOS, build an equivalent using `NSStackView` (AppKit) or `UIStackView` (UIKit) with vertical axis, each row a horizontal stack containing a decorative status badge, a truncating label with `lineBreakMode = .byTruncatingTail`, and a trailing value.
+- **WinUI 3**: Build the list using a vertical `StackPanel` (Orientation="Vertical", with `Spacing` for row gaps) or an `ItemsRepeater` bound to the rows. Each row is a `Grid` with column definitions `Auto`, `*`, `Auto` (dot / label / trailing) — a horizontal `StackPanel` gives its children unlimited width, so a `TextTrimming` value never fires and `HorizontalAlignment="Right"` has no effect inside it. Put the status indicator (`Ellipse` or custom control) in the first column; a `TextBlock` with `TextWrapping="NoWrap"` and `TextTrimming="CharacterEllipsis"` in the `*` column so it clips within its constrained width; and the trailing content in the third column, inside a `StackPanel` with Orientation="Horizontal" and HorizontalAlignment="Right".
 
 ## Design Decisions
 
 - **Decision**: split into `StatList` (wrapper) + `StatListRow` (row) rather than one
-  data-driven component. **Rationale**: the two real call sites differ only in the
+  data-driven component.
+  **Rationale**: the two real call sites differ only in the
   trailing content (a bold duration vs a count + deep link); a `trailing` slot keeps
   the row declarative for the common part while letting each site own its tail without
   a config explosion.
-- **Decision**: the dot is always decorative (no aria label). **Rationale**: the row's
+  **Approved**: pending
+- **Decision**: the dot is always decorative (no aria label).
+  **Rationale**: the row's
   visible label + trailing already convey the item; labeling the dot too would make a
-  screen reader announce the status twice — the same a11y trap the StatusDot adapter
-  fix addressed.
-- **Decision**: `divided` is a boolean, not a caller-supplied className. **Rationale**:
-  both sites use the identical `border-t border-apt-border pt-2.5` treatment when the
+  screen reader announce the status twice — the same a11y trap StatusDot's own
+  `agenticdevelopertoolkit://recipes/status-dot#requirements/unlabeled-is-decorative`
+  requirement addresses.
+  **Approved**: pending
+- **Decision**: `divided` is a boolean, not a caller-supplied className.
+  **Rationale**:
+  both sites use the identical top-border-and-padding treatment when the
   list sits under card content; a named flag keeps that one decision in the block.
-- **Decision**: `as` picks the element (`ul`/`li` vs `div`). **Rationale**: a monitor's
+  **Approved**: pending
+- **Decision**: `as` picks the element (`ul`/`li` vs `div`).
+  **Rationale**: a monitor's
   down sites ARE a semantic list, while a card's freeform tail may not be; the block
   supports both without forcing list semantics where they don't fit.
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| Artifact formatting (recipe) | pass | artifact-formatting |
-| No raw hex / arbitrary colors / `!important` (uses `apt-*` tokens) | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (composes StatusDot; no bespoke UI) | pass | project-guidelines UI |
-| Decorative dot (no double-announce); truncated label has a `title` tooltip | pass | accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | partial | Platform Compliance |
+| [rf-compliance](agenticdevelopercookbook://compliance/artifact-formatting/recipe-formatting#rf-compliance) | passed | Artifact Formatting |
+
+The dot carries no `aria-label` while the label + trailing text convey the row's
+meaning (screen-reader-support); `StatListRow`/`StatList` render a semantic `li`/`ul`
+when `as` requests one (semantic-markup); styling is expressed entirely through
+`apt-*` token classes with no raw hex or `!important`, though the dark-mode/
+high-contrast wiring those tokens resolve to lives in the themes package rather
+than in this source, hence `partial` (platform-theming); and this section now
+matches the Check/Status/Category table format with linked, catalog check ids
+(rf-compliance).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add as-consistency; state truncation/stacking/divider behavior instead of literal Tailwind classes; add test vectors for default `div` roots, `StatListRow` attribute spreading, `trailing={0}`, and the `as` mismatch case; rework WinUI 3 Platform Notes onto a `Grid` layout and drop "Not applicable" from SwiftUI/Compose/AppKit-UIKit, adding trailing-visibility guidance to SwiftUI/Compose; link Compliance checks to the catalog with `passed`/`partial` status and reformat Design Decisions with `Approved` lines; trim the frontmatter summary; note that leaf components are recipes in this toolkit; record the domain scheme's move to `agenticdevelopertoolkit` (commit c1d412c), which this version's frontmatter already carries. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete control guidance; remove "Not applicable" phrasing. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Reorganize Platform Notes per cookbook standards; fix domain URI scheme from agenticdeveloperhub to agenticdevelopercookbook; update status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; the StatusDot + truncating label + trailing figure row/list grammar extracted from the fleet and telemetry status lists. |
