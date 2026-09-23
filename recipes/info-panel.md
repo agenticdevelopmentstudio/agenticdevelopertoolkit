@@ -3,7 +3,7 @@ id: 2ad7c681-6a9e-43ae-a9d9-b448939d3455
 title: InfoPanel
 domain: agenticdevelopertoolkit://recipes/info-panel
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: '2026-07-03'
@@ -57,18 +57,18 @@ Two symbols ship from `@agenticdevelopertoolkit/ui/blocks/info-panel`:
 
 ## Behavioral Requirements
 
-- **must-render-titled-header**: The component MUST render a header row containing the `title`, preceded by `icon` when provided and immediately followed by `titleAfter` when provided.
-- **must-show-count-when-positive**: The component MUST render the `count` after the title only when it is provided and greater than zero, and MUST hide it otherwise.
-- **must-place-header-slots**: The component MUST place `center` in a centered, flexible header slot and `actions` in a right-justified header slot.
-- **must-right-justify-actions-without-center**: When `actions` is present and `center` is absent, the component MUST push the actions to the right edge of the header.
-- **must-share-header-height**: The component MUST give the header a minimum height equal to `INFO_PANEL_HEADER_HEIGHT` so sibling panels' headers align.
-- **must-default-content-sized-body**: By default (`scroll` false) the component MUST size the panel to its content and MUST NOT scroll the body.
-- **must-fill-and-scroll-when-scroll**: When `scroll` is true, the component MUST let the panel flex to fill its track and MUST make the body scroll vertically when its content overflows.
-- **must-expose-body-ref**: The component MUST attach `bodyRef` to the scrolling body element so the host can tail or anchor it.
-- **must-label-region**: The component MUST expose the panel as a labeled region, defaulting the accessible name to `title` when it is a string and using `ariaLabel` when provided.
-- **must-apply-mode-default-padding**: The component MUST apply body padding defaulting by mode (card vs scroll) and MUST use `bodyPadding` when provided.
-- **must-honor-layout-props**: The component MUST apply caller-supplied `flex` and `maxHeight` to the outer element for host-controlled sizing.
-- **must-spread-host-attributes**: The component MUST spread remaining host attributes (`data-*`, `id`, event handlers) onto the outer `<section>`, without overriding the computed accessible name.
+- **titled-header**: The component MUST render a header row containing the `title`, preceded by `icon` when provided and immediately followed by `titleAfter` when provided.
+- **count-when-positive**: The component MUST render the `count` after the title only when it is provided and greater than zero, and MUST hide it otherwise.
+- **header-slot-placement**: The component MUST place `center` in a centered, flexible header slot and `actions` in a right-justified header slot.
+- **actions-right-justified-without-center**: When `actions` is present and `center` is absent, the component MUST push the actions to the right edge of the header.
+- **shared-header-height**: The component MUST give the header a minimum height equal to `INFO_PANEL_HEADER_HEIGHT` so sibling panels' headers align.
+- **content-sized-by-default**: By default (`scroll` false) the component MUST size the panel to its content and MUST NOT scroll the body.
+- **fill-and-scroll-on-scroll**: When `scroll` is true, the component MUST let the panel flex to fill its track and MUST make the body scroll vertically when its content overflows.
+- **body-ref-exposure**: The component MUST attach `bodyRef` to the scrolling body element so the host can tail or anchor it.
+- **label-region**: The component MUST expose the panel as a labeled region whenever an accessible name can be computed — `ariaLabel` when provided, else `title` when it is a string. It leaves the region unnamed only when `title` is a non-string node and no `ariaLabel` is given (see Edge Cases, "Non-string title").
+- **mode-default-padding**: The component MUST apply body padding defaulting by mode (card vs scroll) and MUST use `bodyPadding` when provided.
+- **layout-prop-passthrough**: The component MUST apply caller-supplied `flex` and `maxHeight` to the outer element for host-controlled sizing.
+- **host-attribute-passthrough**: The component MUST spread remaining host attributes (`data-*`, `id`, event handlers) onto the outer `<section>`, without overriding the computed accessible name: an explicit `ariaLabel` prop takes precedence over a raw `aria-label` present in the spread attributes, which in turn takes precedence over the string `title` fallback.
 
 ## Appearance
 
@@ -94,16 +94,24 @@ Fill + scroll (`scroll`):
 └───────────────────────────────────────────────┘
 ```
 
-- Outer: `flex flex-col overflow-hidden rounded-[10px] border border-apt-border
-  bg-apt-surface text-apt-text`; `min-h-0` added in scroll mode so the flex child
-  can shrink. Outer `flex` defaults to `0 0 auto` (card) or `1 1 0` (scroll).
-- Header: `flex flex-none items-center gap-2`, bottom border, `min-height` =
-  `INFO_PANEL_HEADER_HEIGHT` (41). Title `text-sm font-semibold whitespace-nowrap`;
-  count `font-mono text-[11px] text-apt-text-dim`.
-- Body: `flex-none` (card) or `min-h-0 flex-auto overflow-y-auto` (scroll); default
-  padding `12px 16px` (card) or `8px 16px 10px` (scroll), overridable via
-  `bodyPadding`.
-- Styled entirely with the `apt-*` token utilities; no raw hex, no `!important`.
+- **Corner radius**: 10px on the outer container; content clips to it (the outer
+  overflow is hidden).
+- **Border**: 1px, theme border color; the same color underlines the header as a
+  divider.
+- **Background / Foreground**: theme surface and text colors, consistent across
+  light and dark.
+- **Header height**: minimum 41px (`INFO_PANEL_HEADER_HEIGHT`), so sibling panels
+  on a rail line up even when their content differs; a flex child can shrink
+  below its content in scroll mode so the body — not the panel — scrolls.
+- **Header text**: title is small, semibold, non-wrapping; count is dim, 11px
+  monospace.
+- **Body padding**: 12px vertical / 16px horizontal by default in card mode; 8px
+  top / 16px sides / 10px bottom by default in scroll mode; either default is
+  fully replaced by `bodyPadding` when supplied.
+- **Outer layout**: flex `0 0 auto` (card, content-sized) or `1 1 0` (scroll,
+  fills its track).
+- Styled entirely with theme tokens; no raw colors, no forced overrides. See the
+  **React/Web** platform note for the exact utility classes.
 
 ## States
 
@@ -124,8 +132,11 @@ Fill + scroll (`scroll`):
   region.
 - The leading `icon` is decorative and marked `aria-hidden`, so assistive tech reads
   the title rather than an unlabeled glyph.
-- In scroll mode the body is a real scroll container (`overflow-y-auto`), keyboard-
-  and screen-reader-scrollable; the host controls focusable content within it.
+- In scroll mode the body is a real scroll container (`overflow-y-auto`). The
+  source gives the div itself no `tabIndex`, so keyboard reachability depends on
+  focusable content the host renders inside it — not every browser makes an
+  unfocusable overflow container keyboard-scrollable on its own (see
+  **keyboard-navigable** in Compliance).
 - Color and contrast come from the `apt-*` theme tokens, consistent across light and
   dark themes and every site.
 
@@ -133,20 +144,24 @@ Fill + scroll (`scroll`):
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | must-render-titled-header | `title="Fleet"`, `icon=<I/>`, `titleAfter=<Copy/>` | header shows icon, then "Fleet", then the copy control |
-| T2 | must-show-count-when-positive | `count={12}` | "12" rendered after the title |
-| T3 | must-show-count-when-positive | `count={0}` (or omitted) | no count rendered |
-| T4 | must-place-header-slots | `center=<Bar/>`, `actions=<Gear/>` | center in the centered slot, actions in the right slot |
-| T5 | must-right-justify-actions-without-center | `actions=<Gear/>`, no `center` | actions block carries `ml-auto` (right-aligned) |
-| T6 | must-share-header-height | render two panels | both headers have `min-height: 41px` and align |
-| T7 | must-default-content-sized-body | default (`scroll` unset) | outer `flex: 0 0 auto`; body has no `overflow-y-auto` |
-| T8 | must-fill-and-scroll-when-scroll | `scroll` with overflowing content | outer `flex: 1 1 0`; body `overflow-y-auto` and scrolls |
-| T9 | must-expose-body-ref | pass a `bodyRef` | the ref resolves to the scrolling body element |
-| T10 | must-label-region | `title="Fleet"`, no `ariaLabel` | `<section aria-label="Fleet">` |
-| T11 | must-label-region | non-string `title`, `ariaLabel="Fleet"` | `<section aria-label="Fleet">` |
-| T12 | must-apply-mode-default-padding | `scroll` vs card, no `bodyPadding` | body padding `8px 16px 10px` (scroll) vs `12px 16px` (card) |
-| T13 | must-honor-layout-props | `flex="2 1 0"`, `maxHeight={400}` | outer style carries that flex and `max-height: 400px` |
-| T14 | must-spread-host-attributes | `data-testid="panel"`, `data-kind="monitor"` | outer `<section>` carries both attributes; `aria-label` still defaults from `title` |
+| T1 | titled-header | `title="Fleet"`, `icon=<I/>`, `titleAfter=<Copy/>` | header shows icon, then "Fleet", then the copy control |
+| T2 | count-when-positive | `count={12}` | "12" rendered after the title |
+| T3 | count-when-positive | `count={0}` (or omitted) | no count rendered |
+| T4 | header-slot-placement | `center=<Bar/>`, `actions=<Gear/>` | center in the centered slot, actions in the right slot |
+| T5 | actions-right-justified-without-center | `actions=<Gear/>`, no `center` | the actions block's right edge equals the header's inner right edge (no center spacer needed to achieve it) |
+| T6 | shared-header-height | render two panels | both headers have `min-height: 41px` and align — **Playwright/E2E**: jsdom has no real layout to assert alignment against |
+| T7 | content-sized-by-default | default (`scroll` unset) | outer `flex: 0 0 auto`; body has no `overflow-y-auto` |
+| T8 | fill-and-scroll-on-scroll | `scroll` with overflowing content | outer `flex: 1 1 0`; body `overflow-y-auto` and scrolls — **Playwright/E2E**: jsdom does not lay out or scroll content |
+| T9 | body-ref-exposure | pass a `bodyRef` | the ref resolves to the scrolling body element |
+| T10 | label-region | `title="Fleet"`, no `ariaLabel` | `<section aria-label="Fleet">` |
+| T11 | label-region | non-string `title`, `ariaLabel="Fleet"` | `<section aria-label="Fleet">` |
+| T12 | mode-default-padding | `scroll` vs card, no `bodyPadding` | body padding `8px 16px 10px` (scroll) vs `12px 16px` (card) |
+| T13 | layout-prop-passthrough | `flex="2 1 0"`, `maxHeight={400}` | outer style carries that flex and `max-height: 400px` |
+| T14 | host-attribute-passthrough | `data-testid="panel"`, `data-kind="monitor"` | outer `<section>` carries both attributes; `aria-label` still defaults from `title` |
+| T15 | host-attribute-passthrough | `title="Fleet"` (string), rest `aria-label="FromRest"`, `ariaLabel="Explicit"` | `<section aria-label="Explicit">` — the `ariaLabel` prop wins over both the rest `aria-label` and the string `title` |
+| T16 | host-attribute-passthrough | `title="Fleet"` (string), rest `aria-label="FromRest"`, no `ariaLabel` prop | `<section aria-label="FromRest">` — the rest attribute wins over the string `title` fallback when `ariaLabel` is absent |
+| T17 | count-when-positive | `count={-3}` | no count rendered (negative is treated as not positive) |
+| T18 | label-region | non-string `title`, no `ariaLabel` | `<section>` has no `aria-label` — the known gap (see Edge Cases, "Non-string title") |
 
 ## Edge Cases
 
@@ -210,47 +225,75 @@ interaction telemetry belongs to the host content it wraps.
 
 ## Privacy
 
-Not applicable: The component collects no data. It is a purely presentational container that renders host-supplied content and manages layout state. No telemetry, logging, or data collection occurs.
+Not applicable: The component collects no data. It is a purely presentational container that renders host-supplied content. No telemetry, logging, or data collection occurs.
 
 ## Logging
 
-No logging. `InfoPanel` is a presentational container; any data-loading or
-interaction telemetry belongs to the host content it wraps.
+No logging. `InfoPanel` performs no I/O and emits no log statements of its own —
+the flex, padding, and `aria-label` values it computes are pure render output,
+not events. The panel does not wrap or filter any logging the host performs
+inside the slots it renders.
 
 ## Platform Notes
 
-- **SwiftUI**: Create a custom `View` that composes a fixed-height header `HStack` with leading icon, title, trailing `titleAfter`, centered content, and right-aligned actions, above a body that conditionally wraps content in a `ScrollView` when `scroll` is true. Use `GeometryReader` or `.frame(minHeight:)` to align sibling headers at a shared baseline height.
-- **Compose**: Build with `Column` holding a `Row` for the header (with `weight` and `align` modifiers for slots) above a body that uses `Modifier.weight(1f).fillMaxHeight()` and conditionally wraps content in a scrollable container. Leverage `Box` and `Row` compositions to implement the slot layout and the card styling.
-- **React/Web**: File: `packages/web/packages/ui/src/blocks/info-panel.tsx`. Uses Tailwind flexbox utilities (`flex`, `flex-col`, `gap-*`, `min-h-0`), the `apt-*` token classes for theming, and React's `Ref` API for exposing the body element. Template and host props determine all header slot content.
-- **AppKit / UIKit**: Implement as a `UIView` (iOS) or `NSView` (macOS) subclass that composes an `NSStackView` (macOS) or `UIStackView` (iOS) with fixed-height header and a scrollable content view. Conditionally add `NSScrollView` / `UIScrollView` wrapping when scroll mode is enabled. Use `layoutMargins` and `isLayoutMarginsRelativeArrangement` to apply body padding.
-- **WinUI 3**: Use a custom `UserControl` with a `StackPanel` (orientation Vertical) containing a `Border` for the header row (with `Height="41"` or binding to the constant) and a `ScrollViewer` (conditionally visible/enabled by scroll mode). Style the header and body using theme resources for borders, backgrounds, and text. The ScrollViewer's `Content` property holds the body content; set `ScrollViewer.VerticalScrollBarVisibility` to `Auto` in scroll mode and hide it in card mode.
+- **SwiftUI**: Create a custom `View` that composes a header `HStack` — leading icon, title, trailing `titleAfter`, centered content, right-aligned actions — given `.frame(minHeight: 41)` (a floor, not a fixed height, so sibling headers align while still growing for taller content; no `GeometryReader` needed) above a body that conditionally wraps content in a `ScrollView` when `scroll` is true.
+- **Compose**: Build with a `Column` holding a `Row` for the header (`weight` and `align` modifiers for the slots) above a body. Apply `Modifier.weight(1f).fillMaxHeight()` to the body only when `scroll` is true — applying it unconditionally would make card mode fill its track too — and wrap the body in a scrollable container in that same branch. Use `Box` and `Row` compositions for the slot layout and card styling.
+- **React/Web**: File: `packages/web/packages/ui/src/blocks/info-panel.tsx`. Outer: `flex flex-col overflow-hidden rounded-[10px] border border-apt-border bg-apt-surface text-apt-text`, plus `min-h-0` in scroll mode. Header: `flex flex-none items-center gap-2` with a bottom border and `min-height: 41px` (`INFO_PANEL_HEADER_HEIGHT`); title `text-sm font-semibold whitespace-nowrap`; count `font-mono text-[11px] text-apt-text-dim`. Body: `flex-none` (card) or `min-h-0 flex-auto overflow-y-auto` (scroll). All colors and surfaces come from the `apt-*` token classes; React's `Ref` API exposes the body element. Template and host props determine all header slot content.
+- **AppKit / UIKit**: Implement as a `UIView` (iOS) or `NSView` (macOS) subclass composing an `NSStackView` (macOS) or `UIStackView` (iOS) with a header view constrained to `>= 41pt` (a floor, matching the min-height design decision, not a fixed height) above a scrollable content view; conditionally wrap it in `NSScrollView` / `UIScrollView` when scroll mode is enabled. For body padding, `UIStackView` (UIKit) can use `layoutMargins` with `isLayoutMarginsRelativeArrangement = true`; `NSStackView` (AppKit) has no such property — use its `edgeInsets` instead.
+- **WinUI 3**: Use a custom `UserControl` with a `Grid` of two rows, `Auto` and `*` — a vertical `StackPanel` would give both rows unlimited height and the `ScrollViewer` would never scroll. Put a `Border` in the `Auto` row for the header, with `MinHeight="41"` (or bound to the constant, not a fixed `Height`) and a `ScrollViewer` in the `*` row (conditionally visible/enabled by scroll mode). Style header and body using theme resources for borders, backgrounds, and text. The ScrollViewer's `Content` property holds the body content; set `ScrollViewer.VerticalScrollBarVisibility` to `Auto` in scroll mode and hide it in card mode.
 
 ## Design Decisions
 
-- **One frame, host-owned slots.** The panel fixes the border/radius/surface and the
-  header rhythm but leaves every slot (`icon`, `title`, `titleAfter`, `count`,
-  `center`, `actions`, body) to the host, so a stat card and a scrolling list share
-  one component instead of two bespoke frames.
-- **Shared, exported header height.** Header alignment across sibling panels on a rail
-  requires a common baseline; exporting `INFO_PANEL_HEADER_HEIGHT` (a `min-height`,
-  not a fixed height) lets headers align while still growing for taller content.
-- **Two body modes on one prop.** `scroll` switches both the outer flex (`0 0 auto`
-  vs `1 1 0` + `min-h-0`) and the body (`flex-none` vs `flex-auto overflow-y-auto`),
-  so "stat card" and "fill + scroll list" are a single boolean rather than two
-  components.
-- **`apt-*` tokens over inline hex.** The panel uses the central token utilities so it
-  themes correctly on every site; the older inline-style + hex-fallback layer was
-  dropped once `@source` guaranteed the utilities exist everywhere.
-- **`bodyRef` for tail/anchor.** Exposing the scroll element lets hosts implement
-  scroll-to-bottom / anchoring without the panel owning that behavior.
+**Decision**: One frame, host-owned slots — the panel fixes the border, radius,
+surface, and header rhythm but leaves every slot (`icon`, `title`, `titleAfter`,
+`count`, `center`, `actions`, body) to the host.
+**Rationale**: So a stat card and a scrolling list share one component instead
+of two bespoke frames.
+**Approved**: pending
+
+**Decision**: Shared, exported header height — export
+`INFO_PANEL_HEADER_HEIGHT` as a `min-height`, not a fixed height.
+**Rationale**: Header alignment across sibling panels on a rail requires a
+common baseline; a `min-height` lets headers align while still growing for
+taller content.
+**Approved**: pending
+
+**Decision**: Two body modes on one prop — `scroll` switches both the outer
+flex (`0 0 auto` vs `1 1 0` + `min-h-0`) and the body (`flex-none` vs
+`flex-auto overflow-y-auto`).
+**Rationale**: So "stat card" and "fill + scroll list" are a single boolean
+rather than two components.
+**Approved**: pending
+
+**Decision**: `apt-*` tokens over inline hex — the panel uses the central
+token utilities instead of the older inline-style + hex-fallback layer.
+**Rationale**: The panel themes correctly on every site this way; the
+fallback layer was dropped once `@source` guaranteed the utilities exist
+everywhere.
+**Approved**: pending
+
+**Decision**: `bodyRef` for tail/anchor — expose the scrolling body element
+through a ref.
+**Rationale**: Lets hosts implement scroll-to-bottom / anchoring without the
+panel owning that behavior.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` (uses `apt-*` tokens) | pass | project-guidelines UI |
-| Labeled region; decorative icon `aria-hidden`; real scroll container | pass | accessibility |
-| Generic/host-owned slots (no bespoke per-site frames) | pass | project-guidelines UI |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+
+`platform-theming` is `passed`: the source styles exclusively with `apt-*`
+theme tokens (no raw hex, no `!important`), which theme correctly in light and
+dark. `semantic-markup` is `partial`: the `<section>` gets a computed
+`aria-label` and the leading icon is `aria-hidden`, but the source leaves the
+region unnamed for a non-string `title` with no `ariaLabel` (see
+**label-region**). `keyboard-navigable` is `partial`: the scroll body is a
+real `overflow-y-auto` container, but the source adds no `tabIndex` to it, so
+keyboard reachability depends on focusable content the host renders inside.
 
 ## Change History
 
@@ -259,3 +302,4 @@ interaction telemetry belongs to the host content it wraps.
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the header anatomy, content-sized vs fill+scroll body, and the shared header-height alignment. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Host-attribute passthrough: remaining HTML attributes spread onto the root `<section>` (data-* tagging without a wrapper). |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Complete recipe sections: add Deep Linking, Localization, Accessibility Options, Feature Flags, Privacy; expand Platform Notes with translation guidance for all five platforms; set status to review. |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; resolve the label-region contradiction with Edge Cases and state the aria-label precedence, with new test vectors T15-T18; correct the keyboard-scrollable overclaim; write a Logging statement distinct from Analytics; reformat Design Decisions and Compliance to the canonical forms; fix WinUI 3's Grid/MinHeight, the SwiftUI/AppKit min-height wording, AppKit-vs-UIKit padding APIs, and Compose's scroll-gated fillMaxHeight; mark T6/T8 as Playwright/E2E and reword T5 behaviorally; rewrite Appearance in neutral terms and move Tailwind classes into the React/Web note; drop the unsupported "manages layout state" phrase from Privacy. |

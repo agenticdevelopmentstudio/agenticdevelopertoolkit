@@ -3,7 +3,7 @@ id: 96e5e0cf-79a9-4873-9745-03442849b2fd
 title: Orb Row
 domain: agenticdevelopertoolkit://recipes/orb-row
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -34,16 +34,19 @@ Orb Row renders a horizontal navigation bar listing available sites as circular 
 
 ## Behavioral Requirements
 
-- **must-render-orb-links**: The component MUST render each site as an `<a>` element with `href` pointing to the site's URL.
-- **must-apply-current-state**: The component MUST apply the `is-current` class to the link whose `id` matches `currentSite`.
-- **must-set-aria-current**: When a link is current, the component MUST set `aria-current="page"` on that link; other links MUST NOT have `aria-current` set.
-- **must-render-emoji-hidden**: The component MUST render the emoji in a `<span>` with `aria-hidden="true"` so it is not announced by assistive technologies.
-- **must-render-tooltip-role**: The component MUST render the site name in a `<span>` with `role="tooltip"`.
-- **must-apply-gradient-background**: The component MUST apply each site's `iconGradient` value as the CSS `background` style property on the orb link.
-- **must-render-indicator-when-current**: When a site is current, the component MUST render an indicator `<span>` with class `orb-row-here` and `aria-hidden="true"`.
-- **must-set-navigation-role**: The component MUST render the container with `role="navigation"` and `aria-label="Agentic family"`.
-- **must-set-docked-class**: When the `docked` prop is `true`, the component MUST apply the `is-docked` class to the root container.
-- **must-apply-custom-class**: The component MUST append any `className` prop value to the root container's class list.
+- **render-orb-links**: The component MUST render each site as an `<a>` element with `href` pointing to the site's URL.
+- **apply-current-state**: The component MUST apply the `is-current` class to the link whose `id` matches `currentSite`.
+- **set-aria-current**: When a link is current, the component MUST set `aria-current="page"` on that link; other links MUST NOT have `aria-current` set.
+- **render-emoji-hidden**: The component MUST render the emoji in a `<span>` with `aria-hidden="true"` so it is not exposed in the accessibility tree.
+- **render-tooltip-role**: The component MUST render the site name in a `<span>` with `role="tooltip"`.
+- **apply-gradient-background**: The component MUST apply each site's `iconGradient` value as the CSS `background` style property on the orb link.
+- **render-indicator-when-current**: When a site is current, the component MUST render an indicator `<span>` with class `orb-row-here` and `aria-hidden="true"`.
+- **set-navigation-role**: The component MUST render the container with `role="navigation"` and `aria-label="Agentic family"`.
+- **set-docked-class**: When the `docked` prop is `true`, the component MUST apply the `is-docked` class to the root container.
+- **apply-custom-class**: The component MUST append any `className` prop value to the root container's class list.
+- **set-link-label**: The component MUST set `aria-label="{site.name}"` on each orb link so it has an accessible name distinct from its (hidden) visual content.
+- **render-focus-indicator**: When an orb link receives keyboard focus, the component MUST present a visible focus indicator (a box-shadow ring applied via `:focus-visible`) and pause its floating animation.
+- **show-tooltip-on-focus**: The component MUST reveal the tooltip span on keyboard focus (`:focus-visible`) as well as on pointer hover.
 
 ## Appearance
 
@@ -58,35 +61,40 @@ Orb Row renders a horizontal navigation bar listing available sites as circular 
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Orb shows emoji with gradient background; tooltip hidden or shown on hover. |
+| Default | Orb shows emoji with gradient background; tooltip hidden until hover or focus. |
 | Current | `is-current` class applied; aria-current="page" set; indicator span rendered. |
+| Focused | `:focus-visible` pauses the floating animation, applies a box-shadow ring, and reveals the tooltip (see **render-focus-indicator**, **show-tooltip-on-focus**). |
 | Docked | `is-docked` class applied to container; specific layout adjustments via stylesheet. |
 
 ## Accessibility
 
-- **Role**: Container is a navigation landmark with `role="navigation"`.
+- **Role**: Container is a navigation landmark via an explicit `role="navigation"` on a `<div>` (see **set-navigation-role**); the source does not use a native `<nav>` element.
 - **Label**: Container includes `aria-label="Agentic family"` to identify the navigation purpose.
-- **Link labels**: Each link receives `aria-label="{site.name}"` for screen reader announcement.
-- **Current page indicator**: Links use `aria-current="page"` to mark the current page, as per WCAG best practices.
-- **Emoji handling**: Emoji spans have `aria-hidden="true"` to prevent redundant announcements.
+- **Link labels**: Each link receives `aria-label="{site.name}"` (see **set-link-label**) for screen reader announcement.
+- **Current page indicator**: Links use `aria-current="page"` to mark the active page, per WCAG best practices (see **set-aria-current**).
+- **Emoji handling**: Emoji spans have `aria-hidden="true"` to prevent redundant announcement (see **render-emoji-hidden**).
 - **Indicator handling**: Current-page indicator span has `aria-hidden="true"` (visual only).
-- **Tooltip role**: Tooltip span has `role="tooltip"` to associate the site name as a tooltip.
-- **Minimum tap target**: Touch target size is not specified in source and is defined by stylesheet; SHOULD be at least 44×44px per mobile HIG standards.
+- **Tooltip role**: The site name span carries `role="tooltip"` (see **render-tooltip-role**), but the source does not associate it with the link via `aria-describedby`; assistive technology receives the site name only through the link's `aria-label`, not through the tooltip role itself.
+- **Keyboard focus**: `:focus-visible` pauses the floating animation and applies a box-shadow ring (see **render-focus-indicator**), and reveals the tooltip on focus the same way it does on hover (see **show-tooltip-on-focus**), matching WCAG 2.1 SC 1.4.13 (Content on Hover or Focus).
+- **Minimum tap target**: Orbs are 48×48px by default (`styles/orb-row.css`), which meets the 44×44px minimum; the `max-width: 640px` breakpoint shrinks orbs to 36×36px, which falls below it.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| orb-row-001 | must-render-orb-links | sites=[{id:"a",url:"https://site-a.com",name:"Site A",emoji:"🅰",iconGradient:"linear-gradient(...)"}] | Rendered `<a href="https://site-a.com">` element |
-| orb-row-002 | must-set-navigation-role | (default) | Root element has `role="navigation"` and `aria-label="Agentic family"` |
-| orb-row-003 | must-apply-current-state, must-set-aria-current | currentSite="a", sites with id "a" | Link with id "a" has class `is-current` and `aria-current="page"`; other links lack both. |
-| orb-row-004 | must-apply-gradient-background | sites=[{...iconGradient:"linear-gradient(to right, #ff0000, #0000ff)"}] | Link's style attribute includes `background: linear-gradient(to right, #ff0000, #0000ff)` |
-| orb-row-005 | must-render-emoji-hidden, must-render-tooltip-role | sites=[{name:"Example",emoji:"🎯"}] | Emoji in `<span aria-hidden="true">🎯</span>`; site name in `<span role="tooltip">Example</span>` |
-| orb-row-006 | must-render-indicator-when-current | currentSite="x", sites with id "x" | Indicator `<span class="orb-row-here" aria-hidden="true"></span>` rendered inside current link |
-| orb-row-007 | must-set-docked-class | docked=true | Root element includes `is-docked` class |
-| orb-row-008 | must-apply-custom-class | className="custom-class" | Root element includes `custom-class` in its class list |
-| orb-row-009 | must-render-emoji-hidden | (any site) | Emoji span is not selectable by assistive technology |
-| orb-row-010 | must-set-aria-current | currentSite=null or not in sites list | No link has `aria-current` set |
+| orb-row-001 | render-orb-links | sites=[{id:"a",url:"https://site-a.com",name:"Site A",emoji:"🅰",iconGradient:"linear-gradient(...)"}] | Rendered `<a href="https://site-a.com">` element |
+| orb-row-002 | set-navigation-role | (default) | Root element has `role="navigation"` and `aria-label="Agentic family"` |
+| orb-row-003 | apply-current-state, set-aria-current | currentSite="a", sites with id "a" | Link with id "a" has class `is-current` and `aria-current="page"`; other links lack both. |
+| orb-row-004 | apply-gradient-background | sites=[{...iconGradient:"linear-gradient(to right, #ff0000, #0000ff)"}] | Link's style attribute includes `background: linear-gradient(to right, #ff0000, #0000ff)` |
+| orb-row-005 | render-emoji-hidden | sites=[{emoji:"🎯"}] | Emoji renders inside `<span aria-hidden="true">🎯</span>`; querying the link's accessible name via the accessibility tree does not include the emoji glyph. |
+| orb-row-006 | render-tooltip-role | sites=[{name:"Example"}] | Site name renders in `<span role="tooltip">Example</span>` |
+| orb-row-007 | render-indicator-when-current | currentSite="x", sites with id "x" | Indicator `<span class="orb-row-here" aria-hidden="true"></span>` rendered inside current link |
+| orb-row-008 | set-docked-class | docked=true | Root element includes `is-docked` class |
+| orb-row-009 | apply-custom-class | className="custom-class" | Root element includes `custom-class` in its class list |
+| orb-row-010 | set-link-label | sites=[{name:"Example"}] | Link has `aria-label="Example"` |
+| orb-row-011 | set-aria-current | currentSite=null or not in sites list | No link has `aria-current` set |
+| orb-row-012 | render-focus-indicator | orb link receives keyboard focus | Link matches `:focus-visible`; computed style shows the paused-animation box-shadow ring, not the default outline |
+| orb-row-013 | show-tooltip-on-focus | orb link receives keyboard focus | Tooltip span's computed `opacity` is `1`, matching the hover-revealed state |
 
 ## Edge Cases
 
@@ -99,7 +107,12 @@ Orb Row renders a horizontal navigation bar listing available sites as circular 
 
 ## Configuration
 
-Not applicable: This component accepts configuration only through React props (sites, currentSite, docked, className) defined at render time, not through a runtime configuration table.
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `sites` | `OrbSite[]` | required | Ordered list of sites to render as orbs. Each `OrbSite` requires `id`, `name`, `emoji`, `iconGradient`, and `url` (all `string`); the component renders them directly and does not validate that they are present. |
+| `currentSite` | `string` (an `OrbSite.id`) | `undefined` | ID of the site to mark as current; no orb is marked current when omitted or when it matches no site. |
+| `docked` | `boolean` | `undefined` (falsy) | When `true`, applies the `is-docked` class for the fixed-position layout variant. |
+| `className` | `string` | `undefined` | Appended to the root container's class list. |
 
 ## Deep Linking
 
@@ -131,27 +144,52 @@ Not applicable: The component does not log diagnostic information.
 
 ## Platform Notes
 
-- **React/Web**: OrbRow.tsx renders a semantic `<nav>` container with `role="navigation"`, mapping over the sites array to create links. The component applies a gradient background via inline style, manages the current state with conditional className and aria-current, and uses aria-hidden for decorative elements. Styling (dimensions, spacing, animations) is defined separately in the associated CSS.
+- **React/Web**: `OrbRow.tsx` renders a `<div>` container with an explicit `role="navigation"` (not a native `<nav>` element) and `aria-label="Agentic family"`, mapping over the `sites` array to create `<a>` links. Each link applies its `iconGradient` as an inline `background` style, toggles `is-current`/`aria-current="page"` from `currentSite`, and marks the emoji and current-page indicator `aria-hidden`. Styling (dimensions, spacing, the floating/pulse animations, and the `:focus-visible` tooltip reveal) lives in the associated CSS.
 
-- **SwiftUI**: Build from a VStack or LazyHStack of NavigationLink buttons, each with a circular background view colored by a gradient created from the site's iconGradient string. Bind the current site via selection state. Use Label to pair an emoji image with the site name, marking the emoji with isHidden if needed. Apply the conditional is-current state via a .border() or .overlay() modifier. Handle the docked state via .environment() or a conditional frame.
+- **SwiftUI**: Build from an `HStack` (the row is horizontal, not a `VStack`) of `Button`/`NavigationLink` views, each with a circular background from a `LinearGradient` parsed from the site's `iconGradient` string. Bind the current site via a `selection` binding and apply the `is-current` treatment with an `.overlay()` ring. Mark the emoji `Text`/`Image` with `.accessibilityHidden(true)` (not `isHidden`, which only affects visibility, not the accessibility tree), and expose the site name via `.accessibilityLabel()`. Handle `docked` with a conditional `.frame()`/positioning modifier.
 
-- **Compose**: Use a Row (or LazyRow for many sites) with NavigationLink or a custom onClick handler. Each item is a Column or Box with a background gradient (parsed from iconGradient), centered emoji, and Text for the name. Apply Modifier.padding() to match orb sizing and use .selectable() or a Modifier.background() state for the current page. The is-current class maps to a Modifier condition.
+- **Compose**: Use a `Row` (or `LazyRow` for many sites) with `Modifier.clickable` per item — not `NavigationLink`, which is a SwiftUI API. Each item is a `Box` with a gradient `Modifier.background()` (parsed from `iconGradient`), a centered emoji, and a `Text` for the tooltip. Mark the current item with `Modifier.semantics { selected = true }` (mapping to the `is-current` class), and apply `Modifier.padding()` to match orb sizing. Toggle a docked layout `Modifier` (fixed alignment + background) to match `is-docked`.
 
-- **AppKit / UIKit**: Use a UIStackView or NSStackView (axis horizontal) with NSButton or UIButton subclasses styled as circular orbs. Apply the background gradient using CAGradientLayer or UIGradientView. Manage current state via button selection state (isSelected or highlighted). For a11y, set accessibilityLabel to site name, accessibilityTraits to .link, and set accessibilityCustomContent for aria-current equivalence. Render the emoji as an NSImageView or UIImageView from a font or symbol.
+- **AppKit / UIKit**: Use a `UIStackView`/`NSStackView` (horizontal axis) of `NSButton`/`UIButton` subclasses styled as circular orbs, applying the gradient via `CAGradientLayer` (not `UIGradientView`, which does not exist) on each button's layer. Manage current state with the button's `.selected` trait/state (not `accessibilityCustomContent`), and set `accessibilityLabel` to the site name and `accessibilityTraits` to `.link`. Render the emoji in an `NSImageView`/`UIImageView` or as attributed button text.
 
-- **WinUI 3**: Create a repeating ItemsControl or ListView with a custom DataTemplate per site. Each template contains a Button with a Grid background (using a LinearGradientBrush created from the iconGradient string), centered TextBlock for the emoji, and a tooltip trigger showing the site name. Bind the current site to the ItemsControl.SelectedItem or use a VisualStateManager state group (named "CommonStates" + custom "IsCurrent") to toggle appearance. The is-current class maps to the "IsCurrent" VisualState, applying a border, scale transform, or color change. Handle docked via the Button.Margin property or a separate RootGrid.ColumnDefinitions binding.
+- **WinUI 3**: Use an `ItemsControl`/`ListView` with a per-site `DataTemplate` containing a `Button` whose background is a `LinearGradientBrush` built from `iconGradient`, a centered `TextBlock` for the emoji, and a `ToolTipService.ToolTip` set to the site name. Bind the current site to `ItemsControl.SelectedItem`, driving a `VisualStateManager` "IsCurrent" state that applies the border/glow used for `is-current`. Map `docked` concretely: when `true`, host the `ItemsControl` in a `Popup` (or a bottom-pinned `Grid.Row`) with a translucent `Background` and rounded `CornerRadius`, matching the fixed-position pill in the web CSS; when `false`, lay it out inline in normal flow.
 
 ## Design Decisions
 
-The component treats the sites array as read-only and the currentSite prop as external state; it does not manage navigation or page state itself. Each site is a simple data object with url, name, emoji, and iconGradient provided by the caller. The use of aria-current="page" follows WCAG best practices for marking the active page in navigation landmarks. The emoji and indicator are marked aria-hidden because they are purely visual reinforcements of the site name conveyed by aria-label and the link href. The tooltip span's role="tooltip" signals to assistive technologies that the site name is contextual help, though CSS determines whether it is visually displayed on hover or always visible.
+**Decision**: The `sites` array is treated as read-only, and `currentSite` is external state; the component does not manage navigation or page state itself.
+**Rationale**: Each site is a simple data object (`url`, `name`, `emoji`, `iconGradient`) supplied by the caller, so keeping the component stateless keeps it composable with any router or state layer.
+**Approved**: pending
+
+**Decision**: Current-page links use `aria-current="page"`.
+**Rationale**: This follows WCAG best practices for marking the active page within a navigation landmark.
+**Approved**: pending
+
+**Decision**: The emoji span and the current-page indicator span are marked `aria-hidden="true"`.
+**Rationale**: Both are purely visual reinforcement of information already conveyed by the link's `aria-label` and `href`; announcing them again would be redundant.
+**Approved**: pending
+
+**Decision**: The site name span carries `role="tooltip"`.
+**Rationale**: The role signals that the span is contextual, hover-revealed help text, though the source does not associate it with the link via `aria-describedby`, so assistive technology receives the site name only through the link's `aria-label`, not through the tooltip role itself.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: No specific compliance checks are defined in source or applicable external standards for this component.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+
+Statuses rest on `OrbRow.tsx` (links, `aria-label`, `aria-hidden`, `aria-current`) and `styles/orb-row.css` (the `:focus-visible` rules; the 48px default vs. 36px `max-width: 640px` orb sizing; and the unguarded `orb-row-float`/`orb-row-pulse` animations, which have no `prefers-reduced-motion` guard).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere; add set-link-label, render-focus-indicator, and show-tooltip-on-focus requirements with test vectors; split the folded emoji/tooltip vector and drop the untestable duplicate; add Configuration and Compliance tables; split Design Decisions into Decision/Rationale/Approved entries; correct the dangling tooltip role, the div-vs-nav wording, and the wrong Platform Notes APIs |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove non-genuine review marker; clarify missing property handling in Edge Cases |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
