@@ -3,7 +3,7 @@ id: 81db83fc-b30c-4ba3-b4d5-572dc8b4e335
 title: Button Bar
 domain: agenticdevelopertoolkit://recipes/button-bar
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -19,7 +19,8 @@ platforms:
 tags:
 - toolbar
 - editing-actions
-depends-on: []
+depends-on:
+- agenticdevelopertoolkit://recipes/button
 related: []
 references: []
 approved-by: ''
@@ -34,24 +35,24 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 
 ## Behavioral Requirements
 
-- **must-render-toolbar-role**: Component MUST render with `role="toolbar"`.
-- **must-have-aria-label**: Component MUST accept and render an `ariaLabel` prop; the default MUST be `"Editing actions"`.
-- **must-accept-children**: Component MUST accept a `children` prop to render arbitrary custom content, which takes precedence over preset actions.
-- **must-support-preset-actions**: When `children` is not provided and `actions` is provided, the component MUST render the preset editing action flow.
-- **must-render-create-button**: When rendering preset actions and `showCreate` is `true` and `actions.onCreate` is provided, the component MUST render a button with a Plus icon and a label (default `"New"`, or `actions.createLabel` if provided).
-- **must-render-delete-button**: When rendering preset actions and `showDelete` is `true` and `actions.onDelete` is provided, the component MUST render a destructive-styled button with a Trash2 icon and the label `"Delete"`.
-- **must-render-cancel-button**: When rendering preset actions and `actions` is provided, the component MUST render a button with an X icon and the label `"Cancel"`.
-- **must-render-save-button**: When rendering preset actions and `actions` is provided, the component MUST render a button with a Check icon and the label `"Save"` or `"Saving…"` when `actions.saving` is `true`.
-- **must-disable-cancel-by-flag**: The Cancel button MUST be disabled when `actions.canCancel` is `false` or `actions.saving` is `true`.
-- **must-disable-save-by-flag**: The Save button MUST be disabled when `actions.canSave` is `false` or `actions.saving` is `true`.
-- **must-disable-delete-by-flag**: The Delete button MUST be disabled when `actions.canDelete` is `false` or `actions.saving` is `true`.
-- **must-disable-create-while-saving**: The Create button MUST be disabled when `actions.saving` is `true`.
-- **must-apply-save-disabled-styling**: When the Save button is disabled, the component MUST apply a muted text color class (`text-apt-text-muted`).
-- **must-render-vertical-separator**: When rendering preset actions and a Create button is present, the component MUST render a vertical separator (visual divider, marked `aria-hidden`) between Create and Delete/Cancel buttons.
-- **must-render-spacer**: When rendering preset actions, the component MUST render a flexible spacer between Delete and Save/Cancel groups that expands to fill available horizontal space.
-- **must-support-leading-content**: Component MUST accept a `leading` prop to render content before the action buttons or children.
-- **must-accept-class-override**: Component MUST accept a `className` prop that is merged with the base styling.
-- **must-invoke-callbacks**: The component MUST invoke `actions.onCreate()`, `actions.onCancel()`, `actions.onSave()`, or `actions.onDelete()` when the respective button is clicked.
+- **render-toolbar-role**: Component MUST render with `role="toolbar"`.
+- **toolbar-aria-label**: Component MUST accept and render an `ariaLabel` prop; the default MUST be `"Editing actions"`.
+- **children-slot**: Component MUST accept a `children` prop to render arbitrary custom content, which takes precedence over preset actions.
+- **preset-actions-flow**: When `children` is not provided and `actions` is provided, the component MUST render the preset editing action flow.
+- **create-button**: When rendering preset actions and `showCreate` is `true` and `actions.onCreate` is provided, the component MUST render a button with a leading add icon and a label (default `"New"`, or `actions.createLabel` if provided).
+- **delete-button**: When rendering preset actions and `showDelete` is `true` and `actions.onDelete` is provided, the component MUST render a button in the Button component's `destructive-ghost` variant with a leading delete icon and the label `"Delete"`.
+- **cancel-button**: When rendering preset actions and `actions` is provided, the component MUST render a button with a leading cancel icon and the label `"Cancel"`.
+- **save-button**: When rendering preset actions and `actions` is provided, the component MUST render a button with a leading confirm icon and the label `"Save"` or `"Saving…"` when `actions.saving` is `true`.
+- **disable-cancel-by-flag**: The Cancel button MUST be disabled when `actions.canCancel` is `false` or `actions.saving` is `true`. `canCancel` is a required field of `actions` (see Configuration); there is no omitted-value case for it.
+- **disable-save-by-flag**: The Save button MUST be disabled when `actions.canSave` is `false` or `actions.saving` is `true`. `canSave` is a required field of `actions` (see Configuration); there is no omitted-value case for it.
+- **disable-delete-by-flag**: The Delete button MUST be disabled when `actions.canDelete` is `false` or `actions.saving` is `true`.
+- **disable-create-while-saving**: The Create button MUST be disabled when `actions.saving` is `true`.
+- **save-disabled-styling**: When the Save button is disabled, the component MUST switch it to the Button component's `ghost` variant and apply the muted text token (`apt-text-muted`).
+- **render-vertical-separator**: When rendering preset actions and a Create button is present, the component MUST render a vertical separator (visual divider, marked `aria-hidden`) between Create and Delete/Cancel buttons.
+- **render-spacer**: When rendering preset actions, the component MUST render a flexible spacer between Delete and Save/Cancel groups that expands to fill available horizontal space.
+- **leading-content**: Component MUST accept a `leading` prop to render content before the action buttons or children.
+- **class-override**: Component MUST accept a `className` prop that is merged with the base styling.
+- **invoke-callbacks**: The component MUST invoke `actions.onCreate()`, `actions.onCancel()`, `actions.onSave()`, or `actions.onDelete()` when the respective button is clicked, and MUST NOT invoke a callback while its button is disabled.
 
 ## Appearance
 
@@ -93,34 +94,37 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| button-bar-001 | must-render-toolbar-role | Render ButtonBar with default props | Element has `role="toolbar"` |
-| button-bar-002 | must-have-aria-label | Render ButtonBar with default props | Element has `aria-label="Editing actions"` |
-| button-bar-003 | must-have-aria-label | Render ButtonBar with `ariaLabel="Custom"` | Element has `aria-label="Custom"` |
-| button-bar-004 | must-accept-children | Render with `children={<div>Custom</div>}` | Custom content appears inside toolbar; preset actions are not rendered |
-| button-bar-005 | must-support-preset-actions, must-render-create-button | Render with `actions={{ onCreate: fn, ... }}` and `showCreate={true}` and `actions.onCreate` is defined | Create button with Plus icon and "New" label renders |
-| button-bar-006 | must-render-create-button | Render with `actions={{ onCreate: fn, createLabel: "Add" }}` and `showCreate={true}` | Create button renders with label "Add" |
-| button-bar-007 | must-render-create-button | Render with `showCreate={false}` | Create button does not render |
-| button-bar-008 | must-render-delete-button | Render with `actions={{ onDelete: fn, ... }}` and `showDelete={true}` and `actions.onDelete` is defined | Delete button with Trash2 icon and "Delete" label renders with destructive-ghost variant |
-| button-bar-009 | must-render-delete-button | Render with `showDelete={false}` | Delete button does not render |
-| button-bar-010 | must-render-cancel-button | Render with `actions={{ onCancel: fn, ... }}` | Cancel button with X icon and "Cancel" label renders |
-| button-bar-011 | must-render-save-button | Render with `actions={{ onSave: fn, ... }}` and `saving={false}` | Save button with Check icon and "Save" label renders |
-| button-bar-012 | must-render-save-button | Render with `actions={{ onSave: fn, ... }}` and `saving={true}` | Save button with Check icon and "Saving…" label renders |
-| button-bar-013 | must-disable-cancel-by-flag | Render with `actions={{ canCancel: false, ... }}` | Cancel button has `disabled` attribute |
-| button-bar-014 | must-disable-cancel-by-flag | Render with `actions={{ canCancel: true, saving: true }}` | Cancel button has `disabled` attribute |
-| button-bar-015 | must-disable-save-by-flag | Render with `actions={{ canSave: false, ... }}` | Save button has `disabled` attribute |
-| button-bar-016 | must-disable-save-by-flag | Render with `actions={{ canSave: false, ... }}` | Save button has `text-apt-text-muted` class |
-| button-bar-017 | must-disable-save-by-flag | Render with `actions={{ canSave: true, saving: true }}` | Save button has `disabled` attribute |
-| button-bar-018 | must-disable-delete-by-flag | Render with `actions={{ canDelete: false, ... }}` | Delete button has `disabled` attribute |
-| button-bar-019 | must-disable-delete-by-flag | Render with `actions={{ canDelete: false, ... }}` and `actions.onDelete` is defined | Delete button has `disabled` attribute |
-| button-bar-020 | must-disable-delete-by-flag | Render with `actions={{ canDelete: true, saving: true }}` | Delete button has `disabled` attribute |
-| button-bar-021 | must-disable-create-while-saving | Render with `actions={{ onCreate: fn, saving: true }}` and `showCreate={true}` | Create button has `disabled` attribute |
-| button-bar-022 | must-apply-save-disabled-styling | Render with `actions={{ canSave: false }}` | Save button renders with `text-apt-text-muted` class and ghost variant |
-| button-bar-023 | must-invoke-callbacks | User clicks Create button | `actions.onCreate()` is invoked |
-| button-bar-024 | must-invoke-callbacks | User clicks Cancel button | `actions.onCancel()` is invoked |
-| button-bar-025 | must-invoke-callbacks | User clicks Save button while `canSave={true}` and `saving={false}` | `actions.onSave()` is invoked |
-| button-bar-026 | must-invoke-callbacks | User clicks Delete button | `actions.onDelete()` is invoked |
-| button-bar-027 | must-support-leading-content | Render with `leading={<span>Title</span>}` | Leading content renders before action buttons |
-| button-bar-028 | must-accept-class-override | Render with `className="custom-class"` | Custom class is applied to the toolbar element alongside base classes |
+| button-bar-001 | render-toolbar-role | Render ButtonBar with default props | Element has `role="toolbar"` |
+| button-bar-002 | toolbar-aria-label | Render ButtonBar with default props | Element has `aria-label="Editing actions"` |
+| button-bar-003 | toolbar-aria-label | Render ButtonBar with `ariaLabel="Custom"` | Element has `aria-label="Custom"` |
+| button-bar-004 | children-slot | Render with `children={<div>Custom</div>}` | Custom content appears inside toolbar; preset actions are not rendered |
+| button-bar-005 | preset-actions-flow, create-button | Render with `actions={{ onCreate: fn, ... }}` and `showCreate={true}` and `actions.onCreate` is defined | Create button with a leading add icon and "New" label renders |
+| button-bar-006 | create-button | Render with `actions={{ onCreate: fn, createLabel: "Add" }}` and `showCreate={true}` | Create button renders with label "Add" |
+| button-bar-007 | create-button | Render with `showCreate={false}` | Create button does not render |
+| button-bar-008 | delete-button | Render with `actions={{ onDelete: fn, ... }}` and `showDelete={true}` and `actions.onDelete` is defined | Delete button with a leading delete icon and "Delete" label renders in the Button component's `destructive-ghost` variant |
+| button-bar-009 | delete-button | Render with `showDelete={false}` | Delete button does not render |
+| button-bar-010 | cancel-button | Render with `actions={{ onCancel: fn, ... }}` | Cancel button with a leading cancel icon and "Cancel" label renders |
+| button-bar-011 | save-button | Render with `actions={{ onSave: fn, ... }}` and `saving={false}` | Save button with a leading confirm icon and "Save" label renders |
+| button-bar-012 | save-button | Render with `actions={{ onSave: fn, ... }}` and `saving={true}` | Save button with a leading confirm icon and "Saving…" label renders |
+| button-bar-013 | disable-cancel-by-flag | Render with `actions={{ canCancel: false, ... }}` | Cancel button has `disabled` attribute |
+| button-bar-014 | disable-cancel-by-flag | Render with `actions={{ canCancel: true, saving: true }}` | Cancel button has `disabled` attribute |
+| button-bar-015 | disable-save-by-flag | Render with `actions={{ canSave: false, ... }}` | Save button has `disabled` attribute |
+| button-bar-016 | disable-save-by-flag | Render with `actions={{ canSave: true, saving: true }}` | Save button has `disabled` attribute |
+| button-bar-017 | disable-delete-by-flag | Render with `actions={{ canDelete: false, ... }}` | Delete button has `disabled` attribute |
+| button-bar-018 | disable-delete-by-flag | Render with `actions={{ canDelete: true, saving: true }}` | Delete button has `disabled` attribute |
+| button-bar-019 | disable-create-while-saving | Render with `actions={{ onCreate: fn, saving: true }}` and `showCreate={true}` | Create button has `disabled` attribute |
+| button-bar-020 | save-disabled-styling | Render with `actions={{ canSave: false }}` | Save button renders in the Button component's `ghost` variant with the muted text token (`apt-text-muted`) applied |
+| button-bar-021 | invoke-callbacks | User clicks Create button | `actions.onCreate()` is invoked |
+| button-bar-022 | invoke-callbacks | User clicks Cancel button | `actions.onCancel()` is invoked |
+| button-bar-023 | invoke-callbacks | User clicks Save button while `canSave={true}` and `saving={false}` | `actions.onSave()` is invoked |
+| button-bar-024 | invoke-callbacks | User clicks Delete button | `actions.onDelete()` is invoked |
+| button-bar-025 | invoke-callbacks | User clicks Save button while it is disabled (`canSave={false}`) | `actions.onSave()` is NOT invoked |
+| button-bar-026 | leading-content | Render with `leading={<span>Title</span>}` | Leading content renders before action buttons |
+| button-bar-027 | class-override | Render with `className="custom-class"` | Custom class is applied to the toolbar element alongside base classes |
+| button-bar-028 | render-vertical-separator | Render with `actions={{ onCreate: fn, onDelete: fn, ... }}` and `showCreate={true}` | A vertical separator renders between the Create button and the Delete button |
+| button-bar-029 | render-vertical-separator | Render with `showCreate={false}` (or `actions.onCreate` undefined) | No vertical separator renders |
+| button-bar-030 | render-spacer | Render with `actions={{ onDelete: fn, ... }}` | A flexible spacer element renders between the Delete button and the Cancel/Save group and expands to fill available horizontal space |
+| button-bar-031 | preset-actions-flow, children-slot | Render with neither `actions` nor `children` provided | Toolbar renders with `role="toolbar"` and no buttons or content, only its border/background/padding |
 
 ## Edge Cases
 
@@ -131,7 +135,7 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 - **`canDelete` not provided**: The Delete button defaults to `undefined`, which is falsy in the context of `!canDelete`. Behavior: MUST render the Delete button as disabled if `onDelete` is provided and `showDelete` is true.
 - **`saving` not provided**: Defaults to `false`. Buttons do not appear disabled due to saving state. Behavior: MUST treat as no save in progress.
 - **Click while `disabled={true}`**: Native HTML `disabled` attribute prevents click events from firing. Behavior: MUST not invoke the callback.
-- **Rapid clicks while saving**: Once `saving={true}`, the Save button is disabled. If the user clicks very quickly before the parent updates `saving={false}`, the second click does not fire because the button is disabled. Behavior: MUST rely on the HTML `disabled` attribute for race condition protection.
+- **Rapid clicks while saving**: Once `saving={true}`, the Save button is disabled. If the user clicks very quickly before the parent updates `saving={true}`, the second click does not fire because the button is disabled. Behavior: MUST rely on the HTML `disabled` attribute for race condition protection.
 
 ## Configuration
 
@@ -145,6 +149,20 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 | `ariaLabel` | `string` | `"Editing actions"` | Accessible label for the toolbar. |
 | `className` | `string` | `undefined` | Additional CSS classes merged with base styling. |
 
+### `ButtonBarActions` shape
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `onCreate` | `() => void` | No | `undefined` | Called when the Create button is clicked. Omit together with `showCreate={false}` for panes that don't create here; the Create button and its separator do not render without it. |
+| `createLabel` | `string` | No | `"New"` | Overrides the Create button's label. |
+| `onCancel` | `() => void` | Yes | — | Called when the Cancel button is clicked. |
+| `canCancel` | `boolean` | Yes | — | Enables the Cancel button when `true` (and `saving` is `false`). |
+| `onSave` | `() => void` | Yes | — | Called when the Save button is clicked. |
+| `canSave` | `boolean` | Yes | — | Enables the Save button when `true` (and `saving` is `false`); also drives the `ghost`-variant/muted-text swap when disabled. |
+| `saving` | `boolean` | No | `false` | While `true`, disables Create/Delete/Cancel/Save and changes the Save label to `"Saving…"`. |
+| `onDelete` | `() => void` | No | `undefined` | Called when the Delete button is clicked. Omit together with `showDelete={false}` for panes that don't delete here; the Delete button does not render without it. |
+| `canDelete` | `boolean` | No | `undefined` (falsy) | Enables the Delete button when `true` (and `saving` is `false`); an omitted value renders Delete as disabled whenever it is shown. |
+
 ## Deep Linking
 
 Not applicable: This component is an editing toolbar with no independent deep-linking semantics. Navigation is the responsibility of the buttons' click handlers and the parent page logic.
@@ -153,18 +171,20 @@ Not applicable: This component is an editing toolbar with no independent deep-li
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| `button_bar.create_label` | "New" | Label for the Create button; `actions.createLabel` in code |
-| `button_bar.cancel_label` | "Cancel" | Label for the Cancel button (hardcoded in code) |
-| `button_bar.save_label` | "Save" | Label for the Save button when not saving |
-| `button_bar.saving_label` | "Saving…" | Label for the Save button while a save is in flight |
-| `button_bar.delete_label` | "Delete" | Label for the Delete button (hardcoded in code) |
-| `button_bar.toolbar_label` | "Editing actions" | Default aria-label for the toolbar |
+| `button_bar.create_label` | "New" | Label for the Create button; overridable via `actions.createLabel`. This is the only preset label the component lets a consumer replace. |
+| `button_bar.cancel_label` | "Cancel" | Label for the Cancel button; hardcoded in source, not currently wired to a string key. |
+| `button_bar.save_label` | "Save" | Label for the Save button when not saving; hardcoded in source, not currently wired to a string key. |
+| `button_bar.saving_label` | "Saving…" | Label for the Save button while a save is in flight; hardcoded in source, not currently wired to a string key. |
+| `button_bar.delete_label` | "Delete" | Label for the Delete button; hardcoded in source, not currently wired to a string key. |
+| `button_bar.toolbar_label` | "Editing actions" | Default `aria-label` for the toolbar; a consumer can override the whole string via `ariaLabel`, but the source has no keyed-translation lookup for the default value itself. |
+
+This table names the strings the component would need to externalize to be fully localizable; today only `createLabel` is an injectable prop. See the Compliance section below for the resulting `string-externalization`/`no-hardcoded-strings` status.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Buttons inherit Reduce Motion behavior from the shared Button component. Behavior MUST NOT include animated transitions when this option is active. The text change from "Save" to "Saving…" does not require animation and is compliant. |
+| Reduce Motion | The Button Bar itself renders no motion or animated transitions; the Save label's text change ("Save" → "Saving…") is a text swap, not an animation, and needs no Reduce Motion accommodation. Buttons composed within it SHOULD follow the shared Button component's own Reduce Motion behavior (agenticdevelopertoolkit://recipes/button#accessibility-options), which is that component's concern, not this one's. |
 | Increase Contrast | Buttons inherit Increase Contrast behavior from the shared Button component. The muted text color (`text-apt-text-muted`) for disabled Save button MUST maintain sufficient contrast when Increase Contrast is enabled. |
 | Differentiate Without Color | Buttons MUST be distinguishable without relying on color alone; the disabled state is indicated by both color and the HTML `disabled` attribute. The destructive-ghost variant for Delete MUST be distinguishable via shape, icon, or other non-color properties. |
 
@@ -186,30 +206,47 @@ Not applicable: The component does not emit logs. Logging (if needed) is the res
 
 ## Platform Notes
 
-- **Web/React**: The component is defined in `packages/web/packages/ui/src/blocks/button-bar.tsx`. It composes the shared Button component with Lucide React icons (Plus, Trash2, X, Check). The styling uses Tailwind utility classes with design tokens (`apt-bg`, `apt-border`, `apt-text-muted`). The toolbar role and aria-label are applied via the root `div`. The separator is a 1px × 20px div with `aria-hidden="true"`.
+- **Web/React**: The component is defined in `packages/web/packages/ui/src/blocks/button-bar.tsx`. It composes the shared Button component (agenticdevelopertoolkit://recipes/button), rendering each icon inline via `data-icon="inline-start"` with a Lucide React icon: `Plus` for Create, `Trash2` for Delete (using Button's `destructive-ghost` variant), `X` for Cancel, and `Check` for Save. The Save button uses Button's `default` variant when enabled and switches to its `ghost` variant with the `text-apt-text-muted` class when disabled; Create and Cancel use `ghost`. The styling uses Tailwind utility classes with design tokens (`apt-bg`, `apt-border`, `apt-text-muted`). The toolbar role and aria-label are applied via the root `div`. The separator is a 1px × 20px div with `aria-hidden="true"`.
 
-- **SwiftUI**: Compose a HStack with equal spacing and a Divider. Use a separate struct for EditingActions. The Save button background should transition to an accent color when enabled; when saving, show a ProgressView overlay and disable interaction. The Cancel and Save buttons MUST respond to keyboard shortcuts (e.g., Esc for Cancel). Use AccessibilityElement with role "toolbar" and label on the parent VStack.
+- **SwiftUI**: Compose an HStack with equal spacing and a Divider between the Create and Delete groups, mirroring the source's conditional rendering (a separate `EditingActions` view). The Save button's background switches to the accent/tint color when `canSave` is `true` and `saving` is `false`, matching the source's `default`-vs-`ghost` variant swap; when `saving` is `true`, its label reads "Saving…" and it is disabled — the source has no progress indicator, so none is required here. Apply `.accessibilityElement(children: .contain)` and `.accessibilityLabel("Editing actions")` to the HStack; SwiftUI has no built-in "toolbar" accessibility role to assign.
 
-- **Compose**: Build with Row and Spacer. Create a composable EditingActions that renders the buttons in order: Create (if shown) | Divider | Delete (if shown) | Spacer | Cancel + Save. The Save button MUST transition to a primary/accent tint when enabled and show a loading indicator (CircularProgressIndicator or similar) when saving. Use the Material 3 Button variants (Filled, Outlined, Tonal) aligned to the design system. Apply semantics { contentDescription = "Editing actions" } to the root Row.
+- **Compose**: Build with Row and Spacer, in the source's order: Create (if shown) | Divider | Delete (if shown) | Spacer | Cancel + Save. The Save button switches to a primary/accent-tinted style when `canSave` is `true` and `saving` is `false`, and to a muted/outlined style when disabled, matching the `default`-vs-`ghost` swap; while `saving` is `true` it shows the label "Saving…" and is disabled — the source shows no loading indicator, so none is required here. Use the Material 3 Button variants (Filled, Outlined, Tonal) aligned to the design system. Apply `Modifier.semantics { contentDescription = "Editing actions" }` to the root Row.
 
-- **AppKit / UIKit**: For iOS, use a toolbar at the bottom with UIBarButtonItems or a custom view built from UIButton. The Save button MUST be tinted with an accent color when enabled and MUST show a UIActivityIndicatorView when saving. For macOS, use NSToolbar or an NSView with NSButton instances, respecting window-level toolbars and the recessed appearance. Buttons MUST support keyboard shortcuts and respond to space/Enter for activation. Accessibility: set `accessibilityRole = .toolbar` and provide a label via `accessibilityLabel`.
+- **AppKit / UIKit**: For iOS, use a custom view built from `UIButton` (or `UIBarButtonItem`s in a bottom toolbar) laid out in the source's order. The Save button is tinted with the accent color when `canSave` is `true` and `saving` is `false`, and shows muted/plain styling when disabled, matching the `default`-vs-`ghost` swap; while `saving` is `true` its title reads "Saving…" and it is disabled — the source shows no activity indicator, so none is required here. For macOS, use an `NSView` with `NSButton` instances (or an `NSToolbar`), respecting the recessed appearance. Neither UIKit nor AppKit has a dedicated "toolbar" accessibility role for a custom container; rely on each button's own `accessibilityLabel` and, if the platform needs a single accessible element, set `accessibilityLabel` on the container view to "Editing actions".
 
-- **WinUI 3**: Implement using a Grid with ColumnSpacings and a SolidColorBrush for the recessed background. Use the Button control with Style set to a custom theme for "ghost" and "default" variants. The separator is a Rectangle with a thin stroke. The Save button MUST have a different fill or border color when enabled (accent color) and MUST disable all buttons when a save operation is in flight. For keyboard support, bind Enter key to the Save button and Escape to Cancel (using KeyboardAcceleratorPlacement). Apply AutomationProperties.Name = "Editing actions" and AutomationProperties.AutomationId = "ButtonBar" to the root Grid for UI Automation accessibility.
+- **WinUI 3**: Implement using a Grid with `ColumnSpacing` and a `SolidColorBrush` for the recessed background. Use the Button control with Style set to a custom theme for the "ghost" and "default" variants. The separator is a Rectangle with a thin stroke. The Save button uses the accent-color style when `canSave` is `true` and `saving` is `false`, and the muted "ghost" style when disabled, matching the `default`-vs-`ghost` swap; while `saving` is `true` its content reads "Saving…" and all buttons are disabled — the source defines no keyboard accelerators, so none is required here (a consumer wanting Enter/Escape shortcuts can add a `KeyboardAccelerator` to a button's `KeyboardAccelerators` collection). Apply `AutomationProperties.Name = "Editing actions"` to the root Grid for UI Automation accessibility.
 
 ## Design Decisions
 
-The component derives its single inert-ness state from one source of truth: `saveDisabled = !canSave || saving`. This single derivation ensures that the button's visual variant, disabled state, and text label are all consistent: a button that reads "Saving…" is guaranteed to have `disabled={true}`, and a disabled Save button is guaranteed to show muted text and the ghost variant. This prevents the visual inconsistency of a "gold, enabled-looking button" that reads "Saving…" and ignores clicks.
+**Decision**: Derive the Save button's inert-ness from a single source of truth, `saveDisabled = !canSave || saving`, and key its variant, `disabled` attribute, and muted-text styling all off that one value.
+**Rationale**: This ensures a button that reads "Saving…" is guaranteed to have `disabled={true}`, and a disabled Save button is guaranteed to show muted text and the ghost variant — preventing the visual inconsistency of a "gold, enabled-looking button" that reads "Saving…" and ignores clicks.
+**Approved**: pending
 
-The preset editing action flow (Create/Delete/Cancel/Save) is optional and composable. Consumers can either use the preset flow by passing `actions`, or implement their own button logic by passing `children`. This design accommodates both simple panes (single-record editors with no Create/Delete) and complex list toolbars (filters, selection actions). The separator between Create and Delete is rendered only when Create is shown; this prevents orphaned visual dividers when Create is hidden.
+**Decision**: Make the preset editing action flow (Create/Delete/Cancel/Save) optional and composable: consumers either pass `actions` for the preset flow or `children` for their own button logic, with `children` taking precedence; the separator between Create and Delete renders only when Create is shown.
+**Rationale**: This accommodates both simple panes (single-record editors with no Create/Delete) and complex list toolbars (filters, selection actions) without orphaned visual dividers when Create is hidden.
+**Approved**: pending
 
-The `ariaLabel` defaults to `"Editing actions"` rather than leaving it empty or undefined. This ensures that the toolbar is always accessible and labeled, even if the consumer forgets to set it. The `saving` boolean is optional and defaults to `false`; this reduces boilerplate for the simple case (panes that do not have async save logic). The `canDelete` flag is optional and defaults to `undefined`, which is treated as falsy; this allows consumers to omit `canDelete` entirely if delete is never available.
+**Decision**: Default `ariaLabel` to `"Editing actions"`, default `saving` to `false`, and treat an omitted `canDelete` as falsy.
+**Rationale**: The toolbar stays accessible and labeled even if a consumer forgets to set `ariaLabel`; the `saving` default reduces boilerplate for panes with no async save logic; and the `canDelete` default lets consumers omit it entirely when delete is never available.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: No platform-wide security, compliance, or data-protection concerns apply to this presentational UI component.
+| Check | Status | Category |
+|-------|--------|----------|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+
+Statuses rest on the source as documented above: every preset button always pairs its icon with visible text, and the toolbar carries an `aria-label`, grounding `screen-reader-support` as passed; composing the shared Button's native `<button>` (which the Button recipe's `keyboard-activates` requirement covers) grounds `keyboard-navigable` as passed; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; using the Button component exclusively at its `sm` size, with no ancestor `--adh-button-min-height`/`--adh-button-min-width` override, grounds `touch-target-size` as failed — the same shortfall the Button recipe documents for that size; `role="toolbar"`, the `aria-hidden` separator, and native `disabled` mapping ground `semantic-markup` as passed; and the Localization section's finding that only `createLabel` is an injectable prop — Cancel, Save, Saving…, Delete, and the default aria-label are hardcoded — grounds both internationalization checks as failed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web implementation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case with no `must-` prefix; moved Lucide/Tailwind/DOM implementation specifics out of Behavioral Requirements and Conformance Test Vectors into the Web/React Platform Note; added the `ButtonBarActions` field table (required/optional/defaults); added the `save-disabled-styling` variant swap and unified the Delete/Save variant wording between requirements and vectors; fixed the Rapid-clicks edge case's `saving={false}`/`saving={true}` typo; corrected wrong native Platform Note APIs (UIKit/SwiftUI toolbar-role claims, SwiftUI HStack/VStack mismatch, WinUI `ColumnSpacing`, `KeyboardAccelerator`) and removed invented spinner/keyboard-shortcut behavior the source does not implement; reformatted Design Decisions into Decision/Rationale/Approved entries; built the Compliance table against the real catalog; corrected Localization to show only `createLabel` as consumer-injectable; added Button's domain to `depends-on`; fixed test-vector-to-requirement mapping, removed duplicate vectors, and added vectors for the separator, spacer, empty bar, and disabled-click cases; softened the Reduce Motion claim to match the Button recipe's own posture. |

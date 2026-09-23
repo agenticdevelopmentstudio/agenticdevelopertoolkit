@@ -3,7 +3,7 @@ id: 46e077a8-1171-4564-9781-7997ff76813a
 title: Appearance Mode Toggle
 domain: agenticdevelopertoolkit://recipes/appearance-mode-toggle
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-09-22'
@@ -36,17 +36,17 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 
 ## Behavioral Requirements
 
-- **must-render-button**: Component MUST render as a `<button>` element with `type="button"`.
-- **must-read-appearance-mode**: Component MUST read the appearance mode from `document.documentElement.dataset.appearanceMode` and treat any unrecognized value as 'auto'.
-- **must-read-resolved-appearance**: Component MUST read the resolved appearance from whether the 'dark' class exists on `document.documentElement`, with 'dark' resolving to 'dark' and absence resolving to 'light'.
-- **must-display-icon-based-on-resolved**: Component MUST display a moon icon when resolved appearance is 'dark' and a sun icon when resolved appearance is 'light'.
-- **must-display-badge-in-auto-mode**: Component MUST display an auto badge element (span with nested SVG) when appearance mode is 'auto'.
-- **must-dispatch-cycle-event-on-click**: Component MUST dispatch a custom event named 'awt:appearance-cycle' when the button is clicked.
-- **must-listen-for-appearance-changed-event**: Component MUST listen for the 'awt:appearance-changed' custom event on the window and update its internal state when the event is received.
-- **must-set-aria-label**: Component MUST set `aria-label` to a string that includes the current mode, resolved appearance, and next expected mode in human-readable language.
-- **must-set-title-attribute**: Component MUST set the `title` attribute to the same value as `aria-label`.
-- **must-accept-classname-prop**: Component MUST accept an optional `className` prop and merge it with the component's base class name 'awt-appearance-mode-toggle'.
-- **must-render-hydration-safe**: Component MUST render safely during server-side rendering by reading from `document` only after mount, defaulting to 'auto' mode and 'light' resolved appearance before hydration is complete.
+- **render-button**: Component MUST render as a `<button>` element with `type="button"`.
+- **read-appearance-mode**: Component MUST read the appearance mode from `document.documentElement.dataset.appearanceMode` and treat any unrecognized value as 'auto'.
+- **read-resolved-appearance**: Component MUST read the resolved appearance from whether the 'dark' class exists on `document.documentElement`, with 'dark' resolving to 'dark' and absence resolving to 'light'.
+- **display-icon-based-on-resolved**: Component MUST display a moon icon when resolved appearance is 'dark' and a sun icon when resolved appearance is 'light'.
+- **display-badge-in-auto-mode**: Component MUST display an auto badge element (span with nested SVG) when appearance mode is 'auto'.
+- **dispatch-cycle-event-on-click**: Component MUST dispatch a custom event named 'awt:appearance-cycle' on `window` when the button is clicked, with no `detail` payload. The component does not change the mode itself — see **External appearance controller** in Design Decisions.
+- **listen-for-appearance-changed-event**: Component MUST listen for the 'awt:appearance-changed' custom event on `window` (no `detail` payload is read) and re-read the appearance mode and resolved appearance from `document.documentElement` when the event is received.
+- **set-aria-label**: Component MUST set `aria-label` to one of three templates, chosen by mode and resolved appearance: when mode is 'auto', `"Appearance: Auto (currently {resolved}). Click to switch to dark."`; when mode is 'dark', `"Dark mode — click for light"`; when mode is 'light', `"Light mode — click for auto"`.
+- **set-title-attribute**: Component MUST set the `title` attribute to the same value as `aria-label`.
+- **accept-classname-prop**: Component MUST accept an optional `className` prop and merge it with the component's base class name 'awt-appearance-mode-toggle'.
+- **render-hydration-safe**: Component MUST render safely during server-side rendering by reading from `document` only after mount, defaulting to 'auto' mode and 'light' resolved appearance before hydration is complete.
 
 ## Appearance
 
@@ -67,7 +67,6 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 | Default (dark mode) | Moon icon visible; no badge. |
 | Default (auto mode) | Sun or moon icon depending on resolved appearance; auto badge visible. |
 | Pressed | No appearance change specified by component; inherited from button styling. |
-| Disabled | No appearance change specified by component; inherited from button styling. |
 | Focused | No appearance change specified by component; inherited from button styling. |
 
 ## Accessibility
@@ -83,22 +82,22 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| toggle-001 | must-render-button | Component renders | Button element with `type="button"` exists in DOM |
-| toggle-002 | must-read-appearance-mode | `document.documentElement.dataset.appearanceMode = 'dark'` | Component reads mode as 'dark' |
-| toggle-003 | must-read-appearance-mode | `document.documentElement.dataset.appearanceMode = 'invalid'` | Component treats invalid mode as 'auto' |
-| toggle-004 | must-read-resolved-appearance | `document.documentElement.classList.contains('dark') = true` | Component resolves appearance as 'dark' |
-| toggle-005 | must-read-resolved-appearance | `document.documentElement.classList.contains('dark') = false` | Component resolves appearance as 'light' |
-| toggle-006 | must-display-icon-based-on-resolved | Resolved appearance is 'dark' | Moon icon SVG is rendered and sun icon is not |
-| toggle-007 | must-display-icon-based-on-resolved | Resolved appearance is 'light' | Sun icon SVG is rendered and moon icon is not |
-| toggle-008 | must-display-badge-in-auto-mode | Mode is 'auto' | Badge span with nested SVG is rendered |
-| toggle-009 | must-display-badge-in-auto-mode | Mode is 'light' or 'dark' | Badge is not rendered |
-| toggle-010 | must-dispatch-cycle-event-on-click | User clicks button | Custom event 'awt:appearance-cycle' is dispatched on window object |
-| toggle-011 | must-listen-for-appearance-changed-event | 'awt:appearance-changed' event fires on window | Component's internal state updates and component re-renders |
-| toggle-012 | must-set-aria-label, must-set-title-attribute | Mode is 'auto', resolved is 'light' | aria-label and title both equal "Appearance: Auto (currently light). Click to switch to dark." |
-| toggle-013 | must-set-aria-label, must-set-title-attribute | Mode is 'dark' | aria-label and title both equal "Dark mode — click for light" |
-| toggle-014 | must-set-aria-label, must-set-title-attribute | Mode is 'light' | aria-label and title both equal "Light mode — click for auto" |
-| toggle-015 | must-accept-classname-prop | `className="custom"` prop | Button element has class names including both 'awt-appearance-mode-toggle' and 'custom' |
-| toggle-016 | must-render-hydration-safe | SSR/hydration scenario before event listener attached | Component renders without calling `document.addEventListener` before hydration |
+| toggle-001 | render-button | Component renders | Button element with `type="button"` exists in DOM |
+| toggle-002 | read-appearance-mode | `document.documentElement.dataset.appearanceMode = 'dark'` | Component reads mode as 'dark' |
+| toggle-003 | read-appearance-mode | `document.documentElement.dataset.appearanceMode = 'invalid'` | Component treats invalid mode as 'auto' |
+| toggle-004 | read-resolved-appearance | `document.documentElement.classList.contains('dark') = true` | Component resolves appearance as 'dark' |
+| toggle-005 | read-resolved-appearance | `document.documentElement.classList.contains('dark') = false` | Component resolves appearance as 'light' |
+| toggle-006 | display-icon-based-on-resolved | Resolved appearance is 'dark' | Moon icon SVG is rendered and sun icon is not |
+| toggle-007 | display-icon-based-on-resolved | Resolved appearance is 'light' | Sun icon SVG is rendered and moon icon is not |
+| toggle-008 | display-badge-in-auto-mode | Mode is 'auto' | Badge span with nested SVG is rendered |
+| toggle-009 | display-badge-in-auto-mode | Mode is 'light' or 'dark' | Badge is not rendered |
+| toggle-010 | dispatch-cycle-event-on-click | User clicks button | Custom event 'awt:appearance-cycle' is dispatched on window object |
+| toggle-011 | listen-for-appearance-changed-event | 'awt:appearance-changed' event fires on window | Component's internal state updates and component re-renders |
+| toggle-012 | set-aria-label, set-title-attribute | Mode is 'auto', resolved is 'light' | aria-label and title both equal "Appearance: Auto (currently light). Click to switch to dark." |
+| toggle-013 | set-aria-label, set-title-attribute | Mode is 'dark' | aria-label and title both equal "Dark mode — click for light" |
+| toggle-014 | set-aria-label, set-title-attribute | Mode is 'light' | aria-label and title both equal "Light mode — click for auto" |
+| toggle-015 | accept-classname-prop | `className="custom"` prop | Button element has class names including both 'awt-appearance-mode-toggle' and 'custom' |
+| toggle-016 | render-hydration-safe | SSR/hydration scenario before event listener attached | No access to `document` or `window` during server render; initial output is auto/light |
 
 ## Edge Cases
 
@@ -119,7 +118,7 @@ Not applicable: This component is a chrome element and does not correspond to a 
 
 ## Localization
 
-Not applicable: Component generates all user-facing strings (aria-label, title) programmatically based on mode state. String templates are hardcoded in the component. A localization system would need to replace the label-generation logic; this is beyond the component's current scope.
+Component generates all user-facing strings (`aria-label`, `title`) from three hardcoded English templates — see **set-aria-label** — with no localization resource lookup or string-injection mechanism. These strings are read aloud by screen readers and shown as a browser tooltip, so they are user-facing text, not internal-only text; the `no-hardcoded-strings` and `string-externalization` checks in Compliance fail on this basis. A consumer that needs localized labels must fork the component or wrap it with its own label-generation logic; the source has no seam for supplying alternative templates.
 
 ## Accessibility Options
 
@@ -127,7 +126,7 @@ Not applicable: Component generates all user-facing strings (aria-label, title) 
 |--------|----------|
 | Reduce Motion | Not implemented: Component has no animation or transition behavior specified. The badge and icon change are instant. |
 | Increase Contrast | Not implemented: Component uses `currentColor` for icons and relies on parent button styling for contrast. Icon contrast depends on parent button's text color. |
-| Differentiate Without Color | Not implemented: Component conveys mode state via icon shape (sun vs. moon) and badge presence, not color alone. Satisfies the principle; no additional implementation needed. |
+| Differentiate Without Color | Satisfied: Component conveys mode state via icon shape (sun vs. moon) and badge presence, not color alone. No additional implementation needed. |
 
 ## Feature Flags
 
@@ -135,10 +134,7 @@ Not applicable: Component has no feature flag integration.
 
 ## Analytics
 
-| Event | Properties | When |
-|-------|-----------|------|
-| `appearance_mode_toggle.clicked` | `{ cycle_event_dispatched: true }` | Button is clicked and 'awt:appearance-cycle' event is dispatched |
-| `appearance_mode_toggle.state_changed` | `{ mode: 'auto' | 'light' | 'dark', resolved: 'light' | 'dark' }` | Component's state updates in response to 'awt:appearance-changed' event |
+Not applicable: component emits no analytics.
 
 ## Privacy
 
@@ -154,31 +150,67 @@ Not applicable: Component does not emit log messages.
 ## Platform Notes
 
 - **React/Web**: Source files: `packages/web/packages/controls/src/appearance-mode-toggle/AppearanceModeToggle.tsx`. Component exports `AppearanceModeToggle` function and `AppearanceModeToggleProps` type. Uses React hooks (`useState`, `useEffect`) for state management and event listening. Icons and badge are inline SVG elements. No external icon library dependency. Hydration-safe: reads from `document` only after mount.
-- **SwiftUI**: Port would use `@State` for mode and resolved appearance. Read mode from `UserDefaults.standard.string(forKey:)` or a custom environment object. Listen for `NotificationCenter` notifications in place of window event listeners. Display conditional SF Symbols: `Image(systemName: resolved == .dark ? "moon.fill" : "sun.max.fill")`. Badge overlay in auto mode using `.overlay(alignment:)`. Button dispatches a `NotificationCenter.default.post()` on tap.
-- **Compose**: Port would use `mutableStateOf` for appearance state. Read from `LocalContext.current.getResources().configuration.uiMode` (for system dark mode) and `Settings.Secure` or a data store for user preference. Listen using `LaunchedEffect` with a `BroadcastReceiver` or custom callback. Display conditional icons using `painterResource()` and conditional modifier for badge. Dispatch custom broadcast or callback on button click.
-- **AppKit / UIKit**: Port would use `UIAppearance` or `NSAppearance` to read system dark mode. Store user preference in `UserDefaults`. Use `NSAppearanceNameDidChangeNotification` and custom notifications for state updates. Display conditional `UIImage` (SF Symbols) or `NSImage`. Badge as a small badge view overlaid on button. Button action dispatches custom notification or callback.
-- **WinUI 3**: Port would use `UISettings` to read system appearance preference. Store user preference in `ApplicationData.Current.LocalSettings.Values`. Listen to `UISettings.ColorValuesChanged` event for system theme changes and custom application event for user-initiated cycles. Display conditional `FontIcon` using SF Symbols (or mapped Segoe MDL2 equivalents: sun icon → ``, moon icon → ``). Badge as a `Border` with `Opacity` overlay on `Button`. Button's `Click` event handler dispatches custom application event via a messaging/event service.
+- **SwiftUI**: Read the system's resolved appearance via `@Environment(\.colorScheme)`, and persist the user's chosen mode with `@AppStorage`, backed by the toolkit's existing `UserDefaultsThemeStorage` (`packages/apple/AgenticDeveloperToolkit/Sources/Theme/UserDefaultsThemeStorage.swift`) rather than a fresh UserDefaults key. Display conditional SF Symbols: `Image(systemName: resolved == .dark ? "moon.fill" : "sun.max.fill")`. Badge overlay in auto mode using `.overlay(alignment:)`. Button action hands the cycle to whatever object owns mode state, per **External appearance controller** in Design Decisions.
+- **Compose**: Read the system value with `isSystemInDarkTheme()`, not `getResources().configuration`. Persist the user's chosen mode in a `DataStore<Preferences>`, not `Settings.Secure`. Use `mutableStateOf` for the in-memory appearance state, observed via `LaunchedEffect` against the DataStore flow. Display conditional icons using `painterResource()` and a conditional modifier for the badge. Button click hands the cycle to whatever object owns mode state, per **External appearance controller** in Design Decisions.
+- **AppKit / UIKit**: `UIAppearance` does not report dark mode, and `NSAppearanceNameDidChangeNotification` does not exist. Read system appearance changes via `traitCollection.userInterfaceStyle` or `registerForTraitChanges` (UIKit), and via KVO on `NSApp.effectiveAppearance` (AppKit). Persist the user's chosen mode with the toolkit's existing `UserDefaultsThemeStorage` (`Sources/Theme/UserDefaultsThemeStorage.swift`) rather than a fresh preference key — `AppKitAppearanceDriver` / `UIKitAppearanceDriver` (`SourcesUI/macOS/Theme/`, `SourcesUI/iOS/Theme/`) already apply light/dark/auto app-wide once the mode changes. Display conditional `UIImage`/`NSImage` (SF Symbols). Badge as a small badge view overlaid on the button.
+- **WinUI 3**: Port would use `UISettings` to read system appearance preference. Store user preference in `ApplicationData.Current.LocalSettings.Values`. Listen to `UISettings.ColorValuesChanged` event for system theme changes and a custom application event for user-initiated cycles. Display conditional `FontIcon` using Segoe Fluent Icons glyphs, written out explicitly since glyph names alone render as empty characters and Segoe Fluent Icons are not SF Symbols (for example `` for sun and `` for moon). Badge as a `Border` with `Opacity` overlay on `Button`. Button's `Click` event handler dispatches a custom application event via a messaging/event service.
 
 ## Design Decisions
 
-- **Three-mode cycle**: The component cycles through three modes (auto → light → dark → auto) because users may want to override the system preference (light/dark) or defer to it (auto). The explicit cycle order is auto → dark → light, established by the label generation logic and the custom event contract — consumers must implement this cycle order.
-- **Event-driven state updates**: State does not poll `document` for changes; it listens for the 'awt:appearance-changed' event. This decouples the component from the mechanism that changes appearance and allows multiple components and external systems to stay in sync without tight coupling.
-- **Aria-label format**: Labels include both current mode and next expected action because users in auto mode need to know what "currently" means (light or dark) to understand what will happen on click. The next-state hint (e.g., "click to switch to dark") helps predictability.
-- **No built-in styling**: Component does not specify padding, corner radius, or colors. It accepts `className` to integrate with any CSS framework. Button size is delegated to parent or CSS, ensuring flexibility.
-- **Hydration safety**: Component defaults to 'auto' and 'light' during SSR to avoid hydration mismatch. This is the safest default because auto mode defers to system preference and light is the most common resolved state at page load.
+**Three-mode cycle**
+
+**Decision**: The component cycles through three appearance modes in the fixed order auto → dark → light → auto.
+**Rationale**: Users may want to override the system preference (light or dark) or defer to it (auto). This order is fixed by the label generation logic (see **set-aria-label**) and by the event contract described in External appearance controller below — the external controller that owns mode state MUST advance through this same order when it receives the cycle event.
+**Approved**: pending
+
+**External appearance controller**
+
+**Decision**: The component does not manage appearance state itself. It dispatches an `awt:appearance-cycle` `CustomEvent` on `window` (no `detail` payload) when clicked, and listens for an `awt:appearance-changed` `CustomEvent` on `window` (also no `detail` payload) to know when to re-read `document.documentElement`.
+**Rationale**: This keeps the toggle decoupled from any specific state-storage mechanism, so any controller that writes `data-appearance-mode` and the `dark` class and honors this event contract can drive it — for example `ColorModeProvider`/`useColorMode` in `packages/web/packages/themes/src/colorMode.tsx`, which implements this exact contract for a different toggle in this toolkit.
+**Approved**: pending
+
+**Event-driven state updates**
+
+**Decision**: State does not poll `document` for changes; it listens for the `awt:appearance-changed` event described in External appearance controller above.
+**Rationale**: This decouples the component from the mechanism that changes appearance and allows multiple components and external systems to stay in sync without tight coupling.
+**Approved**: pending
+
+**Aria-label format**
+
+**Decision**: Labels include both the current mode and the next expected action.
+**Rationale**: Users in auto mode need to know what "currently" means (light or dark) to understand what will happen on click. The next-state hint (e.g., "click to switch to dark") helps predictability.
+**Approved**: pending
+
+**No built-in styling**
+
+**Decision**: Component does not specify padding, corner radius, or colors; it accepts `className` to integrate with any CSS framework.
+**Rationale**: Button size is delegated to parent or CSS, ensuring flexibility across consuming applications.
+**Approved**: pending
+
+**Hydration safety**
+
+**Decision**: Component defaults to `auto` mode and `light` resolved appearance during server-side rendering.
+**Rationale**: The server has no access to `document`, so it cannot know the real mode or resolved appearance; rendering any other combination risks a mismatch between server-rendered and client-rendered markup on first paint. `auto`/`light` is simply the fixed, deterministic fallback the source uses before mount, not a claim about which state is most common among users.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [wcag-2.1-aa-button-accessible-name](https://www.w3.org/TR/WCAG21/#name-role-value) | passed | Accessibility: Component provides accessible name via aria-label and title. |
-| [wcag-2.1-aa-icon-text-alternative](https://www.w3.org/TR/WCAG21/#non-text-content) | passed | Accessibility: SVG icons are marked `aria-hidden="true"` because the button label conveys their meaning. |
-| [semantic-html-button](https://html.spec.whatwg.org/multipage/form-controls.html#the-button-element) | passed | HTML: Component uses native `<button>` element with correct `type` attribute. |
-| [event-driven-architecture](agenticdevelopercookbook://compliance/component-design#event-driven-architecture) | passed | Architecture: Component listens for and dispatches custom events, enabling loose coupling. |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+
+The passed and partial statuses rest on the `<button type="button">` element, the always-present `aria-label`/`title`, the `aria-hidden="true"` icons, and the `currentColor`-based, parent-delegated styling in `AppearanceModeToggle.tsx`; the two failed internationalization checks rest on that same file's three hardcoded English label templates, which the source has no mechanism to override.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and folded the label templates into set-aria-label; documented the external appearance-controller event contract (payload, target); resolved the cycle-order and hydration-rationale contradictions in Design Decisions; corrected Localization from a false not-applicable to a described gap; replaced invented/external Compliance links with real catalog checks; marked Analytics not-applicable; fixed toggle-016's document/window assertion; resolved the Differentiate-Without-Color contradiction; removed the unsupported Disabled state; corrected the Compose, AppKit/UIKit, SwiftUI, and WinUI 3 platform notes |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove the review marker from Localization (not applicable); retain tap target marker as genuine gap |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
