@@ -3,16 +3,15 @@ id: 79093eb5-83e8-46d8-9efe-3cc6ff88d8db
 title: Trust
 domain: agenticdevelopertoolkit://recipes/trust
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
-created: '2026-09-22'
-modified: '2026-09-22'
+created: 2026-09-22
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: Semantic list of trust claims or assertions visitors should verify before
-  engaging with features.
+summary: Unboxed list of reassurance claims shown before a feature list.
 platforms:
 - typescript
 - web
@@ -35,16 +34,15 @@ The Trust component renders a semantic unordered list of trust claims—things a
 
 ## Behavioral Requirements
 
-- **must-render-items-as-list**: Component MUST render each item in the `items` array as a distinct `<li>` element within a `<ul>`.
-- **must-use-ul-semantic**: Component MUST render the container as a semantic unordered list (`<ul>`) element.
-- **must-accept-react-nodes**: Component MUST accept `items` as a `ReactNode[]` prop, supporting text, React elements, fragments, and null values.
-- **must-apply-container-class**: Component MUST apply the className `lp-trust` to the rendered `<ul>` element.
+- **list-structure**: Component MUST render the `items` array as a semantic unordered list: a `<ul>` container with each item wrapped in a distinct `<li>` element.
+- **node-items**: Component MUST accept `items` as a `ReactNode[]` prop, supporting text, React elements, fragments, and null values; every entry maps to an `<li>` in order, including `null`/`undefined` entries, which render as an empty `<li>` rather than being skipped.
+- **container-class**: Component MUST apply the className `lp-trust` to the rendered `<ul>` element.
 
 ## Appearance
 
-- **Container**: Semantic `<ul>` element with className `lp-trust`; no inline styles defined.
-- **Items**: `<li>` elements containing provided React nodes; no item-level styling.
-- **Layout**: List items flow vertically in document order; styling is controlled by the `.lp-trust` CSS class and item-level styles.
+- **Container**: Semantic `<ul>` element with className `lp-trust`; no inline styles. Visual treatment comes entirely from `packages/web/packages/landing/src/css/blocks.css`: a wrapping flex row (not a vertical stack), centered, small uppercase text (`0.72rem`, `0.14em` letter-spacing) in a dim ink color, with no border or box—lighter weight than `.lp-cards`.
+- **Items**: `<li>` elements, each a flex row with a small 5px round accent-colored marker (`::before`) preceding the provided React node content; no other item-level styling.
+- **Layout**: Items wrap left-to-right and center as a group (`flex-wrap: wrap; justify-content: center`), not stacked vertically; gap of `0.4rem` (row) by `1.5rem` (column) between items.
 
 ## States
 
@@ -52,7 +50,7 @@ Not applicable: The Trust component is a static container that does not respond 
 
 ## Accessibility
 
-- **Role**: Semantic `<ul>` and `<li>` establish list structure; screen readers announce the list and each item's nesting level.
+- **Role**: Semantic `<ul>` and `<li>` establish list structure; screen readers announce list length and each item's position.
 - **Label requirements**: Individual items should provide meaningful content; if items contain interactive controls, they MUST include accessible labels or descriptions.
 - **Keyboard navigation**: No interactive behavior in the container; keyboard access is inherited from item content.
 
@@ -60,19 +58,19 @@ Not applicable: The Trust component is a static container that does not respond 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| trust-001 | must-render-items-as-list | `items={[<span>Claim A</span>, <span>Claim B</span>]}` | Renders `<ul class="lp-trust"><li><span>Claim A</span></li><li><span>Claim B</span></li></ul>` |
-| trust-002 | must-use-ul-semantic | Any valid items | Rendered output contains exactly one `<ul>` as the root element |
-| trust-003 | must-apply-container-class | Any valid items | Rendered `<ul>` includes `className="lp-trust"` |
-| trust-004 | must-accept-react-nodes | `items={["Text", <Badge />, <span>Mixed</span>, null]}` | Renders list item for each non-null ReactNode in order |
-| trust-005 | must-render-items-as-list | `items={[]}` | Renders an empty `<ul class="lp-trust"></ul>` |
+| trust-001 | list-structure | `items={[<span>Claim A</span>, <span>Claim B</span>]}` | Renders `<ul class="lp-trust"><li><span>Claim A</span></li><li><span>Claim B</span></li></ul>` |
+| trust-002 | list-structure | `items={[<span>Claim A</span>]}` | Rendered output contains exactly one `<ul>` element as the root, with no additional wrapping elements |
+| trust-003 | container-class | `items={[<span>Claim A</span>]}` | Rendered `<ul>` has `class="lp-trust"` |
+| trust-004 | node-items | `items={["Text", <Badge />, <span>Mixed</span>, null]}` | Renders one `<li>` for every entry, in order, including the `null` entry, which renders as an empty `<li>` |
+| trust-005 | list-structure | `items={[]}` | Renders an empty `<ul class="lp-trust"></ul>` |
 
 ## Edge Cases
 
 - **Empty array**: Component renders an empty `<ul>` with no error or fallback message.
 - **Single item**: Component renders a `<ul>` containing one `<li>` child.
-- **Null or undefined items**: Component skips null/undefined values in the array and renders only non-null ReactNodes.
+- **Null or undefined items**: The component does not filter these values—`items.map` renders one `<li>` per array entry regardless of content, so a `null` or `undefined` entry produces an empty `<li>` rather than being skipped.
 - **Deeply nested React elements**: Component renders the full tree of each item without flattening or transforming structure.
-- **Dynamic items**: Component re-renders when items array or item content changes; items are rendered in array order, not reordered by component logic.
+- **Dynamic items**: Component re-renders when items array or item content changes; items are rendered in array order, not reordered by component logic. Items are keyed by array index (see **Design Decisions**), so reordering the array does not preserve an item's identity across renders.
 
 ## Configuration
 
@@ -110,22 +108,34 @@ Not applicable: The Trust component does not emit diagnostic or debug log messag
 
 ## Platform Notes
 
-- **TypeScript/Web**: Render as `<ul className="lp-trust">` wrapping `<li>` children. See `packages/web/packages/landing/src/blocks/Trust.tsx`. Items are passed as `ReactNode[]` and rendered in order via `map()`.
-- **SwiftUI**: Compose using a `List` view with `listStyle(.plain)` to render a semantic unordered list. Map each item to a `Text`, `VStack`, or custom view. Styling is delegated to the consuming view's style modifiers; the component provides no wrapper styling.
-- **Compose**: Use `LazyColumn` or `Column` with `verticalScroll(rememberScrollState())` to provide semantic list semantics. Map each item to a composable within the column. Styling is the responsibility of item-level composables and the surrounding context; the container applies no default styling.
-- **AppKit / UIKit**: On macOS, use `NSOutlineView` or `NSTableView` with a single column to render a semantic list; on iOS, use `UITableView` with `UITableViewCell` or a modern `UICollectionView` with a list layout. Delegate item rendering to each cell's configuration. No cell-level styling is applied by the component; styling is the responsibility of the cell renderer.
-- **WinUI 3**: Use `ItemsRepeater` within a `ScrollViewer`, binding to the items collection, or use `ListView` with `SelectionMode="None"`. Define a `DataTemplate` to render each item. Apply no item-level styling; styling is delegated to the template and the app's resource dictionary.
+- **TypeScript/Web**: Render as `<ul className="lp-trust">` wrapping `<li>` children. See `packages/web/packages/landing/src/blocks/Trust.tsx`. Items are passed as `ReactNode[]` and rendered in order via `map()`, including `null`/`undefined` entries, which render as empty `<li>` elements.
+- **SwiftUI**: Compose using a `VStack` (or `HStack`, matching the flex-row layout) with list semantics applied through accessibility traits (e.g. `.accessibilityElement(children: .contain)`)—not `List`, which is a scrolling, selectable collection control that would give the strip more visual weight and interaction affordance than the source's deliberately unstyled, non-elevated intent. Map each item to a `Text` or custom view; styling is delegated to the consuming view's modifiers.
+- **Compose**: Use a wrapping `Row`/`FlowRow` or plain `Column`—not `LazyColumn` with `verticalScroll`, which turns a short static strip into a scrolling list. Apply list semantics with `Modifier.semantics` (e.g. collection item info) rather than a scrolling container. Map each item to a composable within the layout; styling is the responsibility of item-level composables.
+- **AppKit / UIKit**: Use a horizontal `NSStackView` (macOS) or `UIStackView` (iOS)—not `NSTableView`/`UITableView`, which are scrolling, selectable collection controls that would elevate the strip beyond its unstyled, non-feature intent. Provide list semantics via accessibility (list-like traits on the container, with each item announcing its position). No cell-level styling is applied by the component.
+- **WinUI 3**: Use an `ItemsRepeater` without a `ScrollViewer`, or a `StackPanel`, bound to the items collection—not a scrolling `ListView`/`ScrollViewer`, which would add selection and scroll affordances the flat strip does not have. Define a `DataTemplate` per item and expose list semantics via `AutomationProperties`. Apply no item-level styling; styling is delegated to the template and the app's resource dictionary.
 
 ## Design Decisions
 
-The Trust component is intentionally minimal and unstyled. It provides only semantic structure, not visual treatment. The name and source comment emphasize that these are trust claims requiring visitor verification—not product features—and therefore should not be visually elevated to the same prominence as a capabilities list. Implementations SHOULD apply styling that reflects this distinction in their design systems.
+**Decision**: The component is deliberately unstyled beyond `.lp-trust`/`.lp-trust li` (a wrapping flex row with small dot markers), and is not built from `Cards`.
+**Rationale**: These are trust claims a visitor wants settled, not product features; boxing them like `Cards` would give them the same visual weight as the product's actual capabilities, which the source comment explicitly rejects.
+**Approved**: pending
+
+**Decision**: Items are keyed by array index (`key={i}`) rather than a caller-supplied stable key.
+**Rationale**: The component has no identity to key on for arbitrary `ReactNode` entries; index keys are adequate for the typical static list, but they mean an item's identity (and any item-local state) is not preserved if the `items` array is reordered between renders.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: The component's structural simplicity and lack of interactive, data-handling, or state-management behavior place it outside the scope of most compliance frameworks. Semantic HTML (`<ul>` and `<li>`) satisfies baseline accessibility requirements.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+
+Both statuses rest on `Trust.tsx`: the component renders `<ul>`/`<li>` elements exclusively and nothing else (semantic-markup), but because item content is arbitrary consumer-supplied `ReactNode`s, the source cannot guarantee accessible labels on any interactive children it wraps (screen-reader-support).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | (recipe-author) | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-prefixed requirements to subject-only names and merge the duplicate list-structure requirement; correct the null/undefined-item edge case, requirement, and test vector to match the unfiltered `map()` in the source; fix trust-003's attribute assertion and give trust-002 concrete input; correct Appearance/Layout from a vertical stack to the source's wrapping flex row and cite the stylesheet; rewrite non-web Platform Notes from scrolling/selectable controls to non-scrolling stacks with accessibility-driven list semantics; reformat Design Decisions into Decision/Rationale/Approved entries and add one for the index-key choice; add a Compliance table; correct the screen-reader accessibility wording; rephrase the summary; and drop frontmatter date quoting to match the template. |

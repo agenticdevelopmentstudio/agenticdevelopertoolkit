@@ -3,7 +3,7 @@ id: ba2377b1-f831-4ef8-bf2c-d8393e5eb2c1
 title: Status Pill
 domain: agenticdevelopertoolkit://recipes/status-pill
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -21,7 +21,8 @@ tags:
 - badge
 - indicator
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/badge
 references: []
 approved-by: ''
 approved-date: ''
@@ -31,60 +32,61 @@ approved-date: ''
 
 ## Overview
 
-StatusPill is a presentational component that renders a status label as a small pill-shaped badge. It accepts text content and an optional `free` boolean prop that applies accent styling to highlight a complimentary or special status. The component is commonly used to display shipping status on product cards or to indicate a model provider tier in a chip list.
+StatusPill is a small, presentational pill-shaped label. It accepts arbitrary children as its status text and an optional `free` boolean prop that switches on an accented style — a distinct border color over a dimmed background — to make one status stand out from the rest. Per the source comment, it backs two call sites that deliberately share this same pill shape: a `Hero`'s shipping status and a `Chips` list of model providers, where `free` marks the one item that should read as accented.
 
 ## Behavioral Requirements
 
-- **must-accept-children**: Component MUST accept and render any ReactNode as children content.
-- **must-apply-base-class**: Component MUST apply the CSS class `lp-status` to the root element.
-- **must-apply-free-class**: When the `free` prop is explicitly `true`, the component MUST add the CSS class `lp-status--free` to apply accent styling.
-- **must-not-apply-free-class-by-default**: When the `free` prop is absent or falsy, the component MUST NOT apply the `lp-status--free` class.
+- **accept-children**: Component MUST accept and render any `ReactNode` as children content.
+- **base-style**: Component MUST render the root element in the pill's base style (see **Appearance**). The React/Web implementation applies this via the `lp-status` CSS class.
+- **accent-style**: When the `free` prop is explicitly `true`, the component MUST render the accented style — a distinct border color over a dimmed background (see **Appearance**). The React/Web implementation applies this by adding the `lp-status--free` CSS class alongside `lp-status`.
+- **accent-opt-in**: When the `free` prop is absent or falsy, the component MUST NOT render the accented style; accenting is opt-in, never the default.
+- **status-conveyed-by-text**: The status MUST be conveyed by the children text content; the accented border and background are supplementary and MUST NOT be the only way the status is communicated.
 
 ## Appearance
 
-- **Corner radius**: Defined by `lp-status` CSS class (typically rounded pill shape).
-- **Padding**: Defined by `lp-status` CSS class.
-- **Font**: Defined by `lp-status` CSS class.
-- **Background**: Default theme color from `--lp-accent-dim` token when `free={true}`; otherwise base background from `lp-status`.
-- **Border**: `--lp-status-free-border` when `free={true}`; otherwise base border from `lp-status`.
-- **Foreground/Text**: Inherited from parent text color or `lp-status` class.
-- **Shadow**: None (as defined in source).
-- **Min/Max size**: No constraints enforced by component; sizing determined by content and CSS.
+- **Corner radius**: `border-radius: 99px` (fully rounded pill).
+- **Padding**: `0.32rem` vertical × `0.6rem` horizontal.
+- **Font**: weight 600, size `0.62rem`, line-height 1, `var(--lp-font-mono, ui-monospace, "SF Mono", monospace)`; `letter-spacing: 0.16em`; `text-transform: uppercase` (locale-sensitive — see **Localization**).
+- **Background**: transparent by default; `var(--lp-accent-dim, rgba(216, 216, 216, 0.14))` when `free={true}`.
+- **Border**: `1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18))` by default; border color becomes `var(--lp-status-free-border, rgba(216, 216, 216, 0.5))` when `free={true}`.
+- **Foreground/Text**: `var(--lp-accent, #9a9a9a)` by default; `var(--lp-accent-bright, #d8d8d8)` when `free={true}`.
+- **Shadow**: None.
+- **Min/Max size**: No explicit min/max; `white-space: nowrap` prevents children from wrapping (see the long-text edge case below), so width grows with content and height follows the font's line box plus padding.
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Base `lp-status` styling |
-| Free (free={true}) | Applies `lp-status--free` class with accent border and dim background |
+| Default | Base `lp-status` styling: `--lp-hairline` border, `--lp-accent` text, transparent background |
+| Free (`free={true}`) | Adds `lp-status--free`: `--lp-status-free-border` border, `--lp-accent-dim` background, `--lp-accent-bright` text |
 
 ## Accessibility
 
-Not applicable: StatusPill is a presentational wrapper for text content with no interactive behavior. Accessibility of the content is the responsibility of the parent context and the text rendered as children. The component renders as a `<p>` element, which is semantically neutral; the containing context SHOULD use appropriate heading hierarchy or ARIA roles if the status conveys structural meaning.
+StatusPill has no interactive behavior of its own, so `screen-reader-support`, `keyboard-navigable`, and `focus-management` do not apply. It renders as a `<p>` element, which carries paragraph (block-level) semantics rather than being semantically neutral, so it MUST NOT be nested inside another `<p>`, inside a `<button>`, or inside other inline-only content (see the nesting edge case in **Edge Cases**); doing so produces invalid HTML. The status itself MUST be legible from the children text alone (see **status-conveyed-by-text**): the accented border and background are supplementary. The containing context remains responsible for heading hierarchy or ARIA roles if the status conveys structural meaning.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| status-pill-001 | must-accept-children | `<StatusPill>Active</StatusPill>` | Component renders the text "Active" within the pill |
-| status-pill-002 | must-apply-base-class | `<StatusPill>Free</StatusPill>` | Root element has CSS class `lp-status` |
-| status-pill-003 | must-apply-free-class | `<StatusPill free={true}>Free Plan</StatusPill>` | Root element has both classes `lp-status` and `lp-status--free` |
-| status-pill-004 | must-not-apply-free-class-by-default | `<StatusPill>Standard</StatusPill>` | Root element has class `lp-status` only; `lp-status--free` is absent |
-| status-pill-005 | must-not-apply-free-class-by-default | `<StatusPill free={false}>Standard</StatusPill>` | Root element has class `lp-status` only; `lp-status--free` is absent |
+| status-pill-001 | accept-children | `<StatusPill>Active</StatusPill>` | Component renders the text "Active" within the pill |
+| status-pill-002 | base-style | `<StatusPill>Free</StatusPill>` | Root element has CSS class `lp-status` |
+| status-pill-003 | accent-style | `<StatusPill free={true}>Free Plan</StatusPill>` | Root element has both classes `lp-status` and `lp-status--free`, giving it `border-color: var(--lp-status-free-border)` and `background: var(--lp-accent-dim)` |
+| status-pill-004 | accent-opt-in | `<StatusPill>Standard</StatusPill>` | Root element has class `lp-status` only; `lp-status--free` is absent |
+| status-pill-005 | accent-opt-in | `<StatusPill free={false}>Standard</StatusPill>` | Root element has class `lp-status` only; `lp-status--free` is absent |
+| status-pill-006 | status-conveyed-by-text | `<StatusPill free={true}>Free Plan</StatusPill>` | The rendered text content reads "Free Plan" regardless of the `free`-driven border and background, so the status is legible with color and border removed |
 
 ## Edge Cases
 
-- **Empty children**: When children is an empty string or empty ReactNode, the component renders an empty pill with only the CSS classes applied. Behavior is MUST.
-- **Undefined or null children**: When children is `undefined` or `null`, the component renders nothing within the pill (React renders no content). Behavior is MUST.
-- **Multiple children elements**: When children contains multiple ReactNode elements (e.g., text mixed with inline elements), all children are rendered within the pill in order. Behavior is MUST.
-- **free prop omitted**: When the `free` prop is not provided, it defaults to `undefined` (falsy), and `lp-status--free` class is not applied. Behavior is MUST.
+- **Long or non-wrapping text**: The base style sets `white-space: nowrap` (see **Appearance**), so the component MUST NOT wrap children onto multiple lines; long content overflows its container instead, and the parent SHOULD size or scroll to accommodate it.
+- **Nesting inside inline-only content**: The component always renders a `<p>` element (see **Accessibility**). The component MUST NOT be nested inside another `<p>`, a `<button>`, or other elements that only accept inline content, since that produces invalid HTML; callers needing an inline pill SHOULD override `display` on the root or wrap it in block-level content.
+- **`free` prop omitted**: When `free` is not provided, the component MUST behave identically to `free={false}` (see **accent-opt-in**).
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | children | ReactNode | required | Content to render inside the pill |
-| free | boolean \| undefined | undefined | When `true`, applies accent styling via `lp-status--free` class |
+| free | boolean \| undefined | undefined | When `true`, renders the accented style (see **accent-style**) via the `lp-status--free` class |
 
 ## Deep Linking
 
@@ -92,7 +94,7 @@ Not applicable: StatusPill is a presentational component with no navigation or d
 
 ## Localization
 
-Not applicable: StatusPill is a content-agnostic wrapper; localization is the responsibility of text provided by the parent.
+The base style applies `text-transform: uppercase` to the children text (see **Appearance**). Casing transforms are locale-sensitive — uppercasing is not a no-op in every language (for example, Turkish's dotted/dotless I, or scripts with no case distinction at all) — so text rendered through StatusPill is always forced to uppercase by CSS regardless of the caller's locale; the component performs no locale-aware casing conversion of its own. Callers translating the children text should also expect longer translations to overflow rather than adapt, since the component neither wraps nor truncates (`white-space: nowrap`; see `text-expansion-tolerance` in **Compliance**).
 
 ## Accessibility Options
 
@@ -116,30 +118,53 @@ Not applicable: No logging is implemented in the source.
 
 ## Platform Notes
 
-- **TypeScript/React**: Component is defined in `packages/web/packages/landing/src/blocks/StatusPill.tsx`. Renders a `<p>` element with conditional CSS class application via template-literal string filtering. Props are `children: ReactNode` and optional `free?: boolean`. CSS classes are applied via inline className binding.
+- **React/Web**: Component is defined in `packages/web/packages/landing/src/blocks/StatusPill.tsx`. Renders a `<p>` element with conditional CSS class application via `['lp-status', free === true ? 'lp-status--free' : ''].filter(Boolean).join(' ')`. Props are `children: ReactNode` and optional `free?: boolean`. Base and accent styling live in the `lp-status` / `lp-status--free` rules in `blocks.css` (see **Appearance**).
 
-- **SwiftUI**: Implement as a `Text` view with a custom modifier or as a `Label` with fixed styling. Apply the pill corner radius via `.clipShape(Capsule())` and border/background conditional on an optional `isFree` Boolean parameter. Text styling (font, foreground color) should match the source CSS tokens.
+- **SwiftUI**: Implement as `Text` inside a pill shape. Do not clip with `.clipShape(Capsule())`, since that also clips the border stroke; instead apply `.background(Capsule().fill(backgroundColor))` and `.overlay(Capsule().stroke(borderColor, lineWidth: 1))`, switching `backgroundColor`/`borderColor` on an `isFree: Bool` parameter. Match font, letter-spacing, and uppercase casing to the source tokens (see **Localization** for the uppercase caveat).
 
-- **Compose**: Implement using a `Text` composable wrapped in a `Box` or `Surface` with conditional styling. Apply rounded corners via `shape = RoundedCornerShape(percent = 50)` and use `background()` and `border()` modifiers to apply the free-tier styling conditionally on a Boolean `free` parameter.
+- **Compose**: Implement using a `Text` composable inside a `Box` or `Surface`. Apply the pill shape via `shape = RoundedCornerShape(percent = 50)`, and switch the `background()`/`border()` colors on a Boolean `free` parameter, matching the source's default vs. accent tokens.
 
-- **AppKit / UIKit**: Implement as a `UILabel` (UIKit) or `NSTextField` (AppKit) with custom background view and border. Apply pill shape via corner radius (`layer.cornerRadius = bounds.height / 2`) and conditionally apply the accent-colored border and dim background via subclass property or external styling. A common pattern is a small `UIView` subclass that handles the styling based on an `isFree` property.
+- **AppKit / UIKit**: Implement as a `UILabel` (UIKit) or `NSTextField` (AppKit) inside a small container view that draws the pill's background and border. Apply the pill shape via `layer.cornerRadius = bounds.height / 2`, and switch the border/background colors on an `isFree` property, matching the source's default vs. accent tokens.
 
-- **WinUI 3**: Implement as a `TextBlock` inside a `Border` element with rounded corners (`CornerRadius` property). Conditionally apply `Background` and `BorderBrush` resources based on a `Free` dependency property or XAML binding. Use `VerticalAlignment="Center"` and `HorizontalAlignment="Center"` with padding via `Margin` and `Padding` properties to match the pill appearance.
+- **WinUI 3**: Implement as a `TextBlock` inside a `Border`. Set `CornerRadius` to half the rendered height (not a fixed value) so the shape stays a pill at any size, and use `Border.Padding` — not `Margin` — to reproduce the `0.32rem × 0.6rem` padding. Switch `Background` and `BorderBrush` on a `Free` dependency property. Leave `HorizontalAlignment`/`VerticalAlignment` to the parent layout rather than fixing them on the pill itself.
 
 ## Design Decisions
 
-The component deliberately uses a `<p>` element rather than a `<span>` or generic `<div>`. This choice trades semantic neutrality for a block-level default layout; consumers typically override display to inline or inline-block via CSS. The `free` prop is optional and defaults to `undefined` (falsy) to allow simple usage without explicit `free={false}`. CSS class names are filtered via `.filter(Boolean).join(' ')` rather than using a class-name library; this keeps the component lightweight and dependency-free.
+**Decision**: Render the root as a `<p>` element rather than `<span>` or `<div>`.
+**Rationale**: Trades semantic neutrality for a block-level default; consumers that need it inline override `display` via CSS rather than the component switching elements itself.
+**Approved**: pending
+
+**Decision**: `free` defaults to `undefined` (falsy) rather than requiring an explicit value.
+**Rationale**: Lets the common case (`<StatusPill>Active</StatusPill>`) skip passing `free={false}`.
+**Approved**: pending
+
+**Decision**: Build the class list with `['lp-status', free === true ? 'lp-status--free' : ''].filter(Boolean).join(' ')` instead of a class-name utility library.
+**Rationale**: One conditional class does not justify a dependency; the filter-and-join pattern keeps the component dependency-free.
+**Approved**: pending
+
+**Decision**: Keep the prop named `free` rather than a neutral name such as `accent` or `variant`.
+**Rationale**: The source docstring documents `free` as marking "the one status that gets the accented treatment" for a specific known use (a complimentary/free tier); the component was built for that one accent, not a general variant system, so the name says what it does.
+**Approved**: pending
+
+**Decision**: Keep StatusPill separate from `badge` (agenticdevelopertoolkit://recipes/badge) rather than folding it in as a variant.
+**Rationale**: The two differ in root element (block `<p>` here vs. inline `<span>` in badge), token namespace (`--lp-*` landing tokens vs. badge's own tokens), and variant model (one binary accent here vs. badge's six tone variants); merging them would mean badge's `<span>` consumers inherit a block element, or StatusPill's callers inherit six unrelated tones.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Text content accessibility | passed | Accessibility — parent responsibility |
-| Touch target (web: not applicable) | passed | Web component is not interactive |
-| Contrast (delegated to CSS) | passed | Appearance — CSS token responsibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+
+Statuses rest on `blocks.css`'s `.lp-status` / `.lp-status--free` rules and `StatusPill.tsx`: foreground/background/border are theme-supplied CSS variables with hardcoded fallbacks, so contrast cannot be fully verified from the source alone; sizing uses fixed `rem` font values with no accommodation noted for native Dynamic Type; and `white-space: nowrap` with no truncation means expanded translations overflow rather than adapt, while all displayed text is caller-supplied rather than hardcoded in the component.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and restated them behaviorally, added a status-conveyed-by-text requirement and vector for the color-only-signal risk, filled Appearance with concrete values and tokens from blocks.css, replaced low-value edge cases with the real nowrap/nesting behaviors, corrected the `<p>` semantics claim in Accessibility, reformatted Design Decisions into Decision/Rationale/Approved blocks and added two documenting the `free` naming and the badge overlap, rebuilt Compliance as a linked table with grounded statuses, rewrote Localization for the uppercase casing transform and text overflow, fixed the SwiftUI and WinUI platform notes, renamed the platform-notes bullet to React/Web, generalized the Overview while keeping the sourced usage examples, and added badge to related |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
