@@ -3,7 +3,7 @@ id: f6d46f16-65a6-4d19-80c7-1fc8b4d323fd
 title: Mobile Chat
 domain: agenticdevelopertoolkit://recipes/mobile-chat
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -20,8 +20,13 @@ tags:
 - chat
 - messaging
 - mobile
-depends-on: []
-related: []
+depends-on:
+- agenticdevelopertoolkit://recipes/transcript
+- agenticdevelopertoolkit://recipes/chat-input
+- agenticdevelopertoolkit://recipes/message-bubble
+- agenticdevelopertoolkit://recipes/typing-indicator
+related:
+- agenticdevelopertoolkit://recipes/inline-chat
 references: []
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,20 +42,19 @@ Mobile Chat is a full-screen chat surface that displays a scrolling transcript o
 
 ## Behavioral Requirements
 
-- **must-render-transcript**: Component MUST render all messages from the chat session's message array in a scrolling transcript, ordered chronologically from oldest to newest.
-- **must-render-active-drafts**: Component MUST render non-empty active drafts from the session's `activeDrafts` array inline within the transcript, styled identically to committed messages.
-- **must-align-messages-by-sender**: Component MUST align messages from the local participant to the right side of the screen and messages from remote participants to the left side.
-- **must-auto-scroll-on-new-content**: Component MUST scroll the transcript to the bottom when new messages or drafts arrive, unless the user has scrolled up to read history (scroll position within 40pt of bottom).
-- **must-focus-input-on-open**: Component MUST focus the text input field within 350ms after the component becomes visible on screen, to trigger the native keyboard presentation.
-- **must-display-thinking-indicator**: Component MUST display a status line above the composer showing the current status of all remote participants; when no remote status exists but typing indicators are present, the component MUST display a default thinking animation (three pulsing dots).
-- **must-validate-message-before-send**: Component MUST reject (not send) any message input that contains only whitespace or is empty.
-- **must-clear-input-after-send**: Component MUST clear the text input field immediately after the user successfully sends a message.
-- **must-send-on-return-key**: Component MUST submit the current input message when the user presses the Return key while focused on the text input.
-- **must-send-on-button-tap**: Component MUST submit the current input message when the user taps the send button.
-- **must-apply-theme-once**: Component MUST apply the chat surface background color and divider color on the controller's own view exactly once (to prevent translucent surface duplicates from appearing lighter).
-- **must-support-close-button**: Component MUST render a close button in the header that triggers the `onClose` callback.
-- **must-support-custom-close-label**: Component SHOULD allow the host to customize the text label of the close button via a `closeLabel` prop (default: "← back").
-- **must-track-open-state**: Component MUST track whether the surface is currently open, so tests and hosts can assert the surface visibility without depending on presentation context.
+- **render-transcript**: Component MUST render all messages from the chat session's message array in a scrolling transcript, ordered chronologically from oldest to newest.
+- **render-active-drafts**: Component MUST render non-empty active drafts from the session's `activeDrafts` array inline within the transcript, styled identically to committed messages.
+- **align-messages-by-sender**: Component MUST align messages from the local participant to the right side of the screen and messages from remote participants to the left side.
+- **auto-scroll-on-new-content**: Component MUST scroll the transcript to the bottom when new messages or drafts arrive, provided the user's scroll position is less than 40pt from the bottom at the moment of arrival; a scroll position at or beyond that 40pt threshold suppresses auto-scroll so the user can keep reading history.
+- **focus-input-on-open**: Component MUST focus the text input field after ~350ms once the component becomes visible on screen, to trigger the native keyboard presentation.
+- **display-thinking-indicator**: Component MUST display a status line above the composer showing the current status of all remote participants; when no remote status exists but typing indicators are present, the component MUST display a default thinking animation (three pulsing dots).
+- **validate-message-before-send**: Component MUST reject (not send) any message input that contains only whitespace or is empty.
+- **clear-input-after-send**: Component MUST clear the text input field immediately after the user successfully sends a message.
+- **send-on-return-key**: Component MUST submit the current input message when the user presses the Return key while focused on the text input.
+- **send-on-button-tap**: Component MUST submit the current input message when the user taps the send button.
+- **theme-color-reapplication**: Component MUST reflect the active theme's chat surface and divider colors, reapplying them whenever the theme changes while the surface is visible — not only once, at the moment it opens.
+- **support-close-button**: Component MUST provide a close affordance that triggers the `onClose` callback when activated. Web renders this as a button in the surface's own header; iOS delegates the affordance to the presenting host, which calls `close(animated:)` (see Platform Notes).
+- **custom-close-label**: Component SHOULD allow the host to customize the text label of the close affordance via a `closeLabel` prop (default: "← back"). This applies where the component owns the affordance — web's header button; iOS has no equivalent affordance in this source.
 
 ## Appearance
 
@@ -61,23 +65,23 @@ Mobile Chat is a full-screen chat surface that displays a scrolling transcript o
 - **Foreground/Text**: Input field text and placeholder: system default. Send button: system image "arrow.up.circle.fill" (tinted).
 - **Border**: Divider between status row and input row: 1pt solid border color.
 - **Shadow**: None; surfaces are flat.
-- **Min/Max size**: Transcript stack width: equal to scroll view frame width. Max bubble width: 75% of scroll view width or 200pt minimum, whichever is larger.
+- **Min/Max size**: Transcript stack width: equal to the transcript container width (iOS: `UIScrollView` bounds width; web: the overlay's `.persona-chat` container width). Max bubble width: 75% of that container width, or 200pt (iOS) / 200px (web) minimum, whichever is larger.
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
 | Default | Surface visible with all content rendered; input field ready for typing. |
-| Open (animated) | Surface alpha animates from 0 to 1 over 0.25 seconds. |
-| Closed (animated) | Surface alpha animates from 1 to 0 over 0.25 seconds. |
+| Open (animated) | iOS: surface `view.alpha` animates 0 → 1 over 0.25s. Web: `.pc-mobile-overlay` slides in, `transform: translateX(100%)` → `translateX(0)`, over 0.3s. |
+| Closed (animated) | iOS: surface `view.alpha` animates 1 → 0 over 0.25s. Web: the overlay slides back out via the reverse transform transition. |
 | Input focused | Native keyboard is presented (platform-specific). |
 | Thinking/typing remote | Status line shows remote participant's current status or default pulsing indicator. |
 | Message composing | Active draft appears in transcript with `.composing` delivery status. |
 
 ## Accessibility
 
-- **Role/trait**: Main container is a view controller (iOS) or div with role `region` (web). Input field is a text field / input[type="text"]. Send button is a button. Close button is a button.
-- **Label requirements**: Input field MUST have a visual or programmatic label or placeholder indicating it accepts message text (placeholder "Type a message..." suffices). Close button MUST be labeled with the `closeLabel` text. Send button SHOULD have a label describing its action (e.g., "send").
+- **Role/trait**: Main container is a view controller (iOS) or div with role `region` (web). Input field is a text field / input[type="text"]. Send button is a button. Close affordance is a button (web's `pc-mobile-close` header button); on iOS the presenting host supplies equivalent chrome (see Platform Notes).
+- **Label requirements**: Input field MUST have a visual or programmatic label or placeholder indicating it accepts message text (placeholder "Type a message..." suffices). The close affordance's accessible label MUST describe the action in words (e.g., "Back" or "Close chat") and MUST NOT rely on the "←" glyph alone, since screen readers can read the raw arrow character literally; where the visible text is the default "← back", the accessible name given to assistive technology MUST differ from that literal string. Send button MUST have a label describing its action (e.g., "send").
 - **Announce state changes**: Status line updates (typing, thinking) SHOULD be announced to screen readers. Message arrival SHOULD trigger an announcement if the transcript is off-screen.
 - **Minimum tap target**: All buttons (close, send) MUST have a touch target of at least 44×44pt on iOS per Apple HIG.
 
@@ -85,43 +89,56 @@ Mobile Chat is a full-screen chat surface that displays a scrolling transcript o
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| mobile-chat-001 | must-render-transcript | Session with 5 messages | All 5 messages appear in transcript in chronological order. |
-| mobile-chat-002 | must-render-active-drafts | Session with 1 draft with text="hello" | Draft appears in transcript styled identically to committed messages. |
-| mobile-chat-003 | must-render-active-drafts | Session with 1 draft with text="" (empty) | Draft is not rendered. |
-| mobile-chat-004 | must-align-messages-by-sender | Message from localParticipantID | Message bubble aligns to right with spacer on left. |
-| mobile-chat-005 | must-align-messages-by-sender | Message from remote participant | Message bubble aligns to left. |
-| mobile-chat-006 | must-auto-scroll-on-new-content | Transcript at bottom; new message arrives | Scroll automatically moves to bottom to show new message. |
-| mobile-chat-007 | must-auto-scroll-on-new-content | Transcript scrolled up by user; new message arrives | Scroll remains where user positioned it (within 40pt threshold of bottom). |
-| mobile-chat-008 | must-focus-input-on-open | Surface becomes visible | Input field receives focus; native keyboard is presented (tappable). |
-| mobile-chat-009 | must-display-thinking-indicator | Remote participant has active status (not nil) | Status line shows the remote participant's status text/animation. |
-| mobile-chat-010 | must-display-thinking-indicator | No remote status; typing indicators exist | Status line shows default pulsing dots. |
-| mobile-chat-011 | must-display-thinking-indicator | No remote status; no typing indicators | Status line is hidden or shows nothing. |
-| mobile-chat-012 | must-validate-message-before-send | User enters "   " (whitespace only); taps send | Message is not sent; input field is not cleared. |
-| mobile-chat-013 | must-validate-message-before-send | User enters "" (empty); taps send | Message is not sent. |
-| mobile-chat-014 | must-validate-message-before-send | User enters "hello"; taps send | Message is sent and input field is cleared. |
-| mobile-chat-015 | must-clear-input-after-send | Input field has text; user sends | Input field text becomes empty. |
-| mobile-chat-016 | must-send-on-return-key | Input field focused; user presses Return | Message is sent; input field is cleared. |
-| mobile-chat-017 | must-send-on-button-tap | Input field has text; user taps send button | Message is sent; input field is cleared. |
-| mobile-chat-018 | must-support-close-button | User taps close button | `onClose` callback is invoked. |
-| mobile-chat-019 | must-support-custom-close-label | closeLabel prop set to "dismiss" | Close button displays "dismiss" text. |
-| mobile-chat-020 | must-track-open-state | Surface is presented and `open(animated:)` called | `isOpen` property is true. |
-| mobile-chat-021 | must-track-open-state | Surface is dismissed and `close(animated:)` called | `isOpen` property is false. |
+| mobile-chat-001 | render-transcript | Session with 5 messages | All 5 messages appear in transcript in chronological order. |
+| mobile-chat-002 | render-active-drafts | Session with 1 draft with text="hello" | Draft appears in transcript styled identically to committed messages. |
+| mobile-chat-003 | render-active-drafts | Session with 1 draft with text="" (empty) | Draft is not rendered. |
+| mobile-chat-004 | align-messages-by-sender | Message from localParticipantID | Message bubble aligns to right with spacer on left. |
+| mobile-chat-005 | align-messages-by-sender | Message from remote participant | Message bubble aligns to left. |
+| mobile-chat-006 | auto-scroll-on-new-content | Transcript at bottom; new message arrives | Scroll automatically moves to bottom to show new message. |
+| mobile-chat-007 | auto-scroll-on-new-content | Transcript scrolled up so distance from bottom is 39pt; new message arrives | Scroll auto-scrolls to bottom (39pt is within the 40pt threshold). |
+| mobile-chat-008 | auto-scroll-on-new-content | Transcript scrolled up so distance from bottom is 41pt; new message arrives | Scroll remains where the user positioned it (41pt is beyond the 40pt threshold). |
+| mobile-chat-009 | focus-input-on-open | Surface becomes visible | Input field receives focus after ~350ms; native keyboard is presented (tappable). |
+| mobile-chat-010 | display-thinking-indicator | Remote participant has active status (not nil) | Status line shows the remote participant's status text/animation. |
+| mobile-chat-011 | display-thinking-indicator | No remote status; typing indicators exist | Status line shows default pulsing dots. |
+| mobile-chat-012 | display-thinking-indicator | No remote status; no typing indicators | Status line is hidden or shows nothing. |
+| mobile-chat-013 | validate-message-before-send | User enters "   " (whitespace only); taps send | Message is not sent; input field is not cleared. |
+| mobile-chat-014 | validate-message-before-send | User enters "" (empty); taps send | Message is not sent. |
+| mobile-chat-015 | validate-message-before-send | User enters "hello"; taps send | Message is sent and input field is cleared. |
+| mobile-chat-016 | clear-input-after-send | Input field has text "hello"; user sends | Input field text becomes empty. |
+| mobile-chat-017 | send-on-return-key | Input field focused with text "hello"; user presses Return | Message is sent; input field is cleared. |
+| mobile-chat-018 | validate-message-before-send, send-on-return-key | Input field focused with text "   " (whitespace only); user presses Return | Message is not sent; input field retains its text. |
+| mobile-chat-019 | send-on-button-tap | Input field has text "hello"; user taps send button | Message is sent; input field is cleared. |
+| mobile-chat-020 | support-close-button | User activates the close affordance | `onClose` callback is invoked (web); on iOS, the host calls `close(animated:)`. |
+| mobile-chat-021 | custom-close-label | closeLabel prop set to "dismiss" (web) | Close button displays "dismiss" text. |
+| mobile-chat-022 | theme-color-reapplication | Surface open; active theme changes | Chat surface background and divider colors update immediately, without requiring the surface to close and reopen. |
+| mobile-chat-023 | send-on-button-tap | User taps send with "first", then immediately taps send again with "second" | Both messages are submitted independently; the second send does not wait for the first, and no debouncing occurs. |
+| mobile-chat-024 | render-transcript | Scroll view width changes (rotation/resize) while scrolled away from the bottom | Transcript rebuilds with a recalculated max bubble width; scroll position is preserved since the surface was not at the bottom. |
 
 ## Edge Cases
 
 - **Empty message array**: When the session has no messages and no active drafts, the transcript is empty but renders without error. The status line still shows thinking/typing indicators if remote participants have them.
 - **Null or missing localParticipantID**: If `localParticipantID` does not match any message sender, all messages align to the left (treated as remote).
 - **Concurrent message and status updates**: If a message arrives simultaneously with a typing status change, both the transcript rebuild and status refresh occur without visual flicker or dropped updates.
-- **Keyboard interruption (iOS)**: If the keyboard is dismissed (e.g., by swiping down), the input field remains focused and tapping it re-presents the keyboard.
-- **Scrolling while new messages arrive**: Auto-scroll is suppressed while the user is scrolling or has scrolled away from the bottom. Scroll direction or velocity does not affect the 40pt threshold check.
-- **Very long messages**: Message bubble width is capped at 75% of screen width or 200pt minimum. Text wrapping is delegated to the bubble view.
+- **Keyboard interruption (iOS)**: If the input field loses focus (for example, the host dismisses the keyboard, or the user taps outside the field), the field itself remains mounted; tapping it re-presents the keyboard. This source does not configure `UIScrollView.keyboardDismissMode`, so no swipe-to-dismiss gesture is enabled by default.
+- **Scrolling while new messages arrive**: Auto-scroll is suppressed once the distance from the bottom reaches or exceeds the 40pt threshold (see **auto-scroll-on-new-content**); scroll direction or velocity does not affect the check, only the distance at the moment a new message arrives.
+- **Very long messages**: Message bubble width is capped at 75% of the transcript container width, or 200pt (iOS) / 200px (web) minimum, whichever is larger. Text wrapping is delegated to the bubble view.
 - **Rapid-fire message sends**: If the user sends multiple messages in quick succession, each message is submitted independently; no debouncing occurs.
-- **Theme change while open**: Surface responds to theme changes and reapplies colors immediately.
+- **Theme change while open**: Surface responds to theme changes and reapplies colors immediately (see **theme-color-reapplication**).
 - **Screen rotation (iOS) or window resize (web)**: Transcript is rebuilt to recalculate max bubble width; scroll position is preserved if scroll is not at bottom; otherwise scrolls to bottom with new messages.
 
 ## Configuration
 
-Not applicable: Mobile Chat accepts configuration only through constructor props (viewModel, localParticipantID, session, persona, user, welcomeMessage, open, onClose, closeLabel) and does not maintain a configuration dictionary or settings object.
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `session` / `viewModel` | ChatSession / any ChatViewModel | required | Backing chat session (web) or view model (iOS) providing messages, active drafts, and status. |
+| `localParticipantID` | string | required | (iOS only, constructor parameter) Participant ID used to align bubbles left/right, since `ChatViewModel` itself has no notion of "me". Web derives local/remote through the session `useChatSession` builds from `backend`/`persona`/`user`. |
+| `backend` | ChatBackend | required | (web only, `MobileChat` wrapper) Backend passed to `useChatSession` to construct the session. |
+| `persona` | ChatParticipant | required | (web only) The remote persona participant. |
+| `user` | ChatParticipant | undefined | (web only) The local user participant. |
+| `welcomeMessage` | string | undefined | (web only) Optional greeting message seeded into the session. |
+| `open` | boolean | required | (web only) Controls surface visibility; the web component is fully prop-controlled. iOS instead exposes `open(animated:)`/`close(animated:)` methods (see Platform Notes). |
+| `onClose` | () => void | required | (web only) Invoked when the close button is tapped. iOS has no close button or callback in this source (see Platform Notes). |
+| `closeLabel` | string | `"← back"` | (web only) Text of the close button. iOS has no equivalent in this source. |
 
 ## Deep Linking
 
@@ -129,13 +146,13 @@ Not applicable: Mobile Chat displays active chat state from the session passed t
 
 ## Localization
 
-Not applicable: Mobile Chat contains only two user-facing strings (input placeholder "Type a message..." and default closeLabel "← back"), both of which are fixed in the source. Localization of these strings is the host's responsibility via prop overrides (iOS) or component configuration (web). Thinking indicator text comes from the `ChatStatusWordPair` configured on `thinkingIndicator`, which the host authors.
+Mobile Chat has two user-facing strings, both currently hardcoded rather than externalized: the input placeholder ("Type a message...", both web and iOS) and the close affordance's default label ("← back", web only). The `closeLabel` prop already lets a web host override that string per locale; the placeholder is not exposed as a prop on either platform today, so it SHOULD be added as an overridable/localizable parameter — mirroring `closeLabel` — rather than staying hardcoded in source. Thinking-indicator text is already externalized: it comes from the host-authored `ChatStatusWordPair` configured on `thinkingIndicator`, not from this component's own strings.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Open/close animations (0.25s fade) SHOULD be skipped or instant when Reduce Motion is enabled; this is delegated to `UIView.animate()` system behavior on iOS. |
+| Reduce Motion | iOS's 0.25s `view.alpha` fade (`open(animated:)`/`close(animated:)`) and web's 0.3s slide transition (`.pc-mobile-overlay` transform) both run unconditionally in this source — neither checks `UIAccessibility.isReduceMotionEnabled` (iOS) nor the `prefers-reduced-motion` media query (web). Implementations MUST check the platform's reduced-motion signal and make the transition instant when it is enabled. |
 | Increase Contrast | Divider and surface colors are determined by the semantic palette; implementations MUST ensure the `border` and `chatSurface` tokens meet WCAG AA contrast requirements when Increase Contrast is enabled. |
 | Differentiate Without Color | Message alignment (left/right) is the primary distinction between local and remote messages; color MUST NOT be the only differentiator. |
 
@@ -145,13 +162,7 @@ Not applicable: Mobile Chat does not check feature flags or have internal toggle
 
 ## Analytics
 
-| Event | Properties | When |
-|-------|-----------|------|
-| `mobile_chat.opened` | `{ animated: boolean }` | `open(animated:)` is called. |
-| `mobile_chat.closed` | `{ animated: boolean }` | `close(animated:)` is called. |
-| `mobile_chat.message_sent` | `{ text_length: number, attachment_count: number }` | User submits a message via send button or Return key. |
-| `mobile_chat.input_focused` | `{}` | Input field receives focus. |
-| `mobile_chat.close_tapped` | `{}` | User taps the close button. |
+Not applicable: this source does not call any analytics or telemetry API. Neither `MobileChatViewController` nor `MobileChatView`/`MobileChat` contains an event-tracking call. A host that wants analytics for this surface would add its own instrumentation around `open(animated:)`/`close(animated:)`, `sendTapped()`/`submitMessage()`, and the close action.
 
 ## Privacy
 
@@ -162,54 +173,68 @@ Not applicable: Mobile Chat does not check feature flags or have internal toggle
 
 ## Logging
 
-Subsystem: `AgenticDeveloperToolkit` | Category: `MobileChatViewController`
-
-| Event | Level | Message |
-|-------|-------|---------|
-| View did load | debug | `MobileChatViewController: viewDidLoad` |
-| Transcript rebuild | debug | `MobileChatViewController: rebuildTranscript (count: N)` |
-| Message send | debug | `MobileChatViewController: sendTapped (text_length: N)` |
-| Send error | error | `MobileChatViewController: submitMessage failed (error: description)` |
-| Scroll position | debug | `MobileChatViewController: scrollViewDidScroll (isAtBottom: boolean)` |
+Not applicable: this source does not call any logging API. No `Logger`/`os.log` usage appears in `MobileChatViewController`, and the web source performs no console or telemetry logging either. Send failures are caught (see Privacy) but not logged anywhere in this source.
 
 ## Platform Notes
 
-- **Web (React)**: Source files `packages/web/packages/chat/src/modes/MobileChat.tsx` define two components: `MobileChat` (wrapper, manages session) and `MobileChatView` (presentation, uses `Transcript` and `ChatInput` subcomponents). The overlay div uses classname `pc-mobile-overlay` with `open` class when visible. Input is focused via `useRef` after 350ms delay to trigger iOS keyboard. The component is prop-controlled (`open` boolean, `onClose` callback).
-- **SwiftUI**: Not implemented in source. A SwiftUI implementation would wrap `MobileChatViewController` in a `UIViewControllerRepresentable` and call `open(animated:)` / `close(animated:)` in response to state changes. The thinking indicator would be configured with `MobileThinkingIndicatorView.configure(_:)` to customize status text and glyphs.
-- **Compose**: Not implemented in source. An Android implementation would mirror the iOS structure: `RecyclerView` for transcript with `MobileMessageBubbleView` adapters, a status row with a thinking indicator, a 1dp divider, and an `EditText` with a send button. The status line would be updated via the `ChatViewModel.statuses` map, with fallback to `typingParticipants` array.
-- **AppKit / UIKit**: Source file `packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Chat/MobileChatViewController.swift` defines `MobileChatViewController: UIViewController`. Main view is a `UIStackView` with four subviews: `UIScrollView` (transcript) with `UIStackView` (bubble stack), `UIView` (status row) containing `MobileThinkingIndicatorView`, `UIView` (1pt divider), and `UIStackView` (input row) with `UITextField` and `UIButton`. Message bubbles are left-aligned; local user messages use a spacer to right-align. The controller is opened/closed via `open(animated:Bool)` / `close(animated:Bool)` methods that fade alpha over 0.25s. Input field is focused in `useEffect` (web) or `viewDidLoad` (iOS). The component observes `ChatViewModel` and rebuilds transcript on `.messagesChanged` or `.activeDraftsChanged` updates.
-- **WinUI 3**: Not implemented in source. A Windows implementation would use a `StackPanel` for the main layout with `ScrollViewer` for transcript, `TextBlock` for status, `TextBox` for input, and a `Button` for send. Message alignment would use `HorizontalAlignment.Left` or `Right` based on sender. The close button would be in a `CommandBar` or `AppBarButton`. The component would bind to `ChatViewModel.Messages` and `ChatViewModel.ActiveDrafts` collections and respond to `INotifyCollectionChanged` events to rebuild the transcript. Status updates would trigger via `INotifyPropertyChanged` on a status property. The input field would use `AcceptsReturn: False` to submit on Enter key via the `KeyDown` event.
+- **Web (React)**: Source files `packages/web/packages/chat/src/modes/MobileChat.tsx` define two components: `MobileChat` (wrapper, manages session) and `MobileChatView` (presentation, uses `Transcript` and `ChatInput` subcomponents). The overlay div uses classname `pc-mobile-overlay` with `open` class when visible; `css/modes/mobile.css` slides it in via `transform: translateX(100%)` → `translateX(0)` over 0.3s, rather than a fade. Input is focused via `useRef` after a 350ms `setTimeout` to trigger the iOS keyboard. The component is prop-controlled (`open` boolean, `onClose` callback) and renders its own header with a `pc-mobile-close` button showing `closeLabel`.
+- **SwiftUI**: Not implemented in source. A native SwiftUI implementation would use `ScrollViewReader` with a `LazyVStack` for the transcript — scrolling to the last message's id when the tracked offset is within the 40pt threshold — a `TextField` bound to the composer text with `.onSubmit` wired to the same send action as the Return-key and button paths, and the existing `MobileThinkingIndicatorView`/`ChatStatusWordPair` vocabulary surfaced through a small SwiftUI wrapper around just that indicator, not the whole controller.
+- **Compose**: Not implemented in source. An Android implementation would mirror the iOS structure using Compose-native APIs: a `LazyColumn` for the transcript with a bubble composable per item (scrolling via `LazyListState.animateScrollToItem` when within the 40dp threshold), a status row hosting a thinking-indicator composable, a 1dp `Divider`, and a `TextField` for the composer with its trailing icon acting as the send button. The status line would be updated via `ChatViewModel.statuses`, with `typingParticipants` as a fallback.
+- **AppKit / UIKit**: Source file `packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Chat/MobileChatViewController.swift` defines `MobileChatViewController: UIViewController`. Its view lays out four constrained subviews: a `UIScrollView` (transcript) containing a `UIStackView` (bubble stack), a `UIView` status row containing `MobileThinkingIndicatorView`, a 1pt `UIView` divider, and a `UIStackView` input row with `UITextField` and `UIButton`. Message bubbles are left-aligned; local user messages get a leading spacer to right-align. `open(animated:)`/`close(animated:)` fade `view.alpha` over 0.25s and track a private `isOpen` flag so tests or a host can assert presentation state without depending on the containing navigation/presentation context. `applyTheme(_:)` sets the `chatSurface`/`border` colors on the controller's own view, the status row, and the divider — never inside a child view, so a translucent theme's surface color is never doubled into a lighter band — and it re-runs on every `ThemePaletteObserver` callback, not only when the surface opens. This source has no header or close button of its own: `onClose`/`closeLabel` are a web-only surface, and a UIKit host supplies its own dismissal chrome (e.g., a navigation back button) and calls `close(animated:)` directly. It likewise has no explicit `becomeFirstResponder()` call; focus-after-open (~350ms once visible) is implemented in the web source via `useEffect`/`setTimeout`, and a UIKit host presenting this controller is expected to trigger focus on the same timing. The controller observes `ChatViewModel` and rebuilds the transcript (recalculating max bubble width) on `.messagesChanged`, `.activeDraftsChanged`, `.typingChanged`, or a `viewDidLayoutSubviews` width change greater than 1pt.
+- **WinUI 3**: Not implemented in source. A Windows implementation would use a `Grid` with row definitions (`Auto` for the status row and divider, `*` for the transcript, `Auto` for the input row) so the surface fills the screen — a `StackPanel` cannot stretch a middle child to fill the remaining space. The transcript would use a `ScrollViewer` wrapping an `ItemsControl`/`ItemsRepeater`; the status row, a `TextBlock`-based thinking indicator; and the composer, a `TextBox` with `AcceptsReturn="False"` set in XAML (not a constructor argument — that property only controls whether Enter inserts a newline) paired with a `Button` for send, with Return-key submission wired through the `TextBox.KeyDown` event. Message alignment would use `HorizontalAlignment.Left`/`Right` based on sender. The close affordance would live in a `CommandBar` or `AppBarButton` supplied by the host page, mirroring the "host supplies chrome" approach used on iOS. The component would bind to `ChatViewModel.Messages`/`ActiveDrafts` via `INotifyCollectionChanged` and to a status property via `INotifyPropertyChanged`.
 
 ## Design Decisions
 
-1. **Input focus delay (350ms)**: On iOS, focusing the input immediately in `viewDidLoad` is too early; the keyboard animation does not appear reliably. A 350ms delay allows the view hierarchy to settle before focus is requested. This mirrors the behavior of web chat surfaces that focus on mount.
+**Decision**: Delay focusing the input field by ~350ms after the surface becomes visible, rather than focusing immediately.
+**Rationale**: Focusing immediately (e.g., in `viewDidLoad`) is too early — the keyboard animation doesn't reliably appear before the view hierarchy has settled. A 350ms delay lets the hierarchy settle first; this mirrors web chat surfaces that focus on mount with the same delay.
+**Approved**: pending
 
-2. **Status row outside transcript**: The thinking/typing indicator is rendered in a separate `statusRow` UIView above the composer, not inside the scrolling transcript. This keeps the status line visible above the keyboard on mobile, where scrolling the transcript away is common. Web mirrors this with `.pc-typing` as a sibling of `.pc-transcript`, not a child.
+**Decision**: Render the thinking/typing indicator in its own `statusRow` above the composer, outside the scrolling transcript.
+**Rationale**: This keeps the status line visible above the keyboard on mobile, where the transcript commonly scrolls out of view. Web mirrors this with `.pc-typing` as a sibling of `.pc-transcript`, not a child.
+**Approved**: pending
 
-3. **Auto-scroll threshold (40pt)**: The transcript auto-scrolls to show new messages only if the user has not scrolled more than 40pt from the bottom. This threshold is chosen to accommodate accidental small scrolls or swipes while still respecting the user's intent to read history. A stricter threshold (1-2pt) would re-center on nearly every new message; a looser one (100pt+) would miss intentional history reads.
+**Decision**: Auto-scroll to new content only when the user's scroll position is within 40pt of the bottom.
+**Rationale**: This accommodates accidental small scrolls or swipes while still respecting an intentional read of history. A stricter threshold (1-2pt) would re-center on nearly every new message; a looser one (100pt+) would miss intentional history reads.
+**Approved**: pending
 
-4. **Empty draft filtering**: Active drafts with empty text (zero-length strings) are not rendered in the transcript. A user typing and then clearing the field does not create visual noise. Once the draft text becomes non-empty, it appears immediately in the transcript (live drafting).
+**Decision**: Filter active drafts with empty (zero-length) text out of the transcript.
+**Rationale**: A user typing and then clearing the field shouldn't create visual noise. Once the draft text becomes non-empty, it appears immediately in the transcript (live drafting).
+**Approved**: pending
 
-5. **No keyboard path for send button**: The send button is accessible via touch only; there is no keyboard shortcut beyond the Return key in the input field. Adding modifiers (e.g., Cmd+Return on macOS, Ctrl+Return on web) is deferred to a follow-up, as the source makes no provision for it.
+**Decision**: Make the send button touch-only, with no keyboard shortcut beyond the Return key in the input field.
+**Rationale**: The source provides no modifier-key path (e.g., Cmd+Return on macOS, Ctrl+Return on web); adding one is deferred to a follow-up rather than invented here.
+**Approved**: pending
 
-6. **Message bubbles delegated**: `MobileMessageBubbleView` (iOS) and the `Transcript` component (web) handle the rendering of individual message content, styling, and delivery status indicators. Mobile Chat concerns itself only with layout, scrolling, and session state updates.
+**Decision**: Delegate individual message rendering, styling, and delivery-status display to `MobileMessageBubbleView` (iOS) and the `Transcript` component (web).
+**Rationale**: Mobile Chat concerns itself only with layout, scrolling, and session-state updates, not message presentation.
+**Approved**: pending
 
-7. **No command-activity pills on mobile**: `ToolCallPillView` (command-activity indicators) are deferred on mobile per Task 8's amendment. Only the thinking indicator is shown in the status row; tool calls are not rendered inline in the transcript.
+**Decision**: Ship without command-activity pills (`ToolCallPillView`) on mobile; only the thinking indicator appears in the status row.
+**Rationale**: Deferring pills lets Mobile Chat ship without full feature parity with the desktop surface — a customer who wants them can file that as a follow-up rather than blocking on a half-parity port.
+**Approved**: pending
 
-8. **No attachment support in UI**: The source calls `submitMessage(text: text, attachments: [])` with an empty array. A future revision will add an attachment picker and preview; for now, attachments are not user-facing.
+**Decision**: Submit messages with an empty `attachments` array; no attachment picker or preview UI exists yet.
+**Rationale**: The source calls `submitMessage(text:attachments:)` with `attachments: []`. A future revision can add an attachment picker once one is built, rather than this recipe documenting UI that doesn't exist.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Keyboard navigation | passed | Accessibility — Return key submits; Tab navigates inputs; focus is managed. |
-| Touch target size | passed | Accessibility — Close and send buttons are system-sized (44×44pt minimum on iOS). |
-| Color contrast | passed | Appearance — Divider and surface colors use semantic palette tokens; contrast is verified during theme application. |
-| Message ordering | passed | Behavior — Messages are rendered in chronological order from `viewModel.messages` array. |
-| Draft rendering | passed | Behavior — Non-empty drafts appear inline with committed messages via `MobileDraftMessageAdapter`. |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy |
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+
+Statuses rest on the source shown: Return-key submission and tap-to-send both work but no other keyboard path exists, so keyboard navigation is partial; close/send buttons are system-default sized, so touch-target-size passes; surface and divider colors come from semantic palette tokens whose contrast is set by the theme system rather than verified in this component, so contrast-ratio is partial; the open/close animations run unconditionally with no reduced-motion check, so reduced-motion fails; the placeholder and default close label are hardcoded rather than externalized, so both internationalization checks fail; the component collects no more than the session already holds, so data-minimization passes; and the composer validates non-empty input but delegates message-content rendering and sanitization to `MobileMessageBubbleView`/`Transcript`, so input-sanitization is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web and iOS sources |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web and iOS sources |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and moved UIKit-only theme/open-state details out of Behavioral Requirements into Platform Notes; reformatted Design Decisions to Decision/Rationale/Approved and resolved the opaque "Task 8" reference; rewrote Compliance with linked, one-word-category checks; corrected unverified Reduce Motion, Analytics, and Logging claims to match what the source actually does; wrote real Configuration and Localization sections in place of "Not applicable"; fixed the auto-scroll threshold wording, split its test vector, and gave bubble-width a single basis with per-platform units; corrected the Compose, WinUI 3, SwiftUI, and AppKit/UIKit platform notes; added missing test vectors for theme reapplication, whitespace-only Return, rapid-fire sends, and resize/rotation, and gave vector 016 concrete input |

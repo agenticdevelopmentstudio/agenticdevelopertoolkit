@@ -3,11 +3,11 @@ id: 8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a
 title: Markdown Viewer
 domain: agenticdevelopertoolkit://recipes/markdown-viewer
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,9 +18,17 @@ platforms:
 - swift
 - macos
 - ios
-tags: []
-depends-on: []
-related: []
+tags:
+- markdown
+- viewer
+- theming
+- syntax-highlighting
+depends-on:
+- agenticdevelopertoolkit://recipes/markdown-renderer
+- agenticdevelopertoolkit://recipes/markdown-document-renderer
+- agenticdevelopertoolkit://recipes/markdown-theme-switcher
+related:
+- agenticdevelopertoolkit://recipes/markdown-reading-palette
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,24 +42,26 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 
 ## Behavioral Requirements
 
-- **must-fetch-document-by-id**: Component MUST fetch markdown content by document `id` via the configured fetcher.
-- **must-support-timeout**: Fetch operation MUST abort if it exceeds the configured `timeoutMs` (default 15000ms).
-- **must-handle-fetch-errors**: Component MUST display an error state with the error message if the fetch fails.
-- **must-render-as-sanitized-html**: Markdown content MUST be rendered as sanitized HTML (no arbitrary script injection).
-- **must-highlight-code-syntax**: Code blocks in markdown MUST receive syntax highlighting via the configured highlighter.
-- **must-persist-theme-selection**: Selected theme ID MUST be persisted to storage (localStorage on web, Preferences on Apple) so it survives app restarts.
-- **must-apply-theme-palette**: Active theme palette MUST be applied to all rendered content (text colors, backgrounds, code highlighting).
-- **must-display-toolbar**: Component MUST render a toolbar containing the document title and a theme switcher control.
-- **must-display-document-title**: Toolbar MUST display the document's title (or empty string if not yet loaded).
-- **must-show-loading-state**: While fetch is in progress, component MUST display a loading indicator with live region announcement.
-- **must-show-idle-state**: Before any document is requested, component MUST display an idle message ("No document selected").
-- **must-show-empty-state**: If document fetches successfully but content is empty or whitespace-only, component MUST display an empty state message.
-- **should-apply-no-flash-theme-on-web**: On web with SSR, a pre-hydration bootstrap script SHOULD apply the persisted theme before React hydration to prevent flash of default theme.
+- **fetch-by-id**: Component MUST fetch markdown content by document `id` via the configured fetcher.
+- **fetch-timeout**: Fetch operation MUST abort if it exceeds the configured `timeoutMs` (default 15000ms).
+- **abort-on-id-change**: If `id` changes while a fetch is in flight, the component MUST abort the previous fetch and ignore any late response for the stale id.
+- **fetch-error-handling**: Component MUST display an error state with the error message if the fetch fails.
+- **sanitized-rendering**: Markdown content MUST be rendered as sanitized HTML using an allowlist: elements limited to prose structure (headings, paragraphs, lists, tables, blockquotes, code, links, images, inline emphasis, `details`/`summary`, and similar), with `<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>`, and `<form>` always stripped. `href`/`cite` accept only the `http`, `https`, `mailto`, and `tel` protocols and `src` accepts only `http`/`https` (no `javascript:` or other schemes). No `on*` event-handler attribute is permitted on any element.
+- **code-syntax-highlighting**: Code blocks in markdown MUST receive syntax highlighting via the configured highlighter.
+- **theme-persistence**: On web, the component MUST persist the selected theme ID to storage (`localStorage`) so it survives app restarts — the component owns this state itself. On Apple, the component does not select or persist a theme: `palette` is a host-injected configuration value, and the host application owns theme selection and any persistence of it (e.g. via `UserDefaults`, if the host chooses to persist).
+- **theme-palette-application**: Active theme palette MUST be applied to all rendered content (text colors, backgrounds, code highlighting).
+- **toolbar-display**: Component MUST render a toolbar containing the document title and a theme switcher control.
+- **document-title-display**: Toolbar MUST display the document's title (or empty string if not yet loaded).
+- **theme-switcher-touch-target**: The toolbar theme switcher control MUST have a tap target of at least 44×44pt (iOS) / 48×48dp (Android).
+- **loading-state**: While fetch is in progress, component MUST display a loading indicator with live region announcement.
+- **idle-state**: Before any document is requested, component MUST display an idle message ("No document selected").
+- **empty-state**: If document fetches successfully but content is empty or whitespace-only, component MUST display an empty state message.
+- **no-flash-theme**: On web with SSR, a pre-hydration bootstrap script SHOULD apply the persisted theme before React hydration to prevent flash of default theme.
 
 ## Appearance
 
-- **Container**: Rounded corners (12px), border (1px), semi-transparent background. On web: `border border-apt-border bg-apt-bg rounded-xl`.
-- **Toolbar**: Horizontal bar with title and theme switcher. Background: `bg-apt-surface`. Text: `text-apt-text`, `text-sm`, `font-medium`. Padding: 3 (12px vertical × 16px horizontal on web).
+- **Container**: Rounded corners (12px), border (1px), semi-transparent background.
+- **Toolbar**: Horizontal bar with title and theme switcher. Padding: 12px vertical × 16px horizontal.
 - **Content area**: Scrollable region carrying viewer-owned `--mdv-*` CSS custom properties (web) or applied palette (Apple). Background, text, and code colors are theme-dependent.
 - **Loading spinner**: Centered icon with "Loading…" text. Color: currentColor (inherits from content root).
 - **Error state**: Centered alert icon with title "Failed to load document" and error detail text. Title color matches alert semantic (typically red/orange).
@@ -63,9 +73,9 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 |-------|------------------|
 | Idle | "No document selected" centered message. |
 | Loading | Spinner icon, "Loading…" title, `aria-live="polite"` and `aria-busy="true"`. |
-| Error | Alert icon (red/orange), "Failed to load document" title, error detail text below, `role="alert"`. |
+| Error | Alert icon (red/orange), "Failed to load document" title, error detail text below, `role="alert"`. No retry action; the caller re-triggers a fetch by changing `id` (or remounting). |
 | Success | Rendered markdown content in active theme palette; toolbar displays document title. |
-| Success–Empty | Document icon, "Empty document" title, detail message (same as idle but after fetch). |
+| Success–Empty | Document icon, "Empty document" title, "This document has no content yet" detail — distinct copy from Idle's "No document selected." |
 
 ## Accessibility
 
@@ -73,34 +83,39 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 - **Live regions**: Loading state uses `aria-live="polite"` and `aria-busy="true"` to announce fetch progress.
 - **Error alerts**: Error state uses `role="alert"` so assistive technology announces failures immediately.
 - **Color not sole differentiator**: Error state icon is distinct from idle/loading icons (different shapes, not color alone).
-- **Keyboard navigation**: Content is readable via keyboard; links and interactive elements in rendered markdown are tab-navigable.
-- **Minimum touch target**: Toolbar theme switcher control MUST have a tap target of at least 44×44pt (iOS) / 48×48dp (Android).
+- **Keyboard navigation**: The theme switcher is a native `<select>` element (natively focusable and operable via keyboard; no extra ARIA needed). Links and interactive elements in rendered markdown are tab-navigable.
+- **Minimum touch target**: See **theme-switcher-touch-target**.
 - **Labels**: All interactive controls (theme switcher) have accessible labels via `aria-label` or visible text.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| mdv-001 | must-fetch-document-by-id | `id="abc123"` | Fetcher is called with id `"abc123"`. |
-| mdv-002 | must-fetch-document-by-id | `id=undefined` | Component enters idle state; no fetch occurs. |
-| mdv-003 | must-support-timeout | `timeoutMs=5000`, fetch hangs >5s | Fetch is aborted; error state shown. |
-| mdv-004 | must-handle-fetch-errors | Fetcher returns error with message | Error state displays error message in detail text. |
-| mdv-005 | must-render-as-sanitized-html | Markdown with `<script>alert('xss')</script>` | Script tag is removed; no script executes. |
-| mdv-006 | must-highlight-code-syntax | Markdown with ` ```js\nvar x=1;\n``` ` | Code block is highlighted with JavaScript syntax colors. |
-| mdv-007 | must-persist-theme-selection | User selects theme "dark"; app restarts | On restart, "dark" theme is still active. |
-| mdv-008 | must-apply-theme-palette | Active palette has text-color="#fff" | Rendered text appears in white (or theme's text color). |
-| mdv-009 | must-display-toolbar | Component renders | Toolbar is visible with title and theme switcher. |
-| mdv-010 | must-display-document-title | `title="My Doc"` in fetched content | Toolbar displays "My Doc". |
-| mdv-011 | must-show-loading-state | Fetch is in progress | Spinner icon and "Loading…" text are visible. |
-| mdv-012 | must-show-idle-state | Component renders before `id` is set | "No document selected" message is shown. |
-| mdv-013 | must-show-empty-state | Content is `""` or whitespace-only | "Empty document" icon and message are shown. |
-| mdv-014 | should-apply-no-flash-theme-on-web | (Web SSR) User has persisted theme "dark" | Dark theme is applied before first paint (no visible theme flash). |
+| mdv-001 | fetch-by-id | `id="abc123"` | Fetcher is called with id `"abc123"`. |
+| mdv-002 | idle-state | `id=undefined` | Component enters idle state; no fetch occurs. |
+| mdv-003 | fetch-timeout | `timeoutMs=5000`, fetch hangs >5s | Fetch is aborted; error state shown. |
+| mdv-004 | fetch-error-handling | Fetcher returns error with message | Error state displays error message in detail text. |
+| mdv-005 | sanitized-rendering | Markdown with `<script>alert('xss')</script>` | Script tag is removed; no script executes. |
+| mdv-006 | code-syntax-highlighting | Markdown with ` ```js\nvar x=1;\n``` ` (web) | Rendered `<code>` contains `<span>` elements carrying inline `--shiki-light`/`--shiki-dark` custom properties (JavaScript tokens are colorized); no bare color literal appears in the HTML. |
+| mdv-007 | theme-persistence | (Web) User selects theme "dark"; app restarts | On restart, "dark" theme is still active. |
+| mdv-008 | theme-palette-application | Active palette has `--mdv-text: #fff` | Content root carries inline style `--mdv-text: #fff`; rendered text resolves to `#fff` via `var(--mdv-text)`. |
+| mdv-009 | toolbar-display | Component renders | Toolbar is visible with title and theme switcher. |
+| mdv-010 | document-title-display | `title="My Doc"` in fetched document | Toolbar displays "My Doc". |
+| mdv-011 | loading-state | Fetch is in progress | Spinner icon and "Loading…" text are visible. |
+| mdv-012 | idle-state | Component renders before `id` is set | "No document selected" message is shown. |
+| mdv-013 | empty-state | Content is `""` or whitespace-only | "Empty document" icon and message are shown. |
+| mdv-014 | no-flash-theme | (Web SSR) User has persisted theme "dark" | Dark theme is applied before first paint (no visible theme flash). |
+| mdv-015 | theme-switcher-touch-target | Component renders | Theme switcher control's hit area measures at least 44×44pt (iOS) / 48×48dp (Android). |
+| mdv-016 | abort-on-id-change | `id` changes from `"abc"` to `"xyz"` while `"abc"`'s fetch is pending | `"abc"`'s fetch is aborted; only `"xyz"`'s result (success or error) is reflected in state. |
+| mdv-017 | sanitized-rendering | `[link](javascript:alert(1))` | Rendered `<a>` has no `href` attribute (disallowed protocol dropped by the sanitizer). |
+| mdv-018 | sanitized-rendering | Raw HTML `<img src=x onerror=alert(1)>` | `onerror` attribute is stripped (not in the attribute allowlist); no script executes. |
 
 ## Edge Cases
 
 - **Null/undefined id**: Component enters idle state; no fetch is triggered. MUST not error.
-- **Stale theme ID in storage**: If stored theme ID is no longer in the valid registry, MUST fall back to the default theme without error.
-- **Storage quota exceeded or unavailable**: Theme selection still works live; persistence just fails silently. User's session theme remains active until app restart.
+- **id changes during in-flight fetch**: The previous fetch MUST be aborted and its response (success or error) ignored; only the new `id`'s fetch determines the resulting state (see **abort-on-id-change**).
+- **Stale theme ID in storage (web)**: If stored theme ID is no longer in the valid registry, MUST fall back to the default theme without error.
+- **Storage quota exceeded or unavailable (web)**: Theme selection still works live; persistence just fails silently. User's session theme remains active until app restart.
 - **CSP blocks bootstrap script (web)**: No-flash protection is disabled; SSR paint uses default theme, then hydration applies persisted theme (visible flash). Component still functions.
 - **Fetch timeout with no timeout configured**: Uses default timeout (15000ms).
 - **Very large markdown content**: Component renders all content; SHOULD NOT paginate or truncate.
@@ -112,13 +127,20 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `id` | `string \| undefined` | `undefined` | Document ID to fetch. If undefined, component shows idle state. |
-| `fetcher` | `MarkdownFetcher` | API forwarder | Optional custom fetcher function; used for testing. Production uses the real API. |
-| `timeoutMs` | `number` | `15000` | Fetch timeout in milliseconds. |
+| `id` | `string \| undefined` | `undefined` | (Web only) Document ID to fetch. If undefined, component shows idle state. |
+| `fetcher` | `MarkdownFetcher` | `defaultMarkdownFetcher` (`GET /api/content/markdown/:id` through the host app's API forwarder) | (Web only) Optional custom fetcher function; used for testing. Production uses the real API. |
+| `timeoutMs` | `number` | `15000` | (Web only) Fetch timeout in milliseconds. |
 | `className` | `string` | `undefined` | (Web only) CSS class to forward to the root container element. |
 | `nonce` | `string` | `undefined` | (Web only) CSP nonce for the pre-hydration bootstrap script. Required if host app enforces strict CSP. |
-| `palette` | `SemanticPalette` | N/A | (Apple only) Semantic color palette to apply to rendered content. |
-| `highlighter` | `CodeHighlighter` | Default | (Apple only) Optional custom code syntax highlighter; uses default if omitted. |
+| `palette` | `SemanticPalette` | N/A (required) | (Apple only) Semantic color palette to apply to rendered content. |
+| `highlighter` | `CodeHighlighter` | `nil` (no highlighting; falls back to monochrome themed monospace) | (Apple only) Optional custom code syntax highlighter; uses default if omitted. |
+
+**Types referenced above:**
+- `MarkdownFetcher`: `(id: string, signal: AbortSignal) => Promise<MarkdownDocument>` — given a document id and an abort signal, resolves the fetched document or rejects with an error.
+- Document shape (fields the viewer reads): `{ id: string; title: string; content: string }` — `title` renders in the toolbar; `content` is the raw markdown body.
+- `SemanticPalette` (Apple): the app-wide semantic color-role palette (e.g. `.primaryText`) — the same type used for theming elsewhere in the app.
+- `CodeHighlighter` (Apple): `func highlight(_ code: String, language: String?, palette: SemanticPalette) -> NSAttributedString?`.
+- Theme ID set (web): `dark` (default), `light`, `sepia`, `github` — validated against the viewer's theme registry; an unrecognized or stale id falls back to the default.
 
 ## Deep Linking
 
@@ -126,7 +148,17 @@ Not applicable: Component fetches by document ID; deep linking to a specific doc
 
 ## Localization
 
-Not applicable: UI displays only state messages ("Loading…", "Failed to load document", "Empty document", "No document selected") which are hardcoded. Markdown content itself is localized by the backend providing the content; the component renders it as-is.
+Five user-facing strings are hardcoded and should be externalized as localization keys:
+
+| String Key | Default (en) | Context |
+|-----------|-------------|---------|
+| `mdv.idle.detail` | No document selected. | Idle state message |
+| `mdv.loading.title` | Loading… | Loading state title |
+| `mdv.error.title` | Failed to load document | Error state title |
+| `mdv.empty.title` | Empty document | Empty state title |
+| `mdv.empty.detail` | This document has no content yet. | Empty state detail |
+
+The error detail text shown in the Error state comes from the fetch/network layer, not from a fixed string in this component, and is not part of this key set; a network error with no message MUST still show a generic, localized fallback (see **fetch-error-handling**, Edge Cases). Markdown content itself is localized by the backend providing the content in the appropriate language; the component renders it as-is.
 
 ## Accessibility Options
 
@@ -142,13 +174,13 @@ Not applicable: No analytics instrumentation in source. Host app or a wrapper ca
 
 ## Privacy
 
-**Data collected**: Theme preference (ID string, e.g., "dark" or "light"). No sensitive user data is collected or transmitted.
+**Data collected**: Theme preference (ID string, e.g., "dark" or "light") — web only, where the component owns the selection. On Apple, the component receives `palette` from the host and does not itself collect or store anything. No sensitive user data is collected or transmitted on either platform.
 
-**Storage**: Theme ID is persisted to localStorage (web) or Preferences (Apple). It is local-only; not sent to a server.
+**Storage**: On web, the theme ID is persisted to `localStorage`, local-only and never sent to a server. On Apple, persistence (if any) is the host's responsibility — e.g. via `UserDefaults` — since the component only receives an already-resolved `palette`.
 
 **Transmission**: No data is transmitted to analytics or telemetry services by the component.
 
-**Retention**: Theme preference persists until the user clears storage or selects a different theme. No expiry or automatic cleanup.
+**Retention**: On web, the theme preference persists until the user clears storage or selects a different theme; no expiry or automatic cleanup. Apple retention is whatever the host implements.
 
 ## Logging
 
@@ -156,37 +188,62 @@ Not applicable: No logging instrumented in source. Host app can log component li
 
 ## Platform Notes
 
-- **SwiftUI**: Component is MarkdownViewerController (extends PlatformViewController). Holds a MarkdownTextPane and MarkdownDocumentRenderer. Re-renders AttributedText on palette change (does not cache) to keep theming synchronized. Palette is a property; assign a new palette to trigger refresh. Use optional CodeHighlighter for syntax highlighting support.
+- **SwiftUI**: No SwiftUI-native implementation exists yet; this is guidance for one. A wrapper would expose the same inputs as a view — `content: String`, `palette: SemanticPalette`, and an optional `highlighter` — either by hosting `MarkdownViewerController` via `NSViewControllerRepresentable`/`UIViewControllerRepresentable`, or by reimplementing the render step directly (e.g. `Text(AttributedString(markdown:))`) and refreshing on `.onChange(of: palette)`.
 
 - **Compose**: Start with a Column in a scrollable Box for the toolbar and content area. Toolbar uses Row with title Text and a theme switcher Button. Content is rendered as composable markdown blocks with theme colors applied via CompositionLocal. Consider LazyColumn for very large documents. Apply theme palette via Material theme or custom color scheme.
 
-- **React/Web**: File: MarkdownViewer.tsx. Client component that fetches via useMarkdownDocument hook, renders MarkdownRenderer output. Pre-hydration bootstrap script applies persisted theme to document root before React hydration (prevents no-flash). Toolbar uses APT design tokens (apt-* classes). Theme ID persisted to localStorage; stale IDs validated against registry. Palette applied as inline CSS custom properties (--mdv-*) on content root.
+- **React/Web**: File: `MarkdownViewer.tsx`. Client component that fetches via the `useMarkdownDocument` hook (default fetcher: `GET /api/content/markdown/:id`) and renders `MarkdownRenderer` output. Pre-hydration bootstrap script applies the persisted theme to the content root before React hydration (prevents no-flash; needs a CSP `nonce` under a strict `script-src` policy). Chrome (container, toolbar, switcher) uses APT design tokens: container `border border-apt-border bg-apt-bg rounded-xl`; toolbar `bg-apt-surface` background, `text-apt-text text-sm font-medium` text, `px-4 py-3` padding (16px horizontal × 12px vertical). Theme ID persisted to `localStorage`; stale IDs validated against the registry and fall back to the default. The content root carries the viewer-owned `--mdv-*` palette as inline CSS custom properties, kept separate from the apt-* chrome tokens.
 
-- **AppKit / UIKit**: Parallel to SwiftUI; use NSTextView (macOS) or UITextView (iOS) with attributed markdown. Create a view controller that holds toolbar (NSView/UIView with title label and theme switcher) and text view. Apply theme by regenerating AttributedString on palette change (similar to SwiftUI). Manage theme persistence via UserDefaults.
+- **AppKit / UIKit**: Component is `MarkdownViewerController` (a `PlatformViewController` — `NSViewController` on macOS, `UIViewController` on iOS). Holds a `MarkdownTextPane` and a `MarkdownDocumentRenderer`; re-renders the attributed text on palette change (does not cache) to keep theming synchronized. `palette` is a host-injected property — assigning a new value triggers `refresh()`. Accepts an optional `CodeHighlighter` for syntax-highlighting support. The controller renders `content` directly and has no toolbar, fetch, or theme-persistence code of its own — a host that wants those composes them around it, e.g. persisting the chosen palette id to `UserDefaults`.
 
 - **WinUI 3**: Use RichTextBlock (read-only, formatted text) or RichEditBox (editable, but configure as read-only). Toolbar is a Grid with title TextBlock and ComboBox for theme selection. Theme colors are applied via resource dictionary with semantic color keys. Handle theme changes by updating all relevant brushes and re-applying to the text block. Persist theme selection to ApplicationData.Current.LocalSettings.
 
 ## Design Decisions
 
-- **No-flash theme on web**: Pre-hydration bootstrap script runs synchronously before React hydration so the persisted theme is applied before first paint. Prevents the visual jarring of loading in the default theme and then switching. The script targets its own parent element to isolate the scope.
+- **Decision**: A pre-hydration bootstrap script runs synchronously before React hydration so the persisted theme is applied before first paint. The script targets its own parent element to isolate its scope.
+  **Rationale**: Prevents the visual jarring of loading in the default theme and then switching.
+  **Approved**: pending
 
-- **No AttributedString caching on Apple**: Rendered markdown is stored as source text, not cached as an AttributedString. Re-rendering on palette change is cheap enough that caching adds unnecessary complexity and divergence risk. This ensures the rendered output stays synchronized with the active palette.
+- **Decision**: Rendered markdown is stored as source text, not cached as an `AttributedString`; the Apple renderer re-renders on every palette change instead.
+  **Rationale**: Re-rendering on palette change is cheap enough that caching adds unnecessary complexity and divergence risk, and this keeps the rendered output synchronized with the active palette.
+  **Approved**: pending
 
-- **Per-instance theme state, not backend-tracked**: Theme selection is persisted locally (localStorage/Preferences) and not synchronized to a backend user preference. This allows independent theme choices across multiple app instances and respects local-first behavior. If backend tracking is desired, the host app can implement it separately.
+- **Decision**: Theme selection is persisted locally — in `localStorage` on web, where the component owns it — and not synchronized to a backend user preference. On Apple, the component holds no theme state at all; the host owns the selection via the injected `palette`.
+  **Rationale**: Allows independent theme choices across multiple app instances and respects local-first behavior. A host app can implement backend tracking, or its own persistence, separately if desired.
+  **Approved**: pending
 
-- **Fetch timeout is per-instance**: Different use cases may require different timeout values (e.g., a quick preview vs. a long-form document). Timeouts are configured per component instance, not globally, to maximize flexibility.
+- **Decision**: Fetch timeouts are configured per component instance (`timeoutMs`), not globally.
+  **Rationale**: Different use cases may require different timeout values (e.g., a quick preview vs. a long-form document), so per-instance configuration maximizes flexibility.
+  **Approved**: pending
 
-- **Storage errors are silent**: If theme persistence fails (quota exceeded, permissions denied, private mode), the operation is logged but the component continues working with the theme in memory. The user retains the theme for the session, and it is not persisted.
+- **Decision**: If theme persistence fails on web (quota exceeded, permissions denied, private mode), the operation fails silently and the component continues working with the theme in memory for the current session.
+  **Rationale**: The user's chosen theme still applies live; a persistence failure isn't fatal to the component's function, so nothing is surfaced to the user and no log event is emitted (see Logging).
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [wcag-2.1-aa](agenticdevelopercookbook://compliance/accessibility#wcag-2.1-aa) | passed | Accessibility |
-| [platform-design-language](agenticdevelopercookbook://compliance/design#platform-design-language) | passed | Design |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+| [content-security-policy](agenticdevelopercookbook://compliance/security#content-security-policy) | passed | Security |
+| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | partial | Security |
+| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy & Data |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+
+`screen-reader-support`/`keyboard-navigable`/`semantic-markup` rest on the `aria-live`/`aria-busy`/`role="alert"` markup and the native `<select>` theme switcher shown in `MarkdownViewer.tsx`; `dynamic-type-support`, `contrast-ratio`, and `touch-target-size` are `partial` because the requirement is stated but not measured or enforced in the given source; `input-sanitization` and `content-security-policy` rest on the `rehype-sanitize` allowlist and the bootstrap script's `nonce` support in `process-markdown.ts`/`MarkdownViewer.tsx`; `secure-transport` is `partial` because the fetcher calls a relative API path with no TLS enforcement visible from this source; `data-minimization` rests on the Privacy section above; the internationalization checks rest on the Localization key table above; and the platform-compliance checks rest on the APT design tokens and the theme registry/palette system.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web (React/TypeScript) and Apple (Swift) sources. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; add a types note (fetcher signature, document shape, theme registry) and a concrete sanitization allowlist; split Apple theme ownership from web's (host-injected `palette` vs. component-owned `localStorage`) across Requirements, Privacy, and Platform Notes, and fix "Preferences" to `UserDefaults`; move the mislabeled SwiftUI bullet to AppKit/UIKit and write a real SwiftUI note; rebuild Compliance as itemized per-check rows instead of one unverifiable `wcag-2.1-aa` line; reformat Design Decisions to Decision/Rationale/Approved and resolve the storage-errors logging contradiction in favor of the source (no logging); make Localization concrete with string keys; add `abort-on-id-change` and `theme-switcher-touch-target` requirements with vectors, plus sanitizer vectors for `javascript:` links and `onerror`; fix the Appearance padding contradiction and move Tailwind classes to the React/Web note; fix the States idle/empty contradiction and note the Error state has no retry; mark `id`/`fetcher`/`timeoutMs` Web-only for platform symmetry; name the fetcher's default endpoint; add discoverability tags and `depends-on`/`related` links to the composed markdown ingredients. |
