@@ -3,11 +3,11 @@ id: c97bebaf-9e6d-49a7-a4bb-90e8e0ea0181
 title: Spinner
 domain: agenticdevelopertoolkit://recipes/spinner
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -31,18 +31,18 @@ approved-date: ''
 
 ## Overview
 
-The Spinner is an indeterminate loading indicator rendered as an animated icon. It communicates to users that an async operation is in progress without showing a specific completion percentage. The component wraps the Lucide `Loader2` icon and applies a continuous spin animation. Size and color are customizable via className; the component defaults to a 1rem (16px) icon with muted text color.
+The Spinner is an indeterminate loading indicator rendered as an animated icon. It communicates to users that an async operation is in progress without showing a specific completion percentage. The React/Web reference implementation wraps the Lucide `Loader2` icon and applies a continuous spin animation. Size and color are customizable via className; the component defaults to a 1rem (16px) icon with muted text color.
 
 ## Behavioral Requirements
 
-- **must-render-icon**: Component MUST render the Lucide `Loader2` icon.
-- **must-apply-spin-animation**: Component MUST apply a continuous spinning animation to the icon.
-- **must-accept-classname**: Component MUST accept and apply a custom `className` prop that overrides or extends the default styling.
-- **must-accept-props**: Component MUST accept and forward all valid React props accepted by the underlying Lucide `Loader2` component.
-- **must-set-aria-label**: Component MUST set `aria-label="Loading"` to communicate the spinner's purpose to assistive technology.
-- **must-set-role**: Component MUST set `role="status"` to indicate this is a live status region that announces loading state.
-- **must-default-size**: Component MUST default to 1rem (16px) size when no `className` is provided.
-- **must-default-color**: Component MUST default to muted text color (`text-apt-text-muted`) when no `className` is provided.
+- **render-indicator**: Component MUST render a circular indeterminate loading indicator (the React/Web reference implementation uses Lucide's `Loader2` icon — see Platform Notes).
+- **spin-animation**: Component MUST apply a continuous spinning animation to the icon; the component does not itself query `prefers-reduced-motion` (see Accessibility Options — Reduce Motion, and Edge Cases).
+- **accept-classname**: Component MUST accept and apply a custom `className` prop that overrides or extends the default styling.
+- **accept-props**: Component MUST accept and forward all valid React props accepted by the underlying Lucide `Loader2` component.
+- **aria-label**: Component MUST set `aria-label="Loading"` to communicate the spinner's purpose to assistive technology. The label is a fixed English string, not a configurable prop (see Localization, Design Decisions).
+- **status-role**: Component MUST set `role="status"` to indicate this is a live status region that announces loading state.
+- **default-size**: Component MUST default to 1rem (16px) size unless `className` supplies a size-overriding utility.
+- **default-color**: Component MUST default to the muted-foreground text color token unless `className` supplies a color-overriding utility (the React/Web reference implementation uses `text-apt-text-muted` — see Platform Notes).
 
 ## Appearance
 
@@ -70,28 +70,27 @@ Not applicable: Spinner is a stateless loading indicator with no interactive sta
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| spinner-001 | must-render-icon | `<Spinner />` | Lucide `Loader2` icon visible on screen |
-| spinner-002 | must-apply-spin-animation | `<Spinner />` | Icon continuously rotates 360° smoothly without pause |
-| spinner-003 | must-accept-classname | `<Spinner className="size-8 text-red-500" />` | Icon renders 2rem (32px) in red color, overriding defaults |
-| spinner-004 | must-accept-props | `<Spinner data-testid="loading-indicator" />` | `data-testid` attribute is present on rendered element and accessible via DOM queries |
-| spinner-005 | must-set-aria-label | `<Spinner />` rendered in a page | Screen reader announces "Loading" when focus enters the spinner's region or the region is announced as live |
-| spinner-006 | must-set-role | `<Spinner />` rendered in the DOM | Element has `role="status"` in its DOM attributes |
-| spinner-007 | must-default-size | `<Spinner />` with no className | Icon renders at exactly 1rem (16px) width and height |
-| spinner-008 | must-default-color | `<Spinner />` with no className | Icon color matches the design system's muted text token (`text-apt-text-muted`) |
+| spinner-001 | render-indicator | `<Spinner />` | A circular indeterminate spinner icon is visible on screen (rendered via Lucide `Loader2` in the reference implementation) |
+| spinner-002 | spin-animation | `<Spinner />` | Rendered element has a non-empty computed `animation-name` (Tailwind's `animate-spin` keyframe), indicating continuous rotation |
+| spinner-003 | accept-classname | `<Spinner className="size-8 text-red-500" />` | Icon renders 2rem (32px) in red color, overriding defaults |
+| spinner-004 | accept-props | `<Spinner data-testid="loading-indicator" />` | `data-testid` attribute is present on rendered element and accessible via DOM queries |
+| spinner-005 | aria-label | `<Spinner />` rendered in a page | The rendered element exposes an accessible name of `"Loading"` (via the `aria-label` attribute), queryable through the accessibility tree (e.g. `getByRole('status', { name: 'Loading' })`) |
+| spinner-006 | status-role | `<Spinner />` rendered in the DOM | Element has `role="status"` in its DOM attributes |
+| spinner-007 | default-size | `<Spinner />` with no `className`, or a `className` that omits a `size-*` utility | Icon renders at exactly 1rem (16px) width and height |
+| spinner-008 | default-color | `<Spinner />` with no `className`, or a `className` that omits a `text-*` color utility | Icon color matches the design system's muted text token (`text-apt-text-muted`) |
 
 ## Edge Cases
 
-- **Empty or undefined className**: When `className` is undefined, falsy, or empty string, defaults apply (1rem size, muted color). Behavior: MUST use defaults without error.
-- **Multiple spin animations**: If a parent element or global CSS also defines a spin animation, the component's animation MUST take precedence via specificity. Behavior: MUST show the component's spin animation, not a competing animation.
+- **className provided without a matching size or color utility**: When `className` is undefined, falsy, empty, or does not include a `size-*`/`text-*` utility, `tailwind-merge` leaves the corresponding default (1rem size, muted color) unaffected. Behavior: MUST use the default for whichever axis (size, color) `className` doesn't override, without error.
 - **Very large classname overrides**: When `className` includes extreme size values (e.g., `size-96`), the component MUST render at that size without clipping or overflow issues (layout depends on parent container). Behavior: MUST render without error; parent container is responsible for containing the size.
-- **No animation support**: If a parent applies `prefers-reduced-motion: reduce`, the Tailwind `animate-spin` class SHOULD be removed or the animation SHOULD be disabled by external CSS media query override. Behavior: The component itself does not query `prefers-reduced-motion`; the animation is controlled via the Tailwind utility class (see Platform Notes for expected behavior).
+- **Reduced-motion preference enabled**: The component does not query `prefers-reduced-motion` itself, so the Tailwind `animate-spin` class keeps animating even when the OS/browser motion-reduction setting is enabled. Behavior: the animation continues to run; a caller who needs to honor the preference must override it via `className` (e.g. a `motion-reduce:` utility) — see Accessibility Options.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `className` | `string` | `undefined` | Additional or overriding Tailwind classes (e.g., `"size-8 text-green-500"`). Merged with default classes via `cn()` utility. |
-| `...props` | `React.ComponentProps<Loader2>` | `undefined` | Any valid prop accepted by Lucide's `Loader2` component (e.g., `strokeWidth`, `data-*` attributes, event handlers). |
+| `...props` | `React.ComponentProps<typeof Loader2>` | `undefined` | Any valid prop accepted by Lucide's `Loader2` component (e.g., `strokeWidth`, `data-*` attributes, event handlers). |
 
 ## Deep Linking
 
@@ -99,13 +98,15 @@ Not applicable: Spinner is a stateless UI component and does not represent a nav
 
 ## Localization
 
-Not applicable: Spinner does not expose user-facing strings to localize. The `aria-label="Loading"` is a fixed English label intended for assistive technology, not end-user display text.
+| String Key | Default (en) | Context |
+|-----------|-------------|---------|
+| _(none — hardcoded, not externalized)_ | `"Loading"` | `aria-label` on the rendered icon, announced to assistive technology; not exposed as a configurable or localizable prop (see Design Decisions) |
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | The `animate-spin` Tailwind class respects CSS `prefers-reduced-motion: reduce` and will not animate when the user's OS or browser accessibility setting enables motion reduction. The spinner remains visible but still; it is not hidden. This behavior is provided by the Tailwind CSS framework, not by explicit code in the component. |
+| Reduce Motion | The plain `animate-spin` Tailwind utility does NOT respect `prefers-reduced-motion` on its own — Tailwind only suppresses the animation when composed with a `motion-safe:`/`motion-reduce:` variant, which this component does not use. The spinner keeps animating even when the OS/browser motion-reduction setting is enabled; a caller who needs to honor that preference must override the animation via `className` (see Edge Cases). |
 | Increase Contrast | Not directly implemented in component. Foreground and background contrast depends on the parent container's background and the `text-apt-text-muted` color token; teams using the component SHOULD ensure the muted text color meets WCAG AA 4.5:1 contrast ratio against the background. Custom `className` overrides (e.g., `text-black` or `text-white`) can be used to achieve higher contrast if needed. |
 | Differentiate Without Color | Not applicable. The component conveys loading state via motion (spin animation) and the aria-label, not by color alone. |
 
@@ -127,34 +128,54 @@ Not applicable: Component does not perform any logging. Callers may add logging 
 
 ## Platform Notes
 
-- **React/Web**: Rendered via Lucide's `Loader2` icon component (the primary platform). Accepts all React and Lucide props. Animation is provided by Tailwind CSS's `animate-spin` utility. The `cn()` utility (likely from `clsx` or similar) merges default and custom classnames with proper precedence. No framework-specific state or hooks are used internally; the component is a pure presentational wrapper.
+- **React/Web**: Rendered via Lucide's `Loader2` icon component (the reference implementation). Accepts all React and Lucide props via `{...props}` (typed `React.ComponentProps<typeof Loader2>`). Animation is provided by Tailwind CSS's `animate-spin` utility. The `cn()` utility (`clsx` composed with `tailwind-merge`) merges default and custom classnames; `tailwind-merge` is what makes the caller's classes win over the defaults. No framework-specific state or hooks are used internally; the component is a pure presentational wrapper.
 
-- **SwiftUI**: Start from SwiftUI's native `ProgressView(label: "Loading") { }` with `.progressViewStyle(.circular)`. To match the React behavior, disable the indefinite-duration animation, apply the same muted text color token, and size it to 16pt by default. The component would need to accept a `@ViewBuilder` modifier chain to support the web component's `...props` flexibility. No equivalent to React's `className` prop exists in SwiftUI; instead, use environment modifiers (`.foregroundColor()`, `.font()`, `.scaleEffect()`).
+- **SwiftUI**: Start from `ProgressView()` with `.progressViewStyle(.circular)`; SwiftUI drives the indeterminate spin automatically while the view is visible, matching **spin-animation**. Apply the muted text color token via `.foregroundStyle(...)` and size it to 16pt by default (e.g. via `.controlSize()`/`.scaleEffect()`). There is no equivalent to React's `className` prop; use environment modifiers (`.foregroundStyle()`, `.font()`, `.scaleEffect()`) instead, and `.accessibilityLabel("Loading")` for the assistive-technology label (see **aria-label**).
 
-- **Compose** (Kotlin/Android): Start from `CircularProgressIndicator()` with default size and color. Set `modifier = Modifier.size(16.dp)` and `.tint(Color.Unspecified.copy(alpha = 0.6f))` (or the muted text color token). Compose's animation timing is built-in to `CircularProgressIndicator` and respects `LocalAnimationTimeMillis`. To support custom properties like the web component, accept a `Modifier` parameter and compose it with the defaults (similar to the web component's `className` merging).
+- **Compose** (Kotlin/Android): Start from `CircularProgressIndicator()`, which animates indeterminately on its own — Compose has no `LocalAnimationTimeMillis` API to configure this. Set `modifier = Modifier.size(16.dp)` for the default size and pass the muted-foreground token directly via the composable's `color` parameter (Compose has no `Modifier.tint()`). To support custom properties like the web component's `className` merging, accept a `Modifier` parameter and compose it with the defaults.
 
-- **AppKit / UIKit** (macOS/iOS): Use `NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 16, height: 16))` (macOS) or `UIActivityIndicatorView(style: .medium)` (iOS). Set `startAnimating()` to begin the spin. Size defaults to 16pt; color defaults to the muted text color token. No direct equivalent to React's `className` or `...props` forwarding; instead, create a wrapper that exposes individual properties (`size`, `color`, `isAnimating`) and applies them via settable view properties.
+- **AppKit / UIKit** (macOS/iOS): Use `NSProgressIndicator` (macOS) with `style = .spinning`, then call `startAnimation(_:)` to begin the spin; or `UIActivityIndicatorView(style: .medium)` (iOS) and call `startAnimating()` — the two platforms expose different method names for the same action. Size defaults to 16pt; color defaults to the muted text color token via the view's tint/appearance. No direct equivalent to React's `className` or `...props` forwarding; instead, create a wrapper that exposes individual properties (`size`, `color`, `isAnimating`) and applies them via settable view properties.
 
-- **WinUI 3** (Windows): Use `ProgressRing` with `IsIndeterminate="True"`. Size it to 16×16 DIP (device-independent pixels, roughly equivalent to 16px on 96 DPI). Set `Foreground` to the muted text color token. `ProgressRing` does not expose a spin animation property directly; animation is automatic when `IsIndeterminate` is true. To support custom styling, expose a `Style` property that consumers can override via XAML or code-behind; this provides the equivalent of the React component's `className` flexibility.
+- **WinUI 3** (Windows): Use `ProgressRing` with `IsIndeterminate="True"`. Size it to 16×16 DIP (device-independent pixels, roughly equivalent to 16px on 96 DPI). Set `Foreground` to the muted text color token. `ProgressRing` animates automatically once `IsIndeterminate` is true and exposes no separate spin-animation property to configure. To support custom styling, expose a `Style` property that consumers can override via XAML or code-behind; this provides the equivalent of the React component's `className` flexibility.
 
 ## Design Decisions
 
-- **Indeterminate vs. determinate**: The component renders an indeterminate spinner (no progress percentage) because the source code and comment explicitly state "Indeterminate loading spinner." A determinate progress bar serves a different use case (showing completion percentage) and is not in scope.
+- **Decision**: The component renders an indeterminate spinner (no progress percentage), not a determinate progress bar.
+  **Rationale**: The source code and comment explicitly state "Indeterminate loading spinner." A determinate progress bar serves a different use case (showing completion percentage) and is not in scope.
+  **Approved**: pending
 
-- **No wrapper div**: The component renders the Lucide icon directly without wrapping it in a `<div>` or other container. This keeps the DOM minimal and allows the caller to control layout and spacing via parent container styling.
+- **Decision**: The component renders the Lucide icon directly, with no wrapping `<div>` or other container.
+  **Rationale**: This keeps the DOM minimal and lets the caller control layout and spacing via the parent container's styling.
+  **Approved**: pending
 
-- **className merging via cn()**: The default classes are passed to `cn()` along with the custom `className`. The `cn()` utility ensures Tailwind class precedence is correct (custom classes override defaults). This design allows callers to customize size and color without needing to know the default class names.
+- **Decision**: Default classes are merged with the caller's `className` via `cn()` (`clsx` + `tailwind-merge`).
+  **Rationale**: `tailwind-merge` resolves Tailwind class precedence correctly, so the caller's classes override the defaults. This lets callers customize size and color without needing to know the default class names.
+  **Approved**: pending
 
-- **Forwarding all Loader2 props**: The component uses `{...props}` to forward any additional React props to the underlying `Loader2` component. This allows callers to add event handlers (if `Loader2` supports them), data attributes, or other HTML attributes without the Spinner component needing to explicitly whitelist each one. This provides extensibility similar to the `className` customization.
+- **Decision**: The component forwards all remaining props to the underlying `Loader2` component via `{...props}` instead of whitelisting individual props.
+  **Rationale**: This lets callers add event handlers (if `Loader2` supports them), data attributes, or other HTML attributes without the Spinner component needing to explicitly whitelist each one — the same extensibility the `className` customization provides.
+  **Approved**: pending
 
-- **Fixed aria-label**: The `aria-label` is hardcoded to "Loading" because the source code does not expose it as a prop. Callers who need a different label (e.g., for translations) would need to use a different approach (e.g., render the Loader2 icon directly with a custom label) or would need this component to be enhanced to accept an `ariaLabel` prop.
+- **Decision**: The `aria-label` is hardcoded to `"Loading"` rather than exposed as a prop.
+  **Rationale**: The source code does not expose the label as a prop. Callers who need a different or localized label would need to render the `Loader2` icon directly with a custom label instead of using this component.
+  **Approved**: pending
 
 ## Compliance
 
-Not applicable: Component does not involve security-sensitive data handling, user authentication, or regulated workflows. Standard web accessibility (WCAG 2.1) is addressed in the Accessibility section.
+| Check | Status | Category |
+|-------|--------|----------|
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+
+These statuses rest on the source directly: `role="status"` and a static `aria-label="Loading"` are set on the `Loader2` element itself with no wrapper (syntactically valid ARIA, but the source gives no independent way to verify it's reliably announced, hence `partial` for semantic-markup/screen-reader-support), contrast depends entirely on the caller's background (hence `partial` for contrast-ratio), the plain `animate-spin` class has no `motion-safe:`/`motion-reduce:` handling (hence `failed` for reduced-motion), and the `"Loading"` string is hardcoded with no externalization mechanism (hence `failed` for the two internationalization checks).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; separated Lucide/Tailwind specifics out of behavioral requirements into Platform Notes; corrected invented/wrong Platform Notes APIs (Compose, AppKit/UIKit, SwiftUI, cn()); fixed Reduce Motion/Edge Cases contradiction over `prefers-reduced-motion`; reworded untestable test vectors and dropped the unmeasurable specificity edge case; reworded default-size/default-color for override precision; fixed `React.ComponentProps<typeof Loader2>` configuration type; converted Design Decisions to Decision/Rationale/Approved triples; replaced Compliance and Localization "Not applicable" with populated tables; fixed frontmatter `modified` date-format mismatch |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React source |

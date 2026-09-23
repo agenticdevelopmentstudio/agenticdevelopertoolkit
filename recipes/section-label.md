@@ -3,7 +3,7 @@ id: fce1333d-7f42-49f8-86da-508159701043
 title: SectionLabel
 domain: agenticdevelopertoolkit://recipes/section-label
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: '2026-07-03'
@@ -24,6 +24,7 @@ depends-on: []
 related:
 - agenticdevelopertoolkit://recipes/user-card
 - agenticdevelopertoolkit://recipes/field
+- agenticdevelopertoolkit://recipes/section-header
 references: []
 approved-by: ''
 approved-date: ''
@@ -108,6 +109,11 @@ with trailing (justify-between row)
 - Sufficient for a quiet in-pane label whose associated content follows visually;
   the treatment relies on size/case/tracking, not color alone, to read as a
   heading.
+- Rendered at `text-[0.625rem]` (10px) in the dim `apt-text-dim` color token,
+  this is small, low-contrast text; it MUST meet WCAG AA's 4.5:1 contrast ratio
+  against the pane/card surfaces it appears on (see the `contrast-ratio`
+  compliance check below) — the source defines the token but not its resolved
+  color, so verify `apt-text-dim` against each surface it is used on.
 
 ## Conformance Test Vectors
 
@@ -115,10 +121,11 @@ with trailing (justify-between row)
 |---|---|---|---|
 | T1 | applies-display-treatment, renders-children-as-label | `<SectionLabel>Recent activity</SectionLabel>` | text "Recent activity" is present; its className contains every token of `sectionLabelClass` |
 | T2 | bare-div-without-trailing | same as T1 | label is a single div (no justify-between wrapper row) |
-| T3 | row-with-trailing, renders-children-as-label | `<SectionLabel trailing={<button>gear</button>}>Stats</SectionLabel>` | "Stats" is present and a button named "gear" is present on the same row |
+| T3 | row-with-trailing, renders-children-as-label | `<SectionLabel trailing={<button>gear</button>}>Stats</SectionLabel>` | outer wrapper's className contains `justify-between`; the label element (text "Stats") and the button named "gear" are both direct children of that wrapper |
 | T4 | exports-class-string | import `sectionLabelClass` | it is a string containing `font-mono`, `text-[0.625rem]`, `uppercase`, `tracking-[0.1em]`, `text-apt-text-dim` |
 | T5 | merges-classname-on-label | `<SectionLabel className="mb-2">Env</SectionLabel>` | label className contains both `mb-2` and `text-apt-text-dim` |
 | T6 | distinct-from-caption-and-title | compare to `fieldCaptionClass` | `sectionLabelClass` differs (`text-[0.625rem]`/`apt-text-dim` vs `text-[0.7rem]`/`apt-text-muted`) |
+| T7 | distinct-from-caption-and-title | compare `sectionLabelClass` to `SectionHeader`'s title treatment | `sectionLabelClass` contains no `apt-gold` token — it differs entirely from `SectionHeader`'s gold title color, not only from `fieldCaptionClass` |
 
 ## Edge Cases
 
@@ -176,43 +183,47 @@ no action.
 
 ## Platform Notes
 
-- **SwiftUI**: A SwiftUI implementation would start from `Text` or `Label` with font modifiers for the micro-heading treatment — `.font(.system(.caption2, design: .monospaced))`, `.fontWeight(.medium)`, `.tracking(0.1)`, and foreground color bound to the muted text semantic color.
-- **Compose**: An Android/Compose implementation would start from `Text` with `fontSize` (0.625rem equivalent), `fontWeight` of medium, `letterSpacing` (0.1em equivalent), and text color matching the web treatment's `apt-text-dim` muted tone.
+- **SwiftUI**: A SwiftUI implementation would start from `Text` or `Label` with font modifiers for the micro-heading treatment — `.font(.system(.caption2, design: .monospaced))`, `.fontWeight(.medium)`, and `.tracking(1)`. SwiftUI's `tracking` is in points, not em, so `0.1` (copied literally from the CSS `em` value) gives almost no visible tracking at caption2 size; use roughly `size × 0.1` (caption2 is ~11pt, so ≈1pt) to match `tracking-[0.1em]`. Bind the foreground to the tertiary text semantic color (`.foregroundStyle(.tertiary)`), not the secondary color `fieldCaptionClass` uses — the two treatments must stay visually distinct.
+- **Compose**: An Android/Compose implementation would start from `Text` with `fontSize = 10.sp` (matching `text-[0.625rem]`), `fontFamily = FontFamily.Monospace`, `fontWeight = FontWeight.Medium`, and `letterSpacing = 0.1.em` (matching `tracking-[0.1em]`). Set the text color to the theme's dim/tertiary text color (e.g. a tertiary-text token distinct from the one used for captions), matching the web treatment's `apt-text-dim` — not the muted/secondary tone `fieldCaptionClass` uses.
 - **React/Web**: Component exported from `packages/web/packages/ui/src/components/section-label.tsx`. Stateless div with optional flex-row wrapper for the trailing slot. Merges consumer `className` after `sectionLabelClass` via the `cn()` utility (from `lib/utils`). No `"use client"` directive — renders in a server component. Sibling treatments (`fieldCaptionClass` and `SectionHeader`) are defined separately; do not collapse them.
-- **AppKit / UIKit**: An iOS/macOS implementation would start from `UILabel` or `Text` with font set to monospaced at 0.625rem size, medium weight, letter spacing of 0.1em, and text color bound to the muted secondary text semantic color.
-- **WinUI 3**: A Windows/WinUI implementation would start from `TextBlock` with `Style="{StaticResource CaptionTextBlockStyle}"` as the base. Set `CharacterCasing` to `Upper` to match the source uppercase treatment, or bind to a converter if the source text passes mixed case. Bind `Foreground` to the muted text brush resource. Apply `Margin` matching the source spacing (consistent with the flex gap and padding of the web version). For the trailing slot equivalent, use `StackPanel` with `Orientation="Horizontal"` and `HorizontalAlignment="Stretch"` to replicate the `justify-between` row.
+- **AppKit / UIKit**: An iOS/macOS implementation would start from `NSTextField` (AppKit) or `UILabel` (UIKit) — not SwiftUI's `Text` — with font `.monospacedSystemFont(ofSize: 10, weight: .medium)`, an `NSAttributedString.Key.kern` attribute of about `1` (matching `tracking-[0.1em]` at this size), and the string uppercased (`.uppercased()`). That uppercasing is a locale-sensitive transform — let it run with the current locale as the source's CSS `text-transform: uppercase` does; do not force an invariant/`en_US_POSIX` locale for user-facing text. Bind the text color to the tertiary label semantic color (`NSColor.tertiaryLabelColor` / `UIColor.tertiaryLabel`), not the secondary label color used for the caption treatment.
+- **WinUI 3**: A Windows/WinUI implementation would use a two-column `Grid` (`ColumnDefinitions="*,Auto"`) as the row, not a horizontal `StackPanel` — a `StackPanel` cannot express `justify-between`; the label sits in the `*` column and the trailing slot in the `Auto` column. `TextBlock` has no `CharacterCasing` property, so uppercase the text at the source or through a converter — again a locale-sensitive transform, so avoid an invariant-culture uppercase call for user-facing text. Set `CharacterSpacing="100"` (WinUI's units are 1/1000 em, so `100` matches `tracking-[0.1em]`), and bind `Foreground` to `TextFillColorTertiaryBrush`, not the secondary/muted brush used for the caption treatment. Set the column spacing to `8` (px), matching the source's `gap-2`, rather than a general `Margin`.
 
 ## Design Decisions
 
-- **Class export + component.** Shipping `sectionLabelClass` alongside the
-  component lets an element that can't be a `SectionLabel` (a `<legend>`, an
-  existing div) still wear the exact treatment, keeping the look in one place.
-- **Three distinct heading treatments, on purpose.** SectionLabel is not
-  `fieldCaptionClass` and not `SectionHeader`: the display micro-label is
-  quieter (dimmer, smaller, wider-tracked) than a form caption, and it is a plain
-  label rather than the gold page title. Keeping them separate prevents a
-  one-size heading that fits none of the three roles.
-- **Trailing slot instead of a separate row component.** The most common pane
-  head is "label + one action opposite it", so the `justify-between` row is built
-  in via a single `trailing` prop rather than forcing every caller to hand-roll a
-  flex row.
-- **Div, not a heading element.** It is a display label, not an outline node, so
-  it renders a `div` — semantic headings are the caller's choice when the outline
-  matters.
+- **Decision**: Ship `sectionLabelClass` as an exported string alongside the `SectionLabel` component.
+  **Rationale**: Lets an element that can't be a `SectionLabel` (a `<legend>`, an existing div) still wear the exact treatment, keeping the look in one place.
+  **Approved**: pending
+
+- **Decision**: Keep three distinct heading treatments — `SectionLabel`, `fieldCaptionClass`, and `SectionHeader` — rather than one shared heading component.
+  **Rationale**: The display micro-label is quieter (dimmer, smaller, wider-tracked) than a form caption, and it is a plain label rather than the gold page title. Keeping them separate prevents a one-size heading that fits none of the three roles.
+  **Approved**: pending
+
+- **Decision**: Build the common "label + one action opposite it" pane head into `SectionLabel` via a single `trailing` prop, rather than a separate row component.
+  **Rationale**: This is the most common pane head, so building it in avoids forcing every caller to hand-roll a flex row.
+  **Approved**: pending
+
+- **Decision**: Render a `div` (or `span`), not a semantic heading element.
+  **Rationale**: It is a display label, not an outline node; semantic headings are the caller's choice when the outline matters.
+  **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| No raw hex / arbitrary colors / `!important` (color is `apt-text-dim`) | pass | project-guidelines UI |
-| Components sourced from `@agenticdevelopertoolkit` (no bespoke UI) | pass | project-guidelines UI |
-| Treatment kept distinct from `fieldCaptionClass` / `SectionHeader` | pass | project-guidelines UI |
-| Display label does not masquerade as a semantic heading | pass | accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | partial | Internationalization |
+
+These statuses rest on the source's plain `<div>`/`<span>` markup (no ARIA role or heading claimed), its `rem`-based sizing that scales with root font size, its color reference to the `apt-text-dim` token without a resolved contrast value, its complete absence of hardcoded string literals (`children` is always caller-supplied), and its reliance on the browser's built-in `text-transform: uppercase` for case-folding of that caller-supplied text.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: name the dim/tertiary color explicitly in every non-web Platform Notes bullet instead of "muted"; give concrete SwiftUI/Compose/AppKit-UIKit/WinUI 3 translation values and flag the uppercase casing transform as locale-sensitive; rewrite T3's expected outcome as a mechanical DOM assertion and add T7 to test distinct-from-caption-and-title against SectionHeader; reformat Design Decisions into the Decision/Rationale/Approved triple; rebuild Compliance as catalog-linked checks; add section-header to related; note the WCAG contrast risk of the dim 10px text in Accessibility. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Platform Notes: remove "Not applicable" phrasing from non-web bullets; add concrete WinUI 3 translation guidance (TextBlock, CharacterCasing, Foreground, Margin, StackPanel for trailing). |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Revise recipe: fix domain URI, add "Not applicable" sections per cookbook guidelines, restructure Platform Notes as translation guidance, update status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents SectionLabel + sectionLabelClass and its boundary vs caption/title. |

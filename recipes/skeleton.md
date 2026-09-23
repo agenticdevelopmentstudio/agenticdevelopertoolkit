@@ -3,11 +3,11 @@ id: 4a3761c5-5809-43c9-9a45-6f91fe82ae97
 title: Skeleton
 domain: agenticdevelopertoolkit://recipes/skeleton
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: 2026-09-22
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,61 +35,65 @@ The Skeleton component is a loading placeholder that displays a pulsing block. I
 
 ## Behavioral Requirements
 
-- **must-render-as-div**: Component MUST render as a HTML `<div>` element.
-- **must-apply-slot-attribute**: Component MUST render with `data-slot="skeleton"` attribute.
-- **must-apply-pulsing-animation**: Component MUST apply the `animate-pulse` class to create a pulsing visual effect.
-- **must-apply-rounded-corners**: Component MUST apply the `rounded-md` class for rounded corner radius.
-- **must-apply-surface-background**: Component MUST apply the `bg-apt-surface-2` class for background color.
-- **must-accept-className**: Component MUST accept and merge a `className` prop with built-in classes via a class composition utility (e.g., `cn()` in the source).
-- **must-spread-html-props**: Component MUST accept and forward standard HTML `div` attributes (`id`, `style`, `aria-*`, etc.) to the rendered element.
-- **may-be-sized-by-props**: Component MAY accept sizing through `className` prop or inline `style` prop, allowing consumers to define width and height.
+- **render-as-div**: Component MUST render as an HTML `<div>` element.
+- **slot-attribute**: Component MUST render with a `data-slot="skeleton"` attribute.
+- **pulsing-animation**: Component MUST apply a continuous pulsing opacity animation to signal a loading state.
+- **rounded-corners**: Component MUST apply a medium corner radius.
+- **surface-background**: Component MUST apply the secondary surface background color token.
+- **class-merge**: Component MUST accept and merge a `className` prop with its built-in classes via a class composition utility (`cn()` in the source, backed by `clsx` and `tailwind-merge`).
+- **html-passthrough**: Component MUST accept and forward standard HTML `div` attributes (`id`, `style`, `aria-*`, etc.) to the rendered element.
+- **sized-by-props**: Component MAY accept sizing through the `className` prop or an inline `style` prop, allowing consumers to define width and height.
+- **reduced-motion-support**: Component MUST allow the pulsing animation to be suppressed under the user's reduced-motion preference; a consumer supplies a variant-scoped override (e.g. `motion-reduce:animate-none`) through `className`, and class-merge (see **class-merge**) preserves it alongside the built-in `animate-pulse` class rather than stripping either.
+- **aria-hidden-while-loading**: Component SHOULD be rendered with `aria-hidden="true"`, forwarded via html-passthrough (see **html-passthrough**), while a parent element carries `aria-busy="true"`, so assistive technology reads the container's busy state instead of the placeholder's empty markup.
 
 ## Appearance
 
-- **Background**: `bg-apt-surface-2` (secondary surface color token)
-- **Corner radius**: Medium rounded corners (`rounded-md`)
-- **Animation**: Pulsing opacity animation (`animate-pulse`)
-- **Padding**: None (appears to be a block-level element)
+- **Background**: Secondary surface color token (Material 3 `surface-container-high` role, injected at runtime by the active theme)
+- **Corner radius**: Medium — 0.8× the design system's base radius token (0.4rem / 6.4px with this repo's default `--radius: 0.5rem`)
+- **Animation**: Continuous pulsing opacity animation — 2s duration, `cubic-bezier(0.4, 0, 0.6, 1)` easing, opacity cycles 1 → 0.5 → 1, infinite (Tailwind's default `pulse` keyframe, unmodified by this design system)
+- **Padding**: None — the element is block-level with no padding
 - **Border**: None
 - **Shadow**: None
-- **Min/Max size**: None (sized by consumer via `className` or inline styles)
+- **Min/Max size**: None (sized by the consumer via `className` or inline styles)
 
 ## States
 
 | State | Appearance change |
 |-------|-------------------|
 | Default | Pulsing opacity animation applied continuously |
-| Loading (implied) | Same as default |
+| Reduced motion (opt-in) | Static — no pulse — when the consumer applies a `motion-reduce:animate-none` override via `className`; not automatic (see **reduced-motion-support**) |
 
 Not applicable: The Skeleton component is a static, non-interactive loading indicator with no focus, pressed, or disabled states.
 
 ## Accessibility
 
-- **Role**: Implied as a non-semantic presentational element (a `<div>` used for layout/styling).
-- **Label requirements**: Not applicable. This is a visual loading indicator with no interactive or informational semantics. The consuming application SHOULD provide context through sibling elements or page title updates to indicate content is loading.
-- **Announce state changes**: Not applicable. The component does not have interactive or state-change semantics to announce.
+- **Role**: Presentational; the component assigns no ARIA role itself (see **aria-hidden-while-loading**).
+- **Label requirements**: None from the component itself. A consumer applying **aria-hidden-while-loading** SHOULD also set `aria-busy="true"` on the parent that shows the placeholder, so assistive technology reads the container's busy state rather than the skeleton's empty markup.
+- **Announce state changes**: Delegated to the parent's `aria-busy` state; the skeleton itself announces nothing.
 - **Keyboard interaction**: Not applicable. This is a non-interactive element.
 
-NEEDS REVIEW: Skeleton renders a plain `div` with no `aria-hidden`, `aria-busy`, or role attribute. A loading placeholder needs screen-reader announcement or suppression so assistive technology can communicate loading status or suppress stale content placeholders.
+NEEDS REVIEW: Skeleton renders a plain `div` with no `aria-hidden`, `aria-busy`, or role attribute, and leaves **aria-hidden-while-loading** to the consumer. Whether the component itself should suppress the placeholder or announce loading status is undecided.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |-------|--------|-------|----------|
-| skeleton-001 | must-render-as-div, must-apply-slot-attribute | Render `<Skeleton />` | Element in DOM with tag name `DIV` and `data-slot="skeleton"` attribute |
-| skeleton-002 | must-apply-pulsing-animation, must-apply-rounded-corners, must-apply-surface-background | Render `<Skeleton />` and inspect computed styles | Computed class list includes `animate-pulse`, `rounded-md`, `bg-apt-surface-2` |
-| skeleton-003 | must-accept-className, must-apply-pulsing-animation, must-apply-rounded-corners | Render `<Skeleton className="w-12 h-12" />` | Element contains both custom classes (`w-12`, `h-12`) and built-in classes (`animate-pulse`, `rounded-md`, `bg-apt-surface-2`) |
-| skeleton-004 | must-spread-html-props | Render `<Skeleton id="loader" data-testid="skeleton-1" />` | Element has attributes `id="loader"` and `data-testid="skeleton-1"` |
-| skeleton-005 | must-spread-html-props | Render `<Skeleton style={{ width: '100px', height: '100px' }} />` | Element has `style` attribute with specified width and height |
-| skeleton-006 | must-apply-pulsing-animation | Render `<Skeleton />` and observe for 2+ seconds | Opacity animation cycles continuously |
+| skeleton-001 | render-as-div, slot-attribute | Render `<Skeleton />` | Element in DOM with tag name `DIV` and `data-slot="skeleton"` attribute |
+| skeleton-002 | pulsing-animation, rounded-corners, surface-background | Render `<Skeleton />` and inspect computed style | Computed `animation-name` is not `"none"` (the pulse keyframe is applied), computed `border-radius` equals the medium radius token's resolved value, and computed `background-color` equals the secondary surface token's resolved value |
+| skeleton-003 | class-merge, pulsing-animation, rounded-corners | Render `<Skeleton className="w-12 h-12" />` | Computed width/height reflect the custom sizing classes, while computed `animation-name` and `border-radius` still show the built-in pulsing animation and corner radius |
+| skeleton-004 | html-passthrough | Render `<Skeleton id="loader" data-testid="skeleton-1" />` | Element has attributes `id="loader"` and `data-testid="skeleton-1"` |
+| skeleton-005 | html-passthrough | Render `<Skeleton style={{ width: '100px', height: '100px' }} />` | Element has `style` attribute with specified width and height |
+| skeleton-006 | pulsing-animation | Render `<Skeleton />` and read the computed `animation-name` and its `@keyframes` | `animation-name` resolves to a pulse keyframe whose rule cycles opacity `1 → 0.5 → 1`, with `animation-iteration-count: infinite` |
+| skeleton-007 | reduced-motion-support | Render `<Skeleton className="motion-reduce:animate-none" />` under a `prefers-reduced-motion: reduce` media context | Computed `animation-name` is `"none"` |
+| skeleton-008 | aria-hidden-while-loading, html-passthrough | Render `<Skeleton aria-hidden="true" />` inside a parent with `aria-busy="true"` | The skeleton element has `aria-hidden="true"`; the parent's `aria-busy="true"` is unaffected |
 
 ## Edge Cases
 
-- **Empty className prop**: When `className` is `undefined`, `null`, or an empty string, the component SHOULD apply only built-in classes (`animate-pulse rounded-md bg-apt-surface-2`).
+- **Empty className prop**: When `className` is `undefined`, `null`, or an empty string, the component SHOULD apply only its built-in pulsing animation, corner radius, and surface background (see **pulsing-animation**, **rounded-corners**, **surface-background**).
 - **Invalid CSS class names in className**: The component MUST accept any string in the `className` prop without validation or error handling. Invalid class names are silently passed through; rendering behavior depends on whether the CSS classes exist.
 - **Very large dimensions**: No minimum or maximum size constraints exist. The component renders at any size specified via `className` or `style`.
 - **Rendering in disabled or read-only contexts**: Not applicable. The component is not interactive.
-- **Animation performance**: The `animate-pulse` animation runs continuously. On devices with low performance or reduced-motion preferences, rendering behavior is undefined by the component itself; it depends on CSS media query support (e.g., `prefers-reduced-motion`).
+- **Animation performance**: The pulsing animation runs continuously by default. Under `prefers-reduced-motion`, the component does not disable itself automatically; a consumer suppresses it via the **reduced-motion-support** override.
 
 ## Configuration
 
@@ -105,7 +109,7 @@ Not applicable: The Skeleton component renders no text and does not require loca
 
 ## Accessibility Options
 
-The source does not read `prefers-reduced-motion`. Tailwind's `animate-pulse` does not disable itself under the user's reduce-motion preference, so the pulsing animation plays continuously regardless of this accessibility setting.
+The source does not read `prefers-reduced-motion` itself. The pulsing animation is not suppressed automatically; per **reduced-motion-support**, a consumer opts in via a `motion-reduce:animate-none` override in `className`, which class-merge preserves alongside the built-in `animate-pulse` class.
 
 ## Feature Flags
 
@@ -125,27 +129,43 @@ Not applicable: The Skeleton component produces no logging output.
 
 ## Platform Notes
 
-- **React/Web**: Implemented in `packages/web/packages/ui/src/components/skeleton.tsx`. Renders a `<div>` with Tailwind CSS classes (`animate-pulse`, `rounded-md`, `bg-apt-surface-2`). Accepts `className` prop and spreads remaining HTML attributes. Uses class composition utility `cn()` (likely `clsx` or similar) to merge custom and built-in classes.
-- **SwiftUI**: No implementation provided. Start with a `RoundedRectangle` or `ZStack` for the shape, apply a `.redacted(reason: .placeholder)` modifier or custom opacity animation to create the pulsing effect. Consider using SwiftUI's native `.shimmering()` or `.redacted()` for accessibility support.
-- **Compose**: No implementation provided. Start with a `Box` composable, apply `Modifier.animateContentSize()` and a custom `infiniteTransition` to pulse opacity. Reference Material Design 3 skeleton guidance for color and animation timing.
-- **AppKit / UIKit**: No implementation provided. Start with `NSView` (AppKit) or `UIView` (UIKit). Apply a `CABasicAnimation` on the opacity property with infinite repeat and appropriate timing. Use system colors or design tokens for the background.
-- **WinUI 3**: No implementation provided. Create a `Border` or `Rectangle` with `CornerRadius` property. Apply a `DoubleAnimation` on the `Opacity` property with `RepeatBehavior.Forever` to achieve the pulsing effect. Reference Fluent 2 token colors for the surface background.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/components/skeleton.tsx`. Renders a `<div data-slot="skeleton">` with the Tailwind classes `animate-pulse rounded-md bg-apt-surface-2`, merged with any consumer `className` via `cn()` (`clsx` + `tailwind-merge`). Standard HTML `div` attributes are spread onto the element. `animate-pulse` is Tailwind's default 2s `cubic-bezier(0.4, 0, 0.6, 1)` infinite opacity pulse (1 → 0.5 → 1); `rounded-md` resolves to `0.4rem` (0.8× this design system's `--radius: 0.5rem` token); `bg-apt-surface-2` maps to the Material 3 `surface-container-high` role. Reduced motion is opt-in: pass `motion-reduce:animate-none` in `className`.
+- **SwiftUI**: Use a `RoundedRectangle(cornerRadius:)` filled with the surface-2 token color. Animate opacity between `1.0` and `0.5` with `.animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: …)`, gated on `@Environment(\.accessibilityReduceMotion)` — when reduce motion is on, hold opacity at `1.0` instead of animating.
+- **Compose**: Use a `Box` with a `Modifier.background(...)` and `RoundedCornerShape(...)`, animating alpha via `rememberInfiniteTransition().animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(tween(...), RepeatMode.Reverse))`. Check the system animator duration scale (`Settings.Global.ANIMATOR_DURATION_SCALE` via `ContentResolver`) and skip the animation when it is zero.
+- **AppKit / UIKit**: Use `NSView` (AppKit) or `UIView` (UIKit) with a `CABasicAnimation` on `opacity` (`1.0` → `0.5`), ~1s duration, `autoreverses: true`, `repeatCount: .infinity`. Check `NSWorkspace.shared.accessibilityDisplayShouldReduceMotion` (AppKit) or `UIAccessibility.isReduceMotionEnabled` (UIKit) and skip adding the animation when true.
+- **WinUI 3**: Use a `Border` or `Rectangle` with `CornerRadius`, animating `Opacity` with a `DoubleAnimation` (`From="1.0"`, `To="0.5"`, `AutoReverse="True"`, `RepeatBehavior="Forever"`). Check `UISettings.AnimationsEnabled` and skip the animation when false. Reference Fluent 2 surface tokens for the background color.
 
 ## Design Decisions
 
-1. **Pulsing opacity over other animation approaches**: The component uses CSS `animate-pulse` for continuous opacity animation rather than background color shifts or position changes. This is a simple, performant animation that does not distort layout.
+**Decision**: Use a continuous pulsing opacity animation rather than background-color shifts or position changes.
+**Rationale**: Opacity pulsing is a simple, performant animation that does not distort layout.
+**Approved**: pending
 
-2. **No built-in sizing**: The component intentionally provides no width or height constraints. Consumers must size the skeleton via `className` or inline styles, allowing flexible layouts (e.g., a small avatar skeleton vs. a large content block).
+**Decision**: Provide no built-in width or height; sizing is left entirely to the consumer via `className` or inline styles.
+**Rationale**: Keeps the component flexible across use cases (e.g. a small avatar skeleton vs. a large content block) without the component needing to know the shape of what it stands in for.
+**Approved**: pending
 
-3. **No ARIA role assigned**: The component does not set an ARIA role. It delegates accessibility semantics to the consuming application, which SHOULD provide context (e.g., "Loading..." text or `aria-busy="true"` on a parent).
+**Decision**: The component sets no ARIA role and does not apply `aria-hidden` itself; a consumer opts in via **aria-hidden-while-loading** (`aria-hidden="true"` on the skeleton, `aria-busy="true"` on the parent).
+**Rationale**: The skeleton is a purely visual placeholder with no semantics of its own; composing the loading announcement belongs to the container that knows what content is loading, using the html-passthrough mechanism the component already provides.
+**Approved**: pending
+
+**Decision**: The pulsing animation is not suppressed automatically under the user's reduced-motion preference; a consumer opts in via a `motion-reduce:animate-none` override in `className`.
+**Rationale**: The source does not read `prefers-reduced-motion` itself, but class-merge (backed by `clsx` and `tailwind-merge`) preserves a variant-scoped override alongside the built-in `animate-pulse` class, so the capability exists without changing the component's default appearance.
+**Approved**: pending
 
 ## Compliance
 
-Not applicable: No compliance checks are specified in the source code.
+| Check | Status | Category |
+|-------|--------|----------|
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+
+The source applies Tailwind's `animate-pulse` unconditionally with no `prefers-reduced-motion` handling (reduced-motion: failed), and assigns no ARIA role or `aria-hidden` of its own, relying on the consumer for the aria-hidden/aria-busy contract described in **aria-hidden-while-loading** (semantic-markup: partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Fix Reduce Motion marker; clarify screen-reader gap |
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: made requirements/appearance/vectors platform-neutral, moving Tailwind class names into the React/Web platform note; renamed requirements to subject-only kebab-case; reformatted Design Decisions into Decision/Rationale/Approved form; replaced the "Not applicable" Compliance section with a table; added a consumer-side aria-hidden-while-loading requirement (the component-side ARIA question stays open); added a reduced-motion-support requirement and test vector; fixed nonexistent/mismatched Platform Notes APIs (SwiftUI, Compose); corrected frontmatter `modified` quoting and Change History author consistency |
+| 1.0.1 | 2026-09-22 | Mike Fullerton | Fix Reduce Motion marker; clarify screen-reader gap |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source code |

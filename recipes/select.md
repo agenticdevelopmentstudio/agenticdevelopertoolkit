@@ -3,7 +3,7 @@ id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: Select
 domain: agenticdevelopertoolkit://recipes/select
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: '2026-09-22'
@@ -36,76 +36,84 @@ The Select component is a form control that renders a native HTML `<select>` ele
 
 ## Behavioral Requirements
 
-- **must-render-native-select**: The component MUST render a native HTML `<select>` element, not a custom listbox or dropdown.
-- **must-update-on-change**: The component MUST invoke the `onChange` callback with the newly selected value when the user changes the selection.
-- **must-reflect-value**: The component MUST display the `value` prop as the currently selected option in the select element.
-- **must-support-choices**: The component MUST render a native `<option>` element for each choice in the `choices` array.
-- **must-display-choice-label**: Each `<option>` element MUST display the `label` property of its corresponding choice.
-- **must-support-disabled-choices**: The component MUST respect the `disabled` property of individual choices and render disabled options.
-- **must-support-disabled-control**: The component MUST disable the entire select element when the `disabled` prop is `true`, preventing user interaction.
-- **must-generate-id-when-missing**: When no `id` prop is provided, the component MUST generate a stable ID using React's `useId` hook.
-- **must-use-provided-id**: When an `id` prop is provided, the component MUST use that ID instead of generating one.
-- **must-associate-label-to-select**: When a `label` is provided, the component MUST render an HTML `<label>` element with `htmlFor` set to the select's ID, associating the label to the control.
-- **must-apply-classname**: The component MUST apply the `className` prop to the wrapper element when provided.
-- **must-display-hint**: When a `hint` prop is provided, the component MUST render it as text content below the select element.
-- **should-display-chevron-indicator**: The component SHOULD display a visual indicator (such as a chevron icon) to signify that the element is a dropdown control.
-- **should-style-focus-state**: The component SHOULD apply visual styling to indicate focus when the select has keyboard focus.
+- **native-select**: The component MUST render a native HTML `<select>` element, not a custom listbox or dropdown.
+- **change-callback**: The component MUST invoke the `onChange` callback with the newly selected value when the user changes the selection.
+- **value-reflection**: The component MUST display the `value` prop as the currently selected option in the select element.
+- **choice-rendering**: The component MUST render a native `<option>` element for each choice in the `choices` array.
+- **choice-label-text**: Each `<option>` element MUST display the `label` property of its corresponding choice.
+- **disabled-choices**: The component MUST respect the `disabled` property of individual choices and render disabled options.
+- **disabled-control**: The component MUST disable the entire select element when the `disabled` prop is `true`, preventing user interaction.
+- **generated-id**: When no `id` prop is provided, the component MUST generate a stable ID using React's `useId` hook.
+- **provided-id**: When an `id` prop is provided, the component MUST use that ID instead of generating one.
+- **label-association**: When a `label` is provided, the component MUST render an HTML `<label>` element with `htmlFor` set to the select's ID, associating the label to the control.
+- **wrapper-classname**: The component MUST apply the `className` prop to the wrapper element when provided.
+- **hint-display**: When a `hint` prop is provided, the component MUST render it as text content below the select element.
+- **chevron-indicator**: The component SHOULD display a visual indicator (such as a chevron icon) to signify that the element is a dropdown control.
+- **focus-style**: The component SHOULD apply visual styling to indicate focus when the select has keyboard focus.
+- **hint-described-by**: When a `hint` is provided, the component SHOULD associate it with the select via `aria-describedby` so assistive technology announces it as descriptive text for the control.
 
 ## Appearance
 
-- **Container**: Wrapper div that groups the label, select, and hint with class names `aws-field` and `aws-field--select` (or equivalent styling framework).
+Two implementations exist in source: the generic (`aws-field`) implementation defers all appearance to caller-supplied CSS classes and specifies no fixed values in source; the apt-token implementation gives concrete values. The following canonical appearance draws from the apt-token implementation, given as sizes in px and a semantic role per color.
+
+- **Container**: Wrapper `<div>` (`position: relative` in the apt implementation) that groups the label, select, and hint; the generic implementation applies the classes `aws-field` and `aws-field--select` as its styling hooks.
 - **Native select styling**: The native select element renders with `appearance: none` to allow custom styling while retaining native behavior.
-- **Corner radius**: No explicit border radius specified in source; uses platform defaults.
-- **Padding**: Select element has horizontal padding of `px-3` and vertical padding of `py-2` (approximately 12px × 8px).
-- **Font**: Text size is `text-sm` (14px or equivalent); color is `text-apt-text` (platform text color token).
-- **Background**: Uses platform form field background via `fieldShellClass` (inherits from input field styling).
-- **Border**: Default border styling from `fieldShellClass`; focus state adds border color `apt-gold` and ring effect.
-- **Focus ring**: When focused, displays a 2px ring with `ring-apt-gold/25` (gold with 25% opacity) and border color changes to `apt-gold`.
-- **Indicator icon**: A chevron-down icon is positioned absolutely to the right of the select (approximately 12px from right edge, vertically centered), with color `text-apt-text-muted`.
-- **Disabled appearance**: When disabled, applies `opacity-50`, removes pointer events, and shows `cursor-not-allowed`.
+- **Corner radius**: 8px, from the shared field-shell style.
+- **Padding**: 12px horizontal, 8px vertical; the apt implementation adds 36px of trailing padding to clear the chevron icon.
+- **Font**: 14px; color role "primary text".
+- **Background**: color role "field surface", from the shared field-shell style.
+- **Border**: 1px, color role "field border" by default; on focus, color role "accent".
+- **Focus ring**: 2px, color role "accent" at 25% opacity.
+- **Indicator icon**: 16px chevron-down icon, positioned 12px from the trailing edge, vertically centered; color role "muted text".
+- **Min/Max size**: height 36px; width grows to fill its container.
+- **Disabled appearance**: 50% opacity, pointer events removed, cursor shows not-allowed.
 
 ## States
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Native select with chevron indicator visible; text and border use base tokens |
-| Focused | Border color changes to `apt-gold`; adds 2px ring with `ring-apt-gold/25`; focus-visible outline applied via CSS |
+| Default | Native select with chevron indicator visible; text and border use the field's base color roles |
+| Focused | Border switches to the accent color role; adds a 2px ring in the accent role at 25% opacity; focus-visible outline applied via CSS |
 | Disabled | Opacity reduced to 50%; pointer events disabled; cursor shows not-allowed symbol |
 | Pressed (open dropdown) | Handled by native browser behavior; no component-specific styling |
 
 ## Accessibility
 
-- **Role**: Native `<select>` element has implicit ARIA role `combobox` (or `listbox` depending on platform interpretation); no custom role required.
-- **Label requirement**: A label MUST be provided via the `label` prop and MUST be associated to the select via the `htmlFor` attribute on the `<label>` element. The `id` of the select matches the `htmlFor` of the label. No fallback ARIA properties (`aria-label`, `aria-labelledby`) are implemented; the label association via `htmlFor` is the sole method for providing an accessible name.
+- **Role**: A single-select `<select>` element with no `size` attribute (as used here) maps to the implicit ARIA role `combobox`; no custom role is required.
+- **Label requirement**: The `label` prop is optional. When provided, it MUST be associated to the select via the `htmlFor` attribute on the `<label>` element, matching the select's `id` (see **label-association**). No fallback ARIA properties (`aria-label`, `aria-labelledby`) are implemented; when `label` is omitted, the control has no accessible name from the component itself.
 - **Keyboard navigation**: Native select supports keyboard navigation; users can open the dropdown with Space or Enter, navigate with arrow keys, and select with Enter. This is provided by the browser and requires no component implementation.
-- **Minimum touch target**: The native select element inherits the form field's minimum size; source does not explicitly constrain this. Visual target size follows `h-9` (36px height), which meets the 44×44pt minimum on web when accounting for text touch zones.
-- **Hint association**: Hint text is rendered as a sibling paragraph element but is not explicitly associated to the select via `aria-describedby`. NEEDS REVIEW: Not implemented in source. Screen readers cannot announce the hint as descriptive text for the control. Evidence that would settle it: whether `aria-describedby` is implemented to connect the hint paragraph ID to the select element's `aria-describedby` attribute.
+- **Minimum touch target**: The control's visual height is 36px (`h-9`), which falls short of the 44×44pt minimum touch target.
+- **Hint association**: The hint text renders as a sibling `<p>` element but is not associated to the select via `aria-describedby` (see **hint-described-by**). NEEDS REVIEW: not implemented in source — screen readers cannot announce the hint as descriptive text for the control.
 - **Disabled state announcement**: Native select announces disabled state to assistive technologies automatically; the component applies no additional ARIA attributes.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| select-001 | must-render-native-select | Render with default props | Component renders a native `<select>` element |
-| select-002 | must-update-on-change | User selects a different option | `onChange` callback is invoked with the selected value |
-| select-003 | must-reflect-value | Render with `value="option2"` and three choices | The option with value `option2` is selected in the rendered select |
-| select-004 | must-support-choices | Render with `choices=[{value:"a",label:"A"},{value:"b",label:"B"}]` | Two `<option>` elements are rendered |
-| select-005 | must-display-choice-label | Render a choice with `label:"Choose Me"` | The rendered `<option>` displays text "Choose Me" |
-| select-006 | must-support-disabled-choices | Render a choice with `disabled: true` | The rendered `<option>` has the `disabled` attribute |
-| select-007 | must-support-disabled-control | Render with `disabled={true}` | The `<select>` element has the `disabled` attribute; user cannot interact |
-| select-008 | must-generate-id-when-missing | Render without an `id` prop | A unique ID is generated; label's `htmlFor` matches the generated ID |
-| select-009 | must-use-provided-id | Render with `id="my-select"` | The rendered select has `id="my-select"`; label's `htmlFor` is `"my-select"` |
-| select-010 | must-associate-label-to-select | Render with `label="Choose an option"` | A `<label>` element is rendered with `htmlFor` matching the select's ID |
-| select-011 | must-apply-classname | Render with `className="custom-class"` | The wrapper div includes the class `custom-class` |
-| select-012 | must-display-hint | Render with `hint="Select one item"` | A `<p>` element is rendered below the select displaying the hint text |
-| select-013 | should-display-chevron-indicator | Render component | A chevron-down icon is displayed to the right of the select |
-| select-014 | should-style-focus-state | Focus the select element via keyboard | Border changes to gold, ring is visible, focus-visible styles are applied |
+| select-001 | native-select | Render with default props | Component renders a native `<select>` element |
+| select-002 | change-callback | User selects a different option | `onChange` callback is invoked with the selected value |
+| select-003 | value-reflection | Render with `value="option2"` and three choices | The option with value `option2` is selected in the rendered select |
+| select-004 | choice-rendering | Render with `choices=[{value:"a",label:"A"},{value:"b",label:"B"}]` | Two `<option>` elements are rendered |
+| select-005 | choice-label-text | Render a choice with `label:"Choose Me"` | The rendered `<option>` displays text "Choose Me" |
+| select-006 | disabled-choices | Render a choice with `disabled: true` | The rendered `<option>` has the `disabled` attribute |
+| select-007 | disabled-control | Render with `disabled={true}` | The `<select>` element has the `disabled` attribute; user cannot interact |
+| select-008 | generated-id | Render without an `id` prop | A unique ID is generated; label's `htmlFor` matches the generated ID |
+| select-009 | provided-id | Render with `id="my-select"` | The rendered select has `id="my-select"`; label's `htmlFor` is `"my-select"` |
+| select-010 | label-association | Render with `label="Choose an option"` | A `<label>` element is rendered with `htmlFor` matching the select's ID |
+| select-011 | wrapper-classname | Render with `className="custom-class"` | The wrapper div includes the class `custom-class` |
+| select-012 | hint-display | Render with `hint="Select one item"` | A `<p>` element is rendered below the select displaying the hint text |
+| select-013 | chevron-indicator | Render component | A chevron-down icon is displayed to the right of the select |
+| select-014 | focus-style | Focus the select element via keyboard | Border changes to the accent color role, ring is visible, focus-visible styles are applied |
+| select-015 | label-association | Render without a `label` prop | No `<label>` element is rendered; the select has no accessible name supplied by the component |
+| select-016 | choice-rendering | Render with `choices=[]` | No `<option>` elements are rendered; the select has no selectable options |
+| select-017 | hint-display | Render with `hint="Select one item"` and no `id` prop | The hint `<p>` renders as a sibling of the select; the select's `aria-describedby` attribute is not set to the hint's id (see **hint-described-by**) |
+| select-018 | disabled-choices | Render a choice with `disabled: true` and attempt to select it via keyboard or pointer | The disabled `<option>` cannot be selected; native browser behavior skips it during navigation |
 
 ## Edge Cases
 
 - **Empty choices provided**: If `choices` is an empty array, the select renders with no options, and no selection is possible until choices are provided.
-- **Choice value mismatch**: If `value` does not match any choice's value, the native select does not highlight any option; the browser's default behavior applies (typically showing the first option or an empty selection).
-- **Missing required label**: If `label` is not provided (undefined), no label is rendered. Hint text is rendered if provided. If neither label nor hint exists, the select has no accessible name. This is an accessibility concern, as the component provides no fallback method (such as `aria-label`) to name the control when the label prop is omitted.
+- **Choice value mismatch**: If `value` does not match any choice's value, no `<option>` matches the controlled value; per the HTML `<select>` specification, the browser falls back to displaying the first `<option>` in document order. Neither implementation provides a placeholder or empty-option choice; a caller wanting a "no selection" state must include an explicit placeholder entry in the `choices` array (e.g., `{ value: '', label: 'Select…' }`).
+- **Missing label**: If `label` is not provided (undefined), no label is rendered. Hint text is rendered if provided. If neither label nor hint exists, the select has no accessible name. This is an accessibility concern, as the component provides no fallback method (such as `aria-label`) to name the control when the label prop is omitted.
 - **Disabled with focused select**: If the select is disabled while focused, focus moves to the next focusable element (browser behavior). No component-specific handling.
 - **Label without select id**: Since the component generates an ID if none is provided and associates the label via `htmlFor`, this edge case cannot occur by design.
 - **Null or undefined choices**: If `choices` is `null` or `undefined`, invoking `.map()` on a null/undefined value throws a runtime error. The component does not provide defensive null checking.
@@ -117,8 +125,8 @@ The Select component is a form control that renders a native HTML `<select>` ele
 |--------|------|---------|-------------|
 | `label` | `ReactNode` | `undefined` | Optional label text or element rendered above the select |
 | `hint` | `ReactNode` | `undefined` | Optional hint text or element rendered below the select |
-| `value` | `string` | Required | The currently selected value (controlled component) |
-| `onChange` | `(value: string) => void` | Required | Callback invoked when the user changes the selection |
+| `value` | `T` (extends `string`, default `string`) | Required | The currently selected value (controlled component) |
+| `onChange` | `(value: T) => void` | Required | Callback invoked when the user changes the selection |
 | `choices` | `Choice<T>[]` | Required | Array of options; each choice has `value`, `label`, and optional `disabled` |
 | `disabled` | `boolean` | `false` | Disables the select element and prevents user interaction |
 | `className` | `string` | `undefined` | Optional CSS class name applied to the wrapper div |
@@ -130,18 +138,14 @@ Not applicable: The Select component is a form control without inherent deep-lin
 
 ## Localization
 
-| String Key | Default (en) | Context |
-|-----------|-------------|---------|
-| `choice.label` | Varies per choice | Each choice's label is provided via the `choices` array and is not localized by the component. Localization is the responsibility of the caller. |
-| `label` | User-provided | The component's label is provided via the `label` prop. |
-| `hint` | User-provided | The component's hint is provided via the `hint` prop. |
+Not applicable: all strings are caller-supplied.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | The component does not apply transition or animation effects; this option has no effect. |
-| Increase Contrast | The component relies on the `apt-text`, `apt-gold`, and related design tokens. If the design system's tokens are updated to provide higher-contrast colors, the component automatically uses them. No component-level implementation required. |
+| Increase Contrast | The component relies on the field's text, accent, and border color roles. If the design system's tokens for those roles are updated to provide higher-contrast colors, the component automatically uses them. No component-level implementation required. |
 | Differentiate Without Color | The component includes a focus ring and uses border changes in addition to color changes. The focus state is differentiated by both color and visual weight. |
 
 ## Feature Flags
@@ -163,39 +167,50 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 ## Platform Notes
 
 - **React/Web**: Two implementations are provided in the source: one using `aws-field` styling (for AWS components) and one using `apt-*` tokens with a custom chevron icon. Both render a native `<select>` element with optional label, hint, and styling. The component is generic and can be adapted to any design system by replacing the class names and icon component.
-- **SwiftUI**: Use `Picker` with `.pickerStyle(.menu)` for a dropdown-style control, or `.pickerStyle(.segmented)` for a compact form. Provide a label via the `label` parameter. Bind the selection via `@State`. Provide hint or descriptive text via a secondary `Text` view positioned below the Picker. For multiselect behavior, use a toggle list instead.
-- **Compose**: Use `ExposedDropdownMenuBox` from Material 3 for a fully accessible dropdown, or `OutlinedExposedDropdownMenuBox` for outlined style. Provide a label via `OutlinedTextField` with `readOnly = true`. Use `DropdownMenuItem` to render each choice. Bind selection via `mutableStateOf()`. Associate hint text via `supportingText` parameter on the `OutlinedTextField` for screen reader announcement.
-- **AppKit / UIKit**: On macOS, use `NSPopUpButton` or `NSComboBox` with a label via `NSTextField`. On iOS, use a custom select sheet with a `UIPickerView`, or adapt a `Menu` button for iOS 14+. For hint text, add an `NSTextField` or `UILabel` below the control with `lineBreakMode = .byWordWrapping`. Associate the hint via VoiceOver custom actions or by setting `accessibilityHint` on the control.
-- **WinUI 3**: Use `ComboBox` control with `ItemsSource` bound to the choices array, `SelectedItem` or `SelectedValuePath` for the value, and `SelectionChanged` event for the callback. Set `IsEditable="False"` to prevent typing. Provide a label via a separate `TextBlock` with explicit `Name` property for UIA name mapping. Place hint text in a `TextBlock` below the ComboBox and associate via `UIA.AutomationProperties.HelpText` attached property on the ComboBox.
+- **SwiftUI**: Use `Picker` with `.pickerStyle(.menu)` for a dropdown-style control, or `.pickerStyle(.segmented)` for a compact form. Provide a label via the `label` parameter. Bind the selection via `@State`. Provide hint or descriptive text via a secondary `Text` view positioned below the Picker.
+- **Compose**: Use `ExposedDropdownMenuBox` from Material 3, with a read-only `OutlinedTextField` (`readOnly = true`) as the anchor via `.menuAnchor()`. Provide a label via the `OutlinedTextField`'s `label` parameter. Use `DropdownMenuItem` to render each choice inside the box's menu. Bind selection via `mutableStateOf()`. Associate hint text via the `supportingText` parameter on the `OutlinedTextField` for screen reader announcement.
+- **AppKit / UIKit**: On macOS, use `NSPopUpButton` with a label via `NSTextField`. On iOS, use a `UIButton` configured with a `menu` and `showsMenuAsPrimaryAction = true`, populating `UIAction` items for each choice. For hint text, add an `NSTextField` or `UILabel` below the control with `lineBreakMode = .byWordWrapping`. Set `accessibilityHint` on the control to associate the hint; VoiceOver custom actions are not the right mechanism for this.
+- **WinUI 3**: Use `ComboBox` control with `ItemsSource` bound to the choices array, `SelectedItem` or `SelectedValuePath` for the value, and `SelectionChanged` event for the callback. `IsEditable` already defaults to `false`, so no explicit setting is needed to prevent typing. Provide a label via the `ComboBox.Header` property so it is exposed to UIA automatically. Place hint text in a `TextBlock` below the ComboBox and associate it via the `AutomationProperties.HelpText` attached property on the ComboBox.
 
 ## Design Decisions
 
-1. **Native select vs. custom listbox**: The component uses a native HTML `<select>` element rather than a custom listbox or dropdown. This decision prioritizes accessibility (native keyboard and screen-reader support), simplicity, and browser compatibility. The trade-off is limited visual customization compared to a custom component. For richer interactions (multiselect, filtering, grouping), a separate custom component should be created.
+**Decision**: Use a native HTML `<select>` element rather than a custom listbox or dropdown.
+**Rationale**: Prioritizes accessibility (native keyboard and screen-reader support), simplicity, and browser compatibility; richer interactions (multiselect, filtering, grouping) are left to a separate custom component.
+**Approved**: pending
 
-2. **Styling via className and design tokens**: The component accepts a `className` prop for composition and uses design system tokens (e.g., `apt-text`, `apt-gold`) rather than hardcoded colors. This allows the component to adapt to different design systems by replacing the CSS class definitions. The trade-off is that the component is coupled to the presence of these token definitions.
+**Decision**: Accept a `className` prop for composition and use design system tokens for color and spacing rather than hardcoded values.
+**Rationale**: Lets the component adapt to different design systems by swapping token/class definitions, at the cost of coupling the component to the presence of those definitions.
+**Approved**: pending
 
-3. **Mandatory id management**: The component automatically generates an ID when one is not provided to ensure the label is always associable to the select. This prevents accessible names from being lost. An `id` prop is also accepted to allow the parent to control the ID if needed (e.g., to match a server-rendered ID).
+**Decision**: Generate an ID via `useId()` when none is provided, while still accepting an `id` prop for caller control.
+**Rationale**: Ensures the label can always be associated to the select, preventing lost accessible names, while letting a caller match a server-rendered ID when needed.
+**Approved**: pending
 
-4. **Controlled component (value as prop)**: The component is a controlled component; `value` is a required prop and the parent manages state. The component does not maintain its own state. This design ensures the parent is always aware of the current value and can implement undo, validation, or other state management patterns.
-
-5. **Hint text as sibling without aria-describedby**: The hint is rendered as a `<p>` element below the select but is not explicitly associated via `aria-describedby`. This is a gap between what should be and what the source implements. A future enhancement should add the ARIA association so screen readers announce the hint as descriptive text for the control.
+**Decision**: Implement Select as a controlled component; `value` is a required prop and the parent owns the state.
+**Rationale**: Keeps the parent always aware of the current value, enabling undo, validation, or other state-management patterns without the component maintaining parallel state.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| Rendered as native HTML element | Passed | Baseline |
-| Form control accessibility (label association) | Passed | WCAG 2.1 |
-| Keyboard navigation | Passed | WCAG 2.1 |
-| Focus indication | Passed | WCAG 2.1 |
-| Disabled state semantics | Passed | WCAG 2.1 |
-| Hint text ARIA association | Failed | WCAG 2.1 |
-| No accessible name fallback (aria-label) | Failed | WCAG 2.1 |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+
+Statuses rest on the native `<select>`/`<option>` markup and native `disabled` semantics in both source files, the `htmlFor`/`id` label association with no `aria-label` fallback, the `h-9` (36px) control height against the 44px minimum, the `apt-text`/`apt-gold` design tokens used without stated contrast values, the rem-based `text-sm` utility whose scaling depends on a Tailwind config not visible in this source, the fully caller-supplied `label`/`hint`/`choice.label` strings, and the physical `right-3`/`pr-9` positioning of the chevron and padding that does not flip for right-to-left locales.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and update every citation; add hint-described-by requirement and remove the deferred Design Decision it replaced; reformat Design Decisions to the Decision/Rationale/Approved form; rebuild Compliance as a catalog-linked table with lowercase statuses and merge the label/accessible-name contradiction into one partial row; correct AppKit/UIKit, Compose, and WinUI 3 Platform Notes to real APIs and drop the irrelevant SwiftUI multiselect aside; rewrite Appearance in px sizes and color roles instead of raw Tailwind classes and tokens; state the 36px touch target falls short instead of claiming it meets the minimum; align the label-optional contract across Accessibility, Configuration, and Edge Cases; correct `value`/`onChange` typing to match the source's generic `T`; sharpen the value-mismatch edge case with the concrete browser fallback; replace the invented Localization table with "not applicable"; correct the Role bullet to name `combobox` directly; add missing conformance test vectors for a missing label, empty choices, the hint/aria-describedby gap, and disabled-option unselectability |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace aria-label fallback question with concrete fact; keep hint aria-describedby gap as genuine issue; enhance Platform Notes with concrete translation guidance for all platforms |
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks source; confirm all requirements traceable to both web implementations |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace reviewer questions with concrete facts; keep accessible name and hint association as genuine gaps |
