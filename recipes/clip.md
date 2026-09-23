@@ -3,7 +3,7 @@ id: e268fe4f-8e83-4189-b1d2-105cd177308c
 title: Clip
 domain: agenticdevelopertoolkit://recipes/clip
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,10 +16,17 @@ summary: Auto-playing video component that respects prefers-reduced-motion for a
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- video
+- media
+- reduced-motion
+- accessibility
 depends-on: []
-related: []
-references: []
+related:
+- agenticdevelopercookbook://guidelines/implementing/accessibility/accessibility
+references:
+- https://www.w3.org/TR/WCAG21/#animation-from-interactions
+- https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
 approved-by: ''
 approved-date: ''
 ---
@@ -32,22 +39,20 @@ A video player component that auto-plays on load while respecting the user's `pr
 
 ## Behavioral Requirements
 
-- **must-accept-src**: Component MUST accept a `src` prop containing the public path to an `.mp4` or `.webm` video file.
-- **must-accept-label**: Component MUST accept a `label` prop for the accessible name, applied as `aria-label` to the video element.
-- **must-render-video-element**: Component MUST render a single `<video>` element with the provided `src`.
-- **must-set-aria-label**: Component MUST set `aria-label` on the video element to the value of the `label` prop.
-- **must-respect-reduced-motion**: Component MUST read the `prefers-reduced-motion` media query and adapt playback behavior accordingly.
-- **must-autoplay-when-motion-allowed**: Component MUST set `autoPlay=true` on the video element when `prefers-reduced-motion` is false.
-- **must-disable-autoplay-when-motion-reduced**: Component MUST set `autoPlay=false` on the video element when `prefers-reduced-motion` is true.
-- **must-loop-when-motion-allowed**: Component MUST set `loop=true` on the video element when `prefers-reduced-motion` is false.
-- **must-disable-loop-when-motion-reduced**: Component MUST set `loop=false` on the video element when `prefers-reduced-motion` is true.
-- **must-show-controls-when-motion-reduced**: Component MUST set `controls=true` on the video element when `prefers-reduced-motion` is true.
-- **must-hide-controls-when-motion-allowed**: Component MUST set `controls=false` on the video element when `prefers-reduced-motion` is false.
-- **must-always-mute**: Component MUST set `muted=true` on the video element.
-- **must-play-inline**: Component MUST set `playsInline=true` on the video element.
-- **must-respond-to-preference-changes**: Component MUST pause the video immediately when the user changes their OS `prefers-reduced-motion` setting from false to true while the page is open.
-- **must-accept-dimensions**: Component MUST accept optional `width` and `height` props and apply them to the video element for layout sizing before content loads.
-- **must-support-web-video-formats**: Component MUST accept `.mp4` and `.webm` video sources via the `src` prop.
+- **accept-src**: Component MUST accept a `src` prop containing the public path to an `.mp4` or `.webm` video file.
+- **render-video-element**: Component MUST render a single `<video>` element with the provided `src`.
+- **aria-label**: Component MUST accept a `label` prop and set it as the video element's `aria-label`.
+- **respect-reduced-motion**: Component MUST read the `prefers-reduced-motion` media query and adapt playback behavior accordingly.
+- **autoplay-when-motion-allowed**: Component MUST set `autoPlay=true` on the video element when `prefers-reduced-motion` is false.
+- **disable-autoplay-when-motion-reduced**: Component MUST set `autoPlay=false` on the video element when `prefers-reduced-motion` is true.
+- **loop-when-motion-allowed**: Component MUST set `loop=true` on the video element when `prefers-reduced-motion` is false.
+- **disable-loop-when-motion-reduced**: Component MUST set `loop=false` on the video element when `prefers-reduced-motion` is true.
+- **show-controls-when-motion-reduced**: Component MUST set `controls=true` on the video element when `prefers-reduced-motion` is true.
+- **hide-controls-when-motion-allowed**: Component MUST set `controls=false` on the video element when `prefers-reduced-motion` is false.
+- **always-mute**: Component MUST set `muted=true` on the video element.
+- **play-inline**: Component MUST set `playsInline=true` on the video element.
+- **respond-to-preference-changes**: Component MUST pause the video immediately via an imperative `ref.current?.pause()` when `prefers-reduced-motion` changes from false to true while the page is open, including the correction that happens right after hydration. When the preference changes from true to false, no imperative action is taken, so playback that was already paused does not resume automatically.
+- **accept-dimensions**: Component MUST accept optional `width` and `height` props and apply them to the video element for layout sizing before content loads.
 
 ## Appearance
 
@@ -66,38 +71,39 @@ A video player component that auto-plays on load while respecting the user's `pr
 |-------|------------------|
 | Default | Video displays at intrinsic size or dimensions specified by `width`/`height` props |
 | Autoplaying (motion allowed) | Video plays silently, loops continuously; no controls visible |
-| Paused (motion reduced) | Video is paused; playback controls visible for user interaction |
-| Reduced motion active | Controls become visible; autoplay and loop are disabled |
+| Reduced motion active | Video is paused; autoplay and loop are disabled; playback controls are visible for user-initiated playback |
 
 ## Accessibility
 
-- **Role**: The component renders a native HTML `<video>` element with the implicit ARIA role of presentation (decorative unless `aria-label` is provided).
-- **Label requirements**: MUST have an `aria-label` prop provided to describe the video content. This is the accessible name for screen readers.
+- **Role**: The component renders a native HTML `<video>` element. `<video>` has no implicit ARIA role; the accessible name comes entirely from the `aria-label` attribute.
+- **Label requirements**: MUST have a `label` prop provided so the video element carries an `aria-label` (see **aria-label**) describing the video content. This is the accessible name for screen readers.
 - **Announce state changes**: The component does not announce state changes via ARIA live regions; the user controls playback through visible controls when `prefers-reduced-motion` is true.
 - **Motion preference**: MUST respect `prefers-reduced-motion: reduce` per [WCAG 2.1 Animation from Interactions](https://www.w3.org/TR/WCAG21/#animation-from-interactions). When enabled, the component must not autoplay or loop without explicit user action.
 - **Keyboard control**: When controls are visible (reduced motion), the native video element provides keyboard support (spacebar, arrow keys) for playback control.
-- **Minimum tap target**: The browser's native controls (when visible) meet platform-specific tap target minimums (44×44pt on iOS, 48×48dp on Android, per platform HIGs).
+- **Minimum tap target**: Native video controls (when visible) are sized and hit-tested by the browser; this component does not control or verify their tap-target dimensions against platform minimums (44×44pt on iOS, 48×48dp on Android).
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| clip-001 | must-render-video-element, must-accept-src | `src="https://example.com/video.mp4"` | Video element renders with `src` attribute set to the provided URL |
-| clip-002 | must-set-aria-label | `label="Demo video"` | Video element has `aria-label="Demo video"` |
-| clip-003 | must-accept-dimensions | `width={640}`, `height={360}` | Video element renders with `width="640"` and `height="360"` attributes |
-| clip-004 | must-autoplay-when-motion-allowed, must-loop-when-motion-allowed, must-hide-controls-when-motion-allowed | `prefers-reduced-motion` is false | Video element has `autoPlay={true}`, `loop={true}`, `controls={false}` |
-| clip-005 | must-disable-autoplay-when-motion-reduced, must-disable-loop-when-motion-reduced, must-show-controls-when-motion-reduced | `prefers-reduced-motion` is true | Video element has `autoPlay={false}`, `loop={false}`, `controls={true}` |
-| clip-006 | must-always-mute | Any props | Video element has `muted={true}` |
-| clip-007 | must-play-inline | Any props | Video element has `playsInline={true}` |
-| clip-008 | must-respond-to-preference-changes | Video is autoplaying with `prefers-reduced-motion` false; user enables `prefers-reduced-motion: reduce` in OS settings | Video element pauses immediately via `ref.current?.pause()` |
-| clip-009 | must-support-web-video-formats | `src="video.webm"` | Video element accepts and renders `.webm` format |
+| clip-001 | render-video-element, accept-src | `src="https://example.com/video.mp4"` | Video element renders with `src` attribute set to the provided URL |
+| clip-002 | aria-label | `label="Demo video"` | Video element has `aria-label="Demo video"` |
+| clip-003 | accept-dimensions | `width={640}`, `height={360}` | Video element renders with `width="640"` and `height="360"` attributes |
+| clip-004 | autoplay-when-motion-allowed, loop-when-motion-allowed, hide-controls-when-motion-allowed | `prefers-reduced-motion` is false | Video element has `autoPlay={true}`, `loop={true}`, `controls={false}` |
+| clip-005 | disable-autoplay-when-motion-reduced, disable-loop-when-motion-reduced, show-controls-when-motion-reduced | `prefers-reduced-motion` is true | Video element has `autoPlay={false}`, `loop={false}`, `controls={true}` |
+| clip-006 | always-mute | Any props | Video element has `muted={true}` |
+| clip-007 | play-inline | Any props | Video element has `playsInline={true}` |
+| clip-008 | respond-to-preference-changes | Video is autoplaying with `prefers-reduced-motion` false; a mocked `matchMedia` change event fires with `matches: true` | Video element pauses immediately via `ref.current?.pause()` |
+| clip-009 | accept-src | `src="video.webm"` | Video element's `src` attribute is set to `"video.webm"` (asserted via the DOM attribute; actual `.webm` decoding is not exercised in jsdom) |
+| clip-010 | respond-to-preference-changes | Server renders assuming `prefers-reduced-motion` is false; the client's actual OS preference is true | After hydration corrects the `usePrefersReducedMotion` snapshot to `true`, the pause effect fires and the video ends up paused despite the SSR markup emitting `autoPlay` |
+| clip-011 | respond-to-preference-changes | Video is paused because `prefers-reduced-motion` was true; the preference then changes to false | `autoPlay`/`loop` update to `true` and `controls` to `false`, but playback does not resume automatically — the video stays paused until the user or host calls `.play()` |
 
 ## Edge Cases
 
 - **Empty or missing src**: If `src` is an empty string or undefined, the video element will not load any content. The component renders with an empty `src` attribute; the browser displays no video. This is a valid state and requires the host to handle the missing source.
 - **Missing label**: If `label` is not provided, the video element has no `aria-label`. This is an accessibility failure; the video is not described for screen reader users. The component does not provide a fallback; the caller is responsible for always providing a label.
 - **Invalid video URL**: If `src` points to a URL that does not exist or is not a valid video file, the video element cannot load it. The browser displays a broken video icon or placeholder. The component does not provide error callbacks; the host is responsible for validating the URL.
-- **Reduced motion disabled then re-enabled**: If the user toggles `prefers-reduced-motion` from false to true and back to false, the component resumes autoplaying. If the user paused the video before toggling, toggling back to false does not resume playback; the paused state is preserved.
+- **Reduced motion re-enabled after being disabled**: If the user toggles `prefers-reduced-motion` from true back to false, `autoPlay` and `loop` update to `true` on the video element, but this does not restart playback: an already-mounted `<video>` element does not resume just because its `autoPlay` attribute changes (see **respond-to-preference-changes**). If the video was paused because reduced motion was true, it remains paused until the user presses play or the host calls `.play()` imperatively.
 - **Zero or negative dimensions**: If `width` or `height` are 0 or negative, the video element renders with those invalid dimensions. The browser behavior is undefined (likely no visible video). The component does not validate or constrain dimension values.
 - **Video ends while looping enabled**: When `loop={true}` (motion allowed), the video replays automatically without interruption. When `loop={false}` (motion reduced), the video stops at the end and requires the user to click play again.
 - **Bandwidth or network failure**: If the video fails to load due to network error, the component does not provide error feedback or retry logic. The native video element displays an error indicator; error handling is the caller's responsibility.
@@ -117,7 +123,7 @@ Not applicable: This component is a playback container for video content. It doe
 
 ## Localization
 
-Not applicable: The component contains no user-facing text. The native video controls (when visible) are localized by the browser. The `label` prop accepts any string and is passed to the accessibility API without translation.
+The component contains no user-facing text of its own; the native video controls (when visible) are localized by the browser using the OS locale. The `label` prop is passed straight through to the video element's `aria-label` without any transformation — the caller MUST pass an already-localized `label` string; the component does not translate, format, or otherwise process it.
 
 ## Accessibility Options
 
@@ -149,27 +155,45 @@ Not applicable: The component does not emit log events.
 ## Platform Notes
 
 - **Web/TypeScript**: The component uses `useSyncExternalStore` to read `prefers-reduced-motion` via `window.matchMedia()` and subscribe to changes. The server-side snapshot returns `false` (motion allowed) to prevent hydration mismatch; the client snapshot is corrected on first render. The component renders a native `<video>` element with HTML attributes. Source: `packages/web/packages/landing/src/blocks/Clip.tsx`.
-- **SwiftUI**: Use `AVPlayer` wrapped in a `VideoPlayer` view. Apply `allowsExternalPlayback(false)` and `playbackControls` visibility bound to `@Environment(\.accessibilityReduceMotion)`. When reduce motion is true, show controls and disable repeat. When false, hide controls and enable repeat. Use `accessibilityLabel()` to provide a text description of the video content.
-- **Compose (Android)**: Use Android's `VideoView` or `ExoPlayer` (recommended). Bind `autoPlay` and `repeatMode` to `isAccessibilityAnimationEnabled()` (inverted; false when motion is reduced). When reduce motion is enabled, set `repeatMode = REPEAT_MODE_OFF` and show player controls. When disabled, set `repeatMode = REPEAT_MODE_ALL` and hide controls. Apply `contentDescription()` for the accessible label. Set `useController=true` when accessibility reduce motion is enabled.
-- **AppKit / UIKit**: Use `AVPlayerViewController` to wrap the video. Bind the `showsPlaybackControls` property to `UIAccessibility.isReduceMotionEnabled()`. When reduce motion is true, manually disable `player?.isMuted`, stop looping, and show controls. When false, mute playback and disable controls. Set the view's `accessibilityLabel` to the provided label string. Use `@Environment(\.accessibilityReduceMotion)` to drive the behavior in SwiftUI; use `UIAccessibility.isReduceMotionEnabled()` in UIKit imperative code.
-- **WinUI 3**: Use `MediaPlayerElement` from the Windows App SDK. Bind `AutoPlay`, `IsLoopingEnabled`, and control visibility to `UISettings.AnimationsEnabled` (or read `prefers-reduced-motion` equivalent via JavaScript interop if available). When animations are disabled, set `AutoPlay=false`, `IsLoopingEnabled=false`, and expose playback controls in the UI. When animations are enabled, hide controls and set `AutoPlay=true`, `IsLoopingEnabled=true`. Mute audio via `MediaPlayerElement.MediaPlayer.IsMuted = true`. Use `AutomationProperties.Name` for the accessible label.
+- **SwiftUI**: Wrap `AVPlayerViewController` (iOS) or an `NSViewControllerRepresentable`-hosted `AVPlayerView` (macOS) rather than the plain `VideoPlayer` view, since `VideoPlayer` exposes no controls-visibility modifier. Read `@Environment(\.accessibilityReduceMotion)`: when true, show controls and play with a plain `AVPlayer` so playback stops at the end; when false, hide controls and loop with an `AVQueuePlayer` + `AVPlayerLooper` (`AVPlayer` has no built-in loop flag). Keep `player.isMuted = true` in every state. Apply `.accessibilityLabel()` with the provided label string.
+- **Compose (Android)**: Use `ExoPlayer` (recommended) hosted in a Compose `AndroidView`. Android has no direct `prefers-reduced-motion` equivalent; detect the closest analog via `Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f`. When reduced, set `useController = true` and `repeatMode = Player.REPEAT_MODE_OFF`; when not reduced, set `useController = false` and `repeatMode = Player.REPEAT_MODE_ALL`. Keep the player muted (`player.volume = 0f`) in every state. Set `contentDescription` on the wrapping view for the accessible label.
+- **AppKit / UIKit**: Use `AVPlayerView` (AppKit, macOS) or `AVPlayerViewController` (UIKit, iOS) to host playback, with an `AVQueuePlayer` + `AVPlayerLooper` to loop content (`AVPlayer` has no native loop flag). Bind `showsPlaybackControls` to the platform's reduce-motion signal — `NSWorkspace.shared.accessibilityDisplayShouldReduceMotion` on AppKit, `UIAccessibility.isReduceMotionEnabled` on UIKit (both Bool properties, not functions). When reduced motion is true, show controls and use a plain `AVPlayer` (not the looper) so playback stops at the end. Keep `player.isMuted = true` in every state — audio stays muted regardless of the motion preference. Set the view's `accessibilityLabel` to the provided label string.
+- **WinUI 3**: Use `MediaPlayerElement` from the Windows App SDK. Windows has no direct `prefers-reduced-motion` API; read `new UISettings().AnimationsEnabled` as the closest system-wide analog. When animations are disabled, set `AutoPlay=false`, `IsLoopingEnabled=false`, and show playback controls. When animations are enabled, hide controls, set `AutoPlay=true`, and set `IsLoopingEnabled=true`. Mute audio via `MediaPlayerElement.MediaPlayer.IsMuted = true` in every state. Use `AutomationProperties.Name` for the accessible label.
 
 ## Design Decisions
 
-- **Muted always**: The component always sets `muted=true` because auto-playing video with sound is widely blocked by browsers and disruptive to users. The caller can provide user controls to unmute if needed, but auto-play without mute is not a viable strategy on the web.
-- **Server-side snapshot assumption**: The server-side snapshot of `useSyncExternalStore` returns `false` (motion allowed) because the server cannot determine the client's OS preferences. This means the initial HTML includes `autoPlay` and `loop` attributes. If the user has enabled reduce motion, React corrects the attributes on first hydration. This is the accepted approach to avoid hydration mismatch.
-- **Force-pause on preference change**: The component uses `useEffect` to call `ref.current?.pause()` when `reduced` changes to true. This is necessary because setting `autoPlay=false` does not stop playback that has already started. The imperative pause ensures the video stops immediately.
-- **No error handling**: The component does not provide error callbacks or fallback UI. Video loading errors are handled by the browser's native error state. This simplifies the component and makes error handling the caller's responsibility, which is appropriate for a reusable media component.
+**Decision**: The component always sets `muted=true` on the video element.
+**Rationale**: Auto-playing video with sound is widely blocked by browsers and disruptive to users; the caller can provide separate UI to unmute if needed, but auto-play without mute is not a viable strategy on the web.
+**Approved**: pending
+
+**Decision**: The server-side snapshot of `useSyncExternalStore` returns `false` (motion allowed), so the initial HTML always includes `autoPlay` and `loop` attributes.
+**Rationale**: The server has no OS preference to consult, so returning `false` avoids a hydration mismatch. React corrects the attributes on first hydration once the real client value is available.
+**Approved**: pending
+
+**Decision**: The component uses a `useEffect` that calls `ref.current?.pause()` whenever `reduced` becomes `true`.
+**Rationale**: Setting `autoPlay=false` does not stop playback that has already started, so an imperative pause is required to guarantee the video stops the instant reduced motion is requested.
+**Approved**: pending
+
+**Decision**: The component provides no error callbacks or fallback UI for video loading failures.
+**Rationale**: Video loading errors are handled by the browser's native error state; leaving error handling to the caller keeps this a small, reusable media component.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [Accessible Labels Required](agenticdevelopercookbook://guidelines/wcag/labels) | passed | Accessibility |
-| [Prefers-Reduced-Motion Respected](agenticdevelopercookbook://guidelines/wcag/animation-from-interactions) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+
+These rest on the source: the `aria-label` attribute carries the accessible name (screen-reader-support, semantic-markup), the native `<video>` element's keyboard-operable controls when `controls` is shown (keyboard-navigable), the `usePrefersReducedMotion` hook driving `autoPlay`/`loop`/`controls` (reduced-motion), and the unmodified pass-through of the `label` string to `aria-label` (unicode-support); native control sizing is the browser's own and is not verified by the source (touch-target-size).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the video role and tap-target claims, fixed nonexistent/misused platform APIs, resolved the AppKit/UIKit mute contradiction, merged duplicate requirements and renamed all requirements to subject-only kebab-case, reformatted Design Decisions, rebuilt Compliance as a linked table, merged duplicate States rows, corrected the reduced-motion-reversal edge case, added SSR-hydration and reverse-transition test vectors, fixed the webm and preference-change test vectors, stated the caller's localization obligation, and populated tags/references/related |

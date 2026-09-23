@@ -3,7 +3,7 @@ id: 05930e64-fa82-49ef-b50d-22d87fa7d182
 title: Deck
 domain: agenticdevelopertoolkit://recipes/deck
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: '2026-09-22'
@@ -16,9 +16,15 @@ summary: A flow container wrapper that holds screen content without scrolling, e
 platforms:
 - typescript
 - web
-tags: []
+tags:
+- layout
+- container
+- landing
+- focus
 depends-on: []
-related: []
+related:
+- agenticdevelopertoolkit://recipes/flow
+- agenticdevelopertoolkit://recipes/nav-chrome
 references: []
 approved-by: ''
 approved-date: ''
@@ -32,11 +38,11 @@ Deck is a layout wrapper component that serves as the root container for screen 
 
 ## Behavioral Requirements
 
-- **must-render-children**: Deck MUST render its `children` prop as direct descendants.
-- **must-apply-lp-deck-class**: Deck MUST apply the CSS class `lp-deck` to its root element.
-- **must-merge-classnames**: Deck MUST merge the `lp-deck` class with any optional `className` prop, filtering out falsy values before joining.
-- **must-be-focusable-div**: Deck MUST render as a `<div>` element with `tabIndex={-1}`, making it focusable without participating in the tab order.
-- **must-not-be-main-landmark**: Deck MUST NOT render as a `<main>` element, as it is designed to be placed inside a host shell that may already provide the page's main landmark.
+- **render-children**: Deck MUST render its child content as direct descendants of its root container.
+- **no-own-scroll**: Deck MUST NOT scroll itself or constrain its own height or overflow, leaving the document to handle scrolling.
+- **merges-style-hook**: Deck MUST apply its own base style hook and merge it with any consumer-supplied style hook, filtering out falsy values before combining them.
+- **focusable-not-tabbable**: Deck MUST be focusable programmatically (e.g. by a click inside it) while being excluded from the default sequential tab order.
+- **not-a-landmark**: Deck MUST NOT expose a semantic landmark role of its own, since it is designed to sit inside a host shell that already provides the page's main landmark.
 
 ## Appearance
 
@@ -48,27 +54,32 @@ Not applicable: Deck is a static container with no interactive states (default, 
 
 ## Accessibility
 
-- **Focus management**: Deck's `tabIndex={-1}` keeps it focusable for programmatic focus control while excluding it from keyboard tab navigation. This allows click-based focus to remain inside the content, letting subsequent keyboard events scroll the document.
-- **No semantic role**: Deck is a structural container with no accessible role. Its element type (`<div>`) must not be changed in a way that introduces an unintended semantic role.
-- **Not a landmark**: Deck is not a landmark element. The page's `<main>` landmark, if present, MUST be provided by the host shell outside the Deck to avoid nested main elements.
+- **Focus management** (`#requirements/focusable-not-tabbable`): A click inside Deck focuses it (or a descendant), which keeps it out of the tab order; from there, arrow keys and Page Down scroll the document rather than being trapped inside Deck.
+- **No semantic role**: Deck is a structural container with no accessible role. Its root element must not be changed in a way that introduces an unintended semantic role.
+- **Not a landmark** (`#requirements/not-a-landmark`): Deck is not a landmark element. The page's `<main>` landmark, if present, MUST be provided by the host shell outside Deck to avoid nested main elements.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| deck-001 | must-render-children | `<Deck><span>Content</span></Deck>` | The span is rendered as a child of the div |
-| deck-002 | must-apply-lp-deck-class | `<Deck/>` | The rendered div has class `lp-deck` |
-| deck-003 | must-merge-classnames | `<Deck className="custom-class"/>` | The rendered div has both classes: `lp-deck custom-class` |
-| deck-004 | must-merge-classnames | `<Deck className={undefined}/>` | The rendered div has only `lp-deck`; undefined className is filtered out |
-| deck-005 | must-be-focusable-div | `<Deck/>` | The rendered element is a div with `tabIndex={-1}` |
-| deck-006 | must-not-be-main-landmark | `<Deck/>` | The rendered element is `<div>`, not `<main>` |
+| deck-001 | render-children | `<Deck><span>Content</span></Deck>` | The span is rendered as a child of the root container |
+| deck-002 | merges-style-hook | `<Deck/>` | The root container carries only its own base style hook (`lp-deck` on React/Web) |
+| deck-003 | merges-style-hook | `<Deck className="custom-class"/>` | The root carries both its base style hook and the consumer's: `lp-deck custom-class` |
+| deck-004 | merges-style-hook | `<Deck className={undefined}/>` | The root carries only its base style hook; the falsy value is filtered out |
+| deck-005 | focusable-not-tabbable | `<Deck/>` | The root container is focusable (`tabIndex={-1}` on React/Web) but is absent from the default tab order |
+| deck-006 | not-a-landmark | `<Deck/>` | The rendered root is a `<div>`, not a `<main>`, and exposes no landmark role |
+| deck-007 | render-children | `<Deck>{null}</Deck>` | Deck renders successfully with no child content present (empty, null, or undefined) |
+| deck-008 | merges-style-hook | `<Deck className=""/>` | The root carries only its base style hook; the empty-string value contributes nothing |
+| deck-009 | merges-style-hook | `<Deck className="a b c"/>` | All three space-separated tokens are preserved alongside the base style hook |
+| deck-010 | no-own-scroll | `<Deck/>` | The root container has no height or overflow style constraining its own scroll |
+| deck-011 | focusable-not-tabbable | Click inside `<Deck>`, then press ArrowDown or Page Down | Focus lands on the clicked content inside Deck; the subsequent key scrolls the document, not Deck |
 
 ## Edge Cases
 
-- **Empty children**: Deck MUST render successfully when `children` is empty, null, or undefined.
-- **Falsy classNames**: Deck MUST filter out falsy classNames (null, undefined, false, empty string) before concatenating.
-- **Multiple className strings**: If `className` contains multiple space-separated class names, Deck MUST preserve all of them when merging with `lp-deck`.
-- **No className prop**: Deck MUST render with only the `lp-deck` class when the `className` prop is not provided.
+- **Empty children** (`#requirements/render-children`): Deck MUST render successfully when its child content is empty, null, or undefined.
+- **Falsy style-hook values** (`#requirements/merges-style-hook`): Deck MUST filter out falsy style-hook values (null, undefined, false, empty string) before combining them.
+- **Multiple class tokens in the style hook** (`#requirements/merges-style-hook`): When the consumer's style hook contains multiple space-separated tokens, Deck MUST preserve all of them when merging with its own base style hook.
+- **No consumer style hook supplied** (`#requirements/merges-style-hook`): Deck MUST render with only its own base style hook when the consumer supplies none.
 
 ## Configuration
 
@@ -107,30 +118,38 @@ Not applicable: No logging is implemented in Deck.
 
 ## Platform Notes
 
-- **TypeScript/Web**: Implemented in `packages/web/packages/landing/src/deck/Deck.tsx`. The component accepts `children` (ReactNode) and optional `className` (string) props. Class names are filtered and merged using `['lp-deck', className].filter(Boolean).join(' ')`. The element has `tabIndex={-1}` to enable focus control without entering the tab order.
+- **React/Web**: Implemented in `packages/web/packages/landing/src/deck/Deck.tsx`. The component accepts `children` (ReactNode) and optional `className` (string) props, realizing render-children and merges-style-hook. Class names are filtered and merged using `['lp-deck', className].filter(Boolean).join(' ')`. The root is a `<div>` (not-a-landmark) with `tabIndex={-1}` (focusable-not-tabbable) and no height or overflow styling (no-own-scroll).
 
-- **SwiftUI**: Use a `VStack(spacing: 0)` or zero-spacing container as the equivalent. Assign the view the accessibility identifier `"deck"` and ensure no scroll behavior is applied to the container itself — let the document or outer scroll view handle scrolling.
+- **SwiftUI**: Use a `VStack(spacing: 0)` or another zero-spacing container as the root, with no scroll modifier applied — let the document or an outer scroll view handle scrolling.
 
-- **Compose**: Use a `Box` or `Column` with `modifier = Modifier.focusable()` to create a focusable container. The equivalent of `tabIndex={-1}` is achieved through Compose's focus management system; the container should be focusable but not part of the default tab order.
+- **Compose**: Compose has no direct equivalent of `tabIndex={-1}`: `Modifier.focusable()` alone places the container in the platform's default focus-traversal order, which would defeat focusable-not-tabbable. Use `Modifier.focusRequester(requester).focusTarget()` so the container becomes focusable only through an explicit `requester.requestFocus()` call, without joining tab/d-pad traversal.
 
-- **AppKit / UIKit**: For macOS, use `NSView` or `NSStackView` as the container. For iOS, use `UIView` or `UIStackView`. Neither should have scroll enabled; scrolling is handled by the document or enclosing scroll view. Set the accessibility element's role to exclude any semantic landmark to prevent nesting issues.
+- **AppKit / UIKit**: For macOS, use `NSView` or `NSStackView`; for iOS, use `UIView` or `UIStackView`. Neither should scroll — scrolling is handled by the document or an enclosing scroll view. Leave the view's default accessibility role (`NSAccessibility.Role.group` on macOS, or `isAccessibilityElement = false` on iOS) rather than assigning a landmark-like trait, so the container satisfies not-a-landmark.
 
-- **WinUI 3**: Use a `Grid` or `StackPanel` (with orientation `Vertical` and spacing `0`) as the root container. Set `IsTabStop="false"` on the panel and `TabIndex="-1"` if programmatic focus is needed. Ensure the parent window or page provides any required semantic roles (like `AutomationProperties.LandmarkType="Main"`) outside the Deck container to avoid nesting conflicts.
+- **WinUI 3**: `Grid` and `StackPanel` are Panels, not Controls, so `TabIndex`/`IsTabStop` don't behave on them as they do on a `Control`; setting `IsTabStop="false"` also blocks programmatic `Focus()`, defeating focusable-not-tabbable's goal of accepting a click or a programmatic focus call without a tab stop. Host the deck's content in a `Control`-derived container where `IsTabStop="false"` paired with an explicit `Focus(FocusState.Programmatic)` call keeps it out of tab order while still accepting focus; where no such host is available, treat focusable-not-tabbable parity as a known WinUI 3 gap. Ensure the parent window or page provides any required semantic roles (like `AutomationProperties.LandmarkType="Main"`) outside the Deck container, matching not-a-landmark.
 
 ## Design Decisions
 
-**Why Deck is a `<div>` and not `<main>`**: The component was initially rendered as a `<main>` element but shipped that way in a consumer that rendered Deck inside a host shell that already provides a page `<main>`. This resulted in two `<main>` landmarks nested, violating HTML validity and confusing screen reader users with multiple "main" landmarks offering no way to disambiguate which is the page's actual main content. Deck is now a `<div>` to avoid landmark duplication. Hosts that do not provide their own main landmark can apply the landmark from outside Deck, which is the only context that knows whether one already exists.
+**Decision**: Deck renders as a `<div>`, not a `<main>` element.
+**Rationale**: Deck was initially rendered as a `<main>` element, but every consumer renders Deck as a page inside a host shell that already draws the page's `<main>` landmark, so the two nested landmarks were invalid HTML and announced two "main" regions to a screen reader with no way to tell which held the actual page content. Deck is now a `<div>` to avoid the duplication; a host that does not provide its own main landmark can apply one from outside Deck, which is the only context that knows whether one already exists.
+**Approved**: pending
 
-**Why Deck has `tabIndex={-1}`**: The `tabIndex={-1}` attribute keeps Deck focusable for programmatic focus (e.g., clicking on the page) without placing it in the keyboard tab order. When focus is programmatically set to Deck or one of its descendants via click, subsequent keyboard events (arrow keys, Page Down, etc.) navigate within the focused content and scroll the document. This avoids trapping focus within Deck and allows the document to act as the natural scroll container.
+**Decision**: Deck sets `tabIndex={-1}` on its root element (focusable-not-tabbable).
+**Rationale**: A click inside Deck focuses it, or a descendant, and keeps it out of the keyboard tab order; from that point, arrow keys and Page Down scroll the document rather than being trapped inside Deck, so the document remains the natural scroll container. See deck-011.
+**Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| No semantic role conflict | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+
+Both statuses rest on the source's deliberate `tabIndex={-1}` focus handling and its `<div>` (not `<main>`) root, documented directly in `Deck.tsx`'s comment block and exercised by its test suite.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and split them into platform-neutral behaviors (render-children, no-own-scroll, merges-style-hook, focusable-not-tabbable, not-a-landmark) with web specifics moved to React/Web notes; rewrote the tabIndex rationale as the concrete click-then-scroll sequence and added matching test vectors deck-007 through deck-011 plus edge-case cross-references; reformatted Design Decisions to Decision/Rationale/Approved; linked real accessibility compliance checks; corrected the Compose, WinUI 3, SwiftUI, and AppKit/UIKit platform notes; added tags and related ingredients; fixed the Change History author. |
