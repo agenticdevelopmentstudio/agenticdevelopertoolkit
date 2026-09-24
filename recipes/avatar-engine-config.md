@@ -4,7 +4,7 @@ title: Avatar Engine Config
 domain: agenticdevelopertoolkit://recipes/avatar-engine-config
 type: ingredient
 category: engine
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
@@ -385,15 +385,7 @@ independently testable at any of its listed call sites.
   `CharacterConfig.load(_:)` returns MUST stay in the isolation domain that
   loaded it; the compiler rejects sending it across an actor boundary. A port
   that shares one loaded config between threads adds that guarantee itself.
-- NEEDS REVIEW: Not implemented in source. Neither loader validates that a shape's `points` array
-  has a count consistent with what its path-builder kind requires (for
-  example, a cubic-bezier family's point count is expected to satisfy
-  `3n + 1` by the renderer's `Build` functions, which are not part of this
-  recipe's source set). `requireShapeFields` confirms `points` is present
-  but not that its count is valid for the declared kind, so a
-  geometrically-malformed but structurally-present `points` array is
-  accepted at load and its downstream behavior is undefined by the sources
-  reviewed here.
+- **points-count**: NEEDS REVIEW: Not implemented in source. Neither loader validates that a shape's `points` array has a count consistent with what its path-builder kind requires (for example, a cubic-bezier family's point count is expected to satisfy `3n + 1` by the renderer's `Build` functions, which are not part of this recipe's source set); `requireShapeFields` confirms `points` is present but not that its count is valid for the declared kind, so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
 
 ## Appearance
 
@@ -595,3 +587,4 @@ answers it inconsistently with `CharacterConfig.load(_:)`'s own wrapping.
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe, covering the Apple and web avatar-engine config loaders. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
+| 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

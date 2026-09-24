@@ -3,11 +3,11 @@ id: 471eb7b8-6821-4fd3-ab89-022c56757421
 title: Avatar Engine Math
 domain: agenticdevelopertoolkit://recipes/avatar-engine-math
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -225,7 +225,8 @@ easing, matrices) identical outputs.
   instance only at scheduled animation events, never once per rendered
   frame/tick, so that the sequence of values consumed is independent of
   display refresh rate (documented invariant in both `Prng.swift` and
-  `prng.ts`; the type does not enforce this itself — see Edge Cases).
+  `prng.ts`; the type does not enforce this itself — see
+  **prng-concurrency**).
 
 ### Cross-cutting
 
@@ -318,30 +319,17 @@ matrix, and PRNG functions), not a visual component.
   happen "ONLY at scheduled events, never per tick" (`prng-scheduled-draw-
   only`), but neither the Swift type nor the TypeScript type enforces
   single-writer access — there is no lock, actor isolation, or atomic
-  compare-and-swap around `s0`..`s3`. `NEEDS REVIEW: Not implemented in
-  source.` What is undefined: whether two call sites (or two threads on the
-  Swift side) may hold a reference to the same `Prng` instance and draw from
-  it without external synchronization, and if so what ordering guarantee (if
-  any) applies to the resulting stream. This module's four source files give
-  no answer beyond the informal comment; resolving it requires either seeing
-  the call sites in the wider `AvatarAnimationEngine`/`avatar-engine`
-  scheduler (to confirm every draw is already serialized by construction) or
-  a decision to add enforcement (an `actor` on the Swift side, a documented
-  single-owner contract on the web side) at this layer.
+  compare-and-swap around `s0`..`s3` — see **prng-concurrency**
+  below.
+- **prng-concurrency**: The Swift `Prng` is a non-`Sendable` `public final class` with no lock or actor, so strict concurrency confines each instance to one isolation domain and a second thread cannot draw from it; the TypeScript `Prng` runs on the single-threaded JS event loop, where each draw completes synchronously. Draws on one instance are therefore serialized by construction, and the stream order is the order of the caller's calls.
 - **Degenerate/non-finite `Mat` transform inputs** (`NaN` or `Infinity` in
   `rotation`, `scaleX`, `scaleY`, `x`, `y`, or a pivot coordinate): unlike
   `Color`'s explicit `clamp01`, neither `Mat.from`/`fromTransform` nor
   `apply`/`applyPoint` clamps, checks, or rejects non-finite input anywhere
-  in `Mat.swift`/`mat.ts`. `NEEDS REVIEW: Not implemented in source.` What is
-  undefined: whether a non-finite transform parameter should be rejected
-  (thrown/error), clamped, or is expected to be validated entirely upstream
-  before it reaches `Mat`. The source is silent — no test in `MatTests`/
-  `mat.test.ts` exercises `NaN` or `Infinity` input — so a `NaN` or infinite
-  matrix component will currently propagate silently into whatever consumes
-  the transform (e.g. a renderer), the same failure mode `Color`'s own code
-  comments identify as the reason `clamp01` exists. Resolving this requires a
-  decision from whoever owns the renderer contract on whether `Mat` should
-  guard the same way `Color` does.
+  in `Mat.swift`/`mat.ts`, and no test in `MatTests`/`mat.test.ts` exercises
+  `NaN` or `Infinity` input — see the open question on mat-non-finite-input
+  below.
+- **mat-non-finite-input**: NEEDS REVIEW: Not implemented in source. Neither `Mat.from`/`fromTransform` nor `apply`/`applyPoint` rejects, clamps, or checks a non-finite (`NaN`/`Infinity`) `rotation`, `scaleX`, `scaleY`, `x`, `y`, or pivot coordinate in `Mat.swift`/`mat.ts`, so such a value propagates silently into whatever consumes the transform (e.g. a renderer) — the same failure mode `Color`'s `clamp01` exists to prevent; resolving it needs a decision from whoever owns the renderer contract on whether `Mat` should guard the same way `Color` does.
 - **Concurrent calls into `Ease.resolve`/`resolveEase`**: the Swift ease
   table is a `static let` built by an immediately-invoked closure, which
   Swift's runtime guarantees is initialized exactly once even under
@@ -530,8 +518,7 @@ errors or rejected TypeScript `Error`s (`hex-parse-failure`,
   Swift's `preconditionFailure` cannot be caught by XCTest or a caller,
   while the web's `throw` can be — an intentional, documented asymmetry
   rather than a bug, but a genuine platform divergence a port must be aware
-  of (see the open question logged under Edge Cases about `Prng`'s
-  concurrency contract, which this same trade-off touches).
+  of (see **prng-concurrency**, which this same trade-off touches).
   **Approved**: pending
 - **Decision**: A caller MUST draw from a `Prng` instance only at scheduled
   events, never once per rendered frame.
@@ -566,3 +553,4 @@ open question in Edge Cases.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

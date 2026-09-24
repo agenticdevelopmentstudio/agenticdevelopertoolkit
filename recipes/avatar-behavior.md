@@ -3,11 +3,11 @@ id: ccfd0128-374c-4cca-a83f-71efd3c02176
 title: Avatar Behavior
 domain: agenticdevelopertoolkit://recipes/avatar-behavior
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -348,29 +348,8 @@ different personas without a fork.
 
 **Unvalidated input — genuine gaps**
 
-- **morph-point-count-validation**: NEEDS REVIEW: Not implemented in
-  source. Nothing in `pose.ts` checks that two morph targets on the same
-  channel actually have matching point counts before calling
-  `gsap.to(..., { morphSVG: ... })` — the only guard is the authoring
-  comment cited in **morph-path-point-count-consistency**. What is missing:
-  a validation step (dev-time assertion or runtime guard) and a defined
-  fallback when counts mismatch. This cannot be settled from this source
-  alone because MorphSVGPlugin's actual behavior on a mismatch (silent
-  distortion vs. a thrown exception) is a detail of the installed GSAP
-  version, not of this engine. Whoever owns the avatar pose-authoring
-  pipeline can resolve it by testing an intentionally mismatched pair
-  against the pinned `gsap`/`MorphSVGPlugin` version.
-- **pose-shape-validation**: NEEDS REVIEW: Not implemented in source.
-  `Pose.dur`/`Pose.ease` are required fields and `Tuning`'s fields are all
-  required numbers, but nothing at runtime checks either shape — the source
-  relies entirely on TypeScript's compile-time types (`types.ts`), which
-  enforce nothing once a `Pose`/`Tuning` value crosses a non-TypeScript
-  boundary (e.g. a JSON- or CMS-authored pose table). What is missing: a
-  schema check or a defined default when a required field is absent or the
-  wrong type. This cannot be settled from this source because no consumer
-  in this source tree loads poses from a non-TypeScript source to reveal
-  the intended fallback; whoever adds such a path can resolve it by
-  defining and testing that fallback.
+- **morph-point-count-validation**: Matching point counts between morph targets on the same channel is an authoring precondition (see **morph-path-point-count-consistency**); nothing in `pose.ts` checks it before calling `gsap.to(..., { morphSVG: ... })`, so a mismatched pair is handed to MorphSVGPlugin as-is and its outcome is whatever the pinned `gsap`/`MorphSVGPlugin` version does.
+- **pose-shape-validation**: `Pose` and `Tuning` shapes are enforced only by TypeScript's compile-time types in `types.ts`; there is no runtime schema check, and every pose table in this source is authored in TypeScript, so a well-typed value is a caller precondition. A value that bypasses the type checker (e.g. a JSON- or CMS-authored table) is passed through unchecked.
 
 ## Appearance
 
@@ -456,7 +435,7 @@ the avatar component that renders the SVG this engine animates.
 | avatar-behavior-059 | ssr-safe-plugin-registration | The module is imported in a non-browser (SSR) module evaluation context (`typeof window === "undefined"`). | Import does not throw; `gsap.registerPlugin(MorphSVGPlugin)` is not called. |
 | avatar-behavior-060 | speech-bubble-pop-and-drift | `speechRef.current` mounted; `speech = { text: "hi", id: 1 }`. | The bubble's timeline runs: opacity `0→0.7`/scale `0.7→1` over `0.22`s, then a `0.5`s hold, then a `1.3`s drift to `0` opacity along a computed `(driftX, driftY)` within `±55°` of straight up. |
 | avatar-behavior-061 | speech-bubble-noop-without-ref-or-speech | `speech = null`. | `useSpeechBubble` starts no timeline. |
-| avatar-behavior-062 | morph-path-point-count-validation (the open question) | Two poses for the same mouth channel whose `pose.mouth` path strings have a different point count. | Behavior is undefined by this source — no test can assert a specific outcome until the genuine gap above is resolved. |
+| avatar-behavior-062 | morph-point-count-validation | Two poses for the same mouth channel whose `pose.mouth` path strings have a different point count. | The engine passes both paths to MorphSVGPlugin unchecked; the outcome is the plugin's, so the test asserts only that no engine-side validation or fallback runs. |
 
 ## Edge Cases
 
@@ -504,10 +483,8 @@ the avatar component that renders the SVG this engine animates.
   is measured against `Date.now()`, so a throttled/delayed poll tick still
   computes the correct elapsed time once it does fire; the grace window is
   not extended or shortened by tab visibility.
-- **Malformed `Pose`/`Tuning` values crossing a non-TypeScript boundary**:
-  see **pose-shape-validation** (the open question) above.
-- **Mismatched MorphSVG point counts across a mood's poses**: see
-  **morph-point-count-validation** (the open question) above.
+- **Malformed `Pose`/`Tuning` values crossing a non-TypeScript boundary**: passed through unchecked; see **pose-shape-validation** above.
+- **Mismatched MorphSVG point counts across a mood's poses**: handed to MorphSVGPlugin unchecked; see **morph-point-count-validation** above.
 - **Concurrent access**: Not applicable in the multi-thread sense — the
   engine runs entirely on the single browser main thread; "concurrency" here
   means overlapping timers/effects (covered above), not shared-memory
@@ -579,7 +556,7 @@ recipe to externalize.
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | NEEDS REVIEW: Not implemented in source. The engine drives several unconditional, indefinite animation loops (idle-fidget breathing and sway in `idleLife.ts`, the antenna sway and face bob/wiggle loops in `pose.ts`, the blink cadence in `reflexes.ts`, the gaze wander in `gaze.ts`) with no check against `prefers-reduced-motion` and no configuration field (in `AvatarEngineConfig` or `Tuning`) to disable or dampen idle motion. What is missing: a way for a host page that honors reduced motion to suppress or slow these loops. This is a genuine gap, not a documented decision — a grep of the whole package for `matchMedia`/`reduce`/`prefers` finds nothing. Whoever owns the engine's motion budget can resolve it by adding a `reducedMotion` config flag (or reading `matchMedia` itself) that the idle fidget, gaze wander, and continuous pose loops all check. |
+| Reduce Motion | Not implemented: the engine drives several unconditional, indefinite animation loops (idle-fidget breathing and sway in `idleLife.ts`, the antenna sway and face bob/wiggle loops in `pose.ts`, the blink cadence in `reflexes.ts`, the gaze wander in `gaze.ts`) with no check against `prefers-reduced-motion` and no configuration field (in `AvatarEngineConfig` or `Tuning`) to disable or dampen idle motion — a grep of the whole package for `matchMedia`/`reduce`/`prefers` finds nothing. |
 | Increase Contrast | Not applicable: color for a mood comes entirely from the caller's `pose.body` value and the rig's own fills; `applyPose`'s `faceEl` tween (**face-chameleon-color**) only interpolates toward whatever color the avatar supplies — the engine sets no palette of its own. |
 | Differentiate Without Color | Not applicable: moods are differentiated by pose geometry (eye/mouth/brow/antenna shape via `Pose`) that the avatar author supplies through `AvatarRig`, not by the engine encoding state through color alone. |
 
@@ -751,8 +728,8 @@ API; failures are silent (guarded no-ops), not logged.
 
 - **Decision**: Keep morph-target point-count matching to a source comment
   and a SHOULD requirement (**morph-path-point-count-consistency**) rather
-  than a validated MUST, and record the two unvalidated-input concerns as open
-  questions instead of inventing enforcement the source doesn't have.
+  than a validated MUST, and record both as caller preconditions instead of
+  inventing enforcement the source doesn't have.
   **Rationale**: The source truly performs no such validation anywhere
   (`pose.ts`, `types.ts`); documenting an enforcement mechanism that
   doesn't exist would be source-fidelity idealization. See
@@ -804,3 +781,4 @@ sections above).
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the `@agenticdevelopertoolkit/avatar` web source (engine, arbitration, gaze, idleLife, pose, reflexes, speechBubble, types); flagged three genuine gaps — unvalidated MorphSVG point-count matching, unvalidated Pose/Tuning shape at runtime, and no reduced-motion accommodation for the engine's continuous idle loops — with the open question and evidence needed for each recorded in place. |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

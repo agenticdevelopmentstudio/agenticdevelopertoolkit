@@ -3,11 +3,11 @@ id: a7c91832-4059-4e06-b8c6-e8c727567c66
 title: Avatar Engine Anim
 domain: agenticdevelopertoolkit://recipes/avatar-engine-anim
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -343,17 +343,7 @@ side.
   from the injected `Prng`. Neither type performs file, network, or process
   I/O, and neither reads or writes any persistence layer.
 
-- **NEEDS REVIEW: Not implemented in source.** `Reflexes.look(x, y, now)`
-  clamps its inputs toward `[-1, 1]` but does not validate that `x`/`y` are
-  finite numbers. A non-finite (`NaN`/`Infinity`) coordinate from the host
-  passes the clamp unchanged (both platforms' clamp forms leave `NaN`
-  as `NaN`) and is then written into a gaze channel, where it can
-  permanently corrupt that channel's tween interpolation (`lerpValue`'s
-  numeric branch and the tween progress calculation both propagate `NaN`
-  once introduced, with no recovery path in the given sources). The
-  contract does not say whether the host is required to pre-validate
-  pointer input or whether `look`/the params/tween layer should reject or
-  sanitize a non-finite value itself.
+- **gaze-input-validation**: NEEDS REVIEW: Not implemented in source. `Reflexes.look(x, y, now)` clamps its inputs toward `[-1, 1]` but does not validate that `x`/`y` are finite numbers; a non-finite (`NaN`/`Infinity`) coordinate from the host passes the clamp unchanged (both platforms' clamp forms leave `NaN` as `NaN`) and is then written into a gaze channel, where it can permanently corrupt that channel's tween interpolation (`lerpValue`'s numeric branch and the tween progress calculation both propagate `NaN` once introduced, with no recovery path in the given sources); the contract does not say whether the host is required to pre-validate pointer input or whether `look`/the params/tween layer should reject or sanitize a non-finite value itself.
 
 ## Appearance
 
@@ -460,9 +450,9 @@ tweens` at 60 fps, and asserts against the resulting channel/state values.
   while a mood's own choreography timeline is active cancels that mood's
   timeline first (see **hand-play-shares-the-timeline-slot**); there is no
   configuration that lets the two run side by side.
-- **Non-finite gaze input**: see the open question above — `look(x, y,
-  now)` does not validate that its coordinates are finite before clamping
-  and writing them.
+- **Non-finite gaze input**: see the open question on gaze-input-validation
+  — `look(x, y, now)` does not validate that its coordinates are finite
+  before clamping and writing them.
 
 ## Configuration
 
@@ -645,3 +635,4 @@ identically only on the web side; on Apple they end the process instead.
   `Reflexes.swift`/`reflexes.ts`, and `Timelines.swift`/`timeline.ts`, with
   the open question about unvalidated non-finite gaze input carried as the
   one open item for a future revision to resolve.
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
