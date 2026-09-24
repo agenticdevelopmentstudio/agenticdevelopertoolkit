@@ -3,11 +3,11 @@ id: 4a3761c5-5809-43c9-9a45-6f91fe82ae97
 title: Skeleton
 domain: agenticdevelopertoolkit://recipes/skeleton
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -72,7 +72,7 @@ Not applicable: The Skeleton component is a static, non-interactive loading indi
 - **Announce state changes**: Delegated to the parent's `aria-busy` state; the skeleton itself announces nothing.
 - **Keyboard interaction**: Not applicable. This is a non-interactive element.
 
-NEEDS REVIEW: Skeleton renders a plain `div` with no `aria-hidden`, `aria-busy`, or role attribute, and leaves **aria-hidden-while-loading** to the consumer. Whether the component itself should suppress the placeholder or announce loading status is undecided.
+The component renders a plain `div` with no `aria-hidden`, `aria-busy`, or role attribute of its own; per **aria-hidden-while-loading**, suppressing the placeholder or announcing loading status is left entirely to the consumer (see Design Decisions).
 
 ## Conformance Test Vectors
 
@@ -169,3 +169,4 @@ The source applies Tailwind's `animate-pulse` unconditionally with no `prefers-r
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: made requirements/appearance/vectors platform-neutral, moving Tailwind class names into the React/Web platform note; renamed requirements to subject-only kebab-case; reformatted Design Decisions into Decision/Rationale/Approved form; replaced the "Not applicable" Compliance section with a table; added a consumer-side aria-hidden-while-loading requirement (the component-side ARIA question stays open); added a reduced-motion-support requirement and test vector; fixed nonexistent/mismatched Platform Notes APIs (SwiftUI, Compose); corrected frontmatter `modified` quoting |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Fix Reduce Motion marker; clarify screen-reader gap |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

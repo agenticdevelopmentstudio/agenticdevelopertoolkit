@@ -3,11 +3,11 @@ id: f1c3b5e7-9d2a-4f8c-a3c1-7e2f5b9c6d4a
 title: Tree Rows
 domain: agenticdevelopertoolkit://recipes/tree-rows
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -204,9 +204,11 @@ Not applicable: Tree Rows is a UI primitive for table and list display, not a na
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | The component applies `transition-transform` to the chevron icon rotation but never queries `prefers-reduced-motion`; the animation plays regardless of the user's motion preference. NEEDS REVIEW: decide whether the rotation should be disabled or shortened under Reduce Motion, and implement it if so. |
-| Increase Contrast | Focus ring color and hover state text color use the `apt-gold` and `apt-text` design tokens. NEEDS REVIEW: confirm those tokens meet the required WCAG contrast ratios. |
+| Reduce Motion | The component applies `transition-transform` to the chevron icon rotation but never queries `prefers-reduced-motion`; the animation plays regardless of the user's motion preference. |
+| Increase Contrast | Focus ring color and hover state text color use the `apt-gold` and `apt-text` design tokens; see the open question on contrast. |
 | Differentiate Without Color | Toggle state is communicated by aria-expanded, title, and icon rotation (visual), not by color alone. Focus is indicated by a ring, not color. |
+
+- **contrast**: NEEDS REVIEW: Not implemented in source. Focus ring and hover-state text colors are set from the `apt-gold` and `apt-text` design tokens (`tree-rows.tsx`); their resolved contrast ratios cannot be verified from this file — confirm they meet the required WCAG contrast ratios.
 
 ## Feature Flags
 
@@ -287,7 +289,7 @@ Each bullet below assumes this recipe's flatten-plus-label approach: hierarchy l
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 
-Statuses rest on `tree-rows.tsx` itself: the native `<button>` with `aria-label`/`aria-expanded`/`title` and its default keyboard behavior support the passed screen-reader, keyboard, and semantic-markup checks; the 14px icon plus `0.125rem` padding falls short of standard touch-target minimums and the chevron's `transition-transform` runs unconditionally regardless of `prefers-reduced-motion` (both also tracked under Accessibility Options above); contrast for the `apt-gold`/`apt-text` tokens can't be verified from this file (see Accessibility Options → Increase Contrast); and the hardcoded `Expand`/`Collapse` English strings fail string-externalization and no-hardcoded-strings, while the logical `paddingInlineStart` property and the unfiltered pass-through of the caller's `label` string pass rtl-layout-support and unicode-support.
+Statuses rest on `tree-rows.tsx` itself: the native `<button>` with `aria-label`/`aria-expanded`/`title` and its default keyboard behavior support the passed screen-reader, keyboard, and semantic-markup checks; the 14px icon plus `0.125rem` padding falls short of standard touch-target minimums and the chevron's `transition-transform` runs unconditionally regardless of `prefers-reduced-motion` (both also tracked under Accessibility Options above); contrast for the `apt-gold`/`apt-text` tokens can't be verified from this file (see the open question on contrast); and the hardcoded `Expand`/`Collapse` English strings fail string-externalization and no-hardcoded-strings, while the logical `paddingInlineStart` property and the unfiltered pass-through of the caller's `label` string pass rtl-layout-support and unicode-support.
 
 ## Change History
 
@@ -296,3 +298,4 @@ Statuses rest on `tree-rows.tsx` itself: the native `<button>` with `aria-label`
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; fix an RFC 2119 inversion and add duplicate-id/negative-depth preconditions; add an omit-collapsed-descendants requirement and test vectors; reformat Design Decisions and add two new entries; rewrite Compliance as a table; correct Appearance/Platform Notes values and move Tailwind specifics off Requirements/Appearance; split Configuration per export; fix the tree-003 and tree-010 vectors and add missing coverage; link the Disclosure recipe in related. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Reduce Motion and Increase Contrast markers; clarify token requirements and motion animation behavior. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from tree-rows.tsx source. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

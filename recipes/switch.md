@@ -3,11 +3,11 @@ id: 951b86ac-cf75-46ec-9746-d15fcb4618b4
 title: Switch
 domain: agenticdevelopertoolkit://recipes/switch
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -136,9 +136,11 @@ Not applicable: Switch has no text content or user-facing strings. Labels and de
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Transitions are applied (transition-colors on the root, transition-transform on the thumb); the component does not respond to the prefers-reduced-motion media query. NEEDS REVIEW: Implement prefers-reduced-motion support to disable or minimize transitions when active. |
-| Increase Contrast | The component uses the `apt-gold` (checked) and `apt-input` (unchecked) tokens from the design system. NEEDS REVIEW: Confirm these tokens meet the WCAG 1.4.11 non-text contrast ratio (3:1) against their surrounding background — the switch's state indicator is a non-text UI component, so the 4.5:1 text threshold doesn't apply. |
+| Reduce Motion | Transitions are applied (transition-colors on the root, transition-transform on the thumb); the component does not check `prefers-reduced-motion` and does not disable or minimize transitions when the user has Reduce Motion enabled. |
+| Increase Contrast | The component uses the `apt-gold` (checked) and `apt-input` (unchecked) tokens from the design system; see the open question on increase-contrast. |
 | Differentiate Without Color | The Switch communicates state through both color (apt-gold vs. apt-input) and position change (thumb translates 14px right when checked); the position change provides a non-color indicator for users who cannot distinguish colors. |
+
+- **increase-contrast**: NEEDS REVIEW: Not implemented in source. Confirm the `apt-gold` (checked) and `apt-input` (unchecked) tokens meet the WCAG 1.4.11 non-text contrast ratio (3:1) against their surrounding background — `switch.tsx` only assigns these tokens and doesn't resolve or verify their contrast; the switch's state indicator is a non-text UI component, so the 4.5:1 text threshold doesn't apply.
 
 ## Feature Flags
 
@@ -210,3 +212,4 @@ Statuses rest on what `switch.tsx` itself shows: the fixed 36×20px track (below
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fixed nonexistent Platform Notes APIs; rewrote Appearance/States/test vectors as semantic values with Tailwind mapping confined to React/Web; corrected thumb-travel math to 14px; resolved the disabled cursor/pointer-events conflict and clarified the native disabled attribute; added toggle-on-space and expose-switch-role requirements with vectors; reformatted Design Decisions; rebuilt Compliance with real linked checks; corrected the Increase Contrast WCAG citation; listed forwarded form props in Configuration; populated related ingredients; fixed the 1.0.0 author and an RFC 2119 misuse |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Accessibility Options markers: state facts, keep genuine gaps only; update Platform Notes with Reduce Motion guidance |
 | 1.0.0 | 2026-09-22 | Generated | Initial creation, generated from base-ui React source |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

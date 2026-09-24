@@ -3,11 +3,11 @@ id: 8f2e4a12-7c3b-4d9f-a1e2-6b5f9c1d3e4a
 title: "Toast"
 domain: agenticdevelopertoolkit://recipes/toast
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -127,7 +127,8 @@ Not applicable: Toast is a transient, non-navigable UI element with no persisten
 ## Accessibility Options
 
 - **Reduce Motion**: The source uses CSS `transition-all` on the toast root and `transition-colors` on the close button, and does not read or respond to the `prefers-reduced-motion` media query — transitions are always applied. See **respect-reduced-motion**.
-- **Increase Contrast**: Close button colors MUST use the design tokens `apt-text-muted` (rest state), `apt-text` (hover), and focus ring MUST use `apt-gold/40` opacity. NEEDS REVIEW: Whether these tokens meet WCAG AA contrast (4.5:1 for text, 3:1 for graphics) cannot be confirmed from source alone — the Compliance table below records `contrast-ratio` as partial pending that review; the actual token color values and the active theme would need to be checked.
+- **Increase Contrast**: Close button colors use the design tokens `apt-text-muted` (rest state) and `apt-text` (hover); the focus ring uses `apt-gold/40` opacity. The component hardcodes no color value, so implementations MUST use those tokens — see the open question on increase-contrast.
+- **increase-contrast**: NEEDS REVIEW: Not implemented in source. Neither `toast.tsx` nor a single fixed theme settles whether `apt-text-muted`, `apt-text`, and `apt-gold/40` clear WCAG AA contrast (4.5:1 for text, 3:1 for graphics) against `apt-surface-2`: the themes package resolves these tokens to different underlying colors across each of its theme stylesheets, and some of those stylesheets (e.g. `dev-team.css`'s `--color-text-secondary`) already carry a "nudged for AA" comment showing the margin is theme-specific, so the ratio depends on which theme is active. The active theme's resolved token values, run through a contrast checker, would settle it.
 - **Differentiate Without Color**: The close button focus indication relies on color change (apt-text-muted to apt-text) and a colored focus ring (apt-gold/40). No non-color visual indicator such as a border, outline, or text styling change is present in the source.
 
 ## Feature Flags
@@ -203,3 +204,4 @@ Statuses rest on the source's hard-coded `aria-label="Close"`, the unpadded 16px
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix the viewport offset (4rem → 1rem) and the false 44×44 touch-target claim, remove the unsupported Material Design citation, drop unimplemented auto-dismiss from the exit vector, replace AppKit/UIKit subclassing guidance with composition, correct the SwiftUI and WinUI 3 platform notes, name the toast's actual ARIA roles and live-region politeness, require Space alongside Enter for Close dismissal and state that Escape does not dismiss, require a localized Close label, add a reduced-motion requirement, specify overflow behavior via the Provider's limit prop, rebuild Compliance as a table, reformat Design Decisions, move Tailwind class names into the React/Web platform note, clarify the fixed-vs-capped toast width, add related cross-references, rename all requirements to drop the must-/should- prefix, and add conformance vectors for per-provider queue isolation and the localized Close label |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Revise accessibility sections and edge cases: document hard-coded Close label, add Reduce Motion fact, clarify Differentiate Without Color limitation, state viewport overflow behavior, reword Compliance as Not applicable |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
