@@ -3,11 +3,11 @@ id: 9f87b4cd-f3a0-482b-830d-c1482ed51bbe
 title: Create Resource Dialog
 domain: agenticdevelopertoolkit://recipes/create-resource-dialog
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -95,7 +95,7 @@ A reusable modal dialog component for creating new resources. The dialog renders
 - **Form labels**: Responsibility for form field labeling and accessibility is delegated to the `renderForm` callback.
 - **Error announcement**: The `error` value is handed to `renderForm` for inline display; the component itself uses no ARIA live region, so whether an error reaches assistive technology as an announcement (e.g. via `aria-describedby` or a live region) depends on the host's `renderForm` implementation.
 - **Keyboard navigation**: DOM order (and default Tab order) is the close (×) button, then the form fields rendered by `renderForm`, then Cancel, then Save; Escape is handled through the same close guard as Cancel and ×.
-- **Focus management**: The source calls no focus API. It neither moves focus into the dialog on open, confines Tab within it while open, nor restores focus to the invoking control on close. NEEDS REVIEW: Not implemented in source. Behavior undefined. What is missing is the focus contract for a container that declares `role="dialog"` and `aria-modal="true"`: which element receives focus on open, whether focus is confined for the dialog's lifetime, and where focus returns after Save, Cancel, ×, or Escape. The source cannot settle it because it assigns the responsibility to neither the dialog nor its host; the evidence that would settle it is a recorded decision assessed against the WAI-ARIA Authoring Practices dialog pattern and WCAG 2.1 SC 2.4.3 (Focus Order), naming the owning layer.
+- **Focus management**: The source calls no focus API. It does not move focus into the dialog on open, does not confine Tab within it while open, and does not restore focus to the invoking control on close — all three left unhandled for a container that declares `role="dialog"` and `aria-modal="true"`, where the WAI-ARIA Authoring Practices dialog pattern and WCAG 2.1 SC 2.4.3 (Focus Order) call for each.
 - **Backdrop interaction**: Backdrop click is intentionally non-interactive to prevent accidental dismissal; this is accessible since keyboard and explicit buttons provide alternatives.
 - **Minimum touch target**: Cancel and Save are text buttons at the `default` size (`h-8`, 32px tall, width driven by label + padding). The close (×) button uses `icon-sm` (`size-7`, 28×28px), below the 44×44pt/48×48dp guideline, unless a host surface raises the shared `--adh-button-min-height`/`--adh-button-min-width` CSS variables that `Button` reads for exactly this purpose; this dialog does not set them itself.
 
@@ -146,7 +146,7 @@ A reusable modal dialog component for creating new resources. The dialog renders
 - **Callback identity during an in-flight save**: `validate`, `create`, `onClose`, `onCreated`, `renderForm`, `saveEnabled`, and `onSaveError` are read directly from props inside `save()` and `requestClose()`, which are plain functions re-created every render — so a click always uses the callbacks current as of that render, with one exception: once `save()` starts awaiting `create(draft)`, it has already captured `onCreated`, `onSaveError`, and `draft` from the render at click time. If the host swaps in new callback instances while that create is in flight, the pending call still completes using the values captured when Save was clicked.
 - **Portal target**: The client-only check (`typeof document === "undefined"`) guards against SSR. Once the component is running in a browser, `document.body` already exists by the time React can mount anything, so this path does not arise in practice; if `createPortal` were ever given a non-element container, React throws synchronously rather than failing silently.
 - **Non-deterministic `blank`**: `blank` is invoked twice — once for `draft` and once for the `pristine` baseline — and `dirty` compares the two results with `JSON.stringify`. A `blank` that returns a fresh identifier, timestamp, or other varying value on each call MUST be avoided: the two initial values differ, so the dialog reports itself dirty at mount, Save is enabled before any edit, and the Discard/Stay alert is raised on the first close.
-- **Focus on open and close**: The source calls no focus API, so focus stays on whatever element opened the dialog, Tab can leave the dialog for content behind the overlay, and nothing restores focus when the dialog closes. This gap is recorded once, in Accessibility.
+- **Focus on open and close**: The source calls no focus API, so focus stays on whatever element opened the dialog, Tab can leave the dialog for content behind the overlay, and nothing restores focus when the dialog closes. This is also documented in Accessibility, under Focus management.
 
 ## Configuration
 
@@ -222,7 +222,7 @@ Not implemented: Component does not emit logs. Errors from `create` are surfaced
 **Approved**: pending
 
 **Decision**: Leave focus unmanaged — no focus moved into the dialog on open, no focus trap while it is open, and no focus restored to the invoking control on close.
-**Rationale**: The source implements none of this and records no rationale for the omission; it is documented here as an open gap rather than a decision. See the Focus management entry in Accessibility for what would settle it. Escape, Cancel, and × still give keyboard users an unambiguous way to close the dialog, so the omission does not leave it unreachable by keyboard.
+**Rationale**: The source implements none of this and records no rationale for the omission; it is documented here as an absent feature, not a decision. See the Focus management entry in Accessibility for what the source does and does not handle. Escape, Cancel, and × still give keyboard users an unambiguous way to close the dialog, so the omission does not leave it unreachable by keyboard.
 **Approved**: pending
 
 **Decision**: Compare draft to pristine state with `JSON.stringify` rather than a structural-equality library or a manual dirty flag.
@@ -257,7 +257,7 @@ Not implemented: Component does not emit logs. Errors from `create` are surfaced
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 
-Statuses rest on the source: interactive elements carry meaningful labels and the correct `role`/`aria-modal`/`aria-label` (screen-reader-support, semantic-markup); every action is reachable through native buttons and a global Escape handler (keyboard-navigable); no code moves, traps, or restores focus (focus-management, the recorded gap above); and the close button's `icon-sm` size measures 28×28px against the 44×44/48×48 guideline unless a host raises `--adh-button-min-height`/`--adh-button-min-width` (touch-target-size). All five user-visible strings ("Cancel", "Save", "Saving…", "Close", "Failed to create.") are hardcoded literals in the component rather than resource lookups (string-externalization, no-hardcoded-strings).
+Statuses rest on the source: interactive elements carry meaningful labels and the correct `role`/`aria-modal`/`aria-label` (screen-reader-support, semantic-markup); every action is reachable through native buttons and a global Escape handler (keyboard-navigable); no code moves, traps, or restores focus (focus-management, documented above under Focus management); and the close button's `icon-sm` size measures 28×28px against the 44×44/48×48 guideline unless a host raises `--adh-button-min-height`/`--adh-button-min-width` (touch-target-size). All five user-visible strings ("Cancel", "Save", "Saving…", "Close", "Failed to create.") are hardcoded literals in the component rather than resource lookups (string-externalization, no-hardcoded-strings).
 
 ## Change History
 
@@ -266,3 +266,4 @@ Statuses rest on the source: interactive elements carry meaningful labels and th
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirement names to subject-only kebab-case and added three requirements (plus vectors) for the alert's Discard/Stay outcomes and Escape-during-save; corrected the unmount-while-saving, callback-identity, draft-mutation, and portal-target Edge Cases to match actual React/DOM behavior; corrected touch-target size, keyboard tab order, and error-display ownership (delegated to renderForm) across Accessibility, States, and Appearance; removed the async claim from the saveEnabled design decision and explained the host re-render mechanism instead; reformatted every Design Decision to the Decision/Rationale/Approved form; added a real Compliance table; added the missing fallback-error localization entry and noted the strings are hardcoded; corrected two test vectors and added five more |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Answer the blank-state, validate-throw, and Reduce Motion questions from the source; keep modal focus management as the one open gap; rewrite Platform Notes to the template's five bullets with concrete per-platform guidance |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

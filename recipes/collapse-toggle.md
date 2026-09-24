@@ -3,11 +3,11 @@ id: f09feb7c-6778-445a-8a68-863c5d60b5cc
 title: CollapseToggle
 domain: agenticdevelopertoolkit://recipes/collapse-toggle
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -74,7 +74,7 @@ A minimal toggle control that switches between expanded and collapsed states of 
 - **State announcement**: The `aria-expanded` attribute indicates the expanded/collapsed state to assistive technologies.
 - **Region association**: When `controls` is provided, `aria-controls` links the button to the region it controls, allowing assistive technology users to navigate directly to that region.
 - **Keyboard navigation**: The button is keyboard-accessible via the standard HTML button element; keyboard focus is visible via the `focus-visible:ring` style.
-- **Minimum tap target**: The source applies `px-1` (0.25rem horizontal padding) and no width, height, or minimum-size rule, so the hit area is exactly the inherited `font-mono` glyph box plus that padding — at a typical 14px rail font this lands well under the 44×44pt target the ingredient template names. NEEDS REVIEW: whether an under-44×44pt target is acceptable for this control is a decision the source cannot make. What is missing is a ruling on the minimum hit area; measuring the rendered button at its two call sites (the TopicDetail rail and the theme-editor column list) against the 44×44pt floor, plus a decision on whether to pad the button itself or enlarge the surrounding row's hit area, would settle it.
+- **minimum-tap-target**: NEEDS REVIEW: Not implemented in source. The source applies `px-1` (0.25rem horizontal padding) and no width, height, or minimum-size rule, so the hit area is exactly the inherited `font-mono` glyph box plus that padding — at a typical 14px rail font this lands well under the 44×44pt target the ingredient template names; measuring the rendered button at its two call sites (the TopicDetail rail and the theme-editor column list) against the 44×44pt floor, plus a decision on whether to pad the button itself or enlarge the surrounding row's hit area, would settle it.
 
 ## Conformance Test Vectors
 
@@ -229,3 +229,4 @@ The `passed` rows rest on the source's literal ARIA attributes and native `<butt
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case with citations updated throughout; corrected glyph terminology (guillemets, not chevrons) and platform API names (Compose semantics, WinUI keyboard-state API, WinUI ExpandCollapse pattern, AppKit/UIKit state exposure); reformatted Design Decisions and Compliance to the standard form and corrected appearance values (corner radius, font, focus-ring color); added keyboard-activation and ⌘-click test vectors, tightened the aria-controls-absent vector, and merged the duplicate empty/missing-label edge cases; recorded platform-glyph-substitution, minimum-hit-area, and RTL-glyph-mirroring as pending Design Decisions |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Replace unresolved review markers with the source's actual behavior for empty label, localization, and accessibility display options; narrow the open tap-target question to the Accessibility section |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source at packages/web/packages/ui/src/components/collapse-toggle.tsx |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,11 +3,11 @@ id: ef7191ff-63a9-442a-b6d0-f8452a0aa1d6
 title: Document Navigation Tree
 domain: agenticdevelopertoolkit://recipes/doc-nav
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -161,7 +161,7 @@ Not applicable: this component is a navigation chrome, not a linkable destinatio
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Chevron rotation uses a 150ms transition and heading scroll uses `behavior: "smooth"`, applied unconditionally regardless of the reduced-motion preference. NEEDS REVIEW: the source never checks `prefers-reduced-motion`; missing is the reduced-motion branch that would make rotation instant and scroll snap instead of smooth. A rendering under `prefers-reduced-motion: reduce` showing an instant chevron and a snapped scroll would settle it. |
+| Reduce Motion | Chevron rotation uses a 150ms transition and heading scroll uses `behavior: "smooth"`, applied unconditionally. The source never checks `prefers-reduced-motion` anywhere, so neither the chevron rotation nor the heading scroll is ever made instant for a reader who has set that preference. |
 | Increase Contrast | All text colors (secondary, primary, dim, accent) MUST meet WCAG AA 4.5:1 contrast against their backgrounds at all times; component relies on theme tokens to provide these values and does not override them. |
 | Differentiate Without Color | Selected state uses BOTH bold weight and a vertical accent bar, not color alone; this is sufficient for color-blind users to distinguish selected from unselected. |
 
@@ -246,3 +246,4 @@ These statuses rest on: theme-token text colors used throughout for contrast; ev
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; moved styling out of render-sections into Appearance; added a Data Model section; reformatted Design Decisions to Decision/Rationale/Approved form; rebuilt the Compliance table with catalog check names, corrected categories, and removed unverified claims; fixed the Localization table's Default (en) column; removed platform-specific class tokens from Appearance; split test vector doc-nav-003 and added doc-nav-016 for render-headings; fixed the section-label appearance contradiction; removed the unverified deep-nesting performance claim; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
