@@ -3,11 +3,11 @@ id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: Select
 domain: agenticdevelopertoolkit://recipes/select
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -87,7 +87,7 @@ Two implementations exist in source: the generic (`aws-field`) implementation de
 - **Label requirement**: The `label` prop is optional. When provided, it MUST be associated to the select via the `htmlFor` attribute on the `<label>` element, matching the select's `id` (see **label-association**). No fallback ARIA properties (`aria-label`, `aria-labelledby`) are implemented; when `label` is omitted, the control has no accessible name from the component itself.
 - **Keyboard navigation**: Native select supports keyboard navigation; users can open the dropdown with Space or Enter, navigate with arrow keys, and select with Enter. This is provided by the browser and requires no component implementation.
 - **Minimum touch target**: The control's visual height is 36px (`h-9`), which falls short of the 44×44pt minimum touch target (WCAG 2.1 SC 2.5.5 Target Size, Enhanced).
-- **Hint association**: The hint text renders as a sibling `<p>` element but is not associated to the select via `aria-describedby` (see **hint-described-by**). NEEDS REVIEW: not implemented in source — screen readers cannot announce the hint as descriptive text for the control.
+- **Hint association**: The hint text renders as a sibling `<p>` element; the select has no `aria-describedby` attribute referencing it (see **hint-described-by**), so screen readers do not announce the hint as descriptive text for the control.
 - **Disabled state announcement**: Native select announces disabled state to assistive technologies automatically; the component applies no additional ARIA attributes.
 
 ## Conformance Test Vectors
@@ -219,3 +219,4 @@ Statuses rest on the native `<select>`/`<option>` markup and native `disabled` s
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks source; confirm all requirements traceable to both web implementations |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace reviewer questions with concrete facts; keep accessible name and hint association as genuine gaps |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web (React) source |
+| 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,11 +3,11 @@ id: 88dc87c9-8058-446d-9513-acfa618c950f
 title: Search Dialog
 domain: agenticdevelopertoolkit://recipes/search-dialog
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -91,10 +91,10 @@ Search Dialog is a modal component that presents a full-screen search interface 
 
 - **Role/trait**: Dialog (`role="dialog"`); form with search role (`role="search"`); results are buttons (`type="button"`).
 - **Label requirements**: Input has `aria-label="Search"`. Section headings and result buttons derive meaning from text content; no explicit ARIA labels on results.
-- **Announce state changes**: NEEDS REVIEW: Live region announcements not implemented. Component should announce result count and selected result changes to screen reader users as the user navigates results and performs searches. What evidence would settle this: implementation of `aria-live="polite"` regions or `aria-atomic` attributes on the results container to communicate dynamic content changes.
+- **Announce state changes**: The component does not implement live region announcements. Result count and selected result changes are not communicated to screen reader users as the user navigates results or performs searches; the results container carries no `aria-live` or `aria-atomic` attributes in the source.
 - **Minimum tap target**: Not specified in source; result buttons and input field target sizes are stylesheet-driven. WCAG 2.5.8 Target Size (Minimum, Level AA) requires 24×24 CSS px; WCAG 2.5.5 Target Size (Enhanced, Level AAA) requires 44×44 CSS px. Platform guidance: 44×44pt minimum on iOS, 48×48dp on Android.
 - **Keyboard navigation**: Fully keyboard operable. Input accepts focus; arrow keys (via `state.handleKey`) navigate results; Enter selects; Escape dismisses.
-- **Modal semantics**: `aria-modal="true"` tells assistive technology that content outside the dialog is inert; it does not by itself trap focus. The source implements neither a focus trap nor focus restoration to the previously focused element on close (see **Announce state changes** for the related, still-open screen-reader gap). Backdrop click and Escape dismiss the dialog (see **dismissible-backdrop**, **escape-dismisses**).
+- **Modal semantics**: `aria-modal="true"` tells assistive technology that content outside the dialog is inert; it does not by itself trap focus. The source implements neither a focus trap nor focus restoration to the previously focused element on close (see **Announce state changes** for the related screen-reader gap). Backdrop click and Escape dismiss the dialog (see **dismissible-backdrop**, **escape-dismisses**).
 
 ## Conformance Test Vectors
 
@@ -290,3 +290,4 @@ Statuses rest on `SearchDialog.tsx`: keyboard handling (Escape, Enter, arrow-key
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case and cross-referenced the duplicates it removed; corrected the focus-trap and WCAG tap-target claims in Accessibility; converted Design Decisions to the Decision/Rationale/Approved form and softened unsupported claims within them; rebuilt Compliance as canonical linked checks with partial status where the source can't confirm; corrected Platform Notes API names (WinUI 3, AppKit/UIKit, Compose) and added the missing AppKit mapping; fixed the localization empty-state quoting and its forking advice; reworded the caller-owned state's retention and reset rationale to remove the contradiction; marked Analytics and Logging as unimplemented documentation rather than a caller MUST contract; fixed edge-case bound precision and restated defect-flavored edge cases as caller preconditions; and linked the related dialog and search-dialog-connected recipes. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Clarify review marker with evidence criteria; relabel Platform Notes Windows bullet to WinUI 3; clarify "Not applicable" sections; remove implementation-specific language from Accessibility Options |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

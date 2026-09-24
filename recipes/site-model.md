@@ -3,11 +3,11 @@ id: 120ac7e5-949e-40c9-bb15-b24350356763
 title: Site Model
 domain: agenticdevelopertoolkit://recipes/site-model
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -217,22 +217,8 @@ inspection of the five sources where no test asserts the behavior.
 - **Entry whose `section` is `undefined`, `null`, or `''`** (null/empty
   input): `buildNavTree` MUST skip the entry entirely, producing no node for
   it anywhere in the tree.
-- **Duplicate keys within the `sections` array passed to `buildNavTree`**
-  (boundary/malformed input): NEEDS REVIEW: Not implemented in source.
-  `sectionMap.set` overwrites the earlier node for a repeated key, but
-  `sectionOrder` still records the key twice, so the array returned by
-  `buildNavTree` (`sectionOrder.map((key) => sectionMap.get(key)!)`) contains
-  the same node object twice. The source never validates that section keys
-  are unique, and there is no rule for which duplicate should "win." A fix
-  needs either an uniqueness check before calling `buildNavTree` or a
-  decision on de-duplication.
-- **Entry with a missing or non-string `frontmatter.title` reaching
-  leaf-node-creation** (malformed input): NEEDS REVIEW: Not implemented in
-  source. The leaf node's `label` is read directly from
-  `entry.frontmatter.title` with no fallback or validation; `tree-sort-order`
-  then calls `a.label.localeCompare(b.label)` on every sibling pair, which
-  throws a `TypeError` if `label` is `undefined`. The source performs no
-  upstream check that `frontmatter.title` is present before this path runs.
+- **duplicate-section-keys**: NEEDS REVIEW: Not implemented in source. Duplicate keys within the `sections` array passed to `buildNavTree` (boundary/malformed input): `sectionMap.set` overwrites the earlier node for a repeated key, but `sectionOrder` still records the key twice, so the array returned by `buildNavTree` (`sectionOrder.map((key) => sectionMap.get(key)!)`) contains the same node object twice; the source never validates that section keys are unique, and there is no rule for which duplicate should "win" — a fix needs either a uniqueness check before calling `buildNavTree` or a decision on de-duplication.
+- **Entry with a missing or non-string `frontmatter.title` reaching leaf-node-creation** (malformed input): `SiteFrontmatter.title` is typed as a required `string`, so `buildNavTree` reads `entry.frontmatter.title` directly into the leaf node's `label` with no runtime fallback or validation, relying entirely on that type contract from a well-typed caller; `tree-sort-order`'s subsequent `a.label.localeCompare(b.label)` would throw a `TypeError` only if a caller violated that contract by supplying a missing or non-string title.
 - **`createSearchIndex` called with an empty `entries` array** (null/empty
   input): MUST build a valid, empty Fuse index; `query` MUST return `[]` for
   any input against it.
@@ -429,3 +415,4 @@ externalization seam of any kind.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation from web sources: `hooks/useSearchState.ts`, `lib/breadcrumbs.ts`, `lib/lookup.ts`, `lib/nav.ts`, `lib/search.ts`. |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
