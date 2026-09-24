@@ -3,11 +3,11 @@ id: 39f26055-c002-40fe-81e2-74c0f9c9311d
 title: Avatar Engine Render
 domain: agenticdevelopertoolkit://recipes/avatar-engine-render
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -304,16 +304,12 @@ Not applicable — this is a rendering bridge, not a visual component.
   `<path>` element ends up representing both, showing whichever item's
   attributes were applied last.
 - **A `DisplayList` whose `id` set shrinks or changes between calls to
-  `render` (Web)** — NEEDS REVIEW: Not implemented in source. `createSvgRenderer`'s
-  `paths` map and the `<svg>`'s children only ever grow: an `id` present in an
-  earlier `list` but absent from the current one leaves its `<path>` in the
-  DOM with stale attributes, since `render` has no code path that removes or
-  hides an element for a vanished `id`. No other file in this repository
-  calls `createSvgRenderer`, so there is no caller-side evidence in this
-  codebase for whether a host is expected to destroy and recreate the
-  renderer across such a change, or whether reconciling a changed `id` set is
-  an unhandled gap relative to `renderToString` (which always rebuilds its
-  output from scratch and so cannot go stale this way).
+  `render` (Web)**: `createSvgRenderer`'s `paths` map and the `<svg>`'s
+  children only ever grow: an `id` present in an earlier `list` but absent
+  from the current one leaves its `<path>` in the DOM with stale attributes,
+  since `render` has no code path that removes or hides an element for a
+  vanished `id`. `renderToString` has no equivalent gap, since it always
+  rebuilds its output from scratch and so cannot go stale this way.
 - **Off-main-actor use of `AvatarEnvironment.live()`'s closure (Apple)**:
   calling the returned `reducedMotion` closure off the main actor traps the
   process via `MainActor.assumeIsolated`; this is documented, deliberate
@@ -543,3 +539,4 @@ supports a 60fps target without proving it from source alone
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

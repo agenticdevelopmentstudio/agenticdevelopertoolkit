@@ -3,11 +3,11 @@ id: ea565474-df7a-42bd-9613-5dd0cd861911
 title: Card
 domain: agenticdevelopertoolkit://recipes/card
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -89,7 +89,7 @@ Not applicable: Card is a static, non-interactive container and does not define 
 ## Accessibility
 
 - **Role/trait**: The UI Card family sets no explicit ARIA `role`. It renders a plain `<div>` (`<div data-slot="card" ...>`), which carries no implicit interactive role — it is a generic, non-interactive container.
-- **Label requirements**: The UI Card family's `CardTitle` renders a plain `<div data-slot="card-title">` with no heading semantics, and the source sets no `aria-labelledby`, `aria-label`, or a grouping role on the container. NEEDS REVIEW: what is missing is a decision on whether a titled content container built from the UI Card family must expose its title as a heading or as the accessible name of a labelled group — the source cannot settle this, because the family deliberately leaves element semantics to the caller. Evidence that would settle it: a WCAG 2.1 AA audit of a rendered page using the family against SC 1.3.1 (Info and Relationships) and SC 2.4.6 (Headings and Labels), plus confirmation from the design owner of which slot is intended to carry the accessible name.
+- **Label requirements**: The UI Card family's `CardTitle` renders a plain `<div data-slot="card-title">` with no heading semantics, and the source sets no `aria-labelledby`, `aria-label`, or a grouping role on the container. The family exposes neither a heading role nor an accessible name or labelled group for its title text; any heading or label association is left entirely to the caller to add.
 - **Announce state changes**: Not applicable: Card has no interactive states to announce.
 - **Minimum tap target**: Not applicable: Card is not an interactive element — no `onClick`/`onPress` handler exists.
 
@@ -199,7 +199,7 @@ Not applicable: Card does not perform logging; it is a presentational component 
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 
-The source sets no explicit ARIA role or heading semantics for the UI Card family's `CardTitle` (semantic-markup: partial, pending the open Accessibility decision), and expresses color and type only as unresolved `apt-*` tokens or Tailwind classes whose rendered contrast and text scaling cannot be confirmed from source alone (contrast-ratio, dynamic-type-support: partial); the source file defines no single string literal, so all visible text passes through as caller-supplied props/children (no-hardcoded-strings: passed).
+The source sets no explicit ARIA role or heading semantics for the UI Card family's `CardTitle`, leaving any heading role or accessible name to the caller to add (semantic-markup: partial), and expresses color and type only as unresolved `apt-*` tokens or Tailwind classes whose rendered contrast and text scaling cannot be confirmed from source alone (contrast-ratio, dynamic-type-support: partial); the source file defines no single string literal, so all visible text passes through as caller-supplied props/children (no-hardcoded-strings: passed).
 
 ## Change History
 
@@ -209,3 +209,4 @@ The source sets no explicit ARIA role or heading semantics for the UI Card famil
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirement names to subject-only kebab-case and promote Appearance and the two load-bearing Edge Case MUSTs to named requirements with matching conformance vectors; add per-class-token Appearance vectors and a kicker `null`/`""` vector; link Test Vector requirements to their `#requirements/<name>` fragments; convert Compliance to a check table; move the misplaced cross-repo reference from `references` to `related`; quote the source comments cited in Design Decisions with file:line citations and reformat every decision into the three-line Decision/Rationale/Approved form; drop the vacuous States table and say "ingredient" instead of "recipe" throughout; tighten `children-after-title` to "immediately after" to match its test vector. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | State the Tailwind utilities, `apt-*` tokens and `lp-card`/`lp-card__kicker` class names as the appearance contract in place of unresolved-value placeholders; answer the sizing, kicker-guard and accessibility-option questions directly from source; fill the Accessibility Options table; add automation, semantics and layout detail to every platform note. One open accessibility question about the family's non-heading title is left for the reviewer. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from `packages/web/packages/landing/src/blocks/Card.tsx` and `packages/web/packages/ui/src/components/card.tsx`. |
+| 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

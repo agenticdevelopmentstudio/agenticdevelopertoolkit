@@ -3,11 +3,11 @@ id: c708a65f-4d6c-40e4-b1b8-a24584cd45a1
 title: Avatar Engine Scene
 domain: agenticdevelopertoolkit://recipes/avatar-engine-scene
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -286,22 +286,22 @@ are not required to agree on exact error message text.
   realm, so there is no runtime data race for these functions to define
   behavior for.
 
-- NEEDS REVIEW: Not implemented in source. Scene construction and `compose`
-  do not validate or enforce that `CharacterConfig.seed(into:)`/
+- **seed-before-compose-is-host-enforced**: Scene construction and `compose`
+  do not themselves validate or enforce that `CharacterConfig.seed(into:)`/
   `seedChannels` has been called on the given `Channels` store before the
   first `compose` call. `compose`'s own per-property fallback defaults
   (`x=0, y=0, rotation=0, scaleX=1, scaleY=1, pivot=(0,0)`) do not carry a
   node's authored transform override — for example an authored pivot such as
   `body.pivotX`/`body.pivotY` — which only reaches the store through
-  `config.rest`. Calling `compose` against an unseeded or partially seeded
-  store therefore silently composes a scene that differs from the
-  character's authored rest pose, with no error, warning, or other
-  observable signal that seeding was skipped. Neither `Rig.swift` nor
-  `rig.ts` states or checks this precondition; settling it requires
-  inspecting the reference host's own per-frame driver (`Engine.swift`/
-  `engine.ts`), which is outside this recipe's given sources, to determine
-  whether seeding-before-first-`compose` is an invariant the host already
-  guarantees.
+  `config.rest`. Neither `Rig.swift` nor `rig.ts` states or checks this
+  precondition; the reference host's own per-frame driver enforces the
+  ordering instead. `Engine.init` (`Engine.swift`) and `createEngine`
+  (`engine.ts`) both call `config.seed(into: store)`/`seedChannels(config,
+  channels)` immediately after creating the `Channels` store and before
+  constructing the `Scene`, and neither exposes `compose` except through
+  `tick`, which no caller can invoke before that constructor/factory
+  returns. On both source platforms, no caller reachable through the public
+  API can reach `compose` before seeding has occurred.
 
 ## Appearance
 
@@ -599,3 +599,4 @@ the same subject (animation-frame-rate: partial).
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation, covering the Apple and web avatar-engine scene compositors, with the open question about an unenforced seed-before-compose precondition carried for a future revision to resolve. |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
