@@ -3,11 +3,11 @@ id: 85ce8c4b-5233-48af-9268-30cddd4747f9
 title: Accordion
 domain: agenticdevelopertoolkit://recipes/accordion
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,7 +50,7 @@ An accordion is a container of vertically stacked collapsible sections. Each sec
 - **forward-props-to-primitive**: Each component MUST forward arbitrary props (via spread operator) to its corresponding primitive, allowing consumers to extend behavior and styling.
 - **support-style-override**: Each component MUST provide a way for consumers to extend or override its default styling (a `className` prop merged with defaults on web) without needing to fork the component.
 - **default-multi-open**: The accordion MUST allow multiple panels to be open simultaneously by default (the primitive's `openMultiple` defaults to `true`); consumers MAY restrict the group to single-open behavior by passing `openMultiple={false}` to `Accordion`.
-- **animate-transitions**: The trigger MUST animate its color changes (`transition-colors`), the chevron MUST animate its rotation (`transition-transform`), and the panel MUST animate its size and opacity (`transition-all`); the source applies all three unconditionally. NEEDS REVIEW: no `prefers-reduced-motion` handling exists. Whether these transitions must be suppressed under `prefers-reduced-motion: reduce` is a decision the source cannot make; a design-system motion policy or an accessibility audit would settle it.
+- **animate-transitions**: The trigger MUST animate its color changes (`transition-colors`), the chevron MUST animate its rotation (`transition-transform`), and the panel MUST animate its size and opacity (`transition-all`); the source applies all three unconditionally and contains no `prefers-reduced-motion` check, so these transitions run the same way whether or not the user has Reduce Motion enabled.
 
 ## Appearance
 
@@ -130,7 +130,7 @@ Not applicable: Component contains no hardcoded user-facing strings. All text (t
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Not handled: the transitions in **animate-transitions** run regardless of `prefers-reduced-motion: reduce` (see that requirement's review note). |
+| Reduce Motion | Not handled: the transitions in **animate-transitions** run regardless of `prefers-reduced-motion: reduce`; the source contains no reduced-motion check. |
 | Increase Contrast | Design system color tokens (apt-text, apt-text-muted, apt-border) SHOULD be defined with sufficient contrast to meet WCAG 2.1 AA standards (4.5:1 for text). Component itself does not implement special handling for prefers-contrast media query; contrast depends on token values. |
 | Differentiate Without Color | Chevron icon direction (down = closed, up = open) provides state indication independent of color. The aria-expanded attribute provides semantic indication for assistive technology. |
 
@@ -185,7 +185,7 @@ Not applicable: Logging is a consumer concern. The underlying @base-ui/react/acc
    **Approved**: pending
 
 6. **Decision**: Ship `transition-colors` and `transition-transform` on the trigger and chevron unconditionally, without checking `prefers-reduced-motion`.
-   **Rationale**: Smooth transitions are the intended default feedback, but shipping them unconditionally leaves the reduced-motion question open (see **animate-transitions**); closing it means conditionally disabling the transitions inside the component, not asking consumers to patch around them with their own media-query overrides.
+   **Rationale**: Smooth transitions are the intended default feedback, but shipping them unconditionally means the component does not honor `prefers-reduced-motion` (see **animate-transitions**); fixing that means conditionally disabling the transitions inside the component, not asking consumers to patch around them with their own media-query overrides.
    **Approved**: pending
 
 ## Compliance
@@ -215,3 +215,4 @@ Accessibility statuses rest on `accordion.tsx`'s delegation of ARIA/keyboard/rol
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; restated Tailwind/base-ui-specific requirements as behavior plus tokens and moved the implementation specifics into the React/Web platform note; added default-multi-open and animate-transitions requirements with test vectors; dropped the no-op hover/focus color claims and rewrote the States table to match; resolved the Reduce Motion contradiction between Design Decisions and Accessibility Options and reformatted Design Decisions to the three-line form; rebuilt Compliance as linked catalog checks with evidence; rewrote non-automatable test vectors against the DOM/accessibility tree; corrected the touch-target WCAG citation and level; split Configuration by component; populated references and depends-on |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise: clarify Reduce Motion gap as genuine accessibility concern; update Platform Notes with motion preference checks for all platforms |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

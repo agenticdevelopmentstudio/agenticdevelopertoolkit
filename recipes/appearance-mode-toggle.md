@@ -3,11 +3,11 @@ id: 46e077a8-1171-4564-9781-7997ff76813a
 title: Appearance Mode Toggle
 domain: agenticdevelopertoolkit://recipes/appearance-mode-toggle
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -76,7 +76,7 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 - **Icon accessibility**: Icons are marked with `aria-hidden="true"` to prevent screen reader announcement of the SVG markup; the button label alone communicates the control's purpose.
 - **Badge accessibility**: Auto badge SVG is marked with `aria-hidden="true"`.
 - **Announce state changes**: State changes are announced via updated `aria-label` and `title` attribute when the component re-renders in response to the 'awt:appearance-changed' event.
-- **Minimum tap target**: NEEDS REVIEW: Component does not specify a minimum tap target size. The button's size depends on parent styling and context. Implementors MUST ensure the button meets platform minimum touch targets (44×44pt on iOS, 48×48dp on Android, 24×24px minimum on web per WCAG). Evidence needed: tap target requirement from platform design language or accessibility audit.
+- **minimum-tap-target**: NEEDS REVIEW: Not implemented in source. `AppearanceModeToggle.tsx` sets no size on the button; its optional default stylesheet (`appearance-mode-toggle.css`: 0.5rem padding plus a 1.25rem icon, ~36×36px) is not enforced by the component and can be overridden, so whether the effective size in a given host layout clears the 44×44pt iOS / 48×48dp Android minimums needs a human judging the rendered button in context.
 
 ## Conformance Test Vectors
 
@@ -214,3 +214,4 @@ The passed and partial statuses rest on the `<button type="button">` element, th
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and folded the label templates into set-aria-label; documented the external appearance-controller event contract (payload, target); resolved the cycle-order and hydration-rationale contradictions in Design Decisions; corrected Localization from a false not-applicable to a described gap; replaced invented/external Compliance links with real catalog checks; marked Analytics not-applicable; fixed toggle-016's document/window assertion; resolved the Differentiate-Without-Color contradiction; removed the unsupported Disabled state; corrected the Compose, AppKit/UIKit, SwiftUI, and WinUI 3 platform notes |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove the review marker from Localization (not applicable); retain tap target marker as genuine gap |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
