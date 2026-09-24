@@ -378,6 +378,25 @@ export function DataTable<T>({
   // Re-measure whenever the rows or the columns change (new content ⇒ new natural widths).
   const sig = `${ids.join("|")}::${renderedColumns.map((c) => c.key).join(",")}`
   const measuredSig = React.useRef<string | null>(null)
+  // Bumped when the grid goes from not laid out (zero width) to laid out, so a measurement that
+  // had to be skipped is retried. A table mounted inside a pane that is not yet displayed measures
+  // every cell at 0px; locking THAT in collapsed every auto-sized column onto the first one — and an
+  // EMPTY table never re-measured, because its signature (no ids) never changes. That is how the
+  // settings Archived list drew "Name", "Handle" and "Archived" on top of each other.
+  const [layoutTick, setLayoutTick] = React.useState(0)
+
+  React.useEffect(() => {
+    const el = gridRef.current
+    if (!autoSizeColumns || !el || typeof ResizeObserver === "undefined") return
+    let laidOut = el.getBoundingClientRect().width > 0
+    const ro = new ResizeObserver(() => {
+      const now = el.getBoundingClientRect().width > 0
+      if (now && !laidOut) setLayoutTick((t) => t + 1)
+      laidOut = now
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [autoSizeColumns])
 
   React.useLayoutEffect(() => {
     if (!autoSizeColumns) return
@@ -390,6 +409,9 @@ export function DataTable<T>({
     // Pass 2 — every cell is now at its natural width; take each column's widest.
     const el = gridRef.current
     if (!el) return
+    // Not laid out (inside an undisplayed pane): every width reads 0. Leave the tracks at
+    // `max-content` and let the ResizeObserver above retry once the grid has a size.
+    if (el.getBoundingClientRect().width === 0) return
     const next: ColumnWidths = {}
     for (const c of renderedColumns) {
       let max = 0
@@ -400,7 +422,7 @@ export function DataTable<T>({
     }
     measuredSig.current = sig
     setAutoWidths(next)
-  }, [autoSizeColumns, sig, renderedColumns, autoWidths])
+  }, [autoSizeColumns, sig, renderedColumns, autoWidths, layoutTick])
 
   // The grid track for each column: a width the USER dragged wins, then the column's declared
   // `width`, then the measured natural width — falling back to `max-content` for the one measuring
