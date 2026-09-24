@@ -149,6 +149,15 @@ export function AlertModal({
     const armedAt = performance.now()
     function onKey(e: KeyboardEvent): void {
       if (e.timeStamp > 0 && e.timeStamp <= armedAt) return
+      // A HELD key auto-repeats. Without this, holding Return through the moment this modal
+      // opens (e.g. holding it down on the button/gesture that opened it) fires a second
+      // keydown that immediately confirms — the same "still inside the opening keystroke"
+      // hazard the arm-on-the-clock guard above exists for, just spread over more than one event.
+      if (e.repeat) return
+      // An IME commits its candidate on Enter too (`isComposing`, and `keyCode === 229` for the
+      // browsers that report a synthetic code instead of setting the flag). That keystroke is
+      // confirming the TYPED TEXT, not this modal.
+      if (e.isComposing || e.keyCode === 229) return
       const action = keyMap[e.key]
       if (!action) return
       e.preventDefault()

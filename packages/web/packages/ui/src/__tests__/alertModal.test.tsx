@@ -314,6 +314,42 @@ describe('AlertModal — standardized behavior', () => {
     render(<AlertModal open title="Done" onConfirm={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'OK' }).className).toContain('w-full')
   })
+
+  // A held Return auto-repeats. Without this guard, holding it through the moment the modal
+  // opens fires a second keydown that confirms immediately — the same "still inside the
+  // opening keystroke" hazard the arm-on-the-clock guard exists for, spread over more events.
+  it('ignores a repeated (held-down) Enter', () => {
+    const onConfirm = vi.fn()
+    render(<AlertModal open title="Save?" cancelLabel="Cancel" onCancel={vi.fn()} onConfirm={onConfirm} />)
+    fireEvent.keyDown(document.body, { key: 'Enter', repeat: true })
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  // An IME commits its candidate on Enter too — that keystroke confirms the typed text, not
+  // this modal. `isComposing` is the standard signal.
+  it('ignores an Enter that is composing an IME candidate', () => {
+    const onConfirm = vi.fn()
+    render(<AlertModal open title="Save?" cancelLabel="Cancel" onCancel={vi.fn()} onConfirm={onConfirm} />)
+    fireEvent.keyDown(document.body, { key: 'Enter', isComposing: true })
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  // `keyCode === 229` covers the browsers that report a synthetic code instead of setting
+  // `isComposing`.
+  it('ignores an Enter carrying the legacy IME keyCode 229', () => {
+    const onConfirm = vi.fn()
+    render(<AlertModal open title="Save?" cancelLabel="Cancel" onCancel={vi.fn()} onConfirm={onConfirm} />)
+    fireEvent.keyDown(document.body, { key: 'Enter', keyCode: 229 })
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('still confirms a later, non-repeated, non-composing Enter', () => {
+    const onConfirm = vi.fn()
+    render(<AlertModal open title="Save?" cancelLabel="Cancel" onCancel={vi.fn()} onConfirm={onConfirm} />)
+    fireEvent.keyDown(document.body, { key: 'Enter', repeat: true })
+    fireEvent.keyDown(document.body, { key: 'Enter' })
+    expect(onConfirm).toHaveBeenCalledTimes(1)
+  })
 })
 
 // ---------------------------------------------------------------------------
