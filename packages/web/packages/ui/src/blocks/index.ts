@@ -71,6 +71,8 @@ export {
   TopicDetail,
   type TopicDetailItem,
   type RailSlot,
+  type TopicListSearch,
+  filterTopicItems,
 } from "./topic-detail";
 // How to name the detail pane the user is actually looking at, rather than HTDV's outgoing
 // crossfade snapshot of the previous one. Re-exported here for app code that already imports from

@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from "react"
 
-import { ChevronRight, Circle, Loader2, Plus, Trash2, X } from "lucide-react"
+import { ChevronRight, Circle, Loader2, Plus, Search, Trash2, X } from "lucide-react"
 
 import { AlertModal } from "../components/alert-modal"
 import { Checkbox } from "../components/checkbox"
@@ -114,6 +114,55 @@ export interface TopicDetailItem {
  *  the top padding). This is distinct from the header `+` create affordance (`onNew`), which the
  *  hierarchical stack uses for its "New …" button. */
 export type RailSlot = ReactNode | ((collapsed: boolean) => ReactNode)
+
+/**
+ * SEARCH for one topic list: a magnifier in the list's toolbar that pops a query field up OVER the
+ * list. Popped rather than pinned because most rails are far too narrow to hold a filter field
+ * beside anything else (Mike, 2026-09-24: the old page-wide filter strip was "clunky", and a field
+ * squeezed into a 180px rail is worse) — so the field floats at a readable width and gets out of
+ * the way when dismissed.
+ *
+ * Pass `{}` and the rail filters its own rows on label + sublabel. Pass `query` (with
+ * `onQueryChange`) and the HOST owns the query and the filtering — for a list whose rows are
+ * matched on more than what they show, or whose query is also read elsewhere.
+ */
+export interface TopicListSearch {
+  /** Controlled query. Omit to let the rail hold it and filter its own rows. */
+  query?: string
+  /** Every keystroke, controlled or not. */
+  onQueryChange?: (query: string) => void
+  /** Placeholder and accessible name for the field. Defaults to "Search". */
+  placeholder?: string
+}
+
+/** Whether a list has anything for its toolbar. The hierarchical stacks ask it of every visible
+ *  level, and once one does, every titled rail reserves the row — so first rows stay aligned
+ *  across the rails instead of stepping down under whichever one has tools. */
+export function hasListTools(level: {
+  onNew?: unknown
+  search?: unknown
+  titleActions?: unknown
+}): boolean {
+  return !!(level.onNew || level.search || level.titleActions)
+}
+
+/** The rows a self-filtering rail shows for `query`: label or sublabel contains it, case-folded.
+ *  The SELECTED row always survives — filtering it away would leave the detail pane showing an
+ *  item the list no longer admits to, with no row to carry the selection bar. */
+export function filterTopicItems(
+  items: TopicDetailItem[],
+  query: string,
+  selectedId: string | null,
+): TopicDetailItem[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return items
+  return items.filter(
+    (it) =>
+      it.id === selectedId ||
+      it.label.toLowerCase().includes(q) ||
+      (it.sublabel?.toLowerCase().includes(q) ?? false),
+  )
+}
 
 // One shared element reference for icon-less rows — stable across renders so
 // React's reconciler skips it. The rail always collapses to an icon-only strip,
@@ -677,6 +726,8 @@ export function TopicRail({
   checkedIds,
   onToggleChecked,
   onFit,
+  search,
+  reserveToolbar = false,
 }: {
   items: TopicDetailItem[]
   selectedId: string | null
@@ -686,15 +737,23 @@ export function TopicRail({
   railSlot?: RailSlot
   /** Move the gold selection bar onto the rail slot (nothing in the list selected). */
   railSlotActive?: boolean
-  /** Create affordance: when set, a right-justified `+` button in the list header fires it. */
+  /** Create affordance: when set, a `+` fires it — first in the list TOOLBAR of a titled rail,
+   *  in the bare control strip of an untitled one. */
   onNew?: () => void
   /** Accessible name + tooltip for the `+` (e.g. "New Persona"). Defaults to "New". */
   newLabel?: string
   /** Tint the `+` gold to signal an in-progress create (nothing selected in the list). */
   newActive?: boolean
-  /** Extra right-justified controls in the TITLE row, just ahead of the `+` (e.g. an
-   *  Auto Configure action). Only rendered with a `title`d, un-collapsed header. */
+  /** Operations on the LIST (a tool menu, a gear of options, an Auto Configure), right-justified
+   *  in the list toolbar. Only rendered with a `title`d, un-collapsed header. Named for where
+   *  they used to ride — the title row — which every consumer across the fleet still spells. */
   titleActions?: ReactNode
+  /** Make this list searchable — see {@link TopicListSearch}. Titled, un-collapsed rails only. */
+  search?: TopicListSearch
+  /** Render the (possibly empty) list toolbar even with no tools in it, so this rail's rows line
+   *  up with a sibling rail that has one. The hierarchical stacks set it on every level once any
+   *  visible level has a toolbar. */
+  reserveToolbar?: boolean
   collapsed: boolean
   /** The click event is forwarded so the hierarchical stack can read its modifier keys (⌘/Ctrl-click
    *  = toggle every list). Callers that don't need it take no argument. */
@@ -836,7 +895,8 @@ export function TopicRail({
   const sig = items.map((it) => it.id).join("\u0000")
   // The header's share of the answer moves when its title or its riders do. A non-string title
   // (a node) cannot be compared cheaply, so it re-measures only when the rows or riders change.
-  const headerSig = `${typeof title === "string" ? title : ""}|${!!onNew}|${!!onClose}|${!!showToggle}|${!!titleActions}`
+  // The toolbar's tools are NOT riders: they sit on their own row, which never outgrows a rail.
+  const headerSig = `${typeof title === "string" ? title : ""}|${!!onClose}|${!!showToggle}`
   // Held in a ref, and NOT a dependency: a parent that passes an inline arrow would otherwise
   // re-run this on every render, and every run costs two forced reflows for a width that has
   // not moved.
@@ -969,17 +1029,112 @@ export function TopicRail({
     </button>
   ) : null
 
-  // Right-justified header controls: `titleActions` and, in the minimized style, the desktop collapse
-  // toggle (`«`). The New `+` is NOT here — in the titled header it rides immediately after the title
-  // (see `headerInner`); only the untitled header branches below render it on their own. The covered
-  // style passes `showToggle=false` and supplies its own `leftControl` instead.
-  const rightControls =
-    titleActions || showToggle ? (
-      <span className="ml-auto flex shrink-0 items-center gap-1">
-        {titleActions}
-        {showToggle && <span className="max-md:hidden">{collapseToggle}</span>}
-      </span>
-    ) : null
+  // Right-justified header control: in the minimized style, the desktop collapse toggle (`«`). The
+  // New `+` and `titleActions` are NOT here — on a titled rail they live in the list toolbar under
+  // the header (see `toolbar`); only the untitled header branches below render the `+` on their own.
+  // The covered style passes `showToggle=false` and supplies its own `leftControl` instead.
+  const rightControls = showToggle ? (
+    <span className="ml-auto flex shrink-0 items-center gap-1">
+      <span className="max-md:hidden">{collapseToggle}</span>
+    </span>
+  ) : null
+
+  // ── The list toolbar ──────────────────────────────────────────────────────────────────────
+  // Operations on THIS list, on a row of their own under the titled header: `+` first (sitting in
+  // the icon column, like the header's control slot), then search, then the list's own tools
+  // right-justified. They used to crowd the title row, where a narrow rail truncated its title to
+  // make room for them, and the list's filter lived in a page-wide strip above every rail — far
+  // from the list it filtered.
+  const [ownQuery, setOwnQuery] = useState("")
+  const [searchOpen, setSearchOpen] = useState(false)
+  const controlledQuery = search?.query !== undefined
+  const query = search ? (controlledQuery ? (search.query ?? "") : ownQuery) : ""
+  const setQuery = (q: string) => {
+    if (!controlledQuery) setOwnQuery(q)
+    search?.onQueryChange?.(q)
+  }
+  const closeSearch = (clear: boolean) => {
+    if (clear) setQuery("")
+    setSearchOpen(false)
+  }
+  const shownItems =
+    search && !controlledQuery ? filterTopicItems(items, query, selectedId) : items
+  const titled = title !== undefined && !collapsed
+  const hasTools = !!(onNew || search || titleActions)
+  const showToolbar = titled && (hasTools || reserveToolbar)
+  const queryActive = query.trim() !== ""
+  const searchLabel = search?.placeholder ?? "Search"
+  const toolClass =
+    "flex shrink-0 items-center justify-center rounded p-0.5 outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40"
+  const toolbar = showToolbar ? (
+    <div
+      data-htd-toolbar
+      role="toolbar"
+      aria-label={typeof title === "string" ? `${title} tools` : "List tools"}
+      // Same `pl-2.5` + `w-4` slot + `gap-2` geometry as the header, so the `+` sits over the row
+      // icons and the rails' first rows still line up.
+      className="relative flex min-h-[2rem] shrink-0 items-center gap-2 border-b border-apt-border pr-2 pl-2.5"
+    >
+      <div className="flex w-4 shrink-0 items-center justify-center">{newButton}</div>
+      {search && (
+        <button
+          type="button"
+          aria-label={searchLabel}
+          title={queryActive ? `${searchLabel}: “${query}”` : searchLabel}
+          aria-expanded={searchOpen}
+          onClick={() => setSearchOpen((o) => !o)}
+          // Gold while a query is narrowing the list with the field closed — otherwise a short
+          // list would look like all there is.
+          className={cn(toolClass, queryActive ? "text-apt-gold" : "text-apt-text-muted")}
+        >
+          <Search size={15} aria-hidden />
+        </button>
+      )}
+      <div className="min-w-0 flex-1" />
+      {titleActions && <span className="flex shrink-0 items-center gap-1">{titleActions}</span>}
+      {search && searchOpen && (
+        <div
+          data-htd-search
+          // Pops OVER the list at a readable width, spilling past a narrow rail rather than being
+          // squeezed by it; `z-30` lifts it above the neighbouring rail it may overlap.
+          className="absolute top-0 left-0 z-30 flex h-full w-[max(100%,16rem)] items-center gap-1.5 border border-apt-border bg-apt-surface pr-1.5 pl-2.5 shadow-lg"
+        >
+          <Search size={14} aria-hidden className="shrink-0 text-apt-text-muted" />
+          <input
+            // The field exists only because the user just asked to type into it.
+            autoFocus
+            type="search"
+            value={query}
+            placeholder={searchLabel}
+            aria-label={searchLabel}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.stopPropagation()
+                closeSearch(true)
+              } else if (e.key === "Enter") {
+                closeSearch(false)
+              }
+            }}
+            // Clicking away keeps the query (the icon stays gold); only Escape or ✕ clears it.
+            onBlur={() => setSearchOpen(false)}
+            className="min-w-0 flex-1 bg-transparent font-mono text-[0.8rem] text-apt-text outline-none placeholder:text-apt-text-dim"
+          />
+          <button
+            type="button"
+            aria-label="Clear search"
+            title="Clear search"
+            // Keep focus in the field so its blur doesn't close the popup before this click lands.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => closeSearch(true)}
+            className={cn(toolClass, "text-apt-text-muted")}
+          >
+            <X size={14} aria-hidden />
+          </button>
+        </div>
+      )}
+    </div>
+  ) : null
 
   // The titled header's inner content. The control slot is a fixed width matching where item icons
   // start; the title is LEFT-JUSTIFIED on the column where item labels start;
@@ -1019,7 +1174,6 @@ export function TopicRail({
               left there is nothing to protect, and in-flow siblings cannot be clipped by the
               `truncate` box the way absolutely-positioned ones had to escape it. */}
           <span className="truncate">{title}</span>
-          {newButton && <span className="pointer-events-auto ml-1 shrink-0">{newButton}</span>}
           {busy && (
             <span data-htd-busy className="ml-1.5 flex shrink-0 items-center">
               {busyIcon}
@@ -1130,6 +1284,7 @@ export function TopicRail({
       {/* The shared list-header hook (filter + actions) for entity lists hosted in the
           stack — full-width under the titled header, above the rows. Hidden when the
           rail is collapsed to an icon strip (no room for a filter field). */}
+      {toolbar}
       {headerSlot !== undefined && !collapsed && (
         <div className="shrink-0 border-b border-apt-border">{headerSlot}</div>
       )}
@@ -1143,10 +1298,10 @@ export function TopicRail({
         )}
       >
         <TopicList
-          items={items}
+          items={shownItems}
           selectedId={selectedId}
           onSelect={onSelect}
-          emptyLabel={emptyLabel}
+          emptyLabel={queryActive && shownItems.length === 0 ? `Nothing matches “${query.trim()}”.` : emptyLabel}
           railSlot={railSlot}
           railSlotActive={railSlotActive}
           collapsed={collapsed}

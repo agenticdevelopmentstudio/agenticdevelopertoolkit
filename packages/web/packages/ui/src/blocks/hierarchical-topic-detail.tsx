@@ -36,6 +36,8 @@ import {
   rootFontPx,
   type TopicDetailItem,
   type RailSlot,
+  type TopicListSearch,
+  hasListTools,
 } from "./topic-detail"
 import { TopicSelectHint } from "./topic-select-hint"
 import { DETAIL_PANE_ATTR } from "../lib/detail-pane"
@@ -190,6 +192,9 @@ export interface TopicLevel {
   /** Extra right-justified controls in this level's TITLE row, just ahead of the `+`
    *  (e.g. the Sites list's Auto Configure). Keep them compact — the row is one line. */
   titleActions?: ReactNode
+  /** Make this level's list searchable: a magnifier in its toolbar pops a query field over the
+   *  rows. `{}` lets the rail filter on label + sublabel; pass `query` to own the filtering. */
+  search?: TopicListSearch
   /** Fixed rail width in px for THIS level (default 240 / FULL_RAIL). Widen a level
    *  whose rows must show on one line (e.g. long API paths). Covered style. */
   width?: number
@@ -1788,6 +1793,8 @@ function MinimizedStack({
               titleActions={level.titleActions}
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
+              search={level.search}
+              reserveToolbar={rendered.some(hasListTools)}
               hideItemIcons={level.hideItemIcons}
               checkable={level.checkable}
               checkedIds={level.checkedIds}
@@ -2352,6 +2359,8 @@ function CoveredStack({
               titleActions={level.titleActions}
               railSlot={level.railSlot}
               headerSlot={level.headerSlot}
+              search={level.search}
+              reserveToolbar={rendered.some(hasListTools)}
               hideItemIcons={level.hideItemIcons}
               checkable={level.checkable}
               checkedIds={level.checkedIds}
@@ -2710,6 +2719,8 @@ function NarrowStack({
             titleActions={level.titleActions}
             railSlot={level.railSlot}
             headerSlot={level.headerSlot}
+            search={level.search}
+            reserveToolbar={levels.some(hasListTools)}
             hideItemIcons={level.hideItemIcons}
             checkable={level.checkable}
             checkedIds={level.checkedIds}
