@@ -4,11 +4,11 @@ title: Offline Sync Client
 domain: agenticdevelopertoolkit://recipes/offline-sync-client
 type: ingredient
 category: engine
-version: 1.0.0
+version: 1.0.1
 status: draft
 language: en
 created: '2026-07-22'
-modified: '2026-07-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -309,14 +309,24 @@ at this call site.
 
 | Check | Status | Category |
 |---|---|---|
-| Frontmatter valid (id, domain, type `ingredient`, category `engine`, platforms) | pass | recipe schema |
-| Sections present and in ingredient order | pass | recipe schema |
-| Category `engine` ⇒ Appearance/Accessibility omitted, no demo required | pass | recipe schema |
-| Every Behavioral Requirement has a Conformance Test Vector row | pass | contract fidelity |
-| Cited tests exist in the two XCTest bundles | pass | contract fidelity |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | Reliability |
+| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | partial | Reliability |
+| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
+| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | partial | Access Patterns |
+| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
+| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | partial | Access Patterns |
+| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
+| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | failed | Access Patterns |
+
+`separation-of-concerns` is passed: the contract splits a platform-neutral core (`SyncEngine`, the wire types, the `SyncStore`/`SyncTransport`/`SyncTriggerSource` protocols, the event stream, `ADHSyncCatalog`) from a swappable on-disk implementation (`GRDBSyncStore`), so a store backend can change without touching engine logic. `unit-test-coverage` is failed: this recipe's own Platform Notes state that no Swift sync module ships in this repo, and none of the cited test classes or bundles (`SyncEngineTests`, `InMemorySyncStoreTests`, `GRDBSyncStoreTests`, `SyncWireTests`, `ADHSyncCatalogTests`, `AgenticToolkitSyncTests`, `AgenticToolkitSyncGRDBTests`) exist anywhere in this repo — the only similarly-named sync code that does exist, `ADHSyncAPI.swift`/`ADHSyncAPITests.swift` under `AgenticDeveloperHubClient`, is a different package this recipe never names. `error-recovery`, `graceful-degradation`, `fault-tolerance`, `idempotent-operations`, `data-integrity`, `offline-behavior`, `pagination-support`, and `error-response-handling` are each partial for the same underlying reason: the contract specifies the behavior in detail — exponential backoff on a transport/5xx failure, an `AuthRequired` pause on 401, the `maxReconcileResyncsPerCycle` manifest-flapping bound, per-opId terminal quarantine on `rejected`, atomic batch-apply-with-cursor plus `recovery-never-deletes-database`, outbox queuing while offline, draining a paginated `/sync/pull` via `hasMore`, and 401/410/rejected-reason handling — but with no implementation in this repo, none of it is verifiable, only specified. `retry-with-backoff` is failed independent of that gap: the spec's own backoff formula, `min(baseBackoff · 2^(n−1), maxBackoff)`, has no jitter term at all, so it does not meet the catalog check even at the design level. `timeout-configuration` is failed for a similar reason: `SyncEngineConfiguration`'s full field list (`deviceId`, `pullLimit`, `pushBatchSize`, `baseBackoff`, `maxBackoff`, `hostResources`) defines no timeout for a `/sync/pull` or `/sync/push` request, a gap in the written contract itself rather than merely an unimplemented one.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.0.0 | 2026-07-22 | Mike Fullerton | Initial draft |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |

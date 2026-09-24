@@ -3,11 +3,11 @@ id: cfb09ec6-c38f-474a-bd79-be8f67ab523c
 title: Chat Coordinator Projection
 domain: agenticdevelopertoolkit://recipes/chat-coordinator-projection
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -205,9 +205,17 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 
 ## Compliance
 
-Not applicable: this cookbook's compliance checks gate on a UI surface, credential handling, or a network call, and `richContent.ts`/`toChatMessages.ts` do none of those — they are a headless, synchronous data projection. Compliance for the surfaces that consume this projection (`Transcript`, `MessageBubble`, `useChatSession`) is tracked in their own recipes.
+| Check | Status | Category |
+|-------|--------|----------|
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+
+`separation-of-concerns` is passed: `toChatMessages.ts` and `richContent.ts` are framework-free, I/O-free pure functions over the chat contract's types, and `projection-one-directional` explicitly forbids calling any mutating `ChatViewModel` method — the read side and the write side never mix in this module. `unit-test-coverage` is failed: no test file in the `chat` package references `projectMessages`, `encodeRichDisplay`, `decodeRichDisplay`, `draftMessageID`, or `toToolCallInfo` — `RichContent.test.tsx` exercises the differently-named `components/RichContent.tsx` React component, not this projection module, and `useChatSession.test.ts` (the only caller) never touches these functions either. `explicit-error-handling` is passed: `decodeRichDisplay` explicitly catches a `JSON.parse` failure on a matching attachment and falls through to the next candidate rather than letting a malformed payload throw, per `rich-display-decode-fallthrough` and `rich-display-decode-non-throwing`. `fault-tolerance` is partial: decoding a malformed attachment is handled cleanly, but the open question on committed-message-identity means `projectMessages` performs no uniqueness check when a committed message's resolved id (`m.id ?? m.localID`) collides with another message's, leaving downstream id-keyed consumers with undefined behavior on that unpredictable-state case.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |

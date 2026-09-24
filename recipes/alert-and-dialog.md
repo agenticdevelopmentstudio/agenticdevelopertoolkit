@@ -3,11 +3,11 @@ id: 550f00f7-bfb2-415e-9b15-bd5dce015500
 title: "Alert & Dialog System"
 domain: agenticdevelopertoolkit://recipes/alert-and-dialog
 type: recipe
-version: 1.2.0
+version: 1.2.1
 status: draft
 language: en
 created: 2026-06-26
-modified: 2026-07-03
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -163,9 +163,16 @@ interface AlertModalKeyboardAdds {
 
 | Check | Status | Category |
 |---|---|---|
-| Artifact formatting (recipe) | passed | artifact-formatting |
-| UI guidelines — no raw hex, no `!important` | passed | adh-ui-guidelines |
-| Backward compatibility — existing call-sites unaffected in API | required | regression |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+
+`separation-of-concerns` is passed: `AlertModal` composes two independently-recipe'd ingredients — `Dialog` for the overlay/focus-trap/portal and `Button` for footer actions — rather than reimplementing either. `unit-test-coverage` is partial: `alertModal.test.tsx` exercises the default/none keyboard policies, `destructive`, `busy`, all three button-layout modes, tone, and the closed state, but the `keyboard-explicit-map` behavior (an arbitrary key→action map) has no dedicated test even though it is implemented in `alert-modal.tsx`'s `keyMap`. `screen-reader-support` and `focus-management` are passed: the surface is built on Base UI's `Dialog` primitive, which supplies the role, `aria-modal`, labelling, focus-trap, and restore-to-opener machinery `be-accessible-dialog` requires. `keyboard-navigable` is passed: Enter/Escape/explicit-map handling plus the footer buttons' native Tab-then-activate semantics remain available even under `keyboard:"none"`, where only the custom shortcuts are disabled. `touch-target-size` is failed: `Button`'s fixed size-variant heights (`h-6`=24px etc.) sit below the 44×44pt/48×48dp minimum by design, reachable only through an ancestor-set `--adh-button-min-height`/`--adh-button-min-width`, and this recipe never sets either variable on its footer buttons. `contrast-ratio` is partial: the header/body/surface/border tokens (`apt-gold`, `apt-text`, `apt-surface`, `apt-border`) are used consistently in place of raw hex, but their actual rendered contrast is a property of the shared theme file this recipe's own source cannot confirm. `no-hardcoded-strings` is partial: `title`, `description`, and both button labels are caller-supplied props, but `confirmLabel`'s default value `"OK"` is a hardcoded English literal baked into `alert-modal.tsx` rather than sourced from a localization resource.
 
 ## Change History
 
@@ -174,3 +181,4 @@ interface AlertModalKeyboardAdds {
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec. |
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Rename the `tone` union member `danger`→`error` to match `AlertModalTone` in `alert-modal.tsx`. |
 | 1.2.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |

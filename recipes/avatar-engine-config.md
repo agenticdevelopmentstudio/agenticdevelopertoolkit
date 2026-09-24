@@ -4,11 +4,11 @@ title: Avatar Engine Config
 domain: agenticdevelopertoolkit://recipes/avatar-engine-config
 type: ingredient
 category: engine
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -581,21 +581,17 @@ answers it inconsistently with `CharacterConfig.load(_:)`'s own wrapping.
 
 | Check | Status | Category |
 |---|---|---|
-| Frontmatter valid (id, domain, type `ingredient`, category `engine`, platforms) | pass | recipe schema |
-| Sections present and in ingredient order, including one-line Appearance/States/Accessibility | pass | recipe schema |
-| Every Behavioral Requirement has a Conformance Test Vector row | partial | contract fidelity |
-| Cited tests exist in `ConfigTests.swift` and `load.test.ts` | pass | contract fidelity |
-| Cross-platform divergences called out explicitly (duplicate-node-id message text; raw-file-read-errors-unwrapped; load-does-not-mutate-caller-input) | pass | contract fidelity |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
 
-`Every Behavioral Requirement has a Conformance Test Vector row` is partial:
-the fifteen vectors above cover a representative slice of the roughly sixty
-grouped requirements — every requirement group has at least one
-representative vector, but not every individual bullet within a shared-
-mechanism group (reference-integrity, loop-fields-validated, and similar)
-has its own dedicated row.
+`separation-of-concerns` is passed: the loader lives in its own `Config` module on both platforms (`Sources/Config/` alongside the sibling `Anim`, `Math`, `Path`, `Render`, `Runtime`, and `Scene` modules on Apple; `src/config/` on web), and it is a pure function with no view, window, or per-frame rendering concern of its own. `unit-test-coverage` is passed: `ConfigTests.swift` and `load.test.ts` both exist and are cited throughout Conformance Test Vectors for schema-version, duplicate-id, palette, shape/ink, bend-damping, path-kind, promotion, timeline-duration, pair-field, branch-list, ladder, ink late-binding, variant-patch, and sayings behavior. `explicit-error-handling` is passed: every rejection surfaces as a typed, attributable error (`ConfigError` on Apple, a prefixed `Error` on web) naming the offending file, key, or reference, and a rejection MUST NOT return a partial `CharacterConfig` — nothing is silently swallowed. `fault-tolerance` is passed: the loader is built to reject malformed or contradictory authored input cleanly rather than crash — `pair-fields-exactly-two` rejects one or three numbers with no special-casing near the boundary, and `primitive-with-family-rejected`/`shape-field-requirements-enforced` reject shape data whose kind and fields disagree — rather than trusting unpredictable authored JSON at face value. `data-integrity` is partial: the loader validates roughly sixty distinct invariants across the six files (references, pair shapes, value types, path syntax), but the recipe itself flags an unresolved gap under Behavioral Requirements → Concurrency — neither loader validates that a shape's `points` array has a count consistent with its declared path-builder kind — so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe, covering the Apple and web avatar-engine config loaders. |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
