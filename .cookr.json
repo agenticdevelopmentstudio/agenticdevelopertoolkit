@@ -96,12 +96,221 @@
       "path": "packages/web/packages/registry-profile/src",
       "tier": "page-kits",
       "platform": "web"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Attachments",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Backend",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Chat",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Commands",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Configuration",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Hooks",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Media",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Messages",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Orchestrator",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Participants",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Permissions",
+      "tier": "chat-contract",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/chat/src/contract",
+      "tier": "chat-contract",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Coordinator",
+      "tier": "chat-coordinator",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/chat/src/runtime",
+      "tier": "chat-coordinator",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/chat/src/backends",
+      "tier": "chat-coordinator",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/chat/src/projection",
+      "tier": "chat-coordinator",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/chat/src/hooks",
+      "tier": "chat-coordinator",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AvatarAnimationEngine/Sources",
+      "tier": "avatar-engine",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/avatar-engine/src",
+      "tier": "avatar-engine",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/avatar/src",
+      "tier": "avatar-behavior",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Markdown",
+      "tier": "markdown-core",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/markdown/src/lib",
+      "tier": "markdown-core",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/markdown/src/hooks",
+      "tier": "markdown-core",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/markdown/src/themes",
+      "tier": "markdown-core",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Theme",
+      "tier": "theme-engine",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/themes/src",
+      "tier": "theme-engine",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/model/src/lib",
+      "tier": "site-model",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/model/src/hooks",
+      "tier": "site-model",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/editing/src",
+      "tier": "content-editing",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/registry-types/src",
+      "tier": "registry-model",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/web/packages/textlens/src",
+      "tier": "registry-model",
+      "platform": "web",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubClient/Sources",
+      "tier": "hub-client",
+      "platform": "apple",
+      "kind": "logic"
+    },
+    {
+      "path": "packages/terminal/src/apt_terminal",
+      "tier": "hub-client",
+      "platform": "python",
+      "kind": "logic"
     }
   ],
   "ignore": [
     "**/__tests__/**",
+    "packages/web/packages/ui/src/components/*.ts",
+    "packages/web/packages/ui/src/blocks/*.ts",
+    "packages/web/packages/controls/src/*.ts",
+    "packages/web/packages/chat/src/components/*.ts",
+    "packages/web/packages/chat/src/modes/*.ts",
+    "packages/web/packages/popover/src/*.ts",
+    "packages/web/packages/chrome/src/*.ts",
+    "packages/web/packages/viewport/src/*.ts",
+    "packages/web/packages/markdown/src/components/*.ts",
+    "packages/web/packages/landing/src/*.ts",
+    "packages/web/packages/search/src/components/*.ts",
+    "packages/web/packages/registry-profile/src/*.ts",
     "**/*.test.tsx",
-    "**/*.ts",
     "**/css/**",
     "**/styles/**",
     "**/internal/**",
@@ -122,7 +331,18 @@
     "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/MarkdownSyntaxReference.swift",
     "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/PlatformKit.swift",
     "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown/MarkdownFileImporter.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownFileImporter.swift"
+    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownFileImporter.swift",
+    "**/*.test.ts",
+    "**/*.d.ts",
+    "**/index.ts",
+    "**/__fixtures__/**",
+    "**/golden/**",
+    "**/Generated/**",
+    "**/generated/**",
+    "**/__init__.py",
+    "**/__main__.py",
+    "packages/apple/AvatarAnimationEngine/Sources/Render/AvatarLayerView.swift",
+    "packages/apple/AvatarAnimationEngine/Sources/Render/AvatarPlateView.swift"
   ],
   "aliases": {
     "chat-input-field": "chat-input",
@@ -137,6 +357,115 @@
     "markdown-viewer-controller": "markdown-viewer"
   },
   "renames": {
-    "packages/web/packages/landing/src/blocks/Card.tsx": "landing-card"
+    "packages/web/packages/landing/src/blocks/Card.tsx": "landing-card",
+    "packages/web/packages/avatar/src/arbitration.ts": "avatar-arbitration",
+    "packages/web/packages/avatar/src/engine.ts": "avatar-behavior-engine",
+    "packages/web/packages/avatar/src/gaze.ts": "avatar-gaze",
+    "packages/web/packages/avatar/src/idleLife.ts": "avatar-idle-life",
+    "packages/web/packages/avatar/src/pose.ts": "avatar-behavior-pose",
+    "packages/web/packages/avatar/src/reflexes.ts": "avatar-behavior-reflexes",
+    "packages/web/packages/avatar/src/speechBubble.ts": "avatar-speech-bubble",
+    "packages/web/packages/avatar/src/types.ts": "avatar-behavior-types",
+    "packages/apple/AvatarAnimationEngine/Sources/Anim/Arbiter.swift": "avatar-arbiter",
+    "packages/web/packages/avatar-engine/src/anim/arbiter.ts": "avatar-arbiter",
+    "packages/apple/AvatarAnimationEngine/Sources/Path/Build.swift": "avatar-build",
+    "packages/web/packages/avatar-engine/src/path/build.ts": "avatar-build",
+    "packages/apple/AvatarAnimationEngine/Sources/Runtime/Channels.swift": "avatar-channels",
+    "packages/web/packages/avatar-engine/src/runtime/channels.ts": "avatar-channels",
+    "packages/apple/AvatarAnimationEngine/Sources/Math/Color.swift": "avatar-color",
+    "packages/web/packages/avatar-engine/src/math/color.ts": "avatar-color",
+    "packages/web/packages/avatar-engine/src/scene/compose.ts": "avatar-compose",
+    "packages/apple/AvatarAnimationEngine/Sources/Math/Ease.swift": "avatar-ease",
+    "packages/web/packages/avatar-engine/src/math/ease.ts": "avatar-ease",
+    "packages/apple/AvatarAnimationEngine/Sources/Engine.swift": "avatar-engine",
+    "packages/web/packages/avatar-engine/src/engine.ts": "avatar-engine",
+    "packages/web/packages/avatar-engine/src/env.ts": "avatar-environment",
+    "packages/apple/AvatarAnimationEngine/Sources/Environment.swift": "avatar-environment",
+    "packages/web/packages/avatar-engine/src/config/load.ts": "avatar-config-loader",
+    "packages/apple/AvatarAnimationEngine/Sources/Config/Loader.swift": "avatar-config-loader",
+    "packages/apple/AvatarAnimationEngine/Sources/Math/Mat.swift": "avatar-mat",
+    "packages/web/packages/avatar-engine/src/math/mat.ts": "avatar-mat",
+    "packages/apple/AvatarAnimationEngine/Sources/Path/Morph.swift": "avatar-morph",
+    "packages/web/packages/avatar-engine/src/path/morph.ts": "avatar-morph",
+    "packages/apple/AvatarAnimationEngine/Sources/Anim/Params.swift": "avatar-params",
+    "packages/web/packages/avatar-engine/src/anim/params.ts": "avatar-params",
+    "packages/web/packages/avatar-engine/src/path/parse.ts": "avatar-path-parse",
+    "packages/apple/AvatarAnimationEngine/Sources/Path/ParsedPath.swift": "avatar-path-parse",
+    "packages/apple/AvatarAnimationEngine/Sources/Render/PlatformShims.swift": "avatar-platform-shims",
+    "packages/web/packages/avatar-engine/src/anim/pose.ts": "avatar-poses",
+    "packages/apple/AvatarAnimationEngine/Sources/Anim/Poses.swift": "avatar-poses",
+    "packages/apple/AvatarAnimationEngine/Sources/Math/Prng.swift": "avatar-prng",
+    "packages/web/packages/avatar-engine/src/math/prng.ts": "avatar-prng",
+    "packages/web/packages/avatar-engine/src/path/promote.ts": "avatar-promote",
+    "packages/apple/AvatarAnimationEngine/Sources/Anim/Reflexes.swift": "avatar-reflexes",
+    "packages/web/packages/avatar-engine/src/anim/reflexes.ts": "avatar-reflexes",
+    "packages/apple/AvatarAnimationEngine/Sources/Scene/Rig.swift": "avatar-rig",
+    "packages/web/packages/avatar-engine/src/scene/rig.ts": "avatar-rig",
+    "packages/apple/AvatarAnimationEngine/Sources/Runtime/Scheduler.swift": "avatar-scheduler",
+    "packages/web/packages/avatar-engine/src/runtime/scheduler.ts": "avatar-scheduler",
+    "packages/web/packages/avatar-engine/src/render/svg.ts": "avatar-svg",
+    "packages/web/packages/avatar-engine/src/anim/timeline.ts": "avatar-timelines",
+    "packages/apple/AvatarAnimationEngine/Sources/Anim/Timelines.swift": "avatar-timelines",
+    "packages/web/packages/avatar-engine/src/runtime/tween.ts": "avatar-tweens",
+    "packages/apple/AvatarAnimationEngine/Sources/Runtime/Tweens.swift": "avatar-tweens",
+    "packages/apple/AvatarAnimationEngine/Sources/Config/Types.swift": "avatar-config-types",
+    "packages/web/packages/avatar-engine/src/config/types.ts": "avatar-config-types",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Attachments/Attachment.swift": "chat-attachment",
+    "packages/web/packages/chat/src/contract/attachments/Attachment.ts": "chat-attachment",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Backend/Backend.swift": "chat-backend",
+    "packages/web/packages/chat/src/contract/backend/Backend.ts": "chat-backend",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Commands/Command.swift": "chat-command",
+    "packages/web/packages/chat/src/contract/commands/Command.ts": "chat-command",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Messages/Conversation.swift": "chat-conversation",
+    "packages/web/packages/chat/src/contract/messages/Conversation.ts": "chat-conversation",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Messages/Message.swift": "chat-message",
+    "packages/web/packages/chat/src/contract/messages/Message.ts": "chat-message",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Orchestrator/Orchestrator.swift": "chat-orchestrator",
+    "packages/web/packages/chat/src/contract/orchestrator/Orchestrator.ts": "chat-orchestrator",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Participants/Participant.swift": "chat-participant",
+    "packages/web/packages/chat/src/contract/participants/Participant.ts": "chat-participant",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Permissions/Permission.swift": "chat-permission",
+    "packages/web/packages/chat/src/contract/permissions/Permission.ts": "chat-permission",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Commands/Skill.swift": "chat-skill",
+    "packages/web/packages/chat/src/contract/commands/Skill.ts": "chat-skill",
+    "packages/apple/AgenticDeveloperToolkit/Sources/Commands/Tool.swift": "chat-tool",
+    "packages/web/packages/chat/src/contract/commands/Tool.ts": "chat-tool",
+    "packages/web/packages/chat/src/projection/richContent.ts": "rich-content-projection",
+    "packages/web/packages/chat/src/backends/types.ts": "chat-backend-types",
+    "packages/web/packages/editing/src/container.tsx": "editing-container",
+    "packages/web/packages/editing/src/controls.tsx": "editing-controls",
+    "packages/web/packages/editing/src/descriptors.ts": "editing-descriptors",
+    "packages/web/packages/editing/src/host.tsx": "editing-host",
+    "packages/web/packages/editing/src/repair.ts": "editing-repair",
+    "packages/web/packages/editing/src/scope.tsx": "editing-scope",
+    "packages/web/packages/editing/src/sections.ts": "editing-sections",
+    "packages/web/packages/editing/src/server.ts": "editing-server",
+    "packages/web/packages/editing/src/validation.ts": "editing-validation",
+    "packages/terminal/src/apt_terminal/auth.py": "terminal-auth",
+    "packages/terminal/src/apt_terminal/auth_commands.py": "terminal-auth-commands",
+    "packages/terminal/src/apt_terminal/cli.py": "terminal-cli",
+    "packages/terminal/src/apt_terminal/config.py": "terminal-config",
+    "packages/apple/AgenticDeveloperHubClient/Sources/Auth/Credentials.swift": "adh-credentials",
+    "packages/terminal/src/apt_terminal/crud.py": "terminal-crud",
+    "packages/terminal/src/apt_terminal/errors.py": "terminal-errors",
+    "packages/terminal/src/apt_terminal/output.py": "terminal-output",
+    "packages/terminal/src/apt_terminal/public.py": "terminal-public",
+    "packages/terminal/src/apt_terminal/resources.py": "terminal-resources",
+    "packages/apple/AgenticDeveloperHubClient/Sources/Auth/Session.swift": "adh-session",
+    "packages/web/packages/markdown/src/themes/palettes.ts": "markdown-palettes",
+    "packages/web/packages/markdown/src/themes/registry.ts": "markdown-theme-registry",
+    "packages/web/packages/textlens/src/color.ts": "text-lens-color",
+    "packages/web/packages/textlens/src/lens.ts": "text-lens",
+    "packages/web/packages/registry-types/src/types.ts": "registry-types",
+    "packages/web/packages/registry-types/src/validate.ts": "registry-validate",
+    "packages/web/packages/registry-types/src/visibility.ts": "registry-visibility",
+    "packages/web/packages/model/src/lib/breadcrumbs.ts": "site-breadcrumbs",
+    "packages/web/packages/model/src/lib/lookup.ts": "site-lookup",
+    "packages/web/packages/model/src/lib/nav.ts": "site-nav",
+    "packages/web/packages/model/src/lib/search.ts": "site-search",
+    "packages/web/packages/themes/src/appearance.ts": "theme-appearance",
+    "packages/web/packages/themes/src/fonts.ts": "theme-fonts",
+    "packages/web/packages/themes/src/manifest.ts": "theme-manifest",
+    "packages/web/packages/themes/src/tokens.ts": "theme-tokens"
   }
 }
