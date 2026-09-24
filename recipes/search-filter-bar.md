@@ -3,11 +3,11 @@ id: c57b1aed-ef38-4803-b38a-2d7e0aeced5f
 title: SearchFilterBar
 domain: agenticdevelopertoolkit://recipes/search-filter-bar
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -77,7 +77,7 @@ adapter that maps its `{ q, category, tag }` state onto this component).
   under the search field by default (`orientation="stacked"`), and MUST lay the
   field and the row out as one wrapping line when `orientation="inline"`, the
   search field taking the free space with a minimum width of its own.
-- **may-scope-autofill-with-a-form**: The SearchFilterBar MAY root itself on a
+- **autofill-form-scope**: The SearchFilterBar MAY root itself on a
   `<form>` instead of a `<div>` when `asForm` is set, carrying `role="search"`
   onto that element and cancelling its `submit`. It MUST default to the `<div>`.
 
@@ -148,7 +148,7 @@ role="search"
 | T8 | filter-options-list | One axis, `options: ["Backlog", { value: "it-1", label: "Sprint 3" }]` | Option `Backlog` has value `Backlog`; option `Sprint 3` has value `it-1` |
 | T9 | filter-row-children, filter-row-omitted-when-empty | One filter plus a `<button>Platforms</button>` child; then the same child with no filters; then `{false}` as the only child | Button and select share one row; the child alone still draws the row; `{false}` draws no row (one child element under the root) |
 | T10 | orientation-layout | Render default, then rerender `orientation="inline"` | Root has `flex-col` by default; inline drops it for `flex-wrap`, and the field wrapper carries `flex-1 min-w-48` |
-| T11 | may-scope-autofill-with-a-form | Render default, then rerender `asForm` | Root is a `DIV`, then a `FORM`; exactly one `role="search"` either way; `fireEvent.submit` on the form reports the event cancelled |
+| T11 | autofill-form-scope | Render default, then rerender `asForm` | Root is a `DIV`, then a `FORM`; exactly one `role="search"` either way; `fireEvent.submit` on the form reports the event cancelled |
 | T12 | filter-value-sync | `category.value` set to a value absent from `category.options` (e.g. after the option universe changed) | The select's displayed option is the all-pass entry (index 0) even though `category.value` is still the stale, unmatched string; no `onChange` fires until the user picks something |
 
 ## Edge Cases
@@ -340,3 +340,4 @@ right-to-left layout.
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Added missing sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with appropriate non-applicable explanations. Moved status to review. |
 | 1.2.1 | 2026-09-22 | Mike Fullerton | Expanded Platform Notes with concrete translation guidance for SwiftUI, Compose, AppKit / UIKit, and WinUI 3; removed "Not applicable" from all non-source platforms. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected `depends-on` to the Input/Select recipes; added `Approved: pending` to every Design Decision; rebuilt Compliance as linked, catalog-derived checks; fixed wrong native APIs and the orientation mapping in the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes and removed their fabricated `asForm`/debounce claims; corrected the stale-selected-value and duplicate-option-strings edge cases with a new conformance vector; fixed the Filter-active state description; and collapsed the duplicated Analytics/Logging text. |
+| 1.3.1 | 2026-09-24 | Mike Fullerton | Renamed `may-scope-autofill-with-a-form` to the subject-only `autofill-form-scope`. |

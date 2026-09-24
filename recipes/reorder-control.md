@@ -3,11 +3,11 @@ id: a70a5906-e2c2-4e15-8b2c-913453ff3714
 title: Reorder Control
 domain: agenticdevelopertoolkit://recipes/reorder-control
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -53,7 +53,7 @@ A pair of arrow buttons (↑/↓) that enable users to move items up or down wit
 - **busy-click-guard**: Click handlers for onMoveUp and onMoveDown MUST NOT fire when busy is true, even if the button is clicked.
 - **decorative-icons**: Component MUST mark arrow icons as aria-hidden="true" because they are decorative (the aria-label conveys the meaning).
 - **compact-transparent-buttons**: Component MUST render both buttons as transparent, compact icon buttons (no visible background or border) sized for inline use, each showing a single directional arrow glyph.
-- **may-accept-custom-className**: Component MAY accept a custom className prop for additional styling applied to the outer container.
+- **custom-class-name**: Component MAY accept a custom className prop for additional styling applied to the outer container.
 - **overlapping-disabled-states**: When busy is true and a button's boundary flag (canMoveUp or canMoveDown) is false, the button MUST carry both the disabled attribute (from the boundary) and aria-disabled (from busy) at the same time — the two are set independently and are not mutually exclusive.
 - **group-aria-busy**: Component MUST set aria-busy to true on the group container when busy is true, and MUST leave it unset (undefined) when busy is false.
 - **empty-subject-no-suffix**: When subject is omitted or an empty string, component MUST render button and group labels without a trailing space or subject suffix (e.g., "Move up", not "Move up ").
@@ -111,7 +111,7 @@ A pair of arrow buttons (↑/↓) that enable users to move items up or down wit
 | reorder-control-013 | busy-click-guard | busy=true, user clicks up or down button | onMoveUp and onMoveDown are not called; component ignores click |
 | reorder-control-014 | decorative-icons | default | Arrow icons have aria-hidden="true" |
 | reorder-control-015 | compact-transparent-buttons | default | Buttons render with no visible background fill or border and compute to 28×28px |
-| reorder-control-016 | may-accept-custom-className | className="custom-class" | Custom class is applied to outer container alongside default classes |
+| reorder-control-016 | custom-class-name | className="custom-class" | Custom class is applied to outer container alongside default classes |
 | reorder-control-017 | overlapping-disabled-states | busy=true, canMoveUp=false | Up button has both the disabled attribute and aria-disabled set at the same time |
 | reorder-control-018 | group-aria-busy | busy=true, then busy=false | Group has aria-busy="true" while busy; attribute is absent once busy is false |
 | reorder-control-019 | empty-subject-no-suffix | subject=undefined | Button aria-labels are exactly "Move up" / "Move down"; group aria-label is exactly "Reorder" (no trailing space) |
@@ -198,5 +198,6 @@ Statuses rest on the source (`reorder-control.tsx`): `aria-label`/`title` on the
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Renamed `may-accept-custom-className` to the subject-only `custom-class-name`. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; added requirements and test vectors for the busy/boundary overlap, aria-busy, empty-subject, both-boundaries-disabled, and busy-to-idle edge cases; corrected Appearance and minimum-tap-target values against the source; reworded the ghost/icon-sm and lucide-react-specific requirements and test vector as platform-neutral intent, moving the web specifics to Platform Notes; fixed the SwiftUI and WinUI 3 busy-state focus guidance; filled in the Compliance table; split Design Decisions into Decision/Rationale/Approved blocks; added the InlineCommitControl related-domain and an aria-disabled reference. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
