@@ -42,7 +42,7 @@ one of the semantic classes `adh-avatar`, `adh-avatar__image`, or
 `adh-avatar__fallback` (merged with any consumer-supplied `className`) and
 forward every other prop unchanged to the underlying Base UI primitive. The
 module is a client component (`'use client'`). The source comment at
-`avatar.tsx:7-9` documents why the class names must stay stable: "Base UI
+`avatar.tsx` documents why the class names must stay stable: "Base UI
 avatar styled through the SEMANTIC `adh-avatar*` classes (skinned in
 `../styles/components.css`): the class names are a public theming surface for
 the theme editor and user CSS themes, so they stay stable hooks in the DOM."

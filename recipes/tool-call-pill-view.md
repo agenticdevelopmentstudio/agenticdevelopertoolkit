@@ -167,7 +167,7 @@ Not applicable: The component does not emit log messages.
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 
-Statuses rest on the source's delegation of caption font sizing, status colors, and contrast to `SemanticPalette` (unverifiable from this file, hence partial); the hardcoded `" — "` concatenation in `title(for:)` (ToolCallPillView.swift:84), which is neither externalized nor RTL-aware; the fixed tail-truncation in `truncate-overflow-text`, which always truncates rather than accommodating expanded text; and full-Unicode text rendering inherited from `NSTextField`.
+Statuses rest on the source's delegation of caption font sizing, status colors, and contrast to `SemanticPalette` (unverifiable from this file, hence partial); the hardcoded `" — "` concatenation in `title(for:)` (ToolCallPillView.swift), which is neither externalized nor RTL-aware; the fixed tail-truncation in `truncate-overflow-text`, which always truncates rather than accommodating expanded text; and full-Unicode text rendering inherited from `NSTextField`.
 
 ## Change History
 
