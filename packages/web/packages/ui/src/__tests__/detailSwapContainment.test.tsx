@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { StrictMode } from "react"
 
 import { HierarchicalTopicDetail, type TopicLevel } from "../blocks/hierarchical-topic-detail"
 import { DETAIL_PANE_ATTR } from "../lib/detail-pane"
@@ -154,6 +155,27 @@ describe("the detail swap's stashed pane", () => {
 
     render(
       <Console scope="acme" items={ACME} selectedId="acme-api" detail="acme/api — deploy log" />,
+    )
+    expect(ghostPanes()).toHaveLength(0)
+    expect(screen.queryByText("acme/web — deploy log")).toBeNull()
+  })
+
+  it("is not stranded when a fade is cancelled — StrictMode's mount → unmount → mount", () => {
+    // The dev hub runs under StrictMode, which unmounts and remounts on the SAME DOM. The unmount
+    // cancelled the fade the first mount had just started, a cancelled animation never fires the
+    // "finish" that empties the overlay, and every settings topic was drawn over the one before
+    // it at full opacity. The harness's fade never finishes either, so a ghost here can only mean
+    // a cancel path that forgot to empty the overlay.
+    const { unmount } = render(
+      <Console scope="acme" items={ACME} selectedId="acme-web" detail="acme/web — deploy log" />,
+    )
+    tick(5_000)
+    unmount()
+
+    render(
+      <StrictMode>
+        <Console scope="acme" items={ACME} selectedId="acme-api" detail="acme/api — deploy log" />
+      </StrictMode>,
     )
     expect(ghostPanes()).toHaveLength(0)
     expect(screen.queryByText("acme/web — deploy log")).toBeNull()

@@ -398,6 +398,21 @@ class DetailCrossfade extends Component<{
     return clone
   }
 
+  /**
+   * Stop any fade in flight AND empty the overlay — always both. The overlay is emptied only by the
+   * fade-out's "finish", and a CANCELLED animation never fires "finish", so cancelling alone strands
+   * the outgoing snapshot on top of the live pane at full opacity (a cancelled fade also drops its
+   * opacity keyframes). That is exactly what shipped: StrictMode runs mount → unmount → mount on the
+   * SAME DOM, the unmount cancelled the fade the first mount started, and every settings topic you
+   * switched to was drawn over the one you left — two titles garbled into each other, two tables
+   * interleaved. Any path that cancels comes through here.
+   */
+  private stopFade(): void {
+    this.anims.forEach((a) => a.cancel())
+    this.anims = []
+    this.overlayRef.current?.replaceChildren()
+  }
+
   private crossfade(outgoing: HTMLElement): void {
     const content = this.contentRef.current
     const overlay = this.overlayRef.current
@@ -406,7 +421,7 @@ class DetailCrossfade extends Component<{
     if (!content || !overlay || typeof content.animate !== "function") return
     // A fast second swap: drop the in-flight pair (cancelled animations never fire "finish", so
     // the old cleanup can't wipe the overlay we are about to fill).
-    this.anims.forEach((a) => a.cancel())
+    this.stopFade()
     overlay.replaceChildren(outgoing)
     const ms = DETAIL_CROSSFADE_MS * (getSlowAnimations() ? SLOW_ANIM_FACTOR : 1)
     const opts: KeyframeAnimationOptions = { duration: ms, easing: "ease-in-out" }
@@ -467,8 +482,7 @@ class DetailCrossfade extends Component<{
   }
 
   override componentWillUnmount(): void {
-    this.anims.forEach((a) => a.cancel())
-    this.anims = []
+    this.stopFade()
     if (this.stashTimer !== null) clearTimeout(this.stashTimer)
     // The DOM is still attached here — stash the pane for the remount half of a swap. The stash
     // is adoptable only for {@link DETAIL_CROSSFADE_STASH_MS}, and it is DROPPED at that deadline
