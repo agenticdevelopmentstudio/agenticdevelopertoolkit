@@ -3,11 +3,11 @@ id: 76d3e5ac-b014-4ba1-a8a4-7bf61f38529b
 title: Theme Engine
 domain: agenticdevelopertoolkit://recipes/theme-engine
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -507,8 +507,7 @@ engine stores and applies, not a UI surface of its own.
   `ThemeStore.add(_:)`'s internal read-then-write of
   `storage.customThemes` MUST NOT be interleaved with another same-process
   call, since neither suspends between the read and the write.
-- **Concurrent access — cross-process (Apple)**: NEEDS REVIEW: Not implemented in source.
-  `UserDefaultsThemeStorage` detects an external
+- **Concurrent access — cross-process (Apple)**: `UserDefaultsThemeStorage` detects an external
   change by comparing the current `UserDefaults` value against the value it
   itself last wrote or saw, and `ThemeStore.add`/`update`/`delete` perform a
   plain read-the-whole-array/write-the-whole-array cycle. Two writers
@@ -516,16 +515,15 @@ engine stores and applies, not a UI surface of its own.
   via an iCloud-synced default) racing between one's read and its write can
   silently lose one side's change — `onExternalChange` only fires *after*
   the fact to prompt a reload/repaint, it neither detects nor prevents the
-  lost update. What conflict-resolution policy (last-write-wins, merge by
-  theme id) is expected is not stated anywhere in the given sources.
-- **Storage write failure (Apple)**: NEEDS REVIEW: Not implemented in source.
-  `ThemeStorage.customThemes`/`.activeThemeID` are non-throwing
+  lost update. The source declares no conflict-resolution policy, so the
+  last whole-array write wins.
+- **Storage write failure (Apple)**: `ThemeStorage.customThemes`/`.activeThemeID` are non-throwing
   `{ get set }` properties, and every `ThemeStore` mutator
   (`add`/`update`/`delete`/`duplicate`/`addNewTheme`/`importJSON`/
   `importITermColors`) reports success unconditionally once the setter
   returns. What happens when a host-supplied `ThemeStorage` conformer fails
   to durably persist that write (disk full, an inaccessible App Group
-  container, a sandbox violation) is left completely undefined: the
+  container, a sandbox violation) is not reported: the
   protocol has no channel to report failure back to the caller, so an
   `add(_:)` that appears to succeed can silently not survive a relaunch.
 - **Malformed JSON on import (Apple)**: a syntactically invalid JSON
@@ -771,20 +769,30 @@ all.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [durability-guarantees](agenticdevelopercookbook://compliance/data-persistence#durability-guarantees) | partial | Data Persistence |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | Best Practices |
 
-Not applicable: this recipe covers no authentication, authorization, or
-credential/token handling (Security), presents no visible UI element or user
-interaction flow of its own (UI and Accessibility — see Accessibility
-above), and none of the given sources makes a network request (Networking
-and Error Handling). Data Persistence is marked `partial` rather than
-`passed` because the given `UserDefaultsThemeStorage`/`localStorage`
-round-trip contracts are fully specified, but the open question raised
-above under Edge Cases — what a `ThemeStore` mutator does when the
-underlying storage write itself fails — is unresolved in the source.
+separation-of-concerns passes because the Apple model splits palette data
+(`ColorTheme`), role derivation (`SemanticPalette`), catalog CRUD
+(`ThemeStore`), and persistence (the host-supplied `ThemeStorage` seam), and
+the web splits pre-authored theme CSS (`manifest.ts` / `ThemeStyle.tsx`) from
+the separate `AppearancePrefs` layer. unit-test-coverage passes because the
+Apple `Theme` test suite covers each of those pieces — including
+`ThemeStoreTests` and `UserDefaultsThemeStorageTests` for the catalog and its
+persistence — and the web `themes` package tests `ThemeStyle`,
+`buildScopedCss`, and the rescued themes. data-integrity is partial because
+`ThemeStore`'s mutators do a plain read-then-write of the whole
+`customThemes` array, so two processes sharing one `UserDefaults` suite can
+lose an update (see the cross-process edge case). explicit-error-handling
+fails because `ThemeStorage`'s properties are non-throwing, so a failed
+durable write is never reported to the `ThemeStore` caller (see the storage
+write failure edge case).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | | | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance rewritten against catalog checks; two absent-feature edge cases restated as facts rather than open questions |

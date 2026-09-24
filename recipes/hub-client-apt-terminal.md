@@ -3,11 +3,11 @@ id: 6593a7e1-b42f-4015-8072-20b70800124e
 title: Hub Client — APT Terminal
 domain: agenticdevelopertoolkit://recipes/hub-client-apt-terminal
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -626,35 +626,41 @@ document in the table this section would otherwise carry.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [token-file-permissions](agenticdevelopercookbook://compliance/security#token-file-permissions) | passed | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [transport-security](agenticdevelopercookbook://compliance/security#transport-security) | partial | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [silent-failure-handling](agenticdevelopercookbook://compliance/reliability#silent-failure-handling) | partial | Reliability |
+| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
+| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | partial | Security |
+| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | failed | Reliability |
+| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
 
-`token-file-permissions` is passed: `save()` creates and tightens the config
-file to `0o600` on every write (`test_save_sets_0600`). `input-sanitization`
-is passed: `build_body` rejects unknown fields and validates enum values
-against the model's declared choices before any request is sent.
-`transport-security` is partial: neither `client_factory()` nor
-`public_client()` enforces `https://` on `base_url`, and neither sets a
-request timeout — see `no-request-timeout`. `explicit-error-handling` is
-passed: every authenticated/public request path raises a named,
-message-bearing `AptError` subtype with a distinct exit code rather than
-failing silently. `unit-test-coverage` is partial: the seven test modules
-(`test_auth.py`, `test_auth_commands.py`, `test_cli.py`, `test_config.py`,
-`test_crud.py`, `test_public.py`, `test_resources.py`) cover the great
-majority of this contract, but `whoami()`'s 401-retry-then-fail branch,
-`config.py`'s missing-file and malformed-file `load()` branches, and
-`save()`'s omit-when-`None` serialization are not exercised by any given
-test (each is called out individually above). `silent-failure-handling` is
-partial: `logout()`'s server-side revoke failure is swallowed with no
-signal to the caller — the open question this recipe flags as
-`logout-revoke-failure-swallowed`.
+`separation-of-concerns` is passed: configuration, authentication, request
+building, resource commands, and CLI dispatch each live in their own module
+(see Overview), and no module reaches into another's file or HTTP state.
+`unit-test-coverage` is partial: the seven test modules (`test_auth.py`,
+`test_auth_commands.py`, `test_cli.py`, `test_config.py`, `test_crud.py`,
+`test_public.py`, `test_resources.py`) cover the great majority of this
+contract, but `whoami()`'s 401-retry-then-fail branch, `config.py`'s
+missing-file and malformed-file `load()` branches, and `save()`'s
+omit-when-`None` serialization are not exercised by any given test (each is
+called out individually above). `secure-storage` is partial: `save()` creates
+and tightens the config file to `0o600` on every write
+(`test_save_sets_0600`), but the tokens live in that plain TOML file rather
+than the operating system's credential store. `input-sanitization` is
+passed: `build_body` rejects unknown fields and validates enum values against
+the model's declared choices before any request is sent. `secure-transport`
+is partial: neither `client_factory()` nor `public_client()` enforces
+`https://` on `base_url`, so an overridden base URL may be plain HTTP.
+`timeout-handling` is failed: neither client passes a `timeout=` argument
+(see no-request-timeout). `explicit-error-handling` is partial: every
+authenticated and public request path raises a named, message-bearing
+`AptError` subtype with a distinct exit code, but `logout()`'s server-side
+revoke failure is swallowed with no signal to the caller — the open question
+on logout-revoke-failure-swallowed.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance rows mapped onto catalog checks (secure-storage, secure-transport, timeout-handling); separation-of-concerns added |

@@ -3,11 +3,11 @@ id: 91db9191-1ab2-4d09-a9a8-b0dc23669066
 title: Points
 domain: agenticdevelopertoolkit://recipes/points
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -160,13 +160,15 @@ Not applicable: Points is a presentational component with no state changes, erro
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [semantic-markup](agenticdevelopertoolkit://compliance/accessibility#semantic-markup) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopertoolkit://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopertoolkit://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [string-externalization](agenticdevelopertoolkit://compliance/internationalization#string-externalization) | passed | Internationalization |
-| [no-hardcoded-strings](agenticdevelopertoolkit://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `Points.tsx`'s render logic (native `<ul>`/`<ol>`/`<li>` elements with no hardcoded user-facing strings, all content passed via props) and `blocks.css`'s use of relative (`rem`) typography, host-supplied CSS custom-property color tokens whose actual contrast the source cannot confirm, and `list-style: none` applied without an explicit `role="list"`.
+Statuses rest on `Points.tsx`'s render logic (native `<ul>`/`<ol>`/`<li>` elements with no hardcoded user-facing strings, all content passed via props) and `blocks.css`'s use of relative (`rem`) typography, host-supplied CSS custom-property color tokens whose actual contrast the source cannot confirm, and `list-style: none` applied without an explicit `role="list"`. separation-of-concerns passes because `Points.tsx` only maps props to markup while every visual decision lives in `blocks.css`. unit-test-coverage passes because the `Points` suite in `blocks-frame.test.tsx` renders term-plus-detail entries, detail-only entries, the ordered variant, and the default unordered list.
 
 ## Change History
 
@@ -174,4 +176,4 @@ Statuses rest on `Points.tsx`'s render logic (native `<ul>`/`<ol>`/`<li>` elemen
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename `must-*` requirements to subject-only names everywhere they're cited; correct Platform Notes APIs (drop nonexistent SwiftUI/WinUI/Compose calls, recommend lightweight stacks, rename Typescript/Web to React/Web, fix PointEntry's type description) and make native term/detail rendering inline to match the web; correct Appearance and Accessibility to match the actual CSS grid structure and screen-reader behavior; reformat Design Decisions into Decision/Rationale/Approved entries; replace redundant test vectors and add compliance links; reword consumer-facing MUSTs as SHOULD guidance; add tags and related recipes. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
-
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Compliance links moved to the agenticdevelopercookbook scheme; separation-of-concerns and unit-test-coverage added |
