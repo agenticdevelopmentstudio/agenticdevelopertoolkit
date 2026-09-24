@@ -77,7 +77,10 @@
   align-items: center;
   gap: 0.5rem;
   border-radius: 0.25rem;
-  padding: 0.6rem 0.75rem;
+  /* The block padding IS the touch-row parameters (0.6rem, set under "Touch rows" at the
+   * end of this sheet), so a host that wants a denser or roomier item sets those and the
+   * touch-screen growth is added to its padding rather than to ours. */
+  padding: var(--adh-touch-row-pt) 0.75rem var(--adh-touch-row-pb);
   font-size: 0.9rem;
   line-height: 1.2;
   outline: none;
@@ -246,25 +249,95 @@ html[data-color-mode="auto"] .adh-color-mode-toggle > .adh-color-mode-toggle__ba
  * The growth is PADDING, split evenly above and below, computed from each row shape's
  * natural single-line height. min-height would have been simpler, but it only lifts
  * rows that are shorter than the target — a row carrying a preview is already taller,
- * so it would gain nothing and the list would read unevenly. One factor, here; every
- * row rule in the fleet (including adh's site menu, and the Tailwind rows in
- * option-menu / list-chooser via `pointer-coarse:`) reads it, so retuning is one edit. */
+ * so it would gain nothing and the list would read unevenly.
+ *
+ * ONE formula, in the coarse block at the end. A row shape only DECLARES what its
+ * single-line height is made of: its pointer padding (`--adh-touch-row-pt` / `-pb`)
+ * and its one line of content (`--adh-touch-row-content`). The formula used to be
+ * restated per shape, as rem literals, in nine places across ui and adh, and the copies
+ * went wrong independently: the combobox rows never got one; the collapsed rail strip
+ * inherited the labelled row's numbers and grew 8% instead of 30%; and every literal
+ * froze a padding the Spacing setting is meant to scale, so Comfortable and Spacious
+ * rows grew less the roomier they were. Hence:
+ *  - the factor, 0.3, is written exactly once, on :root, and nothing restates it as a
+ *    `var()` fallback;
+ *  - a row whose pointer padding is a spacing utility declares it from `var(--spacing)`,
+ *    so the base AND the growth follow the density and every density grows 30%;
+ *  - content is `1lh`, the row's OWN line box, never a hand-multiplied font-size ×
+ *    line-height — that is how the rail's number came to depend on adh's 1.7 body line.
+ *    `lh` needs Safari 16.4, which Tailwind 4 already requires of every page this
+ *    package styles. Below that the formula is invalid, and a coarse row would lose its
+ *    padding altogether, not just its growth.
+ *
+ * A host restyles a row by setting the PARAMETERS, never `padding`. The base dropdown
+ * item reads its block padding from them, so a host's compact 0.35rem is at once its
+ * pointer padding and what the growth is added to; a `padding` override out-specifies
+ * the coarse block and switches the growth off, which is why adh's site menu once had
+ * to carry its own copy of this rule.
+ *
+ * Cascade: UNLAYERED on purpose. That is how the coarse block beats the Tailwind rows'
+ * own `py-*` / `pt-*` (Tailwind emits them inside @layer utilities) without !important,
+ * so it only works where this sheet is imported unlayered — as adh's adh-components.css
+ * and shipr's sources.css do — or into a layer after utilities; imported into an earlier
+ * layer, rows keep their pointer height on a touch screen. The defaults below are
+ * `:where()` (specificity 0), so any unlayered host rule that sets a parameter wins
+ * whichever sheet loads first. A LAYERED one loses to them, however specific —
+ * including a Tailwind arbitrary property like `[--adh-touch-row-pt:…]`. */
 :root {
   --adh-touch-row-grow: 0.3;
 }
 
-@media (pointer: coarse) {
-  /* Base dropdown / menu item: 0.6rem padding × 2 + 0.9rem × 1.2 line = 2.28rem. */
-  .adh-dropdown-menu__item {
-    padding-top: calc(0.6rem + 2.28rem * var(--adh-touch-row-grow) / 2);
-    padding-bottom: calc(0.6rem + 2.28rem * var(--adh-touch-row-grow) / 2);
-  }
+/* `.adh-touch-row`: the Tailwind rows (list-chooser, option-menu, combobox) — `py-1.5`
+ * around one line of their `text-sm`. The class adds no padding of its own on a fine
+ * pointer; `py-1.5` stays on the row and these must be kept in step with it
+ * (__tests__/touchRows.test.tsx compiles each row's classes and fails when they drift). */
+:where(.adh-touch-row) {
+  --adh-touch-row-pt: calc(var(--spacing) * 1.5);
+  --adh-touch-row-pb: calc(var(--spacing) * 1.5);
+  --adh-touch-row-content: 1lh;
+}
 
-  /* TopicRail row (topic-detail.tsx). Unlayered, so it beats the row's own `pt-1 pb-0.5`
-   * utilities, which Tailwind emits inside @layer utilities. Natural height: 0.25rem +
-   * 0.125rem padding + 0.8rem text at the body's 1.7 line = 1.735rem. */
+/* Dropdown / menu item. A fixed 0.6rem that never followed the Spacing setting on a
+ * pointer either, so its growth does not; the base rule above reads these two. */
+:where(.adh-dropdown-menu__item) {
+  --adh-touch-row-pt: 0.6rem;
+  --adh-touch-row-pb: 0.6rem;
+  --adh-touch-row-content: 1lh;
+}
+
+/* TopicRail rows (topic-detail.tsx) — keep in step with the row's `pt-1 pb-0.5` (labelled
+ * and covered rows) and `py-1.5` (collapsed strip); touchRows.test.tsx holds them to it,
+ * as it does the Tailwind rows above. A labelled row's line is the taller of its label
+ * and its `h-4` icon (the icon wins at Spacious). The icon-only strips are marked
+ * `data-htd-strip`: their content is the icon alone, and a collapsed strip is padded
+ * like the Tailwind rows. The three rules tie on specificity, so their ORDER here is
+ * what lets the strip rules refine the general one. */
+:where([data-htd-row]) {
+  --adh-touch-row-pt: var(--spacing);
+  --adh-touch-row-pb: calc(var(--spacing) * 0.5);
+  --adh-touch-row-content: max(1lh, calc(var(--spacing) * 4));
+}
+
+:where([data-htd-row][data-htd-strip]) {
+  --adh-touch-row-content: calc(var(--spacing) * 4);
+}
+
+:where([data-htd-row][data-htd-strip="collapsed"]) {
+  --adh-touch-row-pt: calc(var(--spacing) * 1.5);
+  --adh-touch-row-pb: calc(var(--spacing) * 1.5);
+}
+
+@media (pointer: coarse) {
+  /* The formula. `--adh-touch-row-extra` is derived here and nowhere else — half of 30%
+   * of the row's natural height, added above and below; never set it. */
+  .adh-touch-row,
+  .adh-dropdown-menu__item,
   [data-htd-row] {
-    padding-top: calc(0.25rem + 1.735rem * var(--adh-touch-row-grow) / 2);
-    padding-bottom: calc(0.125rem + 1.735rem * var(--adh-touch-row-grow) / 2);
+    --adh-touch-row-extra: calc(
+      (var(--adh-touch-row-pt) + var(--adh-touch-row-pb) + var(--adh-touch-row-content)) *
+        var(--adh-touch-row-grow) / 2
+    );
+    padding-top: calc(var(--adh-touch-row-pt) + var(--adh-touch-row-extra));
+    padding-bottom: calc(var(--adh-touch-row-pb) + var(--adh-touch-row-extra));
   }
 }

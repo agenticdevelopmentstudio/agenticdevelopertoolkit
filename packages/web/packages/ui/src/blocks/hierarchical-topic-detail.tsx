@@ -27,6 +27,7 @@ import { getSlowAnimations, SLOW_ANIM_FACTOR } from "./debug-options"
 import { hlog } from "./htdv-log"
 import { UnsavedChangesAlert } from "../components/unsaved-changes-alert"
 import { useExitGate, type PaneExitGuard } from "../hooks/useExitGate"
+import { useSwipeBackClaim } from "../hooks/useSwipeBackClaim"
 import {
   TopicRail,
   FULL_RAIL,
@@ -131,8 +132,10 @@ export interface TopicLevel {
    *  nothing (Settings: there is no "no section" pane). In the NARROW stack that made the list
    *  unreachable: Back cleared the level, the host re-selected the default, and the detail came
    *  straight back — a phone could never see the section list. With this set, narrow Back
-   *  REVEALS this level's list without calling `onClear` (the current row stays marked), and
-   *  tapping any row — the current one included — pushes its detail again. Wide layouts are
+   *  REVEALS this level's list without calling `onClear` (the current row stays marked) — also
+   *  when that Back is pressed on a revealed list below, so a run of persistent levels is walked
+   *  up list by list with none of them cleared. Tapping the marked row goes back down one pane
+   *  (the list below, or the detail); any other row selects as usual. Wide layouts are
    *  unaffected: the list is on screen there anyway. */
   persistentSelection?: boolean
   emptyLabel?: string
@@ -995,17 +998,12 @@ export function HierarchicalTopicDetail({
     // The dev-only animation scale is applied to <html> by the host app, not here: portaled
     // dialogs/menus escape this subtree, so a container-level variable could never reach them.
     //
-    // `data-fills-viewport` is this view telling the page it is MEASURED, not flowed: every
-    // stack under here is `min-h-0 flex-1`, so the whole block sizes itself to whatever
-    // height it is given and scrolls internally. The app shell reserves a band at the bottom
-    // of every page for the bitbag dock to overhang (`.adh-app-shell__main`), which is free
-    // slack on a scrolling page and a permanent strip of empty above the footer on one like
-    // this — so the shell hands that space back when it sees this attribute. Declared here
-    // rather than by each host page because this component is what makes the fact true.
-    <div
-      data-fills-viewport=""
-      className="flex min-h-0 min-w-0 flex-1 flex-col"
-    >
+    // The view is MEASURED, not flowed: every stack under here is `min-h-0 flex-1`, and so is
+    // this root, so the whole block sizes itself to whatever height it is given and scrolls
+    // internally. A root that could outgrow that height (a flex item's default `min-height:
+    // auto` is its content's height) would push the page past the viewport instead of
+    // scrolling its own panes.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <TopBar
         rootLabel={rootLabel}
         crumbs={crumbs}
@@ -2350,8 +2348,10 @@ function CoveredStack({
  * being chosen from, and the detail once every level is selected. Selecting **pushes** the next pane
  * in from the right; **Back** (top-left of every pane but the root) pops it back out, clearing exactly
  * the deepest selected level — the same `onClear` the breadcrumb and the wide layout's Back use, so
- * the unsaved-work guard applies identically. The pane behind the top one parallaxes a little (as iOS
- * does) and is `inert` + `aria-hidden`, so only the visible pane is reachable.
+ * the unsaved-work guard applies identically. The page's swipe-back gesture, offered to the stack
+ * under the finger (lib/swipe-back.ts), runs that same Back whenever one is showing. The pane
+ * behind the top one parallaxes a little (as iOS does) and is `inert` + `aria-hidden`, so only the
+ * visible pane is reachable.
  *
  * Panes are rendered for EVERY level (not just the ones in the current path), so a pane exists to
  * slide in from the right before it becomes the top — and a popped pane slides back OUT instead of
@@ -2370,19 +2370,31 @@ function NarrowStack({
   detailSlot,
   detailSeed,
 }: StackProps & { levels: TopicLevel[] }) {
-  // A `persistentSelection` level Back has popped to its list (see TopicLevel.persistentSelection):
-  // the selection is still there, so the stack is told to show that list instead of the detail.
-  // Dropped whenever the selection itself moves — a pick pushes the detail like any other.
-  const [revealed, setRevealed] = useState<number | null>(null)
+  // The `persistentSelection` list Back has popped to (see TopicLevel.persistentSelection): the
+  // selection is still there, so the stack is told to show that list instead of what lies below
+  // it. It holds only for the selection it was made at — the moment the selection moves, the stack
+  // shows the pick like any other.
+  //
+  // Stored WITH that selection, in state, and compared during render — never a ref advanced during
+  // render. React can render a selection change, throw that render away (a transition that
+  // suspends, or that an urgent update interrupts) and render it again from the last committed
+  // state. A ref written by the discarded render survives it; a state reset made during it does
+  // not. So when this remembered "the selection I last saw" in a ref, the discarded render used the
+  // change up, the render that committed saw no change, and the revealed list stayed on top of the
+  // row just picked. Derived from the pair instead, the answer is right in every render, whichever
+  // of them commits.
+  const [reveal, setReveal] = useState<{ index: number; sig: string } | null>(null)
   const selectionSig = levels.map((l) => l.selectedId ?? "").join("\u0000")
-  const lastSelectionSig = useRef(selectionSig)
-  if (lastSelectionSig.current !== selectionSig) {
-    lastSelectionSig.current = selectionSig
-    if (revealed !== null) setRevealed(null)
-  }
-  // The top of the navigation stack: the detail (index `levels.length`) once every level is selected,
-  // else the frontier list — the one with nothing chosen in it yet.
-  const top = revealed ?? (firstUnselected === -1 ? levels.length : frontier)
+  const revealed = reveal !== null && reveal.sig === selectionSig ? reveal.index : null
+  // Forget a reveal the selection has moved past (store-and-adjust during render), so a selection
+  // that later comes BACK to the old one — history, a host reset — cannot resurrect it.
+  if (reveal !== null && revealed === null) setReveal(null)
+  const revealList = (i: number) => setReveal({ index: i, sig: selectionSig })
+  // Where the selection alone puts the top of the navigation stack: the detail (index
+  // `levels.length`) once every level is selected, else the frontier list — the one with nothing
+  // chosen in it yet. A revealed list sits above it.
+  const selectedTop = firstUnselected === -1 ? levels.length : frontier
+  const top = revealed ?? selectedTop
   // The position the panes are RENDERED at. It catches up to `top` one frame later, so the pane being
   // pushed is painted off-screen FIRST and its move to centre is a transition rather than a jump — an
   // element that mounts at its final transform has nothing to animate from.
@@ -2417,17 +2429,34 @@ function NarrowStack({
 
   // Back pops one pane: clear the deepest SELECTED level (exit-guarded, like every other clear) —
   // or, for a `persistentSelection` level, just reveal its list. From a revealed list, Back goes
-  // one level further up the ordinary way.
+  // one level further up by the same rule: the parent's list is revealed if the parent is
+  // persistent too, and only a parent that is not gets cleared. Clearing a persistent parent is
+  // what this used to do, and its `onClear` re-selects the default row — so the host swapped the
+  // parent's selection and pushed a detail instead of showing the parent's list.
   const onBack = () => {
-    if (revealed !== null) {
-      const parent = levels[revealed - 1]
-      if (parent) attemptExit(() => parent.onClear())
-      return
-    }
-    const level = levels[deepestSelected]
-    if (level?.persistentSelection) attemptExit(() => setRevealed(deepestSelected))
-    else attemptExit(() => level?.onClear())
+    const pop = revealed !== null ? revealed - 1 : deepestSelected
+    const level = levels[pop]
+    if (!level) return
+    if (level.persistentSelection) attemptExit(() => revealList(pop))
+    else attemptExit(() => level.onClear())
   }
+  // The top pane shows a Back exactly when it is not the root list (a list pane `i > 0` carries it
+  // in its `backSlot`, the detail in its header) and there is a selection for it to pop.
+  const showsBack = top > 0 && deepestSelected >= 0
+
+  // THE SWIPE-BACK GESTURE (lib/swipe-back.ts). The page's flick-right handler offers the gesture
+  // at the element under the finger before falling back to `history.back()`. While this stack
+  // SHOWS a Back it claims the gesture and runs exactly what that Back runs — every kind of Back,
+  // the ordinary selection-clearing one included, because the fallback is wrong for all of them:
+  // `history.back()` skips the unsaved-work guard, leaves the page outright when the host keeps
+  // its selection in memory, and on a routed host lands on whatever entry happens to precede this
+  // one rather than one pane up (a deep link, or a default select that replaced its entry). One
+  // gesture, one visible Back. HOW it claims — subscribed once, running the Back the commit
+  // showed rather than one a discarded render wrote (the lesson of `reveal` above), and never over
+  // a stack nested inside this one — is hooks/useSwipeBackClaim.ts, shared with HMD's stack.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useSwipeBackClaim(rootRef, showsBack ? onBack : null)
+
   const backButton = deepestSelected >= 0 && (
     <button
       type="button"
@@ -2459,7 +2488,7 @@ function NarrowStack({
     )
 
   return (
-    <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+    <div ref={rootRef} className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
       {levels.map((level, i) => (
         <div
           key={level.id}
@@ -2491,11 +2520,18 @@ function NarrowStack({
             rowDisclosure
             items={level.items}
             selectedId={level.selectedId}
-            // A revealed persistent list's CURRENT row pushes its detail back in; re-click-deselect
-            // would only re-select the default, which is not what a tap on a visible row means.
+            // A revealed persistent list's CURRENT row goes back down ONE pane, retracing the Backs
+            // that got here: to the list below it while that one is revealed too, else to where the
+            // selection puts the top. Jumping straight to the detail would skip lists the user
+            // walked up through; re-click-deselect would only re-select the default, which is not
+            // what a tap on a visible row means.
             onSelect={
               revealed === i
-                ? (id) => (id === level.selectedId ? setRevealed(null) : railOnSelect(level, attemptExit)(id))
+                ? (id) => {
+                    if (id !== level.selectedId) railOnSelect(level, attemptExit)(id)
+                    else if (i + 1 < selectedTop) revealList(i + 1)
+                    else setReveal(null)
+                  }
                 : railOnSelect(level, attemptExit, levels[i + 1])
             }
             emptyLabel={level.emptyLabel ?? "Nothing here yet."}

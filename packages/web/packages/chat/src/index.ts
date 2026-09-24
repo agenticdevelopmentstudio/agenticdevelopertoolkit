@@ -6,6 +6,9 @@ export type {
   InactiveSizingBehavior,
   SizingTransition,
 } from './modes/InlineChat'
+// The marker for a control a host parks beside an inline chat, so a press on it is
+// not a tap away that folds the chat — see useChatSizing.
+export { CHAT_INSIDE_ATTR } from './hooks/useChatSizing'
 export { ThreePaneChat, ThreePaneChatView } from './modes/ThreePaneChat'
 export { MobileChat, MobileChatView } from './modes/MobileChat'
 export { PersonaChat } from './modes/PersonaChat'

@@ -90,6 +90,21 @@ export interface InlineChatViewProps {
   inputDisabled?: boolean
   /** Fade older messages — each line dimmer than the one below it. */
   fadeOlder?: boolean
+  /**
+   * Takes engagement (expanded vs. folded to `sizing.inactive`) over from the
+   * chat, like an input's `value`: when set, it is the state, and the chat's own
+   * focus / tap-away / Escape tracking only reports through `onEngagedChange`.
+   * For a host that hides the chat itself and must fold it as it does — left to
+   * its own tracking, a hidden chat stays engaged until the next tap or Escape.
+   */
+  engaged?: boolean
+  /**
+   * Hears each engagement flip, from the gesture that caused it and only on a
+   * real change — a typed signal for a host that acts on the fold, instead of
+   * reading `.pc-collapsed` back off the DOM. Fires only when `sizing.inactive`
+   * is set, since that is what turns engagement tracking on.
+   */
+  onEngagedChange?: (engaged: boolean) => void
 }
 
 export function InlineChatView({
@@ -107,11 +122,13 @@ export function InlineChatView({
   statusUtterance,
   inputDisabled,
   fadeOlder,
+  engaged,
+  onEngagedChange,
 }: InlineChatViewProps) {
   const { messages, isTyping, sendMessage } = session
   // While he's "talking" (a reply streaming in), keep the status alive too.
   const streaming = !!statusWhileStreaming && messages.some((m) => m.isStreaming)
-  const { ref, style, className: sizingClass } = useChatSizing(sizing)
+  const { ref, style, className: sizingClass } = useChatSizing(sizing, { engaged, onEngagedChange })
   const rootClass = ['persona-chat', sizingClass, className].filter(Boolean).join(' ')
   return (
     <div ref={ref} className={rootClass} style={style}>
@@ -158,6 +175,8 @@ export interface InlineChatProps {
   statusUtterance?: string | null
   inputDisabled?: boolean
   fadeOlder?: boolean
+  engaged?: boolean
+  onEngagedChange?: (engaged: boolean) => void
 }
 
 export function InlineChat(props: InlineChatProps) {
@@ -178,6 +197,8 @@ export function InlineChat(props: InlineChatProps) {
       statusUtterance={props.statusUtterance}
       inputDisabled={props.inputDisabled}
       fadeOlder={props.fadeOlder}
+      engaged={props.engaged}
+      onEngagedChange={props.onEngagedChange}
     />
   )
 }

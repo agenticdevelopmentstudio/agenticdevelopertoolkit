@@ -34,6 +34,39 @@
  *  itself — don't click-intercept me". */
 export const GUARDED_NAV_ATTR = "data-guarded-nav"
 
+/** The fields {@link isModifiedClick} reads. Structural rather than DOM's
+ *  `MouseEvent`, so a React synthetic event satisfies it as well as a native one. */
+export type ClickModifiers = Pick<
+  MouseEvent,
+  "button" | "metaKey" | "ctrlKey" | "shiftKey" | "altKey"
+>
+
+/**
+ * True for a click the BROWSER should keep: any button but the primary one (a
+ * middle-click opens a new tab) or any modifier (Cmd/Ctrl: new tab, Shift: new
+ * window, Alt: download). Every handler that intercepts a link click, to navigate
+ * programmatically or to open something in-page instead, must let such a click
+ * through untouched.
+ *
+ * One definition because the copies drift: five hand-written versions of this test
+ * existed across this guard and the adh chrome, and the footer's Legal links had
+ * already dropped the button check the other four kept.
+ *
+ * Deliberately NOT `defaultPrevented`. That asks a different question, "has
+ * something already handled this click?", and a caller that must ask it (this
+ * module's own guard bails on it to let the primary de-dupe the anchor path) asks it
+ * beside this call, where the reason can be written down.
+ */
+export function isModifiedClick(event: ClickModifiers): boolean {
+  return (
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  )
+}
+
 /** Resolve true to allow the navigation, false to block it. */
 export type NavigationGuard = () => boolean | Promise<boolean>
 

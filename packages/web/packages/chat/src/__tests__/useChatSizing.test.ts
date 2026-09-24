@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, act } from '@testing-library/react'
 import { createRef, createElement } from 'react'
 import type { CSSProperties } from 'react'
-import { useChatSizing } from '../hooks/useChatSizing'
+import { CHAT_INSIDE_ATTR, useChatSizing, type ChatEngagement } from '../hooks/useChatSizing'
 import type { InlineChatSizing } from '../modes/InlineChat'
 
 // jsdom doesn't lay anything out, so getBoundingClientRect returns zeros.
@@ -37,16 +37,32 @@ interface ProbeApi {
   el: HTMLDivElement | null
 }
 
+interface EngagementProbe extends ProbeApi {
+  /** Renders again with new engagement options — the host re-rendering its chat. */
+  rerender: (engagement: ChatEngagement) => void
+}
+
 /**
  * Renders a component using the hook with a controlled chat-element rect.
  * Returns the latest hook output (after the layoutEffect fires) and the
  * resolved ref element. Tests assert against `api.style.maxHeight` etc.
  */
-function renderProbe(sizing: InlineChatSizing | undefined, chatRect: Partial<DOMRect>): ProbeApi {
-  const api: ProbeApi = { style: {}, className: '', collapsed: false, engaged: false, el: null }
+function renderProbe(
+  sizing: InlineChatSizing | undefined,
+  chatRect: Partial<DOMRect>,
+  engagement?: ChatEngagement,
+): EngagementProbe {
+  const api: EngagementProbe = {
+    style: {},
+    className: '',
+    collapsed: false,
+    engaged: false,
+    el: null,
+    rerender: () => {},
+  }
 
-  function Probe() {
-    const { ref, style, className, collapsed, engaged } = useChatSizing(sizing)
+  function Probe({ engagement }: { engagement?: ChatEngagement }) {
+    const { ref, style, className, collapsed, engaged } = useChatSizing(sizing, engagement)
     api.style = style
     api.className = className
     api.collapsed = collapsed
@@ -60,7 +76,8 @@ function renderProbe(sizing: InlineChatSizing | undefined, chatRect: Partial<DOM
     })
   }
 
-  render(createElement(Probe))
+  const { rerender } = render(createElement(Probe, { engagement }))
+  api.rerender = (next) => rerender(createElement(Probe, { engagement: next }))
   return api
 }
 
@@ -272,6 +289,135 @@ describe('useChatSizing — engagement & minimal', () => {
 
     act(() => {
       document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }))
+    })
+    expect(api.collapsed).toBe(true)
+  })
+})
+
+describe('useChatSizing — a host observing and controlling engagement', () => {
+  const MINIMAL: InlineChatSizing = { active: { mode: 'fixed' }, inactive: { mode: 'minimal' } }
+  const focusIn = (api: ProbeApi) => api.el?.dispatchEvent(new Event('focusin', { bubbles: true }))
+  const pressOn = (el: Element | null | undefined) =>
+    el?.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }))
+
+  it('reports each flip once, from the gesture — one tap in is pointerdown AND focusin', () => {
+    const onEngagedChange = vi.fn()
+    const api = renderProbe(MINIMAL, { bottom: 700 }, { onEngagedChange })
+    // Mounting folded is not a flip.
+    expect(onEngagedChange).not.toHaveBeenCalled()
+
+    // Both land before React re-renders, so only the recorded value can dedupe them.
+    act(() => {
+      pressOn(api.el)
+      focusIn(api)
+    })
+    expect(onEngagedChange.mock.calls).toEqual([[true]])
+
+    act(() => {
+      pressOn(document.body)
+    })
+    expect(onEngagedChange.mock.calls).toEqual([[true], [false]])
+
+    // Already folded: Escape changes nothing, so it reports nothing.
+    act(() => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+    expect(onEngagedChange.mock.calls).toEqual([[true], [false]])
+  })
+
+  it('reports nothing when no inactive behavior turns tracking on', () => {
+    const onEngagedChange = vi.fn()
+    const api = renderProbe({ active: { mode: 'fixed' } }, { bottom: 700 }, { onEngagedChange })
+    act(() => {
+      focusIn(api)
+    })
+    expect(onEngagedChange).not.toHaveBeenCalled()
+  })
+
+  it('takes a controlled `engaged` as the state — so a host can fold a chat it hid itself', () => {
+    const onEngagedChange = vi.fn()
+    const api = renderProbe(MINIMAL, { bottom: 700 }, { engaged: false, onEngagedChange })
+
+    // The gesture is reported, but the host has not followed it: still folded.
+    act(() => {
+      focusIn(api)
+    })
+    expect(onEngagedChange.mock.calls).toEqual([[true]])
+    expect(api.collapsed).toBe(true)
+
+    act(() => {
+      api.rerender({ engaged: true, onEngagedChange })
+    })
+    expect(api.collapsed).toBe(false)
+
+    // The host folds it with no gesture at all (it hid the chat), and is not told
+    // back about its own decision.
+    act(() => {
+      api.rerender({ engaged: false, onEngagedChange })
+    })
+    expect(api.collapsed).toBe(true)
+    expect(api.engaged).toBe(false)
+    expect(onEngagedChange.mock.calls).toEqual([[true]])
+
+    // Folded by the host, a fresh focus is a real flip again.
+    act(() => {
+      focusIn(api)
+    })
+    expect(onEngagedChange.mock.calls).toEqual([[true], [true]])
+  })
+
+  it('leaves engagement as it was on a press on a control marked CHAT_INSIDE_ATTR', () => {
+    const control = document.createElement('div')
+    control.setAttribute(CHAT_INSIDE_ATTR, '')
+    const glyph = document.createElement('span')
+    control.appendChild(glyph)
+    document.body.appendChild(control)
+    const api = renderProbe(MINIMAL, { bottom: 700 })
+
+    // Folded, a press on it does not unfold the box under whatever it opens.
+    act(() => {
+      pressOn(glyph)
+    })
+    expect(api.collapsed).toBe(true)
+
+    act(() => {
+      focusIn(api)
+    })
+    expect(api.collapsed).toBe(false)
+
+    // Engaged, a press on it (on a child: the mark is found by `closest`) is not a
+    // tap away.
+    act(() => {
+      pressOn(glyph)
+    })
+    expect(api.collapsed).toBe(false)
+
+    // A press anywhere unmarked still is.
+    act(() => {
+      pressOn(document.body)
+    })
+    expect(api.collapsed).toBe(true)
+    control.remove()
+  })
+
+  it('does not fold on an Escape something else already consumed', () => {
+    const api = renderProbe(MINIMAL, { bottom: 700 })
+    act(() => {
+      focusIn(api)
+    })
+    expect(api.collapsed).toBe(false)
+
+    // A popover beside the chat closing on the key: one press, one layer.
+    const consumed = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    consumed.preventDefault()
+    act(() => {
+      document.body.dispatchEvent(consumed)
+    })
+    expect(api.collapsed).toBe(false)
+
+    // The next Escape is the chat's.
+    act(() => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
     })
     expect(api.collapsed).toBe(true)
   })

@@ -14,7 +14,7 @@
  * onPointerEnter/onPointerLeave are built from (a raw `pointerenter` doesn't bubble to React's root
  * listener).
  */
-import { useState } from 'react'
+import { startTransition, useState } from 'react'
 import { act, render, screen, fireEvent, within } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
@@ -22,6 +22,7 @@ import {
   type TopicLevel,
   type TopicSelectOptions,
 } from '../blocks/hierarchical-topic-detail'
+import { offerSwipeBack } from '../lib/swipe-back'
 
 const REGIONS = [
   { id: 'us', label: 'us-west-1' },
@@ -1020,56 +1021,33 @@ describe('HierarchicalTopicDetail — the covered stack during a live container 
 })
 
 /**
- * THE VIEW TELLS THE PAGE IT IS MEASURED, NOT FLOWED.
- *
- * "the HTDV content should be pinned to the top of the footer, there is currently a gap — this is
- * likely a code in the shared code, fixing it here will fix it everywhere" (Mike).
- *
- * The gap was the app shell's bitbag reservation: `.adh-app-shell__main` reserves 6rem at the
- * bottom of every page for the fixed dock to overhang. On a scrolling page that is free slack you
- * scroll past once. On a page whose height is MEASURED against the viewport — this one, `min-h-0
- * flex-1` the whole way down — it is a permanent band of empty above the footer, and the view has
- * already shrunk itself to fit above it, so the band is content the page gave up rather than room
- * it had spare.
- *
- * `data-fills-viewport` is how this view says so, and `.adh-app-shell__main:has([data-fills-
- * viewport])` in adh-site.css is how the shell hands the space back. The attribute is therefore a
- * PUBLIC CONTRACT with a stylesheet in another package, which is exactly the kind of coupling that
- * dies silently: nothing imports it, no type mentions it, and a rename here breaks a rule over
- * there with no error anywhere. Hence a test for an attribute.
- *
- * The other half of the pair — that the stylesheet still cancels the band, and that the shell's
- * main still carries the class it cancels it on — is pinned in
- * `adh/src/layout/__tests__/viewportFillingPage.test.tsx`, and the whole chain is measured in a
- * real browser by `sites/shipr/tests/smoke.spec.ts` ("hands its bottom band back…").
+ * THE VIEW IS MEASURED, NOT FLOWED: every stack in it is `min-h-0 flex-1`, and so is the outermost
+ * element, so the whole block takes exactly the height its host hands it and scrolls inside its
+ * own panes. A root that could grow past that height (a flex item's default `min-height: auto` is
+ * its content's height) would push the page's footer below the viewport and scroll the document
+ * under lists that were meant to scroll themselves.
  */
-describe('HierarchicalTopicDetail — the viewport-filling claim', () => {
+describe('HierarchicalTopicDetail — the measured root', () => {
   const resizeTo = containerWidth(W3_NONE_COVERED)
   const allSelected = () => levelsFor({ region: 'us', eco: 'core', topic: 'apps' })
 
-  it('declares data-fills-viewport on its outermost element', () => {
+  it('sizes its outermost element to the height it is handed', () => {
     const { container } = render(
       <HierarchicalTopicDetail levels={allSelected()}>
         <p>detail</p>
       </HierarchicalTopicDetail>,
     )
 
-    // The OUTERMOST element, not merely some element: `:has()` is satisfied by any descendant, but
-    // a claim about the whole view's height belongs on the box that HAS that height — and anywhere
-    // deeper is inside a stack that a resize can unmount, which would make the claim flicker.
+    // The OUTERMOST element, not merely some element: a box that can outgrow its host anywhere
+    // above the stacks defeats the stacks' own `min-h-0` below it.
     const root = container.firstElementChild
-    expect(root).toHaveAttribute('data-fills-viewport')
-
-    // The claim has to be TRUE, and these are what make it true: a root that could grow past the
-    // height it is handed would be asking the shell for space it then overflows.
     expect(root?.className).toMatch(/\bmin-h-0\b/)
     expect(root?.className).toMatch(/\bflex-1\b/)
   })
 
-  it('keeps the claim when the container narrows into the navigation stack', () => {
-    // The narrow layout is a different subtree, and the attribute belongs to neither subtree — it
-    // is the view's own fact. A regression that pushed it down into the covered stack would fold
-    // the band back in on a phone, which is where a wasted 6rem costs the most.
+  it('stays measured when the container narrows into the navigation stack', () => {
+    // The narrow layout is a different subtree under the same root; a phone is where a root that
+    // grows with its content costs the most, so the root must not change with the mode.
     const { container } = render(
       <HierarchicalTopicDetail levels={allSelected()}>
         <p>detail</p>
@@ -1077,7 +1055,8 @@ describe('HierarchicalTopicDetail — the viewport-filling claim', () => {
     )
     resizeTo(360)
     expect(isNarrow(container)).toBe(true)
-    expect(container.firstElementChild).toHaveAttribute('data-fills-viewport')
+    expect(container.firstElementChild?.className).toMatch(/\bmin-h-0\b/)
+    expect(container.firstElementChild?.className).toMatch(/\bflex-1\b/)
   })
 })
 
@@ -1134,5 +1113,259 @@ describe('HierarchicalTopicDetail — narrow, persistentSelection', () => {
     await nextFrame()
     fireEvent.click(within(col(0)).getByRole('button', { name: /Users/ }))
     expect(onSelect).toHaveBeenCalledWith('users')
+  })
+
+  it('a pick made in a transition React throws away before committing still pushes its detail', async () => {
+    // React can render a transition and then DISCARD that render — it suspended (here), or an
+    // urgent update interrupted it (a click elsewhere mid-render, in production) — and render it
+    // again later from the last COMMITTED state. State set during the discarded render goes with
+    // it; a ref written during it does not. The stack used to remember "the selection I last saw"
+    // in a ref, so the thrown-away render used the change up, the render that committed saw no
+    // change at all, and the revealed list stayed on top of the row just picked.
+    let suspended = false
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    // A sibling AFTER the view, so the stack has already rendered the new pick when this throws.
+    function SuspendWhileArmed() {
+      if (suspended) throw pending
+      return null
+    }
+    const id = `settings-${++surfaceSeq}`
+    function Host() {
+      const [selectedId, setSelectedId] = useState('apps')
+      const levels: TopicLevel[] = [
+        {
+          id,
+          title: 'Settings',
+          items: TOPICS,
+          selectedId,
+          onSelect: (next) => startTransition(() => setSelectedId(next)),
+          onClear: () => setSelectedId('apps'),
+          persistentSelection: true,
+        },
+      ]
+      return (
+        <>
+          <HierarchicalTopicDetail layoutMode="narrow" levels={levels}>
+            <p>detail</p>
+          </HierarchicalTopicDetail>
+          <SuspendWhileArmed />
+        </>
+      )
+    }
+    render(<Host />)
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await nextFrame()
+    expect(col(0).style.transform).toBe('translateX(0)') // the revealed list
+
+    suspended = true
+    await act(async () => {
+      fireEvent.click(within(col(0)).getByRole('button', { name: /Users/ }))
+    })
+    expect(col(0).style.transform).toBe('translateX(0)') // nothing committed yet
+
+    suspended = false
+    await act(async () => {
+      release()
+      await pending
+    })
+    await nextFrame()
+    expect(col(1).style.transform).toBe('translateX(0)') // Users' detail, not the list
+  })
+
+  it('two persistent levels: Back reveals each list in turn, and the marked row goes down one level', async () => {
+    // Back from a revealed list used to CLEAR the level above it — and a persistent level's
+    // onClear re-selects its default, so the host snapped to a different row and pushed its
+    // detail instead of showing the parent list. A persistent parent is revealed the same way.
+    const onClear = vi.fn()
+    const surface = ++surfaceSeq
+    const levels: TopicLevel[] = [
+      {
+        id: `groups-${surface}`,
+        title: 'Groups',
+        items: REGIONS,
+        selectedId: 'us',
+        onSelect: () => {},
+        onClear,
+        persistentSelection: true,
+      },
+      {
+        id: `sections-${surface}`,
+        title: 'Sections',
+        items: TOPICS,
+        selectedId: 'apps',
+        onSelect: () => {},
+        onClear,
+        persistentSelection: true,
+      },
+    ]
+    render(
+      <HierarchicalTopicDetail layoutMode="narrow" levels={levels}>
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    expect(col(2).style.transform).toBe('translateX(0)') // the detail is on top
+
+    fireEvent.click(within(col(2)).getByRole('button', { name: 'Back' }))
+    await nextFrame()
+    expect(col(1).style.transform).toBe('translateX(0)') // Sections
+
+    fireEvent.click(within(col(1)).getByRole('button', { name: 'Back' }))
+    await nextFrame()
+    expect(onClear).not.toHaveBeenCalled()
+    expect(col(0).style.transform).toBe('translateX(0)') // Groups
+
+    // The way back down retraces the way up: the marked row of a revealed list shows the list it
+    // leads to, not the detail two levels below it.
+    fireEvent.click(within(col(0)).getByRole('button', { name: /us-west-1/ }))
+    await nextFrame()
+    expect(col(1).style.transform).toBe('translateX(0)')
+
+    fireEvent.click(within(col(1)).getByRole('button', { name: /Applications/ }))
+    await nextFrame()
+    expect(col(2).style.transform).toBe('translateX(0)')
+    expect(onClear).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * THE SWIPE IS THE BACK YOU CAN SEE. The page's flick-right gesture first OFFERS itself at the
+ * element under the finger (`offerSwipeBack`, lib/swipe-back.ts) and falls back to
+ * `history.back()` only when nothing claims it. That fallback is the wrong answer inside a stack
+ * showing a Back: it skips the unsaved-work guard, it leaves the page outright when the host keeps
+ * its selection in memory, and on a routed host it lands on whatever entry happens to be previous
+ * rather than one pane up. So the stack claims the gesture whenever it shows a Back, and answers it
+ * with exactly what that Back runs.
+ *
+ * The claim itself is shared with HMD's stack (hooks/useSwipeBackClaim.ts, pinned in
+ * useSwipeBackClaim.test.tsx); what these pin is that THIS stack hands it the Back it shows,
+ * exactly while it shows one.
+ */
+describe('HierarchicalTopicDetail — narrow, swipe-back', () => {
+  const nextFrame = () =>
+    act(async () => {
+      await new Promise((r) => requestAnimationFrame(() => r(null)))
+    })
+  /** Offer the gesture at `el`, inside act: the answer may be a React update. */
+  const swipeBackFrom = (el: Element): boolean => {
+    let answered = false
+    act(() => {
+      answered = offerSwipeBack(el)
+    })
+    return answered
+  }
+  const clears = () => ({ regions: vi.fn(), ecosystems: vi.fn(), topics: vi.fn() })
+
+  it('a swipe on the detail runs its Back and claims the gesture', () => {
+    const onClear = clears()
+    render(
+      <HierarchicalTopicDetail
+        layoutMode="narrow"
+        levels={levelsFor({ region: 'us', eco: 'core', topic: 'apps', onClear })}
+      >
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    // The finger is on the detail's CONTENT, which the frame portals into a host inside the stack.
+    expect(swipeBackFrom(screen.getByText('detail'))).toBe(true)
+    expect(onClear.topics).toHaveBeenCalledTimes(1)
+    expect(onClear.ecosystems).not.toHaveBeenCalled()
+  })
+
+  it('a swipe on a list pane runs the Back that pane shows', () => {
+    const onClear = clears()
+    render(
+      <HierarchicalTopicDetail layoutMode="narrow" levels={levelsFor({ region: 'us', onClear })}>
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    // Ecosystems is the pane on top, and its Back clears the region it was opened from.
+    expect(swipeBackFrom(within(col(1)).getByRole('button', { name: /Temporal/ }))).toBe(true)
+    expect(onClear.regions).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves the gesture to the page on the root list, where no Back is showing', () => {
+    const onClear = clears()
+    render(
+      <HierarchicalTopicDetail layoutMode="narrow" levels={levelsFor({ onClear })}>
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    expect(swipeBackFrom(within(col(0)).getByRole('button', { name: /us-west-1/ }))).toBe(false)
+    expect(onClear.regions).not.toHaveBeenCalled()
+  })
+
+  it('on a persistentSelection level it reveals the list like Back, then has nothing left to pop', async () => {
+    const onClear = vi.fn()
+    render(
+      <HierarchicalTopicDetail
+        layoutMode="narrow"
+        levels={[
+          {
+            id: `settings-${++surfaceSeq}`,
+            title: 'Settings',
+            items: TOPICS,
+            selectedId: 'apps',
+            onSelect: () => {},
+            onClear,
+            persistentSelection: true,
+          },
+        ]}
+      >
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    expect(swipeBackFrom(screen.getByText('detail'))).toBe(true)
+    await nextFrame()
+    expect(onClear).not.toHaveBeenCalled()
+    expect(col(0).style.transform).toBe('translateX(0)')
+
+    // The list is the root pane: its Back is gone, so the stack no longer claims the gesture.
+    expect(swipeBackFrom(within(col(0)).getByRole('button', { name: /Users/ }))).toBe(false)
+  })
+
+  it('a stack nested in another stack’s detail answers first, and the outer one stands aside', () => {
+    const outer = clears()
+    const inner = clears()
+    render(
+      <HierarchicalTopicDetail
+        layoutMode="narrow"
+        levels={levelsFor({ region: 'us', eco: 'core', topic: 'apps', onClear: outer })}
+      >
+        <HierarchicalTopicDetail
+          layoutMode="narrow"
+          levels={levelsFor({ region: 'eu', eco: 'temporal', topic: 'users', onClear: inner })}
+        >
+          <p>inner detail</p>
+        </HierarchicalTopicDetail>
+      </HierarchicalTopicDetail>,
+    )
+    expect(swipeBackFrom(screen.getByText('inner detail'))).toBe(true)
+    expect(inner.topics).toHaveBeenCalledTimes(1)
+    expect(outer.topics).not.toHaveBeenCalled()
+  })
+
+  it('a nested stack showing no Back of its own leaves the gesture to the stack around it', () => {
+    // The inner stack sits on its root list, so the only Back on screen is the outer detail's. A
+    // listener that claimed the gesture without a Back to run would swallow that one.
+    const outer = clears()
+    const inner = clears()
+    render(
+      <HierarchicalTopicDetail
+        layoutMode="narrow"
+        levels={levelsFor({ region: 'us', eco: 'core', topic: 'apps', onClear: outer })}
+      >
+        <HierarchicalTopicDetail layoutMode="narrow" levels={levelsFor({ onClear: inner })}>
+          <p>inner detail</p>
+        </HierarchicalTopicDetail>
+      </HierarchicalTopicDetail>,
+    )
+    // Document order puts the outer stack's root list first; the inner one is inside its detail.
+    const innerRoot = [...document.querySelectorAll<HTMLElement>('[data-htd-col="0"]')].at(-1)!
+    expect(swipeBackFrom(within(innerRoot).getByRole('button', { name: /us-west-1/ }))).toBe(true)
+    expect(outer.topics).toHaveBeenCalledTimes(1)
+    expect(inner.regions).not.toHaveBeenCalled()
   })
 })

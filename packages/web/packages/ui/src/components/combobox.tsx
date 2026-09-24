@@ -71,8 +71,14 @@ export function Combobox({
               "rounded-lg border border-apt-border bg-apt-surface p-1 text-sm text-apt-text shadow-lg outline-none",
             )}
           >
-            <Autocomplete.Empty className="px-2 py-1.5 text-sm text-apt-text-muted">
-              {emptyLabel}
+            {/* The ROW is the child, not Empty itself. Base UI keeps Empty's root mounted
+                whatever the list holds — it is the polite live region that announces "no
+                matches", and hiding or unmounting it breaks that — and renders only its
+                CHILDREN when nothing matches. Padding on the root therefore drew a blank
+                0.75rem strip above every non-empty list, and a touch-row class there would
+                have grown that strip too. */}
+            <Autocomplete.Empty className="text-sm text-apt-text-muted">
+              <div className="adh-touch-row px-2 py-1.5">{emptyLabel}</div>
             </Autocomplete.Empty>
             <Autocomplete.List>
               {(item: string) => (
@@ -80,7 +86,9 @@ export function Combobox({
                   key={item}
                   value={item}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-apt-text outline-none",
+                    // `adh-touch-row`: 30% taller on a touch screen, grown from this `py-1.5` and
+                    // the density by the one rule in styles/components.css ("Touch rows").
+                    "adh-touch-row flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-apt-text outline-none",
                     "data-[highlighted]:bg-apt-highlight/15",
                   )}
                 >

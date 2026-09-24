@@ -11,10 +11,48 @@ import type { InlineChatSizing, InactiveSizingBehavior } from '../modes/InlineCh
 const HUGGING_CLASS = 'pc-hugging'
 const DEFAULT_SIZING: InlineChatSizing = { active: { mode: 'fixed' } }
 
+/**
+ * Marks an element OUTSIDE the chat's box as part of the conversation anyway: a
+ * press on it is not a tap away, so the chat's engagement stays exactly as it was.
+ * Spread it as `{ [CHAT_INSIDE_ATTR]: '' }` on a control a host parks beside the
+ * chat. bitbag's dock is why it exists: its `i` sits on the chat's corner, and a
+ * press on it read as a tap away, so the chat folded and the dock — which closes on
+ * that fold — hid the `i` before its click could land. It is deliberately NOT a tap
+ * IN either: the press is for the control, and unfolding the box under a panel the
+ * control just opened would bury the panel.
+ */
+export const CHAT_INSIDE_ATTR = 'data-pc-inside'
+
+/**
+ * Who owns engagement. Left out, the hook owns it outright. A host that has to act
+ * on it hears each flip through `onEngagedChange`; a host that has to END it passes
+ * `engaged` and takes the fact over, the way a controlled input takes over `value`.
+ */
+export interface ChatEngagement {
+  /**
+   * When set, this IS the engaged state, and the hook's own tracking only reports
+   * what the gestures said through `onEngagedChange`. A host needs it to fold a
+   * chat it hid itself: tracking alone left a hidden chat engaged — holding the
+   * host's engaged-only CSS (a scrim, a raised z-index) over the page — until the
+   * next tap or Escape happened to land.
+   */
+  engaged?: boolean
+  /**
+   * Hears each flip, called from the gesture that caused it (focus in, a tap in or
+   * away, Escape) — never from a render or an effect — and only on a real change.
+   * The typed alternative to reading `.pc-collapsed` back off the DOM, which a
+   * class rename breaks silently.
+   */
+  onEngagedChange?: (engaged: boolean) => void
+}
+
 export interface ChatSizing {
   ref: RefObject<HTMLDivElement | null>
   style: CSSProperties
-  /** True while the user is interacting (focused or just clicked in). */
+  /**
+   * True while the user is interacting (focused or just clicked in) — or, when the
+   * host passes `engaged`, whatever it says.
+   */
   engaged: boolean
   /** True when showing the inactive `minimal` state (input bar only). */
   collapsed: boolean
@@ -29,14 +67,30 @@ export interface ChatSizing {
  * content so growth extends the top edge upward). When an `inactive` behavior
  * is configured, it also tracks engagement — focus expands to the active
  * size, clicking away or pressing Escape collapses to the inactive size — and
- * exposes class hooks so CSS can animate the grow-up / grow-down.
+ * exposes class hooks so CSS can animate the grow-up / grow-down. A press on an
+ * element marked with `CHAT_INSIDE_ATTR` is not a click away, and an Escape that
+ * something else already consumed (`defaultPrevented`) does not collapse: see
+ * `onKeyDown` below. `engagement` lets a host observe or control the state.
  */
-export function useChatSizing(sizing: InlineChatSizing | undefined): ChatSizing {
+export function useChatSizing(
+  sizing: InlineChatSizing | undefined,
+  engagement: ChatEngagement = {},
+): ChatSizing {
   const { active, inactive, transition = 'animated' } = sizing ?? DEFAULT_SIZING
+  const { engaged: engagedProp, onEngagedChange } = engagement
 
   const ref = useRef<HTMLDivElement | null>(null)
   const [maxHeightPx, setMaxHeightPx] = useState<number | null>(null)
-  const [engaged, setEngaged] = useState(false)
+  const [ownEngaged, setOwnEngaged] = useState(false)
+  // Controlled when the host passes `engaged`: its value is the fact, and our own
+  // state is only what the gestures last said.
+  const engaged = engagedProp ?? ownEngaged
+
+  // The listeners below live as long as the chat does, so they read the CURRENT
+  // engaged value and callback through a ref instead of re-subscribing on every
+  // flip — the same latest-value idiom as `usePersonaGaze`.
+  const latest = useRef({ engaged, onEngagedChange })
+  latest.current = { engaged, onEngagedChange }
 
   // Engagement only matters when an inactive behavior is configured; otherwise
   // the box is static and behaves exactly as it did before this option existed.
@@ -48,12 +102,31 @@ export function useChatSizing(sizing: InlineChatSizing | undefined): ChatSizing 
     const el = ref.current
     if (!el) return
 
-    const engage = () => setEngaged(true)
+    // Only a real flip is reported, and it is recorded at once: a tap in fires
+    // pointerdown AND focusin before React re-renders, and the host must hear
+    // "engaged" once, not twice.
+    const report = (next: boolean): void => {
+      if (next === latest.current.engaged) return
+      latest.current.engaged = next
+      setOwnEngaged(next)
+      latest.current.onEngagedChange?.(next)
+    }
+    const engage = () => report(true)
     const onPointerDown = (e: Event) => {
-      setEngaged(el.contains(e.target as Node))
+      if (el.contains(e.target as Node)) report(true)
+      // A press on a control the host marked as part of the conversation leaves
+      // engagement as it was — see CHAT_INSIDE_ATTR.
+      else if (!(e.target instanceof Element && e.target.closest(`[${CHAT_INSIDE_ATTR}]`))) {
+        report(false)
+      }
     }
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setEngaged(false)
+      // An Escape something else already consumed was THAT layer's — a popover
+      // beside the chat closing on it (bitbag's `i` panel, which consumes it from
+      // a capture listener so it gets there first). Folding as well spent one
+      // press on two layers, and a host that closes on the fold lost its panel
+      // AND its chat to a key meant only for the panel.
+      if (e.key === 'Escape' && !e.defaultPrevented) report(false)
     }
 
     el.addEventListener('focusin', engage)

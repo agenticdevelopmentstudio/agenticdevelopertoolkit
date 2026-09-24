@@ -5,6 +5,7 @@ import * as React from "react"
 import { UnsavedChangesAlert } from "./unsaved-changes-alert"
 import {
   GUARDED_NAV_ATTR,
+  isModifiedClick,
   isNavigationApproved,
   isPrimaryNavigationGuard,
   registerNavigationGuard,
@@ -115,8 +116,11 @@ export function UnsavedChangesGuard({
     }
 
     function onClick(e: MouseEvent): void {
+      // Another guard (the primary) already intercepted this anchor — see the
+      // component doc: that preventDefault is how one click raises one confirm.
       if (e.defaultPrevented) return
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      // New tab / window / download: the page this guard protects stays open.
+      if (isModifiedClick(e)) return
       const target = e.target instanceof Element ? e.target : null
       const anchor = target?.closest<HTMLAnchorElement>("a[href]")
       if (!anchor) return

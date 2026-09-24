@@ -65,6 +65,14 @@ describe('UnsavedChangesGuard — link interception', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
+  it('non-primary (middle) clicks pass through untouched', () => {
+    // A new tab leaves this page, and its unsaved work, exactly where it was.
+    const { link } = renderWithLink(true)
+    const ev = fireEvent.click(link, { button: 1 })
+    expect(ev).toBe(true) // not defaultPrevented
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
   it('same-page links (no path change) are not intercepted', () => {
     // Anchor resolving to the current pathname+search destroys no state.
     render(

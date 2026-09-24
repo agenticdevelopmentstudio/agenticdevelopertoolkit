@@ -192,7 +192,9 @@ export function OptionMenu({
                 inputRef.current?.blur()
               }}
               onClick={() => commit(item.value)}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 pointer-coarse:py-[calc(0.375rem+2rem*var(--adh-touch-row-grow,0.3)/2)] text-left text-sm text-apt-text data-[highlighted]:bg-apt-highlight/15"
+              // `adh-touch-row`: 30% taller on a touch screen, grown from this `py-1.5` and
+              // the density by the one rule in styles/components.css ("Touch rows").
+              className="adh-touch-row flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-apt-text data-[highlighted]:bg-apt-highlight/15"
             >
               <Check size={14} aria-hidden className={cn("shrink-0", checked ? "text-apt-gold" : "opacity-0")} />
               <span className="truncate">{item.label}</span>
@@ -205,7 +207,10 @@ export function OptionMenu({
             role="option"
             aria-selected={otherActive}
             data-highlighted={selection === OTHER || undefined}
-            className="rounded-md px-2 py-1.5 pointer-coarse:py-[calc(0.375rem+2rem*var(--adh-touch-row-grow,0.3)/2)] data-[highlighted]:bg-apt-highlight/15"
+            // `text-sm` on the row itself, not only on its label line below: the touch growth
+            // measures the row's own line (`1lh`), and this row is grown as if it were that one
+            // line — the field and OK button under it are extra height, not more rows.
+            className="adh-touch-row rounded-md px-2 py-1.5 text-sm data-[highlighted]:bg-apt-highlight/15"
           >
             <div className="flex items-center gap-2 text-sm text-apt-text">
               <Check size={14} aria-hidden className={cn("shrink-0", otherActive ? "text-apt-gold" : "opacity-0")} />

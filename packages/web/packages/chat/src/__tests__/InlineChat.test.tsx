@@ -122,4 +122,30 @@ describe('InlineChat', () => {
     fireEvent.focusIn(screen.getByPlaceholderText('Type a message...'))
     expect(chat.classList.contains('pc-collapsed')).toBe(false)
   })
+
+  it('reports engagement to the host, and lets the host take it over with `engaged`', () => {
+    const backend = createBackend()
+    const onEngagedChange = vi.fn()
+    const chatWith = (engaged: boolean) => (
+      <InlineChat
+        backend={backend}
+        persona={{ name: 'Bot' }}
+        sizing={{ active: { mode: 'fixed' }, inactive: { mode: 'minimal' } }}
+        engaged={engaged}
+        onEngagedChange={onEngagedChange}
+      />
+    )
+    const { container, rerender } = render(chatWith(false))
+    const chat = container.querySelector('.persona-chat') as HTMLElement
+
+    fireEvent.focusIn(screen.getByPlaceholderText('Type a message...'))
+    expect(onEngagedChange.mock.calls).toEqual([[true]])
+    // Controlled, and the host has not followed: the chat stays folded.
+    expect(chat.classList.contains('pc-collapsed')).toBe(true)
+
+    rerender(chatWith(true))
+    expect(chat.classList.contains('pc-collapsed')).toBe(false)
+    rerender(chatWith(false))
+    expect(chat.classList.contains('pc-collapsed')).toBe(true)
+  })
 })

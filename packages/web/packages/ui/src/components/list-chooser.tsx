@@ -231,8 +231,11 @@ export function ListChooser({
             aria-label={ariaLabel}
             className="max-h-60 overflow-y-auto"
           >
+            {/* `adh-touch-row` on every row: 30% taller on a touch screen, grown from the
+                row's own `py-1.5` and density by the one rule in styles/components.css
+                ("Touch rows") rather than by a copy of it here. */}
             {filtered.length === 0 && !canCreate && (
-              <p className="px-2 py-1.5 pointer-coarse:py-[calc(0.375rem+2rem*var(--adh-touch-row-grow,0.3)/2)] text-sm text-apt-text-muted">{emptyLabel}</p>
+              <p className="adh-touch-row px-2 py-1.5 text-sm text-apt-text-muted">{emptyLabel}</p>
             )}
             {filtered.map((item, i) => {
               const highlighted = highlight === i
@@ -246,7 +249,7 @@ export function ListChooser({
                   aria-selected={checked}
                   data-highlighted={highlighted || undefined}
                   onClick={() => commit(item.value, false)}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 pointer-coarse:py-[calc(0.375rem+2rem*var(--adh-touch-row-grow,0.3)/2)] text-left text-sm text-apt-text hover:bg-apt-highlight/10 data-[highlighted]:bg-apt-highlight/15"
+                  className="adh-touch-row flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-apt-text hover:bg-apt-highlight/10 data-[highlighted]:bg-apt-highlight/15"
                 >
                   <Check
                     size={14}
@@ -265,7 +268,7 @@ export function ListChooser({
                 aria-selected={false}
                 data-highlighted={onCreateRow || undefined}
                 onClick={() => commit(text, true)}
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 pointer-coarse:py-[calc(0.375rem+2rem*var(--adh-touch-row-grow,0.3)/2)] text-left text-sm text-apt-text hover:bg-apt-highlight/10 data-[highlighted]:bg-apt-highlight/15"
+                className="adh-touch-row flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-apt-text hover:bg-apt-highlight/10 data-[highlighted]:bg-apt-highlight/15"
               >
                 <Plus size={14} aria-hidden className="shrink-0 text-apt-text-muted" />
                 <span className="truncate">{createLabel(text)}</span>

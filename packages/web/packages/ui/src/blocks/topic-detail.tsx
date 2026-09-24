@@ -317,6 +317,11 @@ function TopicList({
       <button
         type="button"
         data-htd-row
+        // The icon-only strips, marked so the touch-row rule in styles/components.css can size
+        // them from what they hold — the icon alone, and for a collapsed strip the `py-1.5`
+        // below. Read as a labelled row, a collapsed strip grew 8% on a touch screen instead
+        // of 30% and sat its icon off-centre, and a covered one grew 38%.
+        data-htd-strip={centered ? "collapsed" : iconOnly ? "covered" : undefined}
         data-blocked={item.blocked ? "true" : undefined}
         disabled={item.disabled}
         onClick={() => {
@@ -819,6 +824,11 @@ export function TopicRail({
    * `scrollWidth` alone would only ever say "the content OVERFLOWS", never "the content has
    * room to spare", so it could widen a rail and never narrow one.
    *
+   * Each measurement costs ONE forced layout — every write, the list's and the header's, lands
+   * before the first read (see `measure`) — and a run measures twice, now and again when the
+   * fonts land: two forced reflows per rail per run, which is what the notes on `sig` and
+   * `onFitRef` below are counting.
+   *
    * `sig` deliberately does not include the labels: a row keeps its identity when its label
    * is re-rendered, and the alternative — re-measuring on every render that rebuilt an equal
    * array — costs two forced reflows per rail for a width that did not move.
@@ -838,29 +848,29 @@ export function TopicRail({
     // A collapsed rail is an icon strip whose width is COLLAPSED_RAIL by definition, and
     // measuring one would report the width of icons — so the last real answer stands.
     if (!report || collapsed || !el) return
-    // THE HEADER COUNTS TOO. A rail sized to its rows alone truncated its own title whenever
-    // the title plus its riders (`+`, the right-hand controls, the ✕) outgrew the rows — a
-    // two-row "Appearance" list whose header read "Appea…" (Mike: "wide enough for their
-    // contents and their headers both"). Same `max-content` question, asked of the header:
-    // its title is `truncate`, whose max-content contribution is the whole string. The busy
-    // spinner is left out on purpose: it comes and goes with every read, and a rail that
-    // widened and narrowed under it would shift every list to its right each time.
-    const headerNatural = () => {
-      const header = headerRef.current
-      if (!header) return 0
-      const busy = header.querySelector<HTMLElement>("[data-htd-busy]")
-      const restoreWidth = header.style.width
-      const restoreBusy = busy?.style.display ?? ""
-      if (busy) busy.style.display = "none"
-      header.style.width = "max-content"
-      const w = Math.max(header.scrollWidth, header.getBoundingClientRect().width)
-      header.style.width = restoreWidth
-      if (busy) busy.style.display = restoreBusy
-      return w
-    }
     const measure = () => {
-      const restore = el.style.width
+      // THE HEADER COUNTS TOO. A rail sized to its rows alone truncated its own title whenever
+      // the title plus its riders (`+`, the right-hand controls, the ✕) outgrew the rows — a
+      // two-row "Appearance" list whose header read "Appea…" (Mike: "wide enough for their
+      // contents and their headers both"). Same `max-content` question, asked of the header:
+      // its title is `truncate`, whose max-content contribution is the whole string. The busy
+      // spinner is left out on purpose: it comes and goes with every read, and a rail that
+      // widened and narrowed under it would shift every list to its right each time.
+      const header = headerRef.current
+      const busy = header?.querySelector<HTMLElement>("[data-htd-busy]") ?? null
+      // EVERY write, then every read, then every restore — so the first read below forces the
+      // one layout this measurement costs and every later read finds it clean. The header used
+      // to ask its question in a helper of its own (write, read, restore) in the middle of the
+      // list's reads, which forced a second layout on every call and doubled what the comments
+      // above count. Batching changes no answer: the header is a no-wrap `shrink-0` row and
+      // the aside does not clip, so a header wider than the rail overhangs it for the instant
+      // it is measured and moves nothing the list's reads depend on.
+      const restoreList = el.style.width
+      const restoreHeader = header?.style.width ?? ""
+      const restoreBusy = busy?.style.display ?? ""
       el.style.width = "max-content"
+      if (header) header.style.width = "max-content"
+      if (busy) busy.style.display = "none"
       // The gutter a vertical scrollbar takes out of the box (0 with overlay scrollbars).
       const scrollbar = el.offsetWidth - el.clientWidth
       // What we measure is the LIST; what we report is the RAIL, and the rail is border-box
@@ -890,8 +900,13 @@ export function TopicRail({
       // to it. The bounding rect keeps the fraction (and, as a border box, the scrollbar
       // gutter); `Math.ceil` below rounds it UP to the pixel that holds the whole label.
       const rows = Math.max(el.scrollWidth + scrollbar, el.getBoundingClientRect().width)
-      const natural = Math.max(rows, headerNatural()) + Math.max(0, chrome)
-      el.style.width = restore
+      const headerWidth = header
+        ? Math.max(header.scrollWidth, header.getBoundingClientRect().width)
+        : 0
+      el.style.width = restoreList
+      if (header) header.style.width = restoreHeader
+      if (busy) busy.style.display = restoreBusy
+      const natural = Math.max(rows, headerWidth) + Math.max(0, chrome)
       // A box with no layout measures 0 — a rail rendered inside a `display:none` ancestor,
       // and every rail under jsdom. Zero is not an answer, and clamping it up to the floor
       // would dress it as one: say nothing and leave the caller's own width standing.

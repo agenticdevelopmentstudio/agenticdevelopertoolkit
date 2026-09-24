@@ -15,11 +15,11 @@
  * which is what `max-content` means for a column of rows. Everything between that number and
  * the rendered column width is the code under test.
  */
-import { render } from "@testing-library/react"
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { render, screen } from "@testing-library/react"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 
 import { HierarchicalTopicDetail, type TopicLevel } from "../blocks/hierarchical-topic-detail"
-import { MIN_FIT_RAIL, MAX_FIT_RAIL } from "../blocks/topic-detail"
+import { MIN_FIT_RAIL, MAX_FIT_RAIL, TopicRail } from "../blocks/topic-detail"
 
 /** Wide enough that a monospace-ish 10px/char model lands inside the clamp. */
 const PX_PER_CHAR = 10
@@ -131,6 +131,82 @@ const boxWidth = (i: number): string => {
   const el = document.querySelector(`[data-htd-col="${i}"]`)
   if (!(el instanceof HTMLElement)) throw new Error(`no column ${i}`)
   return el.style.width
+}
+
+/** Count the layouts a measurement FORCES.
+ *
+ *  A browser answers a geometry read from its last layout unless the DOM has been written since;
+ *  then it has to lay the page out again, synchronously, before it can answer. A MutationObserver
+ *  queues exactly those writes, so every read here first empties the observer's queue: anything
+ *  in it is a layout the read forced, nothing in it is a read the last layout already answers.
+ *  jsdom never lays anything out, so this counts what a browser WOULD do with the same sequence
+ *  of writes and reads — the only part of the cost the code under test decides.
+ */
+function countForcedLayouts(): { forced: () => number; restore: () => void } {
+  let forced = 0
+  const observer = new MutationObserver(() => {})
+  observer.observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    characterData: true,
+  })
+  const read = () => {
+    if (observer.takeRecords().length > 0) forced += 1
+  }
+  const restores: (() => void)[] = []
+  for (const name of ["offsetWidth", "clientWidth", "scrollWidth"] as const) {
+    // jsdom defines `offsetWidth` on HTMLElement and the other two on Element, and a stub in
+    // this file may already shadow any of them on HTMLElement: wrap whichever a read reaches.
+    const own = Object.getOwnPropertyDescriptor(HTMLElement.prototype, name)
+    const reached = own ?? Object.getOwnPropertyDescriptor(Element.prototype, name)
+    Object.defineProperty(HTMLElement.prototype, name, {
+      configurable: true,
+      get(this: HTMLElement) {
+        read()
+        return reached?.get?.call(this) ?? 0
+      },
+    })
+    restores.push(() => {
+      if (own) Object.defineProperty(HTMLElement.prototype, name, own)
+      else delete (HTMLElement.prototype as unknown as Record<string, unknown>)[name]
+    })
+  }
+  const realRect = Element.prototype.getBoundingClientRect
+  Element.prototype.getBoundingClientRect = function (this: Element) {
+    read()
+    return realRect.call(this)
+  }
+  restores.push(() => {
+    Element.prototype.getBoundingClientRect = realRect
+  })
+  return {
+    forced: () => forced,
+    restore: () => {
+      observer.disconnect()
+      for (const undo of restores) undo()
+    },
+  }
+}
+
+/** Answer `scrollWidth` only in the state the measurement has to CREATE before it may ask: a box
+ *  reports its content only while it is `max-content`, and the header reports its title alone
+ *  only while the busy spinner is out of the way (otherwise the spinner's width rides along). A
+ *  read taken before its write, or after its restore, therefore changes the width the rail
+ *  reports — which holds a reordering of those writes to the same ANSWERS, not just fewer layouts.
+ *  Layered over the row harness, which supplies the rows' width. */
+function answerOnlyWhileMeasured(headerPx: number, spinnerPx: number) {
+  const rowsOnly = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollWidth")!
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+    configurable: true,
+    get(this: HTMLElement) {
+      if (this.style.width !== "max-content") return 0
+      if (!this.hasAttribute("data-htd-header")) return rowsOnly.get!.call(this)
+      const busy = this.querySelector<HTMLElement>("[data-htd-busy]")
+      return headerPx + (busy && busy.style.display !== "none" ? spinnerPx : 0)
+    },
+  })
+  return () => Object.defineProperty(HTMLElement.prototype, "scrollWidth", rowsOnly)
 }
 
 describe("TopicRail auto-fit", () => {
@@ -250,6 +326,52 @@ describe("TopicRail auto-fit", () => {
       expect(boxWidth(1)).toBe(`${TITLE.length * PX_PER_CHAR}px`)
     } finally {
       restoreHeader()
+    }
+  })
+
+  it("forces ONE layout per measurement, the header's question included", () => {
+    // Every write lands before the first read, so the layout that read forces answers the
+    // header's question as well. The header used to ask it in a helper of its own — write, read,
+    // restore — between the list's reads, which forced a SECOND layout on every measurement; a
+    // run measures twice (now, and when the fonts land), so each rail cost four forced reflows
+    // per run where two do. Rendered busy, so hiding and restoring the spinner is one of the
+    // writes being batched.
+    const TITLE = "Repositories awaiting their deployment" // 38 chars → 380px, past the 50px row
+    const SPINNER_PX = 18 // `size-3` plus its `ml-1.5`
+    const restoreAnswers = answerOnlyWhileMeasured(TITLE.length * PX_PER_CHAR, SPINNER_PX)
+    const layouts = countForcedLayouts()
+    const onFit = vi.fn()
+    try {
+      render(
+        <TopicRail
+          items={[{ id: "r2", label: "shipr" }]}
+          selectedId={null}
+          onSelect={() => {}}
+          emptyLabel="Nothing"
+          collapsed={false}
+          onToggle={() => {}}
+          title={TITLE}
+          busy
+          onFit={onFit}
+        />,
+      )
+      expect(layouts.forced()).toBe(1)
+      // The same answer as before the batching: the title alone, spinner excluded. A header read
+      // taken outside its `max-content` would leave the 50px row (the floor); one taken with
+      // the spinner showing would add its 18px.
+      expect(onFit).toHaveBeenCalledTimes(1)
+      expect(onFit).toHaveBeenCalledWith(TITLE.length * PX_PER_CHAR)
+      // And no measuring value outlives the measurement into a painted frame.
+      const toggle = screen.getByRole("button", { name: "Collapse topic list" })
+      const list = document.getElementById(toggle.getAttribute("aria-controls") ?? "")
+      const header = document.querySelector<HTMLElement>("[data-htd-header]")
+      const busy = document.querySelector<HTMLElement>("[data-htd-busy]")
+      expect(list?.style.width).toBe("")
+      expect(header?.style.width).toBe("")
+      expect(busy?.style.display).toBe("")
+    } finally {
+      layouts.restore()
+      restoreAnswers()
     }
   })
 

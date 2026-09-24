@@ -8,21 +8,26 @@
  * call to that level's `onClear`.
  *
  * Two buttons, never three: the alert does not save — `PaneExitGuard` carries no `save()` at all.
+ *
+ * The narrow stack's swipe-back is the one exit that does not start at a button, so it has its own
+ * test at the bottom: it must meet the same gate as the Back it stands for.
  */
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { act, render, screen, fireEvent, within } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { HierarchicalTopicDetail } from '../blocks/hierarchical-topic-detail'
+import { offerSwipeBack } from '../lib/swipe-back'
 
 // The block keys module-scoped surface state (pins/hover) by the ROOT level's id and that state
 // deliberately outlives a mount, so each test gets its own id rather than inheriting a neighbour's.
 let surfaceSeq = 0
 
 /** One level, one selected row, so the root crumb is rendered and clicking it is a real exit. */
-function renderWithGuard(isDirty: boolean) {
+function renderWithGuard(isDirty: boolean, layoutMode?: 'narrow') {
   const onClear = vi.fn()
   const guard = { isDirty: () => isDirty }
   render(
     <HierarchicalTopicDetail
+      layoutMode={layoutMode}
       rootLabel="Things"
       levels={[
         {
@@ -83,5 +88,18 @@ describe('HierarchicalTopicDetail — exit guard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Stay' }))
     expect(onClear).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('holds a narrow swipe-back like the Back it stands for, and still claims the gesture', () => {
+    // Unclaimed, the page would answer the swipe with `history.back()` — straight past this gate.
+    const { onClear } = renderWithGuard(true, 'narrow')
+    let answered = false
+    act(() => {
+      answered = offerSwipeBack(screen.getByText('detail body'))
+    })
+    expect(answered).toBe(true)
+    expect(onClear).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+    expect(onClear).toHaveBeenCalledTimes(1)
   })
 })

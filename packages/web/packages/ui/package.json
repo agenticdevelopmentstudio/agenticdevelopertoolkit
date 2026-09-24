@@ -86,6 +86,16 @@
       "development": "./src/lib/file-exchange.ts",
       "import": "./dist/lib/file-exchange.js"
     },
+    "./lib/swipe-back": {
+      "types": "./dist/lib/swipe-back.d.ts",
+      "development": "./src/lib/swipe-back.ts",
+      "import": "./dist/lib/swipe-back.js"
+    },
+    "./hooks/useSwipeBackClaim": {
+      "types": "./dist/hooks/useSwipeBackClaim.d.ts",
+      "development": "./src/hooks/useSwipeBackClaim.ts",
+      "import": "./dist/hooks/useSwipeBackClaim.js"
+    },
     "./hooks/useIsomorphicLayoutEffect": {
       "types": "./dist/hooks/useIsomorphicLayoutEffect.d.ts",
       "development": "./src/hooks/useIsomorphicLayoutEffect.ts",

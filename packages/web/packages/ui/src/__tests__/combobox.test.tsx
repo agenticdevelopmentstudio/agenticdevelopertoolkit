@@ -84,3 +84,31 @@ describe('Combobox — keyboard', () => {
     await waitFor(() => expect(el).toHaveAttribute('aria-expanded', 'false'))
   })
 })
+
+describe('Combobox — the no-match message', () => {
+  // Base UI keeps Autocomplete.Empty's root mounted whatever the list holds — it is the polite
+  // live region that announces "no matches" — and renders only its CHILDREN when nothing matches.
+  // The row's padding once sat on that root, so every list that DID match opened with a blank
+  // strip above its first option.
+  it('adds no height above a list that has matches', async () => {
+    render(<Harness />)
+    const el = input()
+    await open(el, 'S')
+    const listbox = await screen.findByRole('listbox')
+    const regions = listbox.parentElement?.querySelectorAll('[role="status"]') ?? []
+    expect(regions).toHaveLength(1)
+    const region = regions[0] as HTMLElement
+    expect(region.textContent).toBe('')
+    expect(region.className).not.toMatch(/(^|\s)p[xytblr]?-/)
+  })
+
+  it('is a touch row, inside the live region, when nothing matches', async () => {
+    render(<Harness />)
+    const el = input()
+    await open(el, 'zzz')
+    const message = await screen.findByText('No matches')
+    expect(message).toHaveClass('adh-touch-row')
+    expect(message.closest('[role="status"]')).not.toBeNull()
+    expect(message).not.toHaveAttribute('role', 'status')
+  })
+})

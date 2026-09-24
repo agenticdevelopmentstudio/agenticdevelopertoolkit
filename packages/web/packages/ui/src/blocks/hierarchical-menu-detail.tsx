@@ -81,6 +81,7 @@ import { clog } from "./cascade-log"
 import type { TopicSelectOptions } from "./hierarchical-topic-detail"
 import { UnsavedChangesAlert } from "../components/unsaved-changes-alert"
 import { useExitGate, type PaneExitGuard } from "../hooks/useExitGate"
+import { useSwipeBackClaim } from "../hooks/useSwipeBackClaim"
 
 // The enclosing frame for a hierarchy of topic/detail rails — the generalisation
 // of the adh.com/home nesting (`[workspaces] | [features] | [content]`). Instead
@@ -3607,8 +3608,10 @@ function CascadingStack({
  * being chosen from, and the detail once every level is selected. Selecting **pushes** the next pane
  * in from the right; **Back** (top-left of every pane but the root) pops it back out, clearing exactly
  * the deepest selected level — the same `onClear` the breadcrumb and the wide layout's Back use, so
- * the unsaved-work guard applies identically. The pane behind the top one parallaxes a little (as iOS
- * does) and is `inert` + `aria-hidden`, so only the visible pane is reachable.
+ * the unsaved-work guard applies identically. The page's swipe-back gesture, offered to the stack
+ * under the finger (lib/swipe-back.ts), runs that same Back whenever one is showing. The pane
+ * behind the top one parallaxes a little (as iOS does) and is `inert` + `aria-hidden`, so only the
+ * visible pane is reachable.
  *
  * Panes are rendered for EVERY level (not just the ones in the current path), so a pane exists to
  * slide in from the right before it becomes the top — and a popped pane slides back OUT instead of
@@ -3650,6 +3653,23 @@ function NarrowStack({
 
   // Back pops one pane: clear the deepest SELECTED level (exit-guarded, like every other clear).
   const onBack = () => attemptExit(() => levels[deepestSelected]?.onClear())
+  // The top pane shows a Back exactly when it is not the root list (a list pane `i > 0` carries it
+  // in its `backSlot`, the detail in its header) and there is a selection for it to pop.
+  const showsBack = top > 0 && deepestSelected >= 0
+
+  // THE SWIPE-BACK GESTURE (lib/swipe-back.ts). The page's flick-right handler offers the gesture
+  // at the element under the finger before falling back to `history.back()`. While this stack
+  // SHOWS a Back it claims the gesture and runs exactly what that Back runs, because the fallback
+  // is the wrong answer here even though a pick in this block is usually a route change: it skips
+  // the unsaved-work guard, leaves the page outright for a host that keeps its selection in memory,
+  // and lands on whatever entry happens to precede this one rather than one pane up (a deep link,
+  // or a default select that replaced its entry). One gesture, one visible Back. HOW it claims —
+  // subscribed once, running the Back the commit showed rather than one a discarded render wrote,
+  // and never over a stack nested inside this one — is hooks/useSwipeBackClaim.ts, shared with
+  // HTDV's stack.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useSwipeBackClaim(rootRef, showsBack ? onBack : null)
+
   const backButton = deepestSelected >= 0 && (
     <button
       type="button"
@@ -3681,7 +3701,7 @@ function NarrowStack({
     )
 
   return (
-    <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+    <div ref={rootRef} className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
       {levels.map((level, i) => (
         <div
           key={level.id}
