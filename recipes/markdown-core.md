@@ -3,11 +3,11 @@ id: 9f938c20-ea6e-42d7-9ddf-9531a96e3ad0
 title: Markdown Core
 domain: agenticdevelopertoolkit://recipes/markdown-core
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -118,12 +118,12 @@ Both sides independently derive title and excerpt text from the same three regex
 - **sanitize-allowlist-not-denylist**: `sanitizeSchema` MUST sanitize by an explicit tag/attribute/protocol allowlist; `script`, `style`, `iframe`, `object`, `embed`, and `form` MUST be stripped, and `style`/`className` attributes MUST be permitted only on `code`, `pre`, and `span` — never globally — so shiki's dual-theme CSS variables survive while an inline-style vector on other tags does not.
 - **sanitize-protocol-allowlist**: `sanitizeSchema.protocols` MUST restrict `href` to `http`, `https`, `mailto`, and `tel`, and `src`/`cite` to `http`/`https` only; no `data:` URI is permitted anywhere.
 - **frontmatter-exposed-as-metadata**: `processMarkdown(raw)` MUST return the frontmatter object gray-matter parses alongside `html`, and MUST return `title` only when `frontmatter['title']` is itself a string.
-- **malformed-frontmatter-yaml-handling**: NEEDS REVIEW: Not implemented in source. `processMarkdown(raw)` calls `matter(raw)` (gray-matter) with no `try`/`catch`, and gray-matter throws on malformed YAML frontmatter. No source file or test (`process-markdown.test.ts`, read in full) exercises this path, so what MUST happen when a document's frontmatter is unparseable — render with frontmatter treated as absent, propagate the throw as a render error, or something else — cannot be settled from these sources alone.
+- **malformed-frontmatter-yaml-handling**: `processMarkdown(raw)` calls `matter(raw)` (gray-matter) with no `try`/`catch`; malformed YAML frontmatter makes gray-matter throw, and because `processMarkdown` is an `async` function, that throw surfaces as a rejected promise rather than a render that treats the frontmatter as absent. No source file or test (`process-markdown.test.ts`, read in full) exercises this path.
 
 ### Alert blockquote transform (remark-adh-alerts.ts)
 
 - **alert-marker-recognition**: `remarkAdhAlerts` MUST recognize a blockquote as a GitHub-style alert only when its first child is a paragraph whose first inline child is a text node matching `^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*` at its start, and MUST recurse into every blockquote's children regardless of whether that blockquote matched, so a nested alert inside a non-alert blockquote is still transformed.
-- **marker-stripped-title-injected**: On a match, `transformAlert` MUST strip the marker text from the paragraph (removing the now-empty leading paragraph entirely when the marker was its only content), retag the blockquote as an `adh-mv-alert adh-mv-alert--{kind}` `div` via `data.hName`/`data.hProperties`, and prepend a title paragraph rendering the matching English entry of `ALERT_TITLES` as an `adh-mv-alert-title` element.
+- **marker-stripped-title-injected**: On a match, `transformAlert` MUST strip that alert-marker text from the paragraph (removing the now-empty leading paragraph entirely when the alert marker was its only content), retag the blockquote as an `adh-mv-alert adh-mv-alert--{kind}` `div` via `data.hName`/`data.hProperties`, and prepend a title paragraph rendering the matching English entry of `ALERT_TITLES` as an `adh-mv-alert-title` element.
 
 ### Theme data (palettes.ts, registry.ts)
 
@@ -293,3 +293,4 @@ Not applicable — no source file in this ingredient writes to a log, console, o
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

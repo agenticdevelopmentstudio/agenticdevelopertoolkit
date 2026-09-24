@@ -3,11 +3,11 @@ id: 57e33900-ca06-474e-abb1-d904c27a6336
 title: Log Panel
 domain: agenticdevelopertoolkit://recipes/log-panel
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -100,10 +100,10 @@ The Log Panel component displays structured log data as rows and columns in a sc
 
 - **Role**: The root container is a grid-based table-like structure; ARIA roles are applied: `row` for header and data rows, `columnheader` for header cells, `cell` for body cells, `rowgroup` for the rows list. The root container itself does not carry a `table` or `grid` role, so the ARIA structure implied by these child roles is incomplete (see Compliance: semantic-markup).
 - **Labels**: Column headers serve as labels for columns; each header cell has role `columnheader` and displays the column title text.
-- **Interactive cells**: Cells with click handlers or the `isClickable` flag receive the CSS class `lp-cell--interactive`. This class is a styling hook only — it carries no ARIA semantics and does not by itself communicate interactivity to assistive technology. See **keyboard-navigation** below.
+- **Interactive cells**: Cells with click handlers or the `isClickable` flag receive the CSS class `lp-cell--interactive`. This class is a styling hook only — it carries no ARIA semantics and does not by itself communicate interactivity to assistive technology. See **Keyboard navigation** below.
 - **Title attribute**: Each cell sets the HTML `title` attribute to the cell's text content, which shows a hover tooltip in most browsers. Screen reader support for `title` is inconsistent, so it is not a reliable accessible name for interactive cells.
 - **Text alternatives**: Text content is displayed directly; no icons or images require alt text in the component itself.
-- **keyboard-navigation**: NEEDS REVIEW: Keyboard navigation is not implemented in source. What keyboard interactions should be supported (e.g., arrow keys to navigate cells, Enter or Space to activate on interactive cells) and how should focus management (tabindex, focus indicators) be implemented?
+- **Keyboard navigation**: Not implemented in source. Cells have no `tabIndex`, no `onKeyDown` handler, and no focus management; `onClick`/`onDoubleClick` are the only interaction handlers wired to a cell, so interactive cells (marked by `column.isClickable`, `cell.link`, or `column.onCellClick`) are reachable only by mouse.
 - **Minimum tap target**: Not applicable: Cell dimensions and tap target sizes are controlled by CSS styling, not by the component; consumers must ensure minimum tap/click targets via stylesheet implementation. WCAG 2.5.8 (Target Size Minimum, Level AA) requires at least 24×24 CSS px; WCAG 2.5.5 (Target Size Enhanced, Level AAA) and platform HIG guidance recommend 44×44pt.
 
 ## Conformance Test Vectors
@@ -278,3 +278,4 @@ Statuses rest on the source: interactive cells have no ARIA label or role beyond
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; clarify cell color/mono precedence and the stop-event-propagation scope; add a Level Colors table; rewrite test vectors and edge cases as observable outcomes and add missing coverage; correct overclaimed Accessibility statements and the WCAG tap-target citation; reformat Design Decisions; add a Compliance table; reorder and correct Platform Notes API references; treat the default emptyMessage as a localizable string. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise accessibility guidance; clarify keyboard navigation gap and tap target responsibility |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

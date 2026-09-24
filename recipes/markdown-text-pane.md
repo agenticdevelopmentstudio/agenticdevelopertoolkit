@@ -3,11 +3,11 @@ id: 61f589a9-d32f-4e9b-85db-1f9aa0eee009
 title: Markdown Text Pane
 domain: agenticdevelopertoolkit://recipes/markdown-text-pane
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -221,7 +221,7 @@ Not applicable: Markdown Text Pane performs no logging of its own. Platform text
 
 `keyboard-navigable`, `focus-management`, `platform-design-language`, and `native-controls-preference` rest on the source wrapping the native `NSTextView`/`UITextView` directly, with the explicit, delegate-driven `focus()` path (mtpane-010/011); `unicode-support` and `input-sanitization` rest on the plain-text-only design (**use-plain-text-mode**), which stores and echoes text without parsing or executing it; `dynamic-type-support`, `contrast-ratio`, `touch-target-size`, and `rtl-layout-support` are `partial` because the source delegates font, color, sizing, and bidi behavior to the caller's palette/container and to native `UITextView`/`NSTextView` defaults, which this recipe cannot verify; `data-minimization` rests on the Privacy section's confirmation that the component collects, stores, and transmits nothing beyond the text the caller provides.
 
-NEEDS REVIEW: No accessible name. `textView` is private in both variants, and the public API (`text`, `attributedText`, `isEditable`, `focus()`, `applyTheme(_:)`) exposes no label-setting member, so a caller has no way to give the pane an accessible name — `UITextView`/`NSTextView` still supply their native role (text view/text area) and read their content back as the value, but not a name (see **screen-reader-support** above). Settled by a decision to add a label-forwarding property to the public API, or a cookbook rule requiring the host to set one once such a property exists.
+The component provides no accessible name. `textView` is private in both variants, and the public API (`text`, `attributedText`, `isEditable`, `focus()`, `applyTheme(_:)`) exposes no label-setting member, so a caller has no way to give the pane an accessible name — `UITextView`/`NSTextView` still supply their native role (text view/text area) and read their content back as the value, but not a name (see **screen-reader-support** above).
 
 ## Change History
 
@@ -230,3 +230,4 @@ NEEDS REVIEW: No accessible name. `textView` is private in both variants, and th
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added enable-find-bar-macos and preserve-default-undo-ios with test vectors; completed the macOS substitution test vectors and fixed the insets vector to assert `textContainerInset` instead of "baseline"; corrected the `applyTheme` signature citation and named each platform's cursor-color property; rewrote the Accessibility label bullet, Reduce Motion bullet, and Differentiate Without Color bullet to match the source; gave the iOS focus-off-screen edge case a definite result; corrected the SwiftUI, Compose, and WinUI 3 platform notes; reformatted Design Decisions to the three-field form; replaced the Compliance prose with a checks table while keeping the accessible-name gap as a marker; unquoted `modified`; linked the sibling recipes that host this pane |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Compliance: narrowed the accessibility review marker to the missing fact (no accessible name, `textView` is private with no label-forwarding member) and what would settle it |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
