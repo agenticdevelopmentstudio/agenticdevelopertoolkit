@@ -3,11 +3,11 @@ id: 9c6338b6-9a7a-4692-8164-a75800875031
 title: Chat Coordinator
 domain: agenticdevelopertoolkit://recipes/chat-coordinator
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -75,18 +75,7 @@ mid-separator is never truncated or duplicated.
 - **widget-response-unsupported**: `submitWidgetResponse(_:)` MUST always
   throw `PersonaChatError.widgetsUnsupported`; the coordinator supports no
   interactive widgets.
-- NEEDS REVIEW: Not implemented in source. `request.httpBody = try?
-  JSONEncoder().encode(SendMessageBody(message: text))` discards an
-  encoding failure instead of propagating it, unlike `ensureConversation()`,
-  which `try`-propagates the equivalent `CreateConversationBody` encoding.
-  If encoding ever fails, `runTurn` proceeds to call
-  `options.authorize(request)` with a `nil` body, silently sending a
-  bodyless POST rather than failing the turn with a diagnosable error.
-  `SendMessageBody` holds only a `String`, so this is unlikely in practice,
-  but the source defines no behavior for the case and no test exercises it.
-  Resolving this requires deciding whether a `send`-time encoding failure
-  should throw synchronously (matching `ensureConversation`'s pattern) or
-  fail the turn via `messageFailed`.
+- **message-encode-failure-swallowed**: NEEDS REVIEW: Not implemented in source. `request.httpBody = try? JSONEncoder().encode(SendMessageBody(message: text))` discards an encoding failure instead of propagating it, unlike `ensureConversation()`, which `try`-propagates the equivalent `CreateConversationBody` encoding. If encoding ever fails, `runTurn` proceeds to call `options.authorize(request)` with a `nil` body, silently sending a bodyless POST rather than failing the turn with a diagnosable error. `SendMessageBody` holds only a `String`, so this is unlikely in practice, but the source defines no behavior for the case and no test exercises it. Resolving this requires deciding whether a `send`-time encoding failure should throw synchronously (matching `ensureConversation`'s pattern) or fail the turn via `messageFailed`.
 
 ### Conversation management
 
@@ -253,29 +242,7 @@ mid-separator is never truncated or duplicated.
   (URLRequest) async throws -> AuthorizedResponse`, so a host's
   implementation MUST be safe to invoke from the coordinator's actor
   context without additional synchronization supplied by the coordinator.
-- NEEDS REVIEW: Not implemented in source. `TurnControl` stores only a
-  single `Task<Void, Never>?`; a second `send()` call issued before the
-  first turn's `done`/`error`/abort overwrites that reference (`adopt`
-  replaces `self.task` unconditionally), so `destroy()` after two
-  overlapping sends only cancels the most recently adopted turn — the
-  earlier turn keeps running and calling `options.authorize`, even though
-  its emitted events are silently dropped once `inboundEvents` has
-  finished. Separately, `ensureConversation()` re-checks `conversationID`
-  before suspending on `await options.authorize(request)`; because actors
-  are reentrant across `await`, two `send()` calls issued back-to-back
-  before either has awaited a response can both observe `conversationID ==
-  nil` and each `POST` a distinct conversation, with whichever response
-  returns last winning the race and the other becoming an orphaned
-  server-side conversation. No test in `PersonaChatCoordinatorTests.swift`
-  exercises two `send()` calls without awaiting the first turn's
-  completion — `test_pcc002_conversationReuse_twoSendsShareOneConversation`
-  explicitly serializes its two sends with `f.collector.wait(for: 4)` in
-  between — so this is unresolved by both the source and its test suite.
-  Resolving it requires either serializing `send()` behind an
-  actor-held queue, tracking one task per turn in `TurnControl` instead of
-  one per coordinator, or documenting that a second concurrent `send()`
-  before the first turn ends is itself a caller error the type should
-  reject.
+- **concurrent-turns**: NEEDS REVIEW: Not implemented in source. `TurnControl` stores only a single `Task<Void, Never>?`; a second `send()` call issued before the first turn's `done`/`error`/abort overwrites that reference (`adopt` replaces `self.task` unconditionally), so `destroy()` after two overlapping sends only cancels the most recently adopted turn — the earlier turn keeps running and calling `options.authorize`, even though its emitted events are silently dropped once `inboundEvents` has finished. Separately, `ensureConversation()` re-checks `conversationID` before suspending on `await options.authorize(request)`; because actors are reentrant across `await`, two `send()` calls issued back-to-back before either has awaited a response can both observe `conversationID == nil` and each `POST` a distinct conversation, with whichever response returns last winning the race and the other becoming an orphaned server-side conversation. No test in `PersonaChatCoordinatorTests.swift` exercises two `send()` calls without awaiting the first turn's completion — `test_pcc002_conversationReuse_twoSendsShareOneConversation` explicitly serializes its two sends with `f.collector.wait(for: 4)` in between — so this is unresolved by both the source and its test suite. Resolving it requires either serializing `send()` behind an actor-held queue, tracking one task per turn in `TurnControl` instead of one per coordinator, or documenting that a second concurrent `send()` before the first turn ends is itself a caller error the type should reject.
 
 ### SSEParser
 
@@ -386,14 +353,14 @@ visual component.
 - **`participantID` boundary (MUST)**: When `options.participantID` is
   `nil`, it MUST default to `options.personaSlug` exactly, so every emitted
   event's `participantID` is the persona slug unless the host overrides it.
-- **Concurrent sends (open question)**: the open question noted under the
-  `concurrent-turns` gap above — two `send()` calls issued before the first
+- **Concurrent sends (open question)**: the open question on
+  concurrent-turns — two `send()` calls issued before the first
   turn ends are not given a defined ordering by the source or its test
   suite; both the single-task `TurnControl` and the reentrant
   `ensureConversation()` check are affected.
 - **Concurrent tool correlation (MUST)**: `openInvocations` is
   coordinator-wide, not per-turn, so if two turns are ever in flight at
-  once (see the open question above), a `tool_call_completed` block is
+  once (see the open question on concurrent-turns), a `tool_call_completed` block is
   matched to the oldest open invocation of that command name regardless of
   which turn opened it — the source's per-command FIFO does not
   distinguish turns.
@@ -651,15 +618,15 @@ values and thrown `PersonaChatError` values, never written to a log.
 `explicit-error-handling` is partial: in-band SSE errors, conversation
 creation failures, and stream-transport failures each surface as a typed
 `InboundEvent` or thrown `PersonaChatError`, but the outbound message
-body's encoding failure is swallowed by `try?` with no error path (the
-`message-encode-failure-swallowed` open question), and several
+body's encoding failure is swallowed by `try?` with no error path (see
+the open question on message-encode-failure-swallowed), and several
 malformed-payload cases — an undecodable SSE block, an unmatched
 `tool_call_completed` — are dropped silently by design rather than
 surfaced as an error. `graceful-degradation` passes: every one of those
 malformed-input paths degrades to "drop the block and keep streaming"
 rather than crashing or corrupting the transcript. `fault-tolerance` is
-partial because of the unresolved concurrency open question
-(`concurrent-turns`): `TurnControl` tracks only one in-flight task, so
+partial because of the open question on concurrent-turns:
+`TurnControl` tracks only one in-flight task, so
 overlapping `send()` calls can leave a turn `destroy()` cannot cancel, and
 `ensureConversation()`'s reentrant check can create two orphaned server-side
 conversations. `separation-of-concerns` passes: the coordinator holds no
@@ -681,3 +648,4 @@ conversation id.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

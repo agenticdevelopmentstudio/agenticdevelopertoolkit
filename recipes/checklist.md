@@ -3,11 +3,11 @@ id: 5182f5ec-186b-4605-8c40-ea70a49262c2
 title: Checklist
 domain: agenticdevelopertoolkit://recipes/checklist
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -63,7 +63,7 @@ Not applicable: Checklist is a presentational component that renders items in a 
 - List semantics: Items are wrapped in `<ul>` and `<li>` elements to signal a list to assistive technologies.
 - Labels: Item text is directly embedded in the item; there is no explicit labeling mechanism beyond the text itself.
 - Differentiate without color: The **soon-class** state is marked by a distinct glyph (`○` vs `✓`, via the `--lp-checklist-mark-soon` / `--lp-checklist-mark` tokens) as well as a dimmer color, so the distinction does not rely on color alone (`packages/web/packages/landing/src/css/blocks.css`).
-- NEEDS REVIEW: Not implemented in source. Whether a "soon" item's mark needs a text equivalent for assistive technology (e.g., visually hidden "coming soon" text), beyond the visual glyph change, is not specified in the source code. Evidence: no ARIA attributes or screen-reader-specific markup present for the `soon` state.
+- **Text equivalent for soon**: The component does not provide a text equivalent for assistive technology beyond the visual glyph change — no ARIA attribute, visually hidden text, or other screen-reader-specific markup accompanies the `soon` state, so a screen reader announces the item's text with no distinction from a non-`soon` item (`Checklist.tsx`).
 
 ## Conformance Test Vectors
 
@@ -165,3 +165,4 @@ Not applicable: Checklist does not perform any logging. Subsystem-level logging 
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added stable-group-order; reformatted Design Decisions to Decision/Rationale/Approved; populated Compliance and Accessibility Options tables; documented the grid column layout; corrected checklist-001/checklist-008 test vectors and added checklist-009; fixed Compose and WinUI platform notes; clarified heading-level wording and simplified the soon edge case and summary |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,11 +3,11 @@ id: 6f7c9bb6-b6fe-479a-9dbc-3ff174f7fed2
 title: Choice Slider
 domain: agenticdevelopertoolkit://recipes/choice-slider
 type: ingredient
-version: 1.3.0
-status: draft
+version: 1.3.1
+status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -64,9 +64,9 @@ A choice slider is a slider control that lets users select one value from a disc
 ## Accessibility
 
 - **Role**: The range input has the implicit ARIA role `slider`.
-- **Labeling**: Per **render-label**, if a `label` prop is provided, it MUST be associated with the range input via `<label htmlFor={fieldId}>`, where `fieldId` is the `id` prop or the `useId()` fallback. The `label` prop is optional, and when it is omitted the source sets no `aria-label`, no `aria-labelledby` and no `title` on the input, so the slider renders with no accessible name at all. NEEDS REVIEW: Not implemented in source. Behavior undefined. Missing is any fallback accessible name for the label-less case; the gap is settled by a decision from the design/accessibility owner on whether `label` becomes a required prop or an `aria-label` prop is added, confirmed by an accessibility audit of a rendering with `label` omitted.
+- **Labeling**: Per **render-label**, if a `label` prop is provided, it MUST be associated with the range input via `<label htmlFor={fieldId}>`, where `fieldId` is the `id` prop or the `useId()` fallback. The `label` prop is optional, and when it is omitted the source sets no `aria-label`, no `aria-labelledby` and no `title` on the input, so the slider renders with no accessible name in that case.
 - **Keyboard support**: The range input MUST support arrow key navigation (left/right to decrease/increase value) per HTML range input spec. No additional keyboard handling required.
-- **Screen reader announcement**: The source sets no `aria-valuetext` on the range input, so assistive technology announces the raw numeric value — the choice index, `0` through `choices.length - 1` — and never the choice label. The `aws-slider__caption` span that carries the label is a sibling of the input and is not referenced by `aria-describedby`, `aria-labelledby` or any other relation, so it is not announced with the value either. NEEDS REVIEW: Not implemented in source. Behavior undefined. Missing is any announced textual value for the selected choice; the gap is settled by a VoiceOver/NVDA pass confirming that only the index is spoken, plus a decision to map each index to `aria-valuetext`.
+- **Screen reader announcement**: The source sets no `aria-valuetext` on the range input, so assistive technology announces the raw numeric value — the choice index, `0` through `choices.length - 1` — and never the choice label. The `aws-slider__caption` span that carries the label is a sibling of the input and is not referenced by `aria-describedby`, `aria-labelledby` or any other relation, so it is not announced with the value either.
 - **Touch target size**: The source sets no thumb size. `styles.css` gives `.aws-slider__input` only `flex: 1`, `min-width: 0`, `cursor: pointer` and `accent-color: var(--aws-accent)`, and declares no `::-webkit-slider-thumb`, `::-moz-range-thumb`, `height` or `width` rule anywhere, so the thumb is the user agent's native range thumb at its default size, tinted by the `--aws-accent` token. Native range thumb sizes vary by browser and are not guaranteed to meet a minimum interactive target. An implementation MUST keep the platform's native range thumb rather than substituting a custom one, MUST tint it using the `--aws-accent` token, and MUST ensure the resulting hit area meets at least 24×24 CSS px (WCAG 2.5.8 Target Size Minimum), enlarging the thumb's hit area with padding if the platform's native default falls short.
 
 ## Conformance Test Vectors
@@ -174,7 +174,7 @@ Not applicable: Component does not perform logging. Debugging is handled via the
   **Approved**: pending
 
 - **Decision**: The control announces only its numeric index to screen readers; the selected choice's label is visual-only and is not included in `aria-valuetext` or otherwise related to the input for announcement.
-  **Rationale**: The source sets no `aria-valuetext` and does not relate the caption to the input via `aria-describedby` or `aria-labelledby`, so no textual value is exposed to assistive technology today. See the Accessibility section's "Screen reader announcement" item for the open gap.
+  **Rationale**: The source sets no `aria-valuetext` and does not relate the caption to the input via `aria-describedby` or `aria-labelledby`, so no textual value is exposed to assistive technology today. See the Accessibility section's "Screen reader announcement" item.
   **Approved**: pending
 
 ## Compliance
@@ -191,7 +191,7 @@ Not applicable: Component does not perform logging. Debugging is handled via the
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 
-Statuses rest on `ChoiceSlider.tsx` and `styles.css`: the native `<input type="range">` gives keyboard operability and an implicit `slider` role with a native `<label>` association for free (passed), font sizes in `styles.css` (`aws-field__label`, `aws-field__hint`, `aws-slider__caption`) use `rem` units that scale with the browser's root font size (passed for dynamic type); but the missing `aria-valuetext`/fallback accessible name (the two open accessibility gaps above) make screen-reader support partial, the unset thumb size against theme-driven `--aws-accent`/`--aws-border`/`--aws-text-muted` colors makes touch-target size and contrast ratio partial (the source cannot guarantee either from its CSS alone), and the component never hardcodes or transforms consumer-supplied text (label/hint/choice labels pass through as opaque `ReactNode`/string content) so hardcoded-strings and Unicode handling pass while text-expansion tolerance is partial, since the flex layout has no explicit overflow handling verified for very long translated labels.
+Statuses rest on `ChoiceSlider.tsx` and `styles.css`: the native `<input type="range">` gives keyboard operability and an implicit `slider` role with a native `<label>` association for free (passed), font sizes in `styles.css` (`aws-field__label`, `aws-field__hint`, `aws-slider__caption`) use `rem` units that scale with the browser's root font size (passed for dynamic type); but the missing `aria-valuetext` and the missing fallback accessible name for the label-less case (see the Accessibility section's "Labeling" and "Screen reader announcement" items) make screen-reader support partial, the unset thumb size against theme-driven `--aws-accent`/`--aws-border`/`--aws-text-muted` colors makes touch-target size and contrast ratio partial (the source cannot guarantee either from its CSS alone), and the component never hardcodes or transforms consumer-supplied text (label/hint/choice labels pass through as opaque `ReactNode`/string content) so hardcoded-strings and Unicode handling pass while text-expansion tolerance is partial, since the flex layout has no explicit overflow handling verified for very long translated labels.
 
 ## Change History
 
@@ -201,3 +201,4 @@ Statuses rest on `ChoiceSlider.tsx` and `styles.css`: the native `<input type="r
 | 1.2.0 | 2026-09-22 | Claude Opus 5 | Thumb sizing and empty-choices behavior restated as fact from `styles.css` and the source (tooling: Claude Opus 5); two accessibility gaps retained |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revision pass Phase 1: gap triage across Accessibility and Edge Cases (tooling: Claude Haiku 4.5) |
 | 1.0.0 | 2026-09-22 | (cookbook update) | Initial creation |
+| 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

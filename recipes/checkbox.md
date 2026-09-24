@@ -3,11 +3,11 @@ id: a105b6cf-307d-4156-8b73-468f627f3c9b
 title: Checkbox
 domain: agenticdevelopertoolkit://recipes/checkbox
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -87,7 +87,8 @@ The recipe covers two source files that together make up "Checkbox": the form-fi
 - **Focus Indicator**: A visible focus indicator MUST appear on keyboard focus to aid keyboard navigation (Primitive, `focus-visible:ring-2 focus-visible:ring-apt-gold/25`; React/Web renders this as a 2px ring at 25% opacity).
 - **Hint Association**: Not yet wired in the source — see the `hint-description-association` SHOULD requirement above and Design Decision 4.
 - **State Changes**: The checked state is communicated to assistive technology by the native `checked` attribute on the wrapper's input (Wrapper, `checked={value}`) and visually by the `Check` glyph rendered inside the primitive's indicator (Primitive, `CheckboxPrimitive.Indicator` / `Check`). The glyph is present in addition to the `apt-gold` fill, so the state does not depend on color perception alone.
-- **Minimum Touch Target**: The primitive's hit area is the 16px `size-4` box (Primitive); the wrapper's `<label>` also carries the click target for the whole row (Wrapper, `<label htmlFor={fieldId} className="aws-checkbox">`), but the label's size is set by stylesheet rules outside these two files. NEEDS REVIEW: Whether the effective target meets the 44×44pt (Apple HIG) / 24×24 CSS px (WCAG 2.2 AA) minimum cannot be decided from the component source — it depends on the padding and line-height the `aws-checkbox` and `aws-field--checkbox` stylesheet rules apply. The computed box of the rendered `<label>`, measured in the app stylesheet or a browser inspection of a live instance, would settle it.
+- **Minimum Touch Target**: The primitive's hit area is the 16px `size-4` box (Primitive); the wrapper's `<label>` also carries the click target for the whole row (Wrapper, `<label htmlFor={fieldId} className="aws-checkbox">`), but the label's size is set by stylesheet rules outside these two files — see the open question on minimum-touch-target.
+- **minimum-touch-target**: NEEDS REVIEW: Not implemented in source. Whether the effective target meets the 44×44pt (Apple HIG) / 24×24 CSS px (WCAG 2.2 AA) minimum cannot be decided from the component source — it depends on the padding and line-height the `aws-checkbox` and `aws-field--checkbox` stylesheet rules apply. The computed box of the rendered `<label>`, measured in the app stylesheet or a browser inspection of a live instance, would settle it.
 
 ## Conformance Test Vectors
 
@@ -158,8 +159,10 @@ Not applicable: The component's label, hint, and any ARIA attributes are provide
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | No motion is animated. The only transition in the source is `transition-colors` on the primitive's Root (Primitive), which animates border and background color; neither source file queries `prefers-reduced-motion`. There is nothing to disable under Reduce Motion. |
-| Increase Contrast | All colors resolve from the `apt-border`, `apt-bg`, and `apt-gold` design tokens (Primitive); the component hardcodes no color value, so implementations MUST use those tokens and any high-contrast theme variant carries through automatically. NEEDS REVIEW: Token values and high-contrast compliance. Neither source file defines the token values, so whether a high-contrast variant exists and whether the checked fill meets WCAG 2.1 AA (4.5:1 for the checkmark on `apt-gold`, 3:1 for the `apt-border` outline on `apt-bg`) cannot be determined here. The stylesheet or theme file that defines the `apt-*` custom properties, run through a contrast checker, would settle it. |
+| Increase Contrast | All colors resolve from the `apt-border`, `apt-bg`, and `apt-gold` design tokens (Primitive); the component hardcodes no color value, so implementations MUST use those tokens and any high-contrast theme variant carries through automatically — see the open question on increase-contrast. |
 | Differentiate Without Color | Satisfied. The checked state is signalled by two independent channels: the `apt-gold` border and fill (Primitive, `data-[checked]:border-apt-gold data-[checked]:bg-apt-gold`) and the `Check` glyph rendered by the indicator (Primitive, `CheckboxPrimitive.Indicator` / `Check`), which is absent when unchecked. In switch appearance the wrapper's input also carries `role="switch"` (Wrapper), so assistive technology announces on/off independently of appearance. Implementations MUST keep the glyph, not color alone, as the checked indicator. |
+
+- **increase-contrast**: NEEDS REVIEW: Not implemented in source. Neither source file defines the `apt-*` token values, so whether a high-contrast theme variant exists and whether the checked fill meets WCAG 2.1 AA (4.5:1 for the checkmark on `apt-gold`, 3:1 for the `apt-border` outline on `apt-bg`) cannot be determined here. The stylesheet or theme file that defines the `apt-*` custom properties, run through a contrast checker, would settle it.
 
 ## Feature Flags
 
@@ -240,3 +243,4 @@ The `passed` statuses rest on the native `role`/`htmlFor` semantics and the keyb
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks form-field wrapper alongside ui-primitives styled primitive; ensure complete platform guidance |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Answer source-visible questions in place (disabled selectors, color transition, checked-state signalling, required change callback); add Windows platform guidance; promote to review |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.4.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
