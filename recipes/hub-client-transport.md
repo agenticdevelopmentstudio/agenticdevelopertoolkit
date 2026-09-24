@@ -3,11 +3,11 @@ id: d9dfd305-be0d-4770-9db8-43a35218c8b7
 title: Hub Client Transport
 domain: agenticdevelopertoolkit://recipes/hub-client-transport
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -241,17 +241,9 @@ visual component.
   `URL(string: "http://127.0.0.1:\(port)")!`, force-unwrapping the result;
   `port` is an unconstrained `Int` accepted by `TransportResolver.init`,
   `APITransport.daemon(port:)`, and `fromUserDefaults(port:)` alike, with no
-  range or sign check anywhere in the given sources.
-  `NEEDS REVIEW: Not implemented in source.` Missing: validation, or a
-  non-crashing failure path, for a `port` value that cannot form a valid
-  URL authority (e.g. negative, or larger than `65535`) — as written, such a
-  call crashes at the forced unwrap rather than returning an error the
-  caller can handle. This cannot be settled from `DaemonContract.swift` /
-  `TransportResolver.swift` alone, since no test in
-  `TransportResolverTests.swift` exercises an out-of-range port; resolvable
-  by whoever defines what a caller should see for an invalid port (a thrown
-  error, a precondition, or a documented "never called with an invalid
-  port" contract).
+  range or sign check anywhere in the given sources — see the open question
+  on port-validation.
+- **port-validation**: NEEDS REVIEW: Not implemented in source. No range or sign check on `port` guards the force-unwrapped `URL(string: "http://127.0.0.1:\(port)")!` in `daemonURL(port:)`/`healthURL(port:)`, so a negative or larger-than-`65535` port crashes rather than returning an error the caller can handle; `TransportResolverTests.swift` has no test for an out-of-range port, so nothing in the given sources defines the intended failure mode — resolvable by whoever decides whether an invalid port should throw, precondition, or stay an undocumented caller contract.
 - **`probeTimeout <= 0`** (boundary values): `TransportResolver.init` and
   the production probe pass `probeTimeout` straight through to
   `URLSessionConfiguration.timeoutIntervalForRequest`/
@@ -266,16 +258,9 @@ visual component.
   `TransportResolver` is a (reentrant) actor, two overlapping first-time
   `resolve()` calls can each observe `cached == nil` before either has
   written a result, so each independently calls `reresolve()` and launches
-  its own probe rather than sharing one in flight.
-  `NEEDS REVIEW: Not implemented in source.` Missing: an in-flight decision
-  (e.g. a stored `Task<TransportKind, Never>` a second caller awaits instead
-  of re-probing) to coalesce concurrent first-time `resolve()` calls into a
-  single probe and a single cache write. This cannot be settled from
-  `TransportResolver.swift` alone — `TransportResolverTests.swift` exercises
-  sequential, not concurrent, `resolve()` calls, so nothing in the given
-  sources shows an intended de-duplication rule. Resolvable by whoever adds
-  a concurrent-resolve test and, if the duplicate probing is undesired, an
-  in-flight cache.
+  its own probe rather than sharing one in flight — see the open question
+  on concurrent-resolve.
+- **concurrent-resolve**: NEEDS REVIEW: Not implemented in source. No in-flight decision (e.g. a stored `Task<TransportKind, Never>` a second caller awaits instead of re-probing) coalesces concurrent first-time `resolve()` calls into a single probe and cache write; `TransportResolverTests.swift` exercises only sequential `resolve()` calls, so nothing in the given sources shows an intended de-duplication rule — resolvable by whoever adds a concurrent-resolve test and, if the duplicate probing is undesired, an in-flight cache.
 - **Two `reresolve()` calls racing** (concurrent access — MUST, not a gap):
   the same reentrancy applies to `reresolve()`, but it is not a gap there —
   `reresolve()`'s own contract ("probe again and replace the cached
@@ -526,3 +511,4 @@ Privacy), a distinction this check does not itself encode.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -4,8 +4,8 @@ title: Offline Sync Client
 domain: agenticdevelopertoolkit://recipes/offline-sync-client
 type: ingredient
 category: engine
-version: 1.0.1
-status: draft
+version: 1.0.2
+status: review
 language: en
 created: '2026-07-22'
 modified: '2026-09-24'
@@ -330,3 +330,4 @@ at this call site.
 |---|---|---|---|
 | 1.0.0 | 2026-07-22 | Mike Fullerton | Initial draft |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
+| 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: status draft to review after lint pass. |

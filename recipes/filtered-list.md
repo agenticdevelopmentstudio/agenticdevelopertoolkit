@@ -3,11 +3,11 @@ id: 17433dd1-f3db-4d7b-9f58-997996a2b92e
 title: Filtered List
 domain: agenticdevelopertoolkit://recipes/filtered-list
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -111,7 +111,7 @@ FilteredList is a searchable list component that renders a text input field abov
 - **Form role**: MUST be `role="search"` for semantic meaning.
 - **Keyboard navigation**: MUST support ArrowUp, ArrowDown, Enter, and Escape keys as specified in Behavioral Requirements.
 - **Focus management**: DOM focus MUST remain on the input at all times; the combobox pattern (aria-activedescendant) communicates the highlighted item to assistive technology without moving focus. List items are not part of the tab order (item buttons use tabIndex={-1}); highlight changes via keyboard or mouse hover never move DOM focus to a list item.
-- **Label for input**: NEEDS REVIEW: Component has no built-in label element and relies on the consumer to supply an aria-label or a descriptive placeholder for accessible labeling. Evidence: whether consuming code consistently provides aria-label, or whether the component should support a label prop directly.
+- **Label for input**: Component renders no `<label>` element, and `FilteredListProps` has no `aria-label` or `label` field, so the only user-facing description available is the input's placeholder text (default "Filter…", set via the `placeholder` prop); a consumer cannot pass an accessible name through this component's typed props.
 - **Minimum touch target size**: Not guaranteed by the component. `.fl-item-button` (source: filtered-list.css) sets only `padding: 0.5rem 0.6rem` with no explicit min-height/min-width, so the rendered hit area depends on content length and any consumer CSS overrides; the component itself does not enforce a 44×44px minimum.
 
 ## Conformance Test Vectors
@@ -285,3 +285,4 @@ Statuses rest on the source: the `combobox`/`listbox`/`option` roles, `aria-sele
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added item-role-option and default-no-matches-message requirements; clarified arrow-down non-wrapping, the renderItem signature, and default filter-match semantics (case-insensitive substring across title/subtitle/details/searchable-extras, with locale-sensitive lower-casing noted); fixed the focus-management and touch-target-size contradictions; corrected the Reduce Motion claim and the "debounced" terminology; corrected SwiftUI (.searchable, onKeyPress, dynamicTypeSize), AppKit (doCommandBy:), and WinUI 3 (AutoSuggestBox) platform notes and kept highlight distinct from selection throughout; reformatted Design Decisions to the Decision/Rationale/Approved form; rebuilt the Compliance table with canonical checks; split and added conformance test vectors for coverage gaps |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Fix Reduce Motion accessibility guidance; keep label accessibility gap marker |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from React source |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

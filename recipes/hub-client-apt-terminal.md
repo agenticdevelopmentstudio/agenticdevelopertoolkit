@@ -3,7 +3,7 @@ id: 6593a7e1-b42f-4015-8072-20b70800124e
 title: Hub Client — APT Terminal
 domain: agenticdevelopertoolkit://recipes/hub-client-apt-terminal
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
@@ -142,16 +142,7 @@ endpoint was removed from the backend.
   {base_url}/auth/revoke` with `Cookie: refresh_token=<refresh_token>` and
   `Content-Type: application/json` (body `"{}"`)  only when
   `profile.refresh_token` is set.
-- **logout-revoke-failure-swallowed**: NEEDS REVIEW: Not implemented in
-  source. `logout()` wraps the `/auth/revoke` POST in
-  `contextlib.suppress(httpx.HTTPError)` with no logging, warning, or return
-  signal, and `auth_commands.py`'s `logout` command unconditionally prints
-  `"Logged out."` regardless of whether the server actually revoked the
-  refresh token. What is missing: a way for the caller to learn that
-  server-side revocation failed, so a refresh token that is still live on
-  the server is not mistaken for dead. Evidence needed: whoever owns
-  `auth.py` deciding whether `logout()` should surface a revoke failure
-  (return value, warning line, or raised error) instead of swallowing it.
+- **logout-revoke-failure-swallowed**: NEEDS REVIEW: Not implemented in source. `logout()` wraps the `/auth/revoke` POST in `contextlib.suppress(httpx.HTTPError)` with no logging, warning, or return signal, and `auth_commands.py`'s `logout` command unconditionally prints `"Logged out."` regardless of whether the server actually revoked the refresh token. What is missing: a way for the caller to learn that server-side revocation failed, so a refresh token that is still live on the server is not mistaken for dead. Evidence needed: whoever owns `auth.py` deciding whether `logout()` should surface a revoke failure (return value, warning line, or raised error) instead of swallowing it.
 - **client-factory-requires-token**: `client_factory()` MUST raise
   `AuthError` with the exact message `"not logged in — run 'apt auth
   login'"` when neither `$APT_TOKEN` nor `profile.access_token` is set.
@@ -171,17 +162,14 @@ endpoint was removed from the backend.
   raise `AuthError` with the fixed message `"not logged in or session
   expired"`, regardless of the actual status code — unlike `execute()`
   (below), `whoami()` does not distinguish error types by status code.
-- **no-request-timeout**: NEEDS REVIEW: Not implemented in source. Neither
-  `client_factory()` nor `public_client()` passes a `timeout` argument when
-  constructing `AuthenticatedClient`/`Client`, so the generated client's
-  `_timeout` field keeps its default of `None` — and `None` passed straight
-  through to `httpx.Client`/`httpx.AsyncClient` disables timeouts entirely,
-  it does not fall back to httpx's own default. What is missing: a bounded
-  wait so a command against an unreachable or hanging server fails instead
-  of blocking indefinitely. Evidence: `generated/client.py`'s
-  `get_httpx_client`/`get_async_httpx_client`; `auth.py`'s `client_factory`
-  and `public_client` never set `timeout=`. Whoever owns `auth.py` can
-  resolve this by passing an explicit `httpx.Timeout` at construction.
+- **no-request-timeout**: Neither `client_factory()` nor `public_client()`
+  passes a `timeout` argument when constructing `AuthenticatedClient`/`Client`
+  (`auth.py`), so the generated client's `_timeout` field keeps its default of
+  `None`; `generated/client.py`'s `get_httpx_client`/`get_async_httpx_client`
+  pass that `None` straight through to `httpx.Client`/`httpx.AsyncClient`,
+  which disables timeouts entirely rather than falling back to httpx's own
+  default. A command against an unreachable or hanging server therefore
+  blocks indefinitely.
 - **error-status-mapping**: `error_for_status(status, message)` MUST return
   `AuthError` for `401` or `403`, `NotFoundError` for `404`, and
   `ApiError(status, message)` for every other status `>= 400`.
@@ -267,16 +255,7 @@ endpoint was removed from the backend.
   `die(str(exc), code=exc.exit_code)` and an escaping `httpx.HTTPError` to
   `die(f"network error: {exc}", code=1)`; any other exception type MUST
   propagate out of `_run()` uncaught.
-- **concurrent-config-writes**: NEEDS REVIEW: Not implemented in source. Two
-  `apt` invocations that both call `config_mod.save()` against the same
-  config path (e.g. a background `refresh` racing a foreground `login`)
-  have no file lock or atomic-rename protection: `save()` opens the file
-  directly at its final path with `os.O_TRUNC`. What is missing: a defined
-  outcome for a concurrent write — whether a lost update (the later writer
-  silently discarding the other process's just-issued tokens) is acceptable,
-  or must be prevented. Evidence needed: confirmation from whoever owns
-  `config.py` on whether concurrent `apt` invocations against one profile
-  are a supported scenario.
+- **concurrent-config-writes**: NEEDS REVIEW: Not implemented in source. Two `apt` invocations that both call `config_mod.save()` against the same config path (e.g. a background `refresh` racing a foreground `login`) have no file lock or atomic-rename protection: `save()` opens the file directly at its final path with `os.O_TRUNC`. What is missing: a defined outcome for a concurrent write — whether a lost update (the later writer silently discarding the other process's just-issued tokens) is acceptable, or must be prevented. Evidence needed: confirmation from whoever owns `config.py` on whether concurrent `apt` invocations against one profile are a supported scenario.
 - **render-dispatch-by-shape**: `render(data, json_out)` MUST emit nothing
   when `data is None`; MUST always emit JSON when `json_out` is `True`;
   otherwise MUST render a list whose items are all `dict`s as a table, a
@@ -409,9 +388,11 @@ and Logging below.
 - **Missing config file on first run.** Handled cleanly: `load()` returns
   defaults and the CLI proceeds as an unauthenticated, default-profile
   session — see `missing-config-file-defaults`.
-- **Unbounded wait on a hanging/unreachable server.** See the
-  `no-request-timeout` requirement — this is left undefined by the source,
-  not merely unhandled at one call site.
+- **Unbounded wait on a hanging/unreachable server.** Neither `client_factory()`
+  nor `public_client()` sets a timeout anywhere in the request path (see
+  `no-request-timeout`), so a command against an unreachable or hanging
+  server blocks indefinitely — this is a source-wide absence, not merely
+  unhandled at one call site.
 
 ## Configuration
 
@@ -499,7 +480,8 @@ config I/O, one or two HTTP calls, and terminal output.
   refresh_token=...` header by `login`/`refresh`/`logout` directly. Whether
   this transits in the clear or over TLS depends entirely on the configured
   `base_url`'s scheme — the source enforces no `https://` requirement (see
-  `no-request-timeout`'s sibling gap: there is also no scheme check).
+  `no-request-timeout`: the same client construction also performs no scheme
+  check).
 - **Retention**: tokens persist indefinitely in the config file until
   `logout()` clears them, a subsequent `login()` overwrites them, or the
   file is edited or deleted by hand. The client performs no time-based
@@ -547,7 +529,8 @@ document in the table this section would otherwise carry.
   .NET **console** project (`System.CommandLine` for the command layer, not
   WinUI controls), using `HttpClient` for the transport (explicitly setting
   `HttpClient.Timeout` to a finite value, since `no-request-timeout` above
-  is a gap this port should not reproduce), `System.Text.Json` for the
+  shows the source itself never sets one — an absence this port should not
+  reproduce), `System.Text.Json` for the
   generated request/response models (mirroring the OpenAPI document this
   package's `generated/` tree was produced from), `Task`/`async`/`await`
   for the request pipeline (the 401-retry-once logic in `execute()`/
@@ -664,3 +647,4 @@ on logout-revoke-failure-swallowed.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance rows mapped onto catalog checks (secure-storage, secure-transport, timeout-handling); separation-of-concerns added |
+| 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

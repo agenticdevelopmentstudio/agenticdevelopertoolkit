@@ -3,11 +3,11 @@ id: 8b79c521-04f3-4a43-90db-ae6e0bba9f84
 title: Hub Client Auth
 domain: agenticdevelopertoolkit://recipes/hub-client-auth
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -224,10 +224,8 @@ Not applicable — this is a non-UI authentication and session-management compon
 - **`_Error` payload with neither `message` nor `code`**: `message(_:)` falls back to the literal string `"unknown error"` rather than throwing or returning an empty string.
 - **WebAuthn `options`/`response` payloads**: passed through as opaque `OpenAPIObjectContainer` values with no client-side schema validation beyond what `Codable`/`JSONSerialization` impose when constructing them.
 
-`NEEDS REVIEW: Not implemented in source.` Two swallowed-failure/atomicity gaps in Keychain persistence that the component's contract (durable credential/session storage) calls for but leaves unresolved:
-
-1. `KeychainHelper.set(_:forKey:)` is `@discardableResult`, and every call site (`KeychainCredentialStore.save`, `KeychainSessionStore.save`) discards the returned `Bool`. A failed `SecItemAdd` (locked Keychain, `errSecInteractionNotAllowed`, a full Keychain) is logged but never surfaced to the caller — `login`, `adopt`, and session-refresh persistence can silently no-op while the rest of the client behaves as though the save succeeded.
-2. `KeychainSessionStore.save(_:)` writes `tokenKey`, `kindKey`, and (conditionally) `refreshKey` as three independent, non-atomic `SecItemAdd`/`SecItemDelete` calls with no rollback. A crash or process termination between them leaves the Keychain holding a mixed old/new triple (e.g. a new token paired with a stale refresh token, or a stale kind), with no documented recovery path.
+- **Keychain save failures are logged, not surfaced to the caller**: `KeychainHelper.set(_:forKey:)` is `@discardableResult`, and both call sites (`KeychainCredentialStore.save`, `KeychainSessionStore.save`) discard the returned `Bool`; a failed `SecItemAdd` is logged at `.error` (see Logging) but `save` itself returns `Void`, so `login`, `adopt`, and session-refresh persistence proceed as though the write succeeded.
+- **`KeychainSessionStore.save` writes its three keys non-atomically**: `tokenKey`, `kindKey`, and (conditionally) `refreshKey` are written as three independent `SecItemAdd`/`SecItemDelete` calls with no rollback; a crash or process termination between them can leave a mixed old/new triple in the Keychain (e.g. a new token paired with a stale refresh token), with no recovery path in this code.
 
 ## Configuration
 
@@ -351,3 +349,4 @@ No other file under `Sources/Auth/` logs anything; `errSecItemNotFound` is treat
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

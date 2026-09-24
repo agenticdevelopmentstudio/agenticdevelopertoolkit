@@ -3,8 +3,8 @@ id: 550f00f7-bfb2-415e-9b15-bd5dce015500
 title: "Alert & Dialog System"
 domain: agenticdevelopertoolkit://recipes/alert-and-dialog
 type: recipe
-version: 1.2.1
-status: draft
+version: 1.2.2
+status: review
 language: en
 created: 2026-06-26
 modified: '2026-09-24'
@@ -182,3 +182,4 @@ interface AlertModalKeyboardAdds {
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Rename the `tone` union member `danger`→`error` to match `AlertModalTone` in `alert-modal.tsx`. |
 | 1.2.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
+| 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: status draft to review after lint pass. |
