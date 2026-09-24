@@ -15,6 +15,7 @@
 		267E901F7C82C3B817964135 /* push-response.json in Resources */ = {isa = PBXBuildFile; fileRef = 74F68CB079A5FF4CDD58344E /* push-response.json */; };
 		2A191C70E813386110F321C4 /* pull-response.json in Resources */ = {isa = PBXBuildFile; fileRef = 64ABF066F038C0DA77BF676B /* pull-response.json */; };
 		2B5F5CB1D63274DE97548642 /* push-request.json in Resources */ = {isa = PBXBuildFile; fileRef = 5DA8E2CE77483E50E39F6883 /* push-request.json */; };
+		2EED377715C7AA8BBC10676F /* EmbeddedDaemonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2BC22E5913C72D2DD0FB86 /* EmbeddedDaemonTests.swift */; };
 		30542471184054C63573984B /* TransportResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CCC04F149E32D7B2F1F059 /* TransportResolver.swift */; };
 		38D33C5F67FD3208DDEF4A87 /* LiveSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECCE8C7E1C9F1C493EEE34F /* LiveSmokeTests.swift */; };
 		3BCBE8103AFB8BC02F788EAF /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2D06625443BC7FCF3F3DF95 /* CredentialStore.swift */; };
@@ -34,6 +35,7 @@
 		8B0A23AB83E02F8454D5B9EB /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = BEFD4345DA24D78AC488F6D2 /* OpenAPIRuntime */; };
 		8B2E94378C5B41EEDC002485 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A4DB57D3EB7A87F9C66A64 /* KeychainHelper.swift */; };
 		8F067E76427A17E47CA952A1 /* DirectTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E9CC24CABD917AFB625B4F /* DirectTransportTests.swift */; };
+		91B91A6056E1D281F27CA30F /* EmbeddedDaemon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 792968CF5E314CD00E0D6DE9 /* EmbeddedDaemon.swift */; };
 		A0012B5AF6EE6B23C07B2385 /* DaemonTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B49F9EAE13469AA4A5DAFC4 /* DaemonTransportTests.swift */; };
 		A93E0DE7B54158357C7FB1AB /* ADHSyncAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CA159FFF3A86B2812F7375 /* ADHSyncAPITests.swift */; };
 		AC808F93EB6C561A71350DE7 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55F00E40E373DA5C00F4F6E6 /* Client.swift */; };
@@ -71,6 +73,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0E2BC22E5913C72D2DD0FB86 /* EmbeddedDaemonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedDaemonTests.swift; sourceTree = "<group>"; };
 		1287A16F9C54B735D869D014 /* Credentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credentials.swift; sourceTree = "<group>"; };
 		14FEAD9C30CF888C272B3527 /* ADHSyncAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADHSyncAPI.swift; sourceTree = "<group>"; };
 		1A3A66E7F3B7A73E902F8618 /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
@@ -91,6 +94,7 @@
 		6B49F9EAE13469AA4A5DAFC4 /* DaemonTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonTransportTests.swift; sourceTree = "<group>"; };
 		72BD5F22D9B3C0007DEBB20A /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		74F68CB079A5FF4CDD58344E /* push-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "push-response.json"; sourceTree = "<group>"; };
+		792968CF5E314CD00E0D6DE9 /* EmbeddedDaemon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedDaemon.swift; sourceTree = "<group>"; };
 		7D5A4C3D0EF7416A58FCCF96 /* TransportResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportResolverTests.swift; sourceTree = "<group>"; };
 		8422A8FD599B5DEB81290D69 /* ADHClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADHClient.swift; sourceTree = "<group>"; };
 		92DC8ED107F6030B64840FB3 /* SessionRefreshMiddlewareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRefreshMiddlewareTests.swift; sourceTree = "<group>"; };
@@ -134,6 +138,7 @@
 			children = (
 				261C64DF9D0E4180068E9B2C /* APITransport.swift */,
 				3A3BA2A17F4A60B7C8FFFCE5 /* DaemonContract.swift */,
+				792968CF5E314CD00E0D6DE9 /* EmbeddedDaemon.swift */,
 				C5CCC04F149E32D7B2F1F059 /* TransportResolver.swift */,
 			);
 			path = Transport;
@@ -188,6 +193,7 @@
 				C0318E085AB7521A2E6EF33B /* AuthWrappersTests.swift */,
 				6B49F9EAE13469AA4A5DAFC4 /* DaemonTransportTests.swift */,
 				D0E9CC24CABD917AFB625B4F /* DirectTransportTests.swift */,
+				0E2BC22E5913C72D2DD0FB86 /* EmbeddedDaemonTests.swift */,
 				EECCE8C7E1C9F1C493EEE34F /* LiveSmokeTests.swift */,
 				A7B92ECC0CD4043B00429DFB /* MockDaemonServer.swift */,
 				5CF768DB94D2B1AED4B062A7 /* RawJSONTests.swift */,
@@ -350,6 +356,7 @@
 				3BCBE8103AFB8BC02F788EAF /* CredentialStore.swift in Sources */,
 				E224A403F5281A056F122DB5 /* Credentials.swift in Sources */,
 				6909918C407C180EEACFEF2B /* DaemonContract.swift in Sources */,
+				91B91A6056E1D281F27CA30F /* EmbeddedDaemon.swift in Sources */,
 				8B2E94378C5B41EEDC002485 /* KeychainHelper.swift in Sources */,
 				4A9568365A21A0A68C16F619 /* Session.swift in Sources */,
 				CA8BFFD0C06FB8F65778DD0D /* SessionRefreshMiddleware.swift in Sources */,
@@ -368,6 +375,7 @@
 				053600078FF2E16C078EB8E6 /* AuthWrappersTests.swift in Sources */,
 				A0012B5AF6EE6B23C07B2385 /* DaemonTransportTests.swift in Sources */,
 				8F067E76427A17E47CA952A1 /* DirectTransportTests.swift in Sources */,
+				2EED377715C7AA8BBC10676F /* EmbeddedDaemonTests.swift in Sources */,
 				38D33C5F67FD3208DDEF4A87 /* LiveSmokeTests.swift in Sources */,
 				0D2E62CD80FC6869E29C8ABB /* MockDaemonServer.swift in Sources */,
 				D60836E9B79313CED5AB35BA /* RawJSONTests.swift in Sources */,
