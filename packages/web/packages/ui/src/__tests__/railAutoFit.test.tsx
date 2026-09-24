@@ -69,6 +69,20 @@ function installMeasurementHarness() {
   }
 }
 
+/** The HEADER's `max-content` is its title: answer the header's own text at the same rate the
+ *  rows are measured, layered over the row harness (which answers 0 for a box with no rows). */
+function stubHeaderWidth() {
+  const rowsOnly = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollWidth")!
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+    configurable: true,
+    get(this: HTMLElement) {
+      if (this.hasAttribute("data-htd-header")) return (this.textContent ?? "").length * PX_PER_CHAR
+      return rowsOnly.get!.call(this)
+    },
+  })
+  return () => Object.defineProperty(HTMLElement.prototype, "scrollWidth", rowsOnly)
+}
+
 /** Give the RAIL BOXES a rendered width, the way a browser does and jsdom never does.
  *
  *  A rail is `border-box` with a hairline right border, so `offsetWidth - clientWidth` is 1 —
@@ -216,6 +230,51 @@ describe("TopicRail auto-fit", () => {
       expect(boxWidth(1)).toBe(`${30 * PX_PER_CHAR + RAIL_BORDER}px`)
     } finally {
       restoreBoxes()
+    }
+  })
+
+  it("is wide enough for its HEADER when the title outgrows the rows", () => {
+    // A rail sized to its rows alone truncated its own title — a two-row list under a long
+    // heading read "Repositor…" (Mike: "wide enough for their contents and their headers
+    // both"). The header's max-content is its title, so the stub answers the header's text.
+    const TITLE = "Repositories awaiting their deployment" // 38 chars → 380px
+    const restoreHeader = stubHeaderWidth()
+    try {
+      const ls = levels()
+      ls[1] = { ...ls[1]!, title: TITLE, items: [{ id: "r2", label: "shipr" }] }
+      render(
+        <HierarchicalTopicDetail levels={ls}>
+          <p>detail</p>
+        </HierarchicalTopicDetail>,
+      )
+      expect(boxWidth(1)).toBe(`${TITLE.length * PX_PER_CHAR}px`)
+    } finally {
+      restoreHeader()
+    }
+  })
+
+  it("rounds a FRACTIONAL row width up, never down", () => {
+    // `scrollWidth` is an integer rounded down from the text's real advance: a label 126.47px
+    // wide got a 126px rail and ellipsized ("Consultant Regist…" in the hub's Hub rail). The
+    // bounding rect keeps the fraction, and the rail rounds it UP to the pixel that holds it.
+    const real = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      const isList = this.tagName !== "ASIDE" && !this.hasAttribute("data-htd-col")
+      const rows = isList ? [...this.querySelectorAll("[data-htd-row]")] : []
+      if (!rows.length) return real.call(this)
+      const width =
+        rows.reduce((w, r) => Math.max(w, (r.textContent ?? "").length * PX_PER_CHAR), 0) + 0.4
+      return { x: 0, y: 0, top: 0, left: 0, width, height: 0, right: width, bottom: 0, toJSON() {} }
+    }
+    try {
+      render(
+        <HierarchicalTopicDetail levels={levels()}>
+          <p>detail</p>
+        </HierarchicalTopicDetail>,
+      )
+      expect(boxWidth(1)).toBe(`${30 * PX_PER_CHAR + 1}px`)
+    } finally {
+      Element.prototype.getBoundingClientRect = real
     }
   })
 

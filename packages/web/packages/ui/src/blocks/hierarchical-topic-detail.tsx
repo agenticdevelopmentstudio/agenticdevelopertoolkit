@@ -1784,10 +1784,19 @@ function CoveredStack({
   // the selection and closes on the one thing that should close it: the pointer leaving.
 
   // The frontier list stays uncovered while it has no selection (its "detail" is only a landing, so
-  // the user needs the list to pick from), and is never shifted off-screen for it — an unselected
-  // frontier's placeholder claims NO minimum width (must-not-hide-frontier-choosing-list).
+  // the user needs the list to pick from), and is never shifted off-screen for it
+  // (must-not-hide-frontier-choosing-list).
   const coverableCount = firstUnselected === -1 ? rendered.length : frontier
-  const detailMin = firstUnselected === -1 ? minPx : 0
+  // THE DETAIL'S MINIMUM IS FIXED — the same in every state, so the covering is a pure function of
+  // the width. It used to be claimed only once every level was selected (0 while the frontier was
+  // still being chosen from), and that made the layout jump on the CLICK rather than on the resize:
+  // with nothing chosen no parent ever covered and the landing was crushed to a sliver (372px of a
+  // 576px minimum in settings), then choosing a topic claimed the full minimum at once and snapped
+  // every parent shut together (Mike: "the details pane for htdv should have a fixed min width
+  // everywhere so the progressive auto collapse works smoothly, right now it looks terrible").
+  // The frontier's exemption survives where it belongs — in `coverableCount` above, and in the
+  // squeeze below, which never narrows the choosing list to make room for a landing hint.
+  const detailMin = minPx
 
   // COVER LAYER 1 — intent. A list is covered here only because the user pinned it (`«`); absent a
   // pin it is disclosed and it is WIDTH PRESSURE below that decides whether it can stay that way.
@@ -1843,7 +1852,10 @@ function CoveredStack({
   const lastOpen = rendered.reduce((k, _l, i) => (i < hidden || isCovered(i) ? k : i), -1)
   let squeeze = 0
   if (containerW > 0 && lastOpen >= 0) {
-    const laid = rendered.reduce((w, _l, i) => (i < hidden ? w : w + rawWidth(i)), 0) + detailMin
+    // An unselected frontier is the list being chosen from; its pane is only a landing hint, which
+    // gives up its width before the list does (the hint reflows; a squeezed list ellipsizes rows).
+    const squeezeMin = firstUnselected === -1 ? detailMin : 0
+    const laid = rendered.reduce((w, _l, i) => (i < hidden ? w : w + rawWidth(i)), 0) + squeezeMin
     squeeze = Math.max(0, Math.min(laid - containerW, rawWidth(lastOpen) - COVERED_PEEK))
   }
   const widthOf = (i: number) => rawWidth(i) - (i === lastOpen ? squeeze : 0)

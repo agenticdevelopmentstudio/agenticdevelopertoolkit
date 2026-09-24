@@ -117,10 +117,12 @@ const railRow = (name: RegExp): HTMLElement => {
  *  delivers, so the same harness drives the live-resize block at the bottom of this file.
  *
  *  The ladder those widths are read off (the fit math in `CoveredStack`): a list is 240px disclosed
- *  and 32px covered; once every level is selected the detail reserves `minDetailWidth` = 36rem =
- *  576px, and while the deepest list is an unselected frontier it reserves nothing (its pane is only
- *  a landing, so the list must stay pickable). Lists are covered leftmost-first until
- *  `Σ lists + detail ≤ container`, then slid off the LEFT EDGE if even all-peeks won't fit. */
+ *  and 32px covered; the detail reserves `minDetailWidth` = 36rem = 576px in EVERY state, selected
+ *  or not, so the covering is a function of the width alone. What an unselected frontier keeps is
+ *  its own exemption: it is never covered or slid off (it is the list being chosen from), and it is
+ *  the one rail the last-resort squeeze may narrow past the detail's minimum. Lists are covered
+ *  leftmost-first until `Σ lists + detail ≤ container`, then slid off the LEFT EDGE if even
+ *  all-peeks won't fit. */
 function installResizeHarness(initial: number) {
   let width = initial
   const observers: (() => void)[] = []
@@ -171,13 +173,17 @@ function containerWidth(initial: number) {
 const W3_NONE_COVERED = 1400
 const W3_TWO_COVERED = 1000
 const W3_ONE_OFF_SCREEN = 640
-// A stack whose deepest list is the unselected FRONTIER claims no detail minimum at all (that pane
-// is only a landing), so its ladder is just the rails: for THREE lists, 720 / 512 / 304. At 700 that
-// covers exactly one — and the SAME width covers all three the moment a click completes the path and
-// the detail claims its 576 (the selected ladder's third rung, 880, is still over 700). One width,
-// both sides of the click. It stays above the 608px wide floor, under which there is no covered stack
-// left to talk about because the whole layout is a navigation controller.
-const W3_FRONTIER_ONE_COVERED = 700
+// A stack whose deepest list is the unselected FRONTIER climbs the SAME ladder — the detail claims its
+// 576 there too — but only its parents can cover: 1296 / 1088 / 880, then off the left edge. At 1200
+// that covers exactly one parent, and completing the path leaves it at exactly one: the click no
+// longer moves the layout (it used to, when a frontier claimed no minimum and the click claimed all
+// 576 at once, snapping every parent shut together).
+const W3_FRONTIER_ONE_COVERED = 1200
+// Under the frontier ladder's last rung (880) but over the selected ladder's (672): both parents are
+// peeks slid off the edge while the frontier is chosen from, and the click that completes the path
+// makes the frontier itself coverable — so it covers the very list it landed in. Above the 608px wide
+// floor, under which there is no covered stack left to talk about.
+const W3_FRONTIER_CLICK_COVERS_IT = 800
 // TWO levels, both selected — so the detail does claim its 576: 1056 / 848 / 640.
 const W2_PARENT_COVERED = 900
 
@@ -419,9 +425,35 @@ describe('HierarchicalTopicDetail — the click that pushes a choosing frontier'
     expect(boxWidth(2)).toBe('240px') // the frontier is never the one covered
   })
 
+  it('completing the path does not move the layout: the detail minimum was already claimed', () => {
+    // The regression: a frontier used to claim no detail minimum, so its landing was crushed to a
+    // sliver with every parent disclosed, and the click that completed the path claimed the full
+    // 576 at once and snapped the parents shut together (Mike: "the details pane for htdv should
+    // have a fixed min width everywhere so the progressive auto collapse works smoothly").
+    function Stack() {
+      const [topic, setTopic] = useState<string | null>(null)
+      return (
+        <HierarchicalTopicDetail
+          levels={levelsFor({ region: 'us', eco: 'core', topic, onSelect: { topics: setTopic } })}
+        >
+          <p>detail</p>
+        </HierarchicalTopicDetail>
+      )
+    }
+    render(<Stack />)
+    expect(boxWidth(0)).toBe('32px')
+    expect(boxWidth(1)).toBe('240px')
+    expect(boxWidth(2)).toBe('240px')
+
+    fireEvent.click(railRow(/Applications/))
+    expect(boxWidth(0)).toBe('32px')
+    expect(boxWidth(1)).toBe('240px')
+    expect(boxWidth(2)).toBe('240px')
+  })
+
   it('a click that covers the list it landed in roots the reveal: that list floats over the detail until the pointer leaves', () => {
-    // Choosing in the frontier COMPLETES the path, and a complete path is what makes the detail
-    // claim its 576px minimum — which at this width squeezes all three lists into peeks, the one the
+    // Choosing in the frontier COMPLETES the path, and a complete path makes the frontier list
+    // itself coverable — which at this width squeezes all three lists into peeks, the one the
     // click landed in included, with the pointer still inside it. That is the exact state
     // pointer-enter names, but the pointer never moved, so no enter will ever fire. The select roots
     // the branch itself: the clicked list stays open where it is, floating over the detail, and the
@@ -439,9 +471,12 @@ describe('HierarchicalTopicDetail — the click that pushes a choosing frontier'
         </HierarchicalTopicDetail>
       )
     }
+    resizeTo(W3_FRONTIER_CLICK_COVERS_IT)
     const { container } = render(<Stack />)
-    // A frontier reserves no detail width, so two of the three lists are still disclosed.
-    expect(boxWidth(1)).toBe('240px')
+    // While the frontier is chosen from, only its parents give way: both are peeks, and the
+    // frontier list the user is choosing in stays disclosed.
+    expect(boxWidth(0)).toBe('32px')
+    expect(boxWidth(1)).toBe('32px')
     expect(boxWidth(2)).toBe('240px')
 
     fireEvent.click(railRow(/Applications/))

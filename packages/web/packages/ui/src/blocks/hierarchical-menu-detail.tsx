@@ -2029,10 +2029,12 @@ function CoveredStack({
   // the selection and closes on the one thing that should close it: the pointer leaving.
 
   // The frontier list stays uncovered while it has no selection (its "detail" is only a landing, so
-  // the user needs the list to pick from), and is never shifted off-screen for it — an unselected
-  // frontier's placeholder claims NO minimum width (must-not-hide-frontier-choosing-list).
+  // the user needs the list to pick from), and is never shifted off-screen for it
+  // (must-not-hide-frontier-choosing-list).
   const coverableCount = firstUnselected === -1 ? rendered.length : frontier
-  const detailMin = firstUnselected === -1 ? minPx : 0
+  // The detail's minimum is FIXED, whatever is selected — see HTDV's covered stack
+  // (hierarchical-topic-detail.tsx) for the jump a selection-dependent minimum caused.
+  const detailMin = minPx
 
   // COVER LAYER 1 — intent. A list is covered because the user pinned it (`«`), or because auto-hide
   // is on and it sits ABOVE the frontier. A pin wins either way, so the user can hold a parent open

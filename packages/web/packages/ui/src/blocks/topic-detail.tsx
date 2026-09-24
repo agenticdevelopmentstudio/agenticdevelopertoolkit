@@ -773,8 +773,8 @@ export function TopicRail({
   checkedIds?: ReadonlySet<string>
   onToggleChecked?: (id: string) => void
   /**
-   * Report the width this rail's ROWS actually want, in px, already clamped to
-   * [MIN_FIT_RAIL, MAX_FIT_RAIL].
+   * Report the width this rail's ROWS and its titled HEADER actually want — whichever is
+   * wider — in px, already clamped to [MIN_FIT_RAIL, MAX_FIT_RAIL].
    *
    * WHY THE RAIL MEASURES ITSELF. Only this component knows what a row is made of — an icon,
    * a gap, a two-line preview, a trailing status dot, a trash button that appears on hover —
@@ -791,6 +791,7 @@ export function TopicRail({
 }) {
   const asideRef = useRef<HTMLElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
   const listId = useId()
   const draggingRef = useRef(false)
   const onDragStart = (e: PointerEvent<HTMLDivElement>) => {
@@ -823,6 +824,9 @@ export function TopicRail({
    * array — costs two forced reflows per rail for a width that did not move.
    */
   const sig = items.map((it) => it.id).join("\u0000")
+  // The header's share of the answer moves when its title or its riders do. A non-string title
+  // (a node) cannot be compared cheaply, so it re-measures only when the rows or riders change.
+  const headerSig = `${typeof title === "string" ? title : ""}|${!!onNew}|${!!onClose}|${!!showToggle}|${!!titleActions}`
   // Held in a ref, and NOT a dependency: a parent that passes an inline arrow would otherwise
   // re-run this on every render, and every run costs two forced reflows for a width that has
   // not moved.
@@ -834,6 +838,26 @@ export function TopicRail({
     // A collapsed rail is an icon strip whose width is COLLAPSED_RAIL by definition, and
     // measuring one would report the width of icons — so the last real answer stands.
     if (!report || collapsed || !el) return
+    // THE HEADER COUNTS TOO. A rail sized to its rows alone truncated its own title whenever
+    // the title plus its riders (`+`, the right-hand controls, the ✕) outgrew the rows — a
+    // two-row "Appearance" list whose header read "Appea…" (Mike: "wide enough for their
+    // contents and their headers both"). Same `max-content` question, asked of the header:
+    // its title is `truncate`, whose max-content contribution is the whole string. The busy
+    // spinner is left out on purpose: it comes and goes with every read, and a rail that
+    // widened and narrowed under it would shift every list to its right each time.
+    const headerNatural = () => {
+      const header = headerRef.current
+      if (!header) return 0
+      const busy = header.querySelector<HTMLElement>("[data-htd-busy]")
+      const restoreWidth = header.style.width
+      const restoreBusy = busy?.style.display ?? ""
+      if (busy) busy.style.display = "none"
+      header.style.width = "max-content"
+      const w = Math.max(header.scrollWidth, header.getBoundingClientRect().width)
+      header.style.width = restoreWidth
+      if (busy) busy.style.display = restoreBusy
+      return w
+    }
     const measure = () => {
       const restore = el.style.width
       el.style.width = "max-content"
@@ -860,7 +884,13 @@ export function TopicRail({
             parseFloat(boxStyle.paddingLeft || "0") +
             parseFloat(boxStyle.paddingRight || "0")
           : 0
-      const natural = el.scrollWidth + scrollbar + Math.max(0, chrome)
+      // The FRACTIONAL width, not `scrollWidth` alone: `scrollWidth` is an integer rounded
+      // DOWN from the text's real advance, so a label measuring 126.47px got a 126px box and
+      // ellipsized — "Consultant Regist…" in the hub's Hub rail, in a rail that had been sized
+      // to it. The bounding rect keeps the fraction (and, as a border box, the scrollbar
+      // gutter); `Math.ceil` below rounds it UP to the pixel that holds the whole label.
+      const rows = Math.max(el.scrollWidth + scrollbar, el.getBoundingClientRect().width)
+      const natural = Math.max(rows, headerNatural()) + Math.max(0, chrome)
       el.style.width = restore
       // A box with no layout measures 0 — a rail rendered inside a `display:none` ancestor,
       // and every rail under jsdom. Zero is not an answer, and clamping it up to the floor
@@ -885,7 +915,7 @@ export function TopicRail({
     return () => {
       live = false
     }
-  }, [collapsed, sig])
+  }, [collapsed, sig, headerSig])
 
   // The create affordance: a compact `+` right-justified in the header (replaces the old leading
   // "New…" rail row). Gold while a create is in progress (`newActive`). Icon-only, so its label
@@ -1029,6 +1059,7 @@ export function TopicRail({
           it is in a titled header — more so, since the strip has no title for it to sit beside. */}
       {title !== undefined && !collapsed ? (
         <div
+          ref={headerRef}
           data-htd-header
           // `pl-2.5` + the `w-4` slot + `gap-2` land the title's leading edge on the row-label
           // column (34px); see `headerInner`.
