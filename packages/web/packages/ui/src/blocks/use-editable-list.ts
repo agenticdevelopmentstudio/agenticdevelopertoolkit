@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type {
   EditableListColumn,
   EditableListFacet,
@@ -70,7 +71,12 @@ export interface EditableListController<T> {
   sort: ListSort | null;
   setSort: (next: ListSort) => void;
   selectedIds: Set<string>;
-  setSelectedIds: (ids: Set<string>) => void;
+  /**
+   * Replace the selection, or derive it from the CURRENT one. The updater form is for a caller
+   * that finishes after an await: a bulk action that resolves seconds later and rebuilds the set
+   * from the ids it captured at click time overwrites every tick made while it ran.
+   */
+  setSelectedIds: Dispatch<SetStateAction<Set<string>>>;
   clearSelection: () => void;
   /** The selected rows, in list order — never a bare id an action would have to resolve again. */
   selectedRows: T[];

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { DataTable, type DataTableColumn, type DataTableProps } from '../components/data-table'
@@ -243,6 +244,29 @@ describe('DataTable row activation', () => {
 
     // Double-clicking a word inside an inline editor selects that word — it must not open the row.
     fireEvent.doubleClick(screen.getByLabelText('edit Ada'))
+    expect(onActivate).not.toHaveBeenCalled()
+  })
+
+  it('ignores keys and clicks that bubble out of a portaled popup a cell opened', () => {
+    // A cell's select renders its listbox in a PORTAL: outside the grid's DOM, but still inside
+    // the row in React's tree, so its events reach the row's and the grid's handlers. None of them
+    // are the grid's to act on.
+    const onSel = vi.fn()
+    const onActivate = vi.fn()
+    const Popup = ({ name }: { name: string }) =>
+      createPortal(<div role="option" aria-selected={false}>{`${name} level`}</div>, document.body)
+    const cols: DataTableColumn<Row>[] = [
+      { key: 'name', header: 'Name', render: (r) => <span>{r.name}{r.id === 'c' && <Popup name={r.name} />}</span> },
+    ]
+    render(<DataTable<Row> columns={cols} rows={ROWS} getRowId={(r) => r.id} selectedIds={new Set(['a', 'b'])} onSelectionChange={onSel} onRowActivate={onActivate} ariaLabel="People" />)
+
+    const option = screen.getByRole('option', { name: 'Curie level' })
+    expect(fireEvent.keyDown(option, { key: 'ArrowDown' })).toBe(true)
+    fireEvent.keyDown(option, { key: 'Enter' })
+    fireEvent.keyDown(option, { key: ' ' })
+    fireEvent.click(option)
+    fireEvent.doubleClick(option)
+    expect(onSel).not.toHaveBeenCalled()
     expect(onActivate).not.toHaveBeenCalled()
   })
 

@@ -340,8 +340,19 @@ export function DataTable<T>({
     )
   }
 
+  /** An event that bubbled out of a PORTAL rather than out of this element — a cell's select
+   *  listbox, a menu, a dialog opened from a row. React delivers it up the COMPONENT tree, so the
+   *  row and the grid hear it although it happened nowhere inside them, and `fromCellControl`
+   *  cannot catch it: an option in a listbox is none of the controls it names. Unguarded, Arrow
+   *  keys in a row's open visibility select also moved the grid's selection, Enter on a level
+   *  opened the Edit dialog for whichever row the grid had focused, and a click on a disabled
+   *  option collapsed a multi-row selection to that one row. */
+  function fromPortal(e: React.SyntheticEvent): boolean {
+    return !(e.target instanceof Node && e.currentTarget.contains(e.target))
+  }
+
   function onKeyDown(e: React.KeyboardEvent): void {
-    if (fromCellControl(e.target)) return
+    if (fromPortal(e) || fromCellControl(e.target)) return
     if (e.key === "ArrowDown") { e.preventDefault(); move(1, e.shiftKey) }
     else if (e.key === "ArrowUp") { e.preventDefault(); move(-1, e.shiftKey) }
     else if (e.key === " ") {
@@ -498,13 +509,15 @@ export function DataTable<T>({
         // The preventDefault keeps a row click from stealing focus into the grid — but NOT when
         // the click is on an in-cell control, which must be allowed to focus itself (an inline
         // editor you cannot click into is no editor at all).
-        onMouseDown={selectable ? (e) => { if (!fromCellControl(e.target)) e.preventDefault() } : undefined}
-        onClick={selectable ? (e) => onRowClick(e, id) : undefined}
+        // A portaled popup's own mousedown is not the row's either: preventing it would stop the
+        // popup's option from taking the press at all.
+        onMouseDown={selectable ? (e) => { if (!fromPortal(e) && !fromCellControl(e.target)) e.preventDefault() } : undefined}
+        onClick={selectable ? (e) => { if (!fromPortal(e)) onRowClick(e, id) } : undefined}
         // Same carve-out as the click: a double-click that lands on an in-cell control belongs
         // to the control (double-clicking a word in an inline editor selects it), not to the row.
         onDoubleClick={
           onRowActivate
-            ? (e) => { if (!fromCellControl(e.target)) onRowActivate(id) }
+            ? (e) => { if (!fromPortal(e) && !fromCellControl(e.target)) onRowActivate(id) }
             : undefined
         }
         className={cn(inlineCommitHoverScopeClass, "grid border-t border-apt-border text-sm text-apt-text",
