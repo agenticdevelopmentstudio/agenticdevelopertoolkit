@@ -3,11 +3,11 @@ id: 91891cc2-3511-4d00-888a-1ff7585c0b64
 title: Chat Coordinator Backends
 domain: agenticdevelopertoolkit://recipes/chat-coordinator-backends
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -497,24 +497,10 @@ exposes no interactive control.
   **persona-turn-serialization**); nothing in either class rejects an
   overlapping `send` call.
 - **Concurrent `sendMessage`/`sendMessageStream` calls directly on a bare
-  `ChatBackend` implementation (concurrent access)**:
-
-  NEEDS REVIEW: Not implemented in source. `ChatBackend` (`types.ts`) documents
-  no concurrency contract for overlapping calls to `sendMessage` and/or
-  `sendMessageStream` on the same instance. `FetchBackend` makes this concrete:
-  its `AbortController` lives in a single instance field
-  (**fetchbackend-single-controller-field**), so a second `sendMessage` call
-  issued before the first resolves silently overwrites that field, and a
-  subsequent `destroy()` aborts only the newer request — the older one runs
-  to completion (or hangs) uncancellable. `useChatSession.ts` always reaches a
-  `ChatBackend` through `ChatBackendAdapter`, which serializes turns and so
-  never produces this overlap in practice, but `FetchBackend` and
-  `MockBackend` are also exported standalone from the package's `index.ts`
-  and can be called directly without that serialization. Resolving this
-  requires either a documented "one call at a time" invariant on `ChatBackend`
-  itself, or `FetchBackend` widening its cancellation state to one
-  `AbortController` per call — a decision for whoever owns the `ChatBackend`
-  interface, not something the given source states.
+  `ChatBackend` implementation (concurrent access)**: `ChatBackend`
+  (`types.ts`) states no concurrency contract for overlapping calls on the
+  same instance; see the open question on **chatbackend-no-concurrency-contract**.
+- **chatbackend-no-concurrency-contract**: NEEDS REVIEW: Not implemented in source. `ChatBackend` (`types.ts`) states no concurrency contract for overlapping calls to `sendMessage` and/or `sendMessageStream` on the same instance. `FetchBackend` makes this concrete: its `AbortController` lives in a single instance field (**fetchbackend-single-controller-field**), so a second `sendMessage` call issued before the first resolves silently overwrites that field, and a subsequent `destroy()` aborts only the newer request — the older one runs to completion (or hangs) uncancellable. `useChatSession.ts` always reaches a `ChatBackend` through `ChatBackendAdapter`, which serializes turns and so never produces this overlap in practice, but `FetchBackend` and `MockBackend` are also exported standalone from the package's `index.ts` and can be called directly without that serialization. Resolving this requires either a documented "one call at a time" invariant on `ChatBackend` itself, or `FetchBackend` widening its cancellation state to one `AbortController` per call — a decision for whoever owns the `ChatBackend` interface, not something the given source states.
 - **Error states (dependency unavailable/error)**: `FetchBackend.sendMessage`
   throws on a non-`ok` HTTP status but does not itself catch a `fetch()`
   network rejection (e.g. offline) — that rejection propagates to the
@@ -858,3 +844,4 @@ handled.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe covering `types.ts`, `EventQueue.ts`, `FetchBackend.ts`, `MockBackend.ts`, `ShuffleBag.ts`, `ChatBackendAdapter.ts`, and `PersonaChatBackend.ts`; documents the cross-implementation divergences between `ChatBackendAdapter` and `PersonaChatBackend` and the open question around concurrent direct use of a bare `ChatBackend`.
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

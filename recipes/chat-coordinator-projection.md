@@ -3,7 +3,7 @@ id: cfb09ec6-c38f-474a-bd79-be8f67ab523c
 title: Chat Coordinator Projection
 domain: agenticdevelopertoolkit://recipes/chat-coordinator-projection
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
@@ -50,7 +50,7 @@ Its only caller is `hooks/useChatSession.ts`, which supplies the `StampFor` cloc
 - **projection-ordering**: `projectMessages` MUST return committed messages from `view.messages`, in their given order, followed by entries derived from `view.activeDrafts`, in their given order.
 - **committed-message-identity**: For each committed message `m`, `projectMessages` MUST set the projected `id` to `m.id` when present, otherwise to `m.localID`.
 
-  NEEDS REVIEW: Not implemented in source. `projectMessages` resolves a committed message's id as `m.id ?? m.localID` (`projection/toChatMessages.ts`, `projectMessages`) with no uniqueness check. If two entries in `view.messages` resolve to the same id — for example a server-assigned `id` that happens to collide with another message's `localID` — `projectMessages` emits two `ChatMessage` entries sharing one id, and downstream consumers keyed on id (list rendering, `stampFor` lookups) have undefined behavior. Resolving this requires either a documented invariant that `ChatViewModel.messages` never yields colliding ids upstream, or de-duplication logic here — neither of which the given source states. This would need input from whoever owns the `ChatViewModel` implementation that produces `messages`.
+- **duplicate-resolved-ids**: NEEDS REVIEW: Not implemented in source. `projectMessages` resolves a committed message's id as `m.id ?? m.localID` (`projection/toChatMessages.ts`, `projectMessages`) with no uniqueness check. If two entries in `view.messages` resolve to the same id — for example a server-assigned `id` that happens to collide with another message's `localID` — `projectMessages` emits two `ChatMessage` entries sharing one id, and downstream consumers keyed on id (list rendering, `stampFor` lookups) have undefined behavior. Resolving this requires either a documented invariant that `ChatViewModel.messages` never yields colliding ids upstream, or de-duplication logic here — neither of which the given source states. This would need input from whoever owns the `ChatViewModel` implementation that produces `messages`.
 - **committed-message-sender**: `projectMessages` MUST set the projected `sender` to `parts.user` when `m.senderID === parts.localParticipantID`, otherwise to `parts.persona`.
 - **committed-message-persona-flag**: `projectMessages` MUST set the projected `isPersona` to `true` when `m.senderID !== parts.localParticipantID`, otherwise to `false`.
 - **committed-message-text**: `projectMessages` MUST set the projected `text` to `m.text` verbatim.
@@ -114,7 +114,7 @@ Not applicable — this is a data projection module, not a visual component; it 
 - **Concurrent access**: Not applicable — every function described here is a synchronous, side-effect-free pure function over its arguments. JavaScript's single-threaded execution model serializes all calls, and no data here is shared mutable state; every contract type these functions read (`Message`, `ActiveDraft`, `ActiveCommand`, `Attachment`) declares its members `Readonly`/`ReadonlyArray`.
 - **Error states (dependency unavailable/error)**: Not applicable in the network/database/file-system sense — this module calls no dependency of that kind. The one internal error path, a malformed inline attachment payload, is handled by `decodeRichDisplay` catching the `JSON.parse` failure and continuing rather than throwing, per **rich-display-decode-non-throwing**; no error is surfaced to the caller.
 - **Offline/disconnected state**: Not applicable — this module makes no network call of its own; it operates entirely on data already resolved into `ChatViewModel`/`Attachment` values by its caller.
-- **Duplicate resolved message ids**: see the open question noted under **committed-message-identity**.
+- **Duplicate resolved message ids**: see the open question on **duplicate-resolved-ids**.
 - **Structurally valid but unrecognized JSON shape (malformed input)**: a matching attachment's payload parses to a JSON array, or to an object with none of `content`/`popover`/`toolCalls` — `decodeRichDisplay`'s `typeof parsed !== 'object' || parsed === null` check accepts it unchanged (an array is `typeof "object"` and not `null`), so the projected `content`, `popover`, and `toolCalls` end up `undefined` with no distinct error signaled; documented further under Design Decisions.
 
 ## Configuration
@@ -191,7 +191,7 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 **Rationale**: A hand-rolled attachment under this vendor media type is the sender's bug, not the transcript's; letting a malformed payload throw inside a render pass would take the whole conversation down with it.
 **Approved**: pending
 
-**Decision**: The open question under **committed-message-identity** (colliding resolved ids) is left unresolved by this module rather than guessed at.
+**Decision**: The open question on **duplicate-resolved-ids** (colliding resolved ids) is left unresolved by this module rather than guessed at.
 **Rationale**: This module does not construct message ids; picking a de-duplication policy here would require guessing which of two colliding messages is canonical, a call only the id's producer — the `ChatViewModel` implementation — can make correctly.
 **Approved**: pending
 
@@ -212,10 +212,11 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 | [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
 | [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
 
-`separation-of-concerns` is passed: `toChatMessages.ts` and `richContent.ts` are framework-free, I/O-free pure functions over the chat contract's types, and `projection-one-directional` explicitly forbids calling any mutating `ChatViewModel` method — the read side and the write side never mix in this module. `unit-test-coverage` is failed: no test file in the `chat` package references `projectMessages`, `encodeRichDisplay`, `decodeRichDisplay`, `draftMessageID`, or `toToolCallInfo` — `RichContent.test.tsx` exercises the differently-named `components/RichContent.tsx` React component, not this projection module, and `useChatSession.test.ts` (the only caller) never touches these functions either. `explicit-error-handling` is passed: `decodeRichDisplay` explicitly catches a `JSON.parse` failure on a matching attachment and falls through to the next candidate rather than letting a malformed payload throw, per `rich-display-decode-fallthrough` and `rich-display-decode-non-throwing`. `fault-tolerance` is partial: decoding a malformed attachment is handled cleanly, but the open question on committed-message-identity means `projectMessages` performs no uniqueness check when a committed message's resolved id (`m.id ?? m.localID`) collides with another message's, leaving downstream id-keyed consumers with undefined behavior on that unpredictable-state case.
+`separation-of-concerns` is passed: `toChatMessages.ts` and `richContent.ts` are framework-free, I/O-free pure functions over the chat contract's types, and `projection-one-directional` explicitly forbids calling any mutating `ChatViewModel` method — the read side and the write side never mix in this module. `unit-test-coverage` is failed: no test file in the `chat` package references `projectMessages`, `encodeRichDisplay`, `decodeRichDisplay`, `draftMessageID`, or `toToolCallInfo` — `RichContent.test.tsx` exercises the differently-named `components/RichContent.tsx` React component, not this projection module, and `useChatSession.test.ts` (the only caller) never touches these functions either. `explicit-error-handling` is passed: `decodeRichDisplay` explicitly catches a `JSON.parse` failure on a matching attachment and falls through to the next candidate rather than letting a malformed payload throw, per `rich-display-decode-fallthrough` and `rich-display-decode-non-throwing`. `fault-tolerance` is partial: decoding a malformed attachment is handled cleanly, but the open question on **duplicate-resolved-ids** means `projectMessages` performs no uniqueness check when a committed message's resolved id (`m.id ?? m.localID`) collides with another message's, leaving downstream id-keyed consumers with undefined behavior on that unpredictable-state case.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
+| 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

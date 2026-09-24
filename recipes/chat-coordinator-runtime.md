@@ -3,11 +3,11 @@ id: 98a0f3de-1489-465d-b1aa-017f4505d05d
 title: Chat Coordinator Runtime
 domain: agenticdevelopertoolkit://recipes/chat-coordinator-runtime
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -74,7 +74,7 @@ implementation without changing `DefaultOrchestrator`'s contract.
 - **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op — an internal `started` flag is set `true` on the first call and is never reset, so a second concurrent event-loop task MUST NOT be created.
 - **stop-cancels-iterator**: `stop()` MUST set an internal `stopped` flag to `true` and MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream.
 - **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event — `runEventLoop`'s `while (!this.stopped)` guard is checked before the first `iterator.next()`, and nothing in this source ever resets `stopped` back to `false`.
-- **event-loop-recovery**: NEEDS REVIEW: Not implemented in source. When `this.iterator.next()` rejects inside the internal event loop, the loop's `catch` block notifies an `error` `ChatUpdate` and the loop function then returns — `started` is never reset to `false`, so a later `start()` call is still a no-op (per start-is-idempotent) and can never resume consumption on the same instance. Missing: any retry, backoff, or reconnect policy, and any way to restart event consumption on an already-started `DefaultOrchestrator`. This cannot be settled from these three files alone — it depends on the reconnect contract a real (non-scripted) `Backend` and its host are expected to provide, which is not defined anywhere in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or `ScriptedBackend.ts`.
+- **event-loop-recovery**: When `this.iterator.next()` rejects inside the internal event loop, the loop's `catch` block notifies an `error` `ChatUpdate` and the loop function then returns — `started` is never reset to `false`, so a later `start()` call is still a no-op (per start-is-idempotent) and consumption never resumes on that instance. `DefaultOrchestrator.ts` implements no retry, backoff, or reconnect policy, and provides no way to restart event consumption on an already-started instance.
 
 ### Display Configuration
 
@@ -225,7 +225,7 @@ describe.
 - **Read cursor to a never-seen message id (boundary value).** `markRead(messageID)` for an id absent from `messages` still upserts a `ReadReceipt` — the regression guard falls back to comparing `at` timestamps when the id cannot be located, and does not require the id to exist. MUST (read-marker-regression-guard-by-time).
 - **Command result with no matching invocation (boundary value).** A `commandCompleted` event whose `invocationID` matches no entry of `activeCommands` — because the invocation was never seen, or its participant's turn already ended via `draftCleared` — is dropped with no state change. MUST (command-completed-matches-by-invocation-id).
 - **Concurrent access — synchronous handlers are safe.** Every event handler and every public method's mutations, up to its first (if any) `await`, run to completion as one JavaScript microtask with nothing else able to interleave; state reads and writes that never straddle an `await` (e.g. `handleEvent`'s branches, `respondToPermission`) cannot race with each other. MUST (a property of the single-threaded JS runtime the source relies on, not a mechanism the source implements itself).
-- **Concurrent access — the one real hazard.** `respondToWidget`'s rollback path is the one place state mutation straddles an `await` (the pending `backend.submitWidgetResponse` call); a concurrent `widgetPresented` or another `respondToWidget` call that completes during that window can have its effect silently discarded on rejection. See widget-response-rollback-ordering. Callers SHOULD NOT assume `pendingWidgets`/the widget-to-message map are safe from lost updates when responses are in flight concurrently.
+- **Concurrent access — the one real hazard.** `respondToWidget`'s rollback path is the one place state mutation straddles an `await` (the pending `backend.submitWidgetResponse` call); a concurrent `widgetPresented` or another `respondToWidget` call that completes during that window can have its effect silently discarded on rejection. See the open question on widget-response-rollback-ordering. Callers SHOULD NOT assume `pendingWidgets`/the widget-to-message map are safe from lost updates when responses are in flight concurrently.
 - **Concurrent access — one backend, one consumer.** Driving two `DefaultOrchestrator` instances (or calling the iterator factory twice and consuming both) from the same `ScriptedBackend` instance does not broadcast events to both — they compete for the same shared queue. MUST NOT (inbound-events-shared-across-iterators; matches `Backend.ts`'s documented single-consumer assumption).
 - **Error states — outbound send failure.** `backend.send` rejecting produces an `error` update and a re-thrown rejection, with no local echo ever added. MUST (submit-message-failure-no-echo).
 - **Error states — inbound stream failure.** The `inboundEvents` iterator itself rejecting produces one `error` update, then permanently halts consumption on that instance with no retry. See event-loop-recovery.
@@ -239,8 +239,8 @@ describe.
 | `ChatConfig.localParticipantID` | `string` | required | Identifies which `Participant` is "this" client for `submitMessage`/`markRead`/`setLocalTyping`. |
 | `ChatConfig.initialParticipants` | `ReadonlyArray<Participant>` | required | Seeds both the frozen `conversation.participants` and the live `participants` roster. |
 | `ChatConfig.commands` | `ReadonlyArray<Command>` | required | Returned verbatim by `listCommands()`. |
-| `ChatConfig.observingHooks` | `ReadonlyArray<ObservingHook>` | required | Accepted but never invoked by `DefaultOrchestrator` — see hook-and-permission-enforcement. |
-| `ChatConfig.gatingHooks` | `ReadonlyArray<GatingHook>` | required | Accepted but never invoked by `DefaultOrchestrator` — see hook-and-permission-enforcement. |
+| `ChatConfig.observingHooks` | `ReadonlyArray<ObservingHook>` | required | Accepted but never invoked by `DefaultOrchestrator` — see the open question on hook-and-permission-enforcement. |
+| `ChatConfig.gatingHooks` | `ReadonlyArray<GatingHook>` | required | Accepted but never invoked by `DefaultOrchestrator` — see the open question on hook-and-permission-enforcement. |
 | `ChatConfig.permissionStore` | `PermissionStore` | required | Consulted only via `remember()` inside `respondToPermission`; `decision()` is never called by `DefaultOrchestrator` itself. |
 | `ChatConfig.backend` | `Backend` | required | The sole source of `InboundEvent`s and the sole sink for `send`/`setLocalTyping`/`submitWidgetResponse`. |
 | `ChatConfig.display` | `DisplayConfig` | required | Stored verbatim as `displayConfig`; never read or branched on internally by these three files (see Accessibility Options and Feature Flags below). |
@@ -464,7 +464,7 @@ mechanism once its source throws. `graceful-degradation` is partial: known,
 recognized failures (a rejected `send`, a rejected `submitWidgetResponse`, an
 unrecognized permission/widget id) degrade cleanly to a documented no-op or
 error signal, but an unrecovered inbound-stream failure and the
-gating/observing hook surface (see hook-and-permission-enforcement) leave no
+gating/observing hook surface (see the open question on hook-and-permission-enforcement) leave no
 degraded-but-functioning path — they leave the runtime either fully working
 or silently missing a whole mechanism.
 
@@ -472,3 +472,4 @@ or silently missing a whole mechanism.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

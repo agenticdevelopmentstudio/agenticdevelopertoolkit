@@ -3,11 +3,11 @@ id: 1f14e4d7-07ea-4f59-8365-5a15eb162def
 title: Chat Contract
 domain: agenticdevelopertoolkit://recipes/chat-contract
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -355,13 +355,13 @@ Not applicable — this is a chat protocol contract, not a visual component.
 
 ## Edge Cases
 
-- **Empty draft text or a zero-length `send`** — `Backend.send(text:attachments:)` and `submitMessage` accept any string, including empty, with no minimum-content check anywhere in these sources. NEEDS REVIEW: Not implemented in source. Whether an empty-text, no-attachment submission is rejected before reaching the backend, or is passed through as-is, is not specified.
-- **Concurrent overlapping `send` calls on a generic `Backend` conformer** — the protocol itself is a plain `async throws` method with no actor requirement; `ScriptedBackend` happens to serialize turns via its own actor isolation and `replayChain`, but that is a property of that one conformer, not a guarantee the `Backend` protocol makes. NEEDS REVIEW: Not implemented in source. No ordering guarantee for concurrent `send` calls exists at the protocol level.
-- **A `commandInvoked` with no matching `commandCompleted`, ever** — the activity's `result` stays `nil` and `isRunning` stays `true` indefinitely; no timeout or cancellation policy is defined anywhere in these sources. NEEDS REVIEW: Not implemented in source. No timeout/cancellation policy exists for a command invocation that never completes.
+- **empty-send**: The contract sets no minimum content: `Backend.send(text:attachments:)` and `submitMessage` accept any string, including empty with no attachments, and neither reference implementation (`ObservableChatViewModel.submitMessage`, `DefaultOrchestrator.submitMessage`) rejects it, so an empty submission reaches the backend as-is.
+- **Concurrent overlapping `send` calls on a generic `Backend` conformer** — `Backend` is a class-bound, `Sendable` protocol whose `send` is a plain `async throws` method with no actor isolation of its own; the protocol grants no ordering guarantee for concurrent calls, leaving serialization to each conformer, the way `ScriptedBackend` provides it through its own actor isolation and `replayChain`.
+- **A `commandInvoked` with no matching `commandCompleted`, ever** — the activity's `result` stays `nil` and `isRunning` stays `true` indefinitely; the contract defines no timeout or cancellation policy for a command invocation that never completes, leaving that policy to a conformer or host.
 - **Cancelling consumption of `inboundEvents` mid-`ScriptedBackend` replay** — `Self.replay` awaits `try? await Task.sleep(for: beat.delay)`; the `try?` silently discards a `CancellationError` and proceeds to yield the next beat rather than stopping the replay task. This is implemented behavior, not a gap, but it is a swallowed error: a cancelled consumer does not necessarily stop a `ScriptedBackend`'s in-flight replay promptly.
 - **`transportError`/`messageFailed` with no retry** — the contract communicates failure (transport-error-is-a-signal-not-a-policy) but defines no backoff, retry count, or reconnection sequence; each `Backend` conformer owns that policy on its own (see Design Decisions).
-- **`maxParticipants` set to `0` or exceeded** — `DisplayConfig.maxParticipants` is a plain optional `Int`/`number` with no enforcement method on the type itself, and no `Orchestrator` implementation is given to show where or whether it is enforced. NEEDS REVIEW: Not implemented in source. Where `maxParticipants` is enforced, and what happens when it is exceeded or set to `0`, is not shown.
-- **Duplicate `participantJoined` for an id already present, or `participantDeparted` for an id never joined** — no given source shows whether the roster upserts a duplicate join, ignores it, or produces two entries, nor what happens to an unknown-id departure. NEEDS REVIEW: Not implemented in source. Duplicate-join and unknown-departure semantics are undefined.
+- **max-participants-enforcement**: NEEDS REVIEW: Not implemented in source. `DisplayConfig.maxParticipants` is declared as a plain optional `Int`/`number`, but no code in either package reads it to enforce a limit — `ObservableChatViewModel` only stores and copies it, and `DefaultOrchestrator` never consults it — so what happens when the roster exceeds it, or when it is `0`, is undefined.
+- **duplicate-join-unknown-departure**: The reference implementations upsert: a `participantJoined` for an id already in the roster replaces that entry (`ObservableChatViewModel.upsertParticipant`, `DefaultOrchestrator`'s `findIndex` replace), and a `participantDeparted` for an id never joined removes nothing. The platforms differ on the notification: Swift still emits `participantsChanged`, while the web emits it only when an entry was actually removed.
 - **Concurrent access to a `PermissionStore` conformer** — the protocol's methods are synchronous and non-actor-isolated by design (permission-store-is-synchronous); a conformer used from multiple threads MUST provide its own synchronization, since the protocol grants none.
 - **Malformed or empty opaque payload strings** (`payloadJSON`, `argumentSchema`, `resultJSON`, `errorMessage`) — these are plain strings with no schema validation defined by the contract itself; parsing and validity are the caller's responsibility, not something a conformer of these protocols is required to check.
 - **All optional fields absent at once** (`Message.id`/`timestamp`, `Attachment.displayName`/`byteSize`, `DisplayConfig.maxParticipants`/`themeIdentifier`, `Permission.defaultDecision`, `CommandResult.resultJSON`/`errorMessage`, `Conversation.title`) — each MUST be treated as legitimately absent, not as an error state; none of these fields is required for the shape to be valid.
@@ -621,3 +621,4 @@ defined at this layer — each `Backend` conformer owns that decision.
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation |
+| 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
