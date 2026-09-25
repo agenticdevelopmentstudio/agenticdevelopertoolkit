@@ -26,13 +26,13 @@ extension JSONDecoder {
     /// ISO-8601 with or without fractional seconds — what the hub backend emits.
     public static let adhDefault: JSONDecoder = {
         let decoder = JSONDecoder()
-        let fractional = ISO8601DateFormatter()
-        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let plain = ISO8601DateFormatter()
-        plain.formatOptions = [.withInternetDateTime]
+        // Format styles, not ISO8601DateFormatter: the strategy closure is
+        // @Sendable and only the value-type styles may be captured by it.
+        let fractional = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
+        let plain = Date.ISO8601FormatStyle()
         decoder.dateDecodingStrategy = .custom { decoder in
             let text = try decoder.singleValueContainer().decode(String.self)
-            if let date = fractional.date(from: text) ?? plain.date(from: text) { return date }
+            if let date = (try? fractional.parse(text)) ?? (try? plain.parse(text)) { return date }
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "not an ISO-8601 date: \(text)"))
         }
         return decoder
