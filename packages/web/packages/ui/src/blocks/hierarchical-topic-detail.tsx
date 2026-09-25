@@ -28,6 +28,7 @@ import { hlog } from "./htdv-log"
 import { UnsavedChangesAlert } from "../components/unsaved-changes-alert"
 import { useExitGate, type PaneExitGuard } from "../hooks/useExitGate"
 import { useSwipeBackClaim } from "../hooks/useSwipeBackClaim"
+import { useSeededBackStack } from "../hooks/useSeededBackStack"
 import {
   TopicRail,
   FULL_RAIL,
@@ -126,8 +127,33 @@ export interface TopicLevel {
    *  passes nothing. A routing implementation should honour it; an in-memory one may ignore it. */
   onSelect: (id: string, opts?: TopicSelectOptions) => void
   /** Clear THIS level and everything below it, keeping ancestors. Pure navigation. The
-   *  package calls it for re-click-deselect, breadcrumb up-navigation, and Back. */
-  onClear: () => void
+   *  package calls it for re-click-deselect, breadcrumb up-navigation, and Back. `opts` says HOW,
+   *  exactly as for `onSelect`: the package passes `{ replace: true }` only when the browser has
+   *  ALREADY moved to this level's `clearHref` (a Back through the seeded history — see
+   *  `clearHref`), so the host must land there without adding an entry. A click passes nothing.
+   *
+   *  It MUST leave this level with nothing selected. A host whose "cleared" address still shows a
+   *  row chosen here — a landing that opens on a first row, an "Overview" row that is the parent's
+   *  own address — makes every Back, swipe-back and breadcrumb a navigation to the page already
+   *  showing: dead controls with nothing on screen saying why. `clearHref` lets the package catch
+   *  it. */
+  onClear: (opts?: TopicSelectOptions) => void
+  /** The ADDRESS `onClear` goes to, for a host that routes: the URL at which this level is open
+   *  with NOTHING selected. Optional, and everything below works without it; given, it buys three
+   *  things the package can only do with a real address in hand:
+   *
+   *   - **The breadcrumbs are links.** A crumb is an `<a href>` to the address it clears to, so it
+   *     can be opened in a new tab, long-pressed on iOS, and read by a crawler — a plain click still
+   *     runs through `onClear` (and the unsaved-work guard) instead of a page load.
+   *   - **The browser's own Back walks up the stack.** Loaded straight onto a selection (a deep
+   *     link, a shared URL), a page has no history behind it, so iOS Safari's Back button and its
+   *     edge swipe — which are the BROWSER's and never reach the page — left the site instead of
+   *     unselecting anything. With every selected level's `clearHref` known, the package seeds one
+   *     history entry per level behind the page, so each Back clears exactly one level, the same
+   *     as the in-page Back and the swipe (see `useSeededBackStack`).
+   *   - **A dead clear is loud.** A selected level whose `clearHref` is the page already showing is
+   *     reported on the console, because its `onClear` cannot do what it is for. */
+  clearHref?: string
   /** This level ALWAYS has a selection — its `onClear` lands on a default row rather than on
    *  nothing (Settings: there is no "no section" pane). In the NARROW stack that made the list
    *  unreachable: Back cleared the level, the host re-selected the default, and the detail came
@@ -188,8 +214,19 @@ export interface TopicLevel {
 /** The top bar: a breadcrumb trail (leading root, then each selected level, then any
  *  non-interactive trailing crumbs) on the left, an optional `help` affordance right-
  *  justified on the breadcrumb bar, and an optional toolbar (e.g. a "New…" button) above. */
+/** One crumb of the trail. `href` is where it leads when the level it clears declares a
+ *  `clearHref`; without one the crumb is a button. */
+type Crumb = { levelIndex: number | null; label: string; interactive: boolean; href?: string }
+
+/** A click the browser should keep: a new tab or window, a download, a non-primary button. Only a
+ *  plain primary click is the stack's to handle in place. */
+function isModifiedClick(e: ReactMouseEvent): boolean {
+  return e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
+}
+
 function TopBar({
   rootLabel,
+  rootHref,
   crumbs,
   onNavigate,
   toolbar,
@@ -197,9 +234,11 @@ function TopBar({
   showBreadcrumb,
 }: {
   rootLabel?: string
+  /** Where the root crumb leads: level 0's `clearHref`, when it has one. */
+  rootHref?: string
   /** Selected-item labels in order, deepest last. Each `onNavigate`-able crumb carries the
    *  level it deselects-down-to; a trailing crumb (e.g. an in-pane leaf) has no levelIndex. */
-  crumbs: { levelIndex: number | null; label: string; interactive: boolean }[]
+  crumbs: Crumb[]
   /** `null` = the root crumb (deselect everything); else navigate to that level
    *  (deselect everything deeper). Omit a handler to render a static trail. */
   onNavigate?: (levelIndex: number | null) => void
@@ -209,10 +248,10 @@ function TopBar({
   showBreadcrumb: boolean
 }) {
   // The whole trail; the last entry is current. The leading root deselects everything.
-  const trail: { levelIndex: number | null; label: string; interactive: boolean }[] = showBreadcrumb
+  const trail: Crumb[] = showBreadcrumb
     ? [
         ...(rootLabel !== undefined
-          ? [{ levelIndex: null as number | null, label: rootLabel, interactive: true }]
+          ? [{ levelIndex: null as number | null, label: rootLabel, interactive: true, href: rootHref }]
           : []),
         ...crumbs,
       ]
@@ -268,12 +307,24 @@ function TopBar({
                       >
                         {c.label}
                       </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onNavigate(c.levelIndex)}
-                        className="truncate rounded font-mono text-xs tracking-[0.02em] text-apt-text-muted outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40"
+                    ) : c.href !== undefined ? (
+                      // A real link to the address the crumb clears to, so it behaves as one
+                      // everywhere a link does (new tab, long-press, copy). A plain click is still
+                      // the stack's: it runs `onClear` through the unsaved-work guard rather than
+                      // loading the page again.
+                      <a
+                        href={c.href}
+                        onClick={(e) => {
+                          if (isModifiedClick(e)) return
+                          e.preventDefault()
+                          onNavigate(c.levelIndex)
+                        }}
+                        className={CRUMB_LINK}
                       >
+                        {c.label}
+                      </a>
+                    ) : (
+                      <button type="button" onClick={() => onNavigate(c.levelIndex)} className={CRUMB_LINK}>
                         {c.label}
                       </button>
                     )}
@@ -288,6 +339,9 @@ function TopBar({
     </>
   )
 }
+
+const CRUMB_LINK =
+  "truncate rounded font-mono text-xs tracking-[0.02em] text-apt-text-muted outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40"
 
 /**
  * What the stack looks like right now, as opposed to what it is showing: the per-list `«`/`»` pins,
@@ -675,22 +729,28 @@ export function HierarchicalTopicDetail({
   // shared hook so this block and HMDV cannot drift apart again.
   const { attemptExit, exitAlertProps } = useExitGate(exitGuard)
 
+  // The browser's own Back (iOS Safari's button and edge swipe) walks up the stack like the in-page
+  // Back does, for a host that routes and says where each level clears to (`clearHref`).
+  useSeededBackStack(levels)
+
   // Each selected level contributes a crumb; clicking it deselects EVERYTHING DEEPER — i.e. it
   // clears the next level down (`levels[i+1].onClear()`), leaving this level's selection in place.
   // The package owns this so consumers write no breadcrumb-up logic. Trailing crumbs (e.g. an
   // in-pane leaf label) are appended non-interactively.
-  const crumbs: { levelIndex: number | null; label: string; interactive: boolean }[] = [
+  const crumbs: Crumb[] = [
     ...levels
-      .map((l, i) =>
+      .map((l, i): Crumb | null =>
         l.selectedId == null
           ? null
           : {
               levelIndex: i,
               label: l.items.find((it) => it.id === l.selectedId)?.label ?? l.selectedId,
               interactive: true,
+              // A level crumb clears the level BELOW it, so it leads where that one clears to.
+              href: levels[i + 1]?.clearHref,
             },
       )
-      .filter((c): c is { levelIndex: number; label: string; interactive: boolean } => c !== null),
+      .filter((c): c is Crumb => c !== null),
     ...(trailingCrumbs ?? []).map((c) => ({ levelIndex: null, label: c.label, interactive: false })),
   ]
 
@@ -1020,6 +1080,7 @@ export function HierarchicalTopicDetail({
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <TopBar
         rootLabel={rootLabel}
+        rootHref={levels[0]?.clearHref}
         crumbs={crumbs}
         onNavigate={onCrumbNavigate}
         toolbar={toolbar}
