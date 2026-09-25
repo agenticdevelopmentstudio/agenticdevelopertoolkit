@@ -22,8 +22,10 @@ export interface GearMenuTriggerProps {
  * same. `CategoryGearMenu` had the only one, styled inline; the second host would have
  * copied those classes and the two would have drifted apart on the next token change.
  *
- * Deliberately just the trigger — the items are the host's, because what a gear offers is
- * never shared between two lists. Compose it inside a `DropdownMenu` with your own
+ * Deliberately just the trigger — the items are the host's, because what a gear offers depends
+ * on the list it acts on. Where two lists do offer the same verbs (a notes list and a documents
+ * list narrowing by category and tag), the layer that knows both lists shares those ITEMS; the
+ * sign itself stays item-free. Compose it inside a `DropdownMenu` with your own
  * `DropdownMenuContent`.
  */
 export function GearMenuTrigger({
