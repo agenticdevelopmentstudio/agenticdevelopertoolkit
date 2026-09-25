@@ -312,6 +312,142 @@ html:root[data-color-mode]:not(.dark)[data-contrast='extra-high'] {
   }
 }
 
+/* === Chat surface ===
+ *
+ * The --pc-* block above only NAMES the chat's colours; base.css is structural and
+ * paints none of them, so a theme that stops at the tokens ships a chat with no box,
+ * no divider and no visible entry line — on a phone, over the page it is laid across,
+ * that read as the chat not drawing at all. Every sibling theme carries this section;
+ * this one is fishlamp.com's own chat skin (websites/main/src/bitbag/styles/
+ * fishlamp-theme.css in the fishlamp repo) restated on this theme's roles.
+ *
+ * One deliberate difference from that original: the surface is --pc-surface (ink-soft
+ * at 94%), not fishlamp.com's 42% glass. There the dock paints a scrim behind the
+ * panel; hosts of this theme (the adh footer) turn the scrim off, so the panel itself
+ * has to hide the page text it sits over. */
+
+.persona-chat {
+  --pc-thinking-done-color: var(--color-on-surface-variant);
+  font-family: var(--pc-font);
+  color: var(--color-on-surface);
+  background: var(--pc-surface);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--color-outline);
+  border-radius: 18px;
+  box-shadow: 0 12px 50px -12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.persona-chat .pc-transcript {
+  padding: 0.7rem 0.8rem 0.55rem;
+  gap: 0.4rem;
+  /* A flick that runs off the end of the transcript stays in it, not the page. */
+  overscroll-behavior: contain;
+}
+
+.persona-chat .pc-avatar { display: none; }
+
+.persona-chat .pc-bubble {
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--pc-radius);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.persona-chat .pc-persona .pc-bubble {
+  background: var(--pc-persona-bg);
+  color: var(--pc-persona-text);
+}
+.persona-chat .pc-user .pc-bubble {
+  background: var(--pc-user-bg);
+  color: var(--pc-user-text);
+}
+.persona-chat .pc-time {
+  color: var(--pc-persona-time);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+}
+
+/* The status line is a status, not a message: a step smaller, lit in ember-bright
+   while working, and stripped of the bubble the package builds it from so it never
+   reads as something the persona SAID. */
+.persona-chat .pc-thinking {
+  font-family: var(--pc-font);
+  font-size: 0.82rem;
+}
+.persona-chat .pc-thinking:not(.pc-thinking--done) {
+  color: var(--color-primary-bright);
+}
+.persona-chat > .pc-typing .pc-bubble {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+.persona-chat > .pc-typing {
+  padding: 0 0.8rem 0.35rem;
+}
+
+/* The entry line: a hairline divider off the transcript, then a terminal prompt —
+   the whole theme is one monospace face, so `>` says "type here" in its own idiom. */
+.persona-chat .pc-input-area {
+  padding: 0.35rem 0.45rem 0.35rem 0.8rem;
+  gap: 0.4rem;
+  border-top: 1px solid var(--color-outline-variant);
+  --pc-send-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20.4V4.6M4.9 11.7 12 4.6l7.1 7.1' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.persona-chat.pc-collapsed .pc-input-area {
+  border-top: 0;
+}
+.persona-chat .pc-input-area::before {
+  content: '>';
+  flex: none;
+  color: var(--color-primary);
+  font-size: 0.86rem;
+  line-height: 1;
+}
+/* Font size is left alone: base.css pins the composer to 16px on touch so iOS Safari
+   does not zoom the page on focus, and this theme's hosts do not all disable that zoom. */
+.persona-chat .pc-input {
+  background: none;
+  border: 0;
+  color: var(--color-on-surface);
+  font-family: inherit;
+  caret-color: var(--color-primary);
+}
+.persona-chat .pc-input::placeholder { color: var(--color-on-surface-variant); }
+
+/* Send: fishlamp.com's up-arrow alone, no filled disc. The package's paper-plane SVG
+   is hidden and the arrow painted as a mask in currentColor, so rest, hover and
+   disabled need no second colour kept in sync. */
+.persona-chat .pc-send-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-primary);
+  transition: color 0.2s, transform 0.2s, background 0.2s;
+}
+.persona-chat .pc-send-btn > svg { display: none; }
+.persona-chat .pc-send-btn::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  -webkit-mask: var(--pc-send-glyph) center / contain no-repeat;
+  mask: var(--pc-send-glyph) center / contain no-repeat;
+}
+.persona-chat .pc-send-btn:hover:not(:disabled) {
+  color: var(--color-primary-bright);
+  background: var(--color-primary-dim);
+  transform: translateY(-1px);
+}
+.persona-chat .pc-send-btn:disabled {
+  color: var(--color-on-surface-variant);
+  opacity: 0.55;
+}
+
 /* === Site surface === */
 
 /* The ambient glow, painted as a background LAYER rather than a positioned element:
