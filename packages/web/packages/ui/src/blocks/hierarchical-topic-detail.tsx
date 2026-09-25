@@ -2490,6 +2490,29 @@ function CoveredStack({
  * vanishing. `anim` lags `top` by one frame for the same reason: a pane that mounts already at its
  * final position cannot transition, so we paint it off-screen once, then move it.
  */
+/**
+ * A history TRAVERSAL (Back / Forward, and iOS Safari's edge swipe) is in flight: set on `popstate`,
+ * spent by the narrow stack once it has landed on the pane that traversal chose, or by the next
+ * touch or click. Module scope because the traversal usually REMOUNTS the stack (a route change),
+ * and the new instance must still know how it got there.
+ *
+ * Why it matters: Safari's edge swipe draws its OWN slide — the previous page's snapshot sliding in
+ * under the finger — and only then fires `popstate`. A stack that then slid from the pane it last
+ * painted to the one the traversal chose played the pop a second time over the finished gesture:
+ * the page blinked and redrew. After a traversal the stack lands at once.
+ */
+let traversalPending = false
+if (typeof window !== "undefined") {
+  window.addEventListener("popstate", () => {
+    traversalPending = true
+  })
+  const spend = () => {
+    traversalPending = false
+  }
+  window.addEventListener("pointerdown", spend, { capture: true, passive: true })
+  window.addEventListener("keydown", spend, { capture: true, passive: true })
+}
+
 function NarrowStack({
   levels,
   firstUnselected,
@@ -2536,15 +2559,29 @@ function NarrowStack({
   // means a route change means a REMOUNT, so a fresh `useState(top)` would start every push already
   // finished. On a genuinely fresh load there is no previous pane and nothing to slide from, so the
   // first paint simply lands.
-  const [anim, setAnim] = useState(narrowTop ?? top)
+  //
+  // After a history traversal it does not slide at all (see `traversalPending`): the browser has
+  // already shown that move, and `instant` drops the transition for the frame the stack lands in.
+  const [anim, setAnim] = useState(() => (traversalPending ? top : (narrowTop ?? top)))
+  const [instant, setInstant] = useState(() => traversalPending)
   useLayoutEffect(() => {
     if (anim === top) {
       setNarrowTop(top) // settled: this is what the next push/pop animates FROM
+      if (instant) {
+        traversalPending = false
+        const id = requestAnimationFrame(() => setInstant(false))
+        return () => cancelAnimationFrame(id)
+      }
+      return
+    }
+    if (traversalPending) {
+      setInstant(true)
+      setAnim(top)
       return
     }
     const id = requestAnimationFrame(() => setAnim(top))
     return () => cancelAnimationFrame(id)
-  }, [anim, top, setNarrowTop])
+  }, [anim, top, instant, setNarrowTop])
 
   // LAYOUT LOG — every push/pop of the navigation stack (htdv-log.ts).
   const loggedTop = useRef<number | null>(null)
@@ -2615,7 +2652,7 @@ function NarrowStack({
   const paneClass = (i: number) =>
     cn(
       "absolute inset-0 flex flex-col",
-      "transition-transform duration-[calc(300ms*var(--apt-anim-scale,1))] ease-in-out",
+      !instant && "transition-transform duration-[calc(300ms*var(--apt-anim-scale,1))] ease-in-out",
       i !== anim && "pointer-events-none",
     )
 
