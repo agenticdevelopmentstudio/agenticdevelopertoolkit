@@ -601,7 +601,8 @@ export function HierarchicalTopicDetail({
   toolbar,
   help,
   showBreadcrumb = true,
-  minDetailWidth = MIN_DETAIL_DEFAULT,
+  minDetailWidth: minDetailWidthProp = MIN_DETAIL_DEFAULT,
+  detailWidth,
   detailTitle,
   exitGuard = null,
   manualCollapse = true,
@@ -651,6 +652,15 @@ export function HierarchicalTopicDetail({
    *  detail is simply the device's width, which is also why phones need no value here). Default
    *  {@link MIN_DETAIL_DEFAULT}: deliberately small for a desktop but clearly wider than a phone. */
   minDetailWidth?: string
+  /** A FIXED width for the leaf detail pane in the wide layouts (CSS length), instead of the
+   *  default of filling whatever the lists leave. For a detail that is a document to read rather
+   *  than a workspace to fill — a measure that does not change as the window does, and content
+   *  that can lay itself out to that one width. The room to its right stays empty.
+   *
+   *  It is also the pane's minimum (it replaces `minDetailWidth`): the lists collapse and slide
+   *  off until the pane has this width, and it narrows only when it could not have it even alone
+   *  — then the stack goes NARROW, where the detail is the device's width as always. */
+  detailWidth?: string
   /** A title shown in the detail (leaf) pane's top strip, aligned with the rail
    *  headers — names what the pane is showing (covered style). */
   detailTitle?: ReactNode
@@ -917,6 +927,8 @@ export function HierarchicalTopicDetail({
   // so the stack stayed wide all the way down and the site was unusable on an iPhone — rescued only
   // by the user-agent check, and a desktop window dragged to phone width has no user agent to
   // rescue it (Mike: "this completely breaks the site on iPhone").
+  // A fixed detail width is also its floor: the fit math must clear room for all of it.
+  const minDetailWidth = detailWidth ?? minDetailWidthProp
   const stripPx = disclosureStyle === "minimized" ? COLLAPSED_RAIL : COVERED_PEEK
   const wideFloor = Math.max(minDetailPx(minDetailWidth) + stripPx, PHONE_FLOOR)
   const narrow =
@@ -1054,6 +1066,7 @@ export function HierarchicalTopicDetail({
     firstUnselected,
     frontier,
     minDetailWidth,
+    detailWidth,
     detailTitle,
     attemptExit,
     pins,
@@ -1267,6 +1280,9 @@ interface StackProps {
   firstUnselected: number
   frontier: number
   minDetailWidth: string
+  /** The frame's `detailWidth`: when set, the wide detail pane is exactly this wide (and
+   *  `minDetailWidth` already equals it). */
+  detailWidth?: string
   detailTitle?: ReactNode
   attemptExit: (action: () => void) => void
   /** Hide every list but the leaf-most, even when there is room (see HierarchicalTopicDetail). */
@@ -1505,6 +1521,7 @@ function MinimizedStack({
   firstUnselected,
   frontier,
   minDetailWidth,
+  detailWidth,
   detailTitle,
   attemptExit,
   pins,
@@ -1651,7 +1668,9 @@ function MinimizedStack({
   // The flat grid template: one column per rendered rail (0 if slid off-screen, icon strip if
   // manually collapsed, else its width), then the detail column. Held in a CSS var so changes
   // animate via the single grid transition (reduce-motion honoured by the global accessibility CSS).
-  const cols = [...rendered.map((l, i) => `${visibleWidth(l, i)}px`), "minmax(0,1fr)"].join(" ")
+  // The detail takes what the lists leave — or, given a fixed `detailWidth`, that and no more.
+  const detailCol = detailWidth ? `minmax(0,${detailWidth})` : "minmax(0,1fr)"
+  const cols = [...rendered.map((l, i) => `${visibleWidth(l, i)}px`), detailCol].join(" ")
 
   // LAYOUT LOG — the fit pass's discrete outcome (icon strips + off-screen count), on change only
   // (htdv-log.ts).
@@ -1767,7 +1786,11 @@ function MinimizedStack({
           once and never remounts as the rail count changes. When every rail is hidden (phone
           width) the Back button rides the top of this pane. The inner div holds a minimum width so
           the pane scrolls horizontally rather than crushing when its column is narrower. */}
-      <section key="__detail__" className="flex min-w-0 flex-col overflow-auto bg-apt-surface">
+      <section
+        key="__detail__"
+        // A fixed-width pane ends short of the container: the border is its edge.
+        className={cn("flex min-w-0 flex-col overflow-auto bg-apt-surface", detailWidth && "border-r border-apt-border")}
+      >
         {detailTitle !== undefined ? (
           <div className="flex min-h-[2.15rem] shrink-0 items-center gap-2 border-b border-apt-border bg-apt-nav px-2">
             {backOnRail === -1 && showBack && backButton}
@@ -1813,6 +1836,7 @@ function CoveredStack({
   firstUnselected,
   frontier,
   minDetailWidth,
+  detailWidth,
   detailTitle,
   attemptExit,
   pins,
@@ -2360,15 +2384,21 @@ function CoveredStack({
           `paneLeft`, not `detailLeft`, precisely because of that pinned right edge: an unmeasured
           `left` past the container's own width solves to a width of ZERO, and this box is inside an
           `overflow-hidden` — so the pre-measurement render doesn't merely sit wrong, it disappears.
-          See the `paneLeft` definition for why that window is the whole page without JavaScript. */}
+          See the `paneLeft` definition for why that window is the whole page without JavaScript.
+
+          A fixed `detailWidth` is a `maxWidth` on top of the pinned edges: over-constrained, the box
+          keeps its `left` and drops `right`, so it is that wide wherever there is room and still
+          ends at the container's edge where there is not. */}
       <section
         key="__detail__"
         // Not `data-htd-col`: that attribute means "this box IS list N" to the pointer→index lookup
         // (`colFromTarget`), and the detail is not a list.
         data-htd-detail
-        style={{ left: paneLeft, right: 0, zIndex: rendered.length + 1 }}
+        style={{ left: paneLeft, right: 0, maxWidth: detailWidth, zIndex: rendered.length + 1 }}
         className={cn(
           "absolute top-0 bottom-0 flex flex-col overflow-auto bg-apt-surface",
+          // A fixed-width pane ends short of the container: the border is its edge.
+          detailWidth && "border-r border-apt-border",
           animate && "transition-[left] duration-[calc(300ms*var(--apt-anim-scale,1))] ease-in-out",
           rendered.length > 0 && isCovered(rendered.length - 1) && "shadow-[-10px_0_22px_-8px_var(--color-shadow)]",
         )}
