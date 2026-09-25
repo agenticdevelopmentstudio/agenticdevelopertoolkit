@@ -56,6 +56,13 @@ struct SessionStoreTests {
         #expect(store.kindKey == "adh.test.token.kind")
         #expect(store.refreshKey == "adh.test.refresh")
     }
+
+    @Test("keychain store's accountKeys are exactly the three keys it writes")
+    func keychainAccountKeys() {
+        let store = KeychainSessionStore(keyPrefix: "adh.test")
+        #expect(store.accountKeys == [store.tokenKey, store.kindKey, store.refreshKey])
+        #expect(store.accountKeys == ["adh.test.token", "adh.test.token.kind", "adh.test.refresh"])
+    }
 }
 
 /// Behavioral cover for `KeychainSessionStore` against the real Keychain.

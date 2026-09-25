@@ -57,6 +57,12 @@ public struct KeychainSessionStore: SessionStore {
         self.refreshKey = "\(keyPrefix).refresh"
     }
 
+    /// Every Keychain account this store reads or writes, and exactly the
+    /// ones `clear()` deletes. Public so a caller that must remove a
+    /// session from outside this process (an installer's uninstall purge)
+    /// is told the keys rather than restating them.
+    public var accountKeys: [String] { [tokenKey, kindKey, refreshKey] }
+
     public func currentSession() -> Session? {
         guard let token = KeychainHelper.get(forKey: tokenKey) else { return nil }
         let kind = KeychainHelper.get(forKey: kindKey)
@@ -78,8 +84,8 @@ public struct KeychainSessionStore: SessionStore {
     }
 
     public func clear() {
-        KeychainHelper.delete(forKey: tokenKey)
-        KeychainHelper.delete(forKey: kindKey)
-        KeychainHelper.delete(forKey: refreshKey)
+        for key in accountKeys {
+            KeychainHelper.delete(forKey: key)
+        }
     }
 }
