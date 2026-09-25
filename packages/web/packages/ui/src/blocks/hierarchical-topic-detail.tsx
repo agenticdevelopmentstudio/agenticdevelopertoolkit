@@ -101,6 +101,16 @@ export interface TopicLevel {
    *  narrow — selecting a row still NEVER auto-selects anything at a deeper level unless that level
    *  asks for it here. Omit for the platform default: nothing is chosen for the user. */
   defaultSelectedId?: string
+  /** WHERE `defaultSelectedId` applies. `"always"` (the default) is the rule above. `"wide"` applies
+   *  it only while the lists are disclosed beside the detail — never in the NARROW stack, where the
+   *  list is a pane of its own and choosing for the user would push straight past it, so a phone
+   *  would open onto the default and have to go Back to see the list it came for. The planning
+   *  route's "Overview" is the case: beside the list it is the obvious thing to read; on a phone
+   *  the list is.
+   *
+   *  A list shown NARROW is not spent: widen the window while it is showing with nothing chosen and
+   *  the default applies then, as it would have had the list appeared wide. */
+  defaultSelectedWhen?: "always" | "wide"
   /** The AUTOMATIC no-selection detail (default on): while this level is the frontier with
    *  nothing selected, the pane stays almost empty — one quiet, centered nudge to select
    *  something (`TopicSelectHint`), named as specifically as this level allows (see
@@ -838,59 +848,6 @@ export function HierarchicalTopicDetail({
     [patchSurface],
   )
 
-  // A level's OPT-IN `defaultSelectedId`: select it for the user the moment the list appears with
-  // nothing chosen. Fired as the level's own `onSelect`, so it is indistinguishable from a click —
-  // except in HISTORY: it goes out with `{ replace: true }`, because the state it replaces is one
-  // the user never asked for and never sees. Push it and every visit costs TWO Back presses, the
-  // first landing on the bare parent that instantly re-applies the default and bounces forward.
-  //
-  // Armed per APPEARANCE, which is the whole subtlety. The arming key is the ancestor selections that
-  // produced this list, remembered per level (in the surface store, because applying or clearing the
-  // selection is itself a route change that remounts this component — a per-instance memory would
-  // forget it had fired and re-select the row the user just cleared, making the row undeselectable):
-  //   - the list is not rendered at all (its parent is unselected) → DISARM, so the next visit fires;
-  //   - already fired for this key and the user has since cleared the row → stay disarmed. The
-  //     default may choose FOR the user, never argue WITH them;
-  //   - the list appeared ALREADY selected (a deep link into a view) → spend the visit without
-  //     firing, so that same clear-stands rule covers the deep-linked entry too.
-  // A default naming an item the list doesn't have (yet) is simply not applied — an async list arms
-  // when its rows land, and a stale default never selects a phantom row.
-  useEffect(() => {
-    levels.forEach((level, i) => {
-      const wanted = level.defaultSelectedId
-      if (wanted == null) return
-      if (i > frontier) {
-        // The list is gone (its parent is unselected): re-arm it for the next visit.
-        if (surface.autoSelected[level.id] !== undefined) {
-          patchSurface((p) => {
-            const next = { ...p.autoSelected }
-            delete next[level.id]
-            return { ...p, autoSelected: next }
-          })
-        }
-        return
-      }
-      const key = `${levels
-        .slice(0, i)
-        .map((l) => l.selectedId ?? "")
-        .join("|")}::${wanted}`
-      if (level.selectedId != null) {
-        // The list appeared with a selection ALREADY in place — a deep link straight to a view,
-        // or the default's own select landing. Nothing to apply, but the visit must still count as
-        // spent: leave it unrecorded and a later manual clear looks exactly like "the list just
-        // appeared with nothing chosen", so the default re-fires and the row cannot be deselected.
-        if (surface.autoSelected[level.id] !== key) {
-          patchSurface((p) => ({ ...p, autoSelected: { ...p.autoSelected, [level.id]: key } }))
-        }
-        return
-      }
-      if (!level.items.some((it) => it.id === wanted)) return
-      if (surface.autoSelected[level.id] === key) return // fired for this visit; a manual clear stands
-      patchSurface((p) => ({ ...p, autoSelected: { ...p.autoSelected, [level.id]: key } }))
-      level.onSelect(wanted, { replace: true })
-    })
-  })
-
   // ONE measurement of the row, owned by the frame: it decides WIDE vs NARROW, and the covered stack
   // reuses it for its fit math (so there is still a single disclosure controller). `useLayoutEffect`
   // inside takes the first measurement before paint, so a narrow container never flashes the wide
@@ -934,6 +891,67 @@ export function HierarchicalTopicDetail({
   const narrow =
     layoutMode === "narrow" ||
     (layoutMode === "auto" && (phone || (containerW > 0 && containerW < wideFloor)))
+
+  // A level's OPT-IN `defaultSelectedId`: select it for the user the moment the list appears with
+  // nothing chosen. Fired as the level's own `onSelect`, so it is indistinguishable from a click —
+  // except in HISTORY: it goes out with `{ replace: true }`, because the state it replaces is one
+  // the user never asked for and never sees. Push it and every visit costs TWO Back presses, the
+  // first landing on the bare parent that instantly re-applies the default and bounces forward.
+  //
+  // Armed per APPEARANCE, which is the whole subtlety. The arming key is the ancestor selections that
+  // produced this list, remembered per level (in the surface store, because applying or clearing the
+  // selection is itself a route change that remounts this component — a per-instance memory would
+  // forget it had fired and re-select the row the user just cleared, making the row undeselectable):
+  //   - the list is not rendered at all (its parent is unselected) → DISARM, so the next visit fires;
+  //   - already fired for this key and the user has since cleared the row → stay disarmed. The
+  //     default may choose FOR the user, never argue WITH them;
+  //   - the list appeared ALREADY selected (a deep link into a view) → spend the visit without
+  //     firing, so that same clear-stands rule covers the deep-linked entry too.
+  // A default naming an item the list doesn't have (yet) is simply not applied — an async list arms
+  // when its rows land, and a stale default never selects a phantom row.
+  //
+  // A `"wide"` default waits until the layout is KNOWN, not merely rendered: before the row is
+  // measured the stack draws wide, and firing on that guess would select for a phone. The phone
+  // test is read live, not from `phone` — that state lands in an effect that runs after this one.
+  useEffect(() => {
+    const layoutKnown = layoutMode !== "auto" || containerW > 0
+    const wideNow = layoutKnown && !narrow && !(layoutMode === "auto" && phoneUserAgent())
+    levels.forEach((level, i) => {
+      const wanted = level.defaultSelectedId
+      if (wanted == null) return
+      if (i > frontier) {
+        // The list is gone (its parent is unselected): re-arm it for the next visit.
+        if (surface.autoSelected[level.id] !== undefined) {
+          patchSurface((p) => {
+            const next = { ...p.autoSelected }
+            delete next[level.id]
+            return { ...p, autoSelected: next }
+          })
+        }
+        return
+      }
+      const key = `${levels
+        .slice(0, i)
+        .map((l) => l.selectedId ?? "")
+        .join("|")}::${wanted}`
+      if (level.selectedId != null) {
+        // The list appeared with a selection ALREADY in place — a deep link straight to a view,
+        // or the default's own select landing. Nothing to apply, but the visit must still count as
+        // spent: leave it unrecorded and a later manual clear looks exactly like "the list just
+        // appeared with nothing chosen", so the default re-fires and the row cannot be deselected.
+        if (surface.autoSelected[level.id] !== key) {
+          patchSurface((p) => ({ ...p, autoSelected: { ...p.autoSelected, [level.id]: key } }))
+        }
+        return
+      }
+      if (!level.items.some((it) => it.id === wanted)) return
+      // Not now, and not spent: a list seen narrow gets its default once it is seen wide.
+      if (level.defaultSelectedWhen === "wide" && !wideNow) return
+      if (surface.autoSelected[level.id] === key) return // fired for this visit; a manual clear stands
+      patchSurface((p) => ({ ...p, autoSelected: { ...p.autoSelected, [level.id]: key } }))
+      level.onSelect(wanted, { replace: true })
+    })
+  })
 
   // ONE DETAIL HOST that survives every stack flip. The three stacks are different component
   // types, and React reconciles by tree position — rendering the detail as a stack's child would
@@ -1101,8 +1119,14 @@ export function HierarchicalTopicDetail({
         showBreadcrumb={showBreadcrumb}
       />
       {/* The measured row. Every stack fills it, so ONE ResizeObserver here is the whole view's
-          width signal — the mode decision above and the covered stack's fit math below. */}
-      <div ref={rowRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
+          width signal — the mode decision above and the covered stack's fit math below.
+          `data-htd-layout` says which mode won, so a host's CSS can fit its detail to the narrow
+          pane (tighter gutters on a phone) off the same decision rather than a guessed breakpoint. */}
+      <div
+        ref={rowRef}
+        data-htd-layout={narrow ? "narrow" : "wide"}
+        className="flex min-h-0 min-w-0 flex-1 flex-col"
+      >
         {narrow ? (
           <NarrowStack {...stackProps} levels={levels} />
         ) : disclosureStyle === "minimized" ? (
@@ -1239,11 +1263,16 @@ function useContainerWidth(ref: RefObject<HTMLDivElement | null>): number {
 function usePhoneUserAgent(): boolean {
   const [phone, setPhone] = useState(false)
   useEffect(() => {
-    if (typeof navigator === "undefined") return
-    const ua = navigator.userAgent
-    setPhone(/iPhone|iPod/.test(ua) || (/Android/.test(ua) && /Mobile/.test(ua)))
+    setPhone(phoneUserAgent())
   }, [])
   return phone
+}
+
+/** Whether this browser is a phone, by its user agent. Client-only — false on the server. */
+function phoneUserAgent(): boolean {
+  if (typeof navigator === "undefined") return false
+  const ua = navigator.userAgent
+  return /iPhone|iPod/.test(ua) || (/Android/.test(ua) && /Mobile/.test(ua))
 }
 
 /** The selection wiring shared by both stacks. Any select that would clear or replace

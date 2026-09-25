@@ -40,7 +40,9 @@ export interface InfoPanelProps extends Omit<HTMLAttributes<HTMLElement>, "title
   /** Outer flex shorthand (mostly for fill mode), e.g. "1 1 0". */
   flex?: string
   maxHeight?: string | number
-  /** Body padding; mode-dependent default (card: 12/16, scroll: 8/16). */
+  /** Body padding; mode-dependent default (card: 12/16, scroll: 8/16). Without it, a surrounding
+   *  `--info-panel-body-padding` sets the default for every panel inside — how a host tightens the
+   *  cards in one region (a phone-width pane) without threading a prop through each card. */
   bodyPadding?: string
   /** Ref to the scrolling body element (so the host can tail/anchor it). */
   bodyRef?: Ref<HTMLDivElement>
@@ -115,7 +117,10 @@ export function InfoPanel({
       <div
         ref={bodyRef}
         className={cn(scroll ? "min-h-0 flex-auto overflow-y-auto" : "flex-none")}
-        style={{ padding: bodyPadding ?? (scroll ? "8px 16px 10px" : "12px 16px") }}
+        style={{
+          padding:
+            bodyPadding ?? `var(--info-panel-body-padding, ${scroll ? "8px 16px 10px" : "12px 16px"})`,
+        }}
       >
         {children}
       </div>
