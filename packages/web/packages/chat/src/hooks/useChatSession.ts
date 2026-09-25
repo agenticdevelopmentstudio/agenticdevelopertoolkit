@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Backend } from '../contract/backend/Backend'
 import type { ChatStateObserver } from '../contract/chat/ChatStateObserver'
+import type { Message } from '../contract/messages/Message'
 import type { Participant } from '../contract/participants/Participant'
 import { ChatBackendAdapter } from '../backends/ChatBackendAdapter'
 import type { ChatBackend } from '../backends/types'
@@ -105,16 +106,26 @@ interface Session {
   readonly owned: boolean
   project(): ChatMessage[]
   destroyBackend(): void
+  /**
+   * This session on a fresh transport, carrying its transcript, once
+   * `destroyBackend` has torn the old one down — or null when nothing was torn
+   * down, or when the transport is not ours to rebuild. See the session effect.
+   */
+  revive(): Session | null
 }
 
-function createSession(options: {
+interface SessionOptions {
   backend?: ChatBackend | Backend
   orchestrator?: DefaultOrchestrator
   persona: ChatParticipant
   user: ChatParticipant
   personaID: string
   welcomeMessage?: string
-}): Session {
+  /** What an earlier session had already said, for `revive`. Replaces the welcome. */
+  transcript?: ReadonlyArray<Message>
+}
+
+function createSession(options: SessionOptions): Session {
   const { personaID } = options
   if (options.orchestrator) return adoptSession(options.orchestrator, options, personaID)
   const raw = options.backend
@@ -143,6 +154,8 @@ function createSession(options: {
   // Assigned immediately below. The adapter only reads it from inside a
   // callback the orchestrator itself triggers, so it is always set by then.
   let orchestrator: DefaultOrchestrator
+  // Set by `destroyBackend`; what `revive` checks before building a successor.
+  let tornDown = false
 
   const backend: Backend = isContractBackend(raw)
     ? raw
@@ -185,7 +198,12 @@ function createSession(options: {
     return projectMessages(orchestrator, parts, stampFor)
   }
 
-  if (options.welcomeMessage) {
+  if (options.transcript) {
+    // A revived session picks up where the torn-down one stopped. Everything in
+    // it has landed — the teardown lands a line mid-type and closes any draft —
+    // so it is settled messages only, and the welcome is among them already.
+    orchestrator.messages = options.transcript
+  } else if (options.welcomeMessage) {
     // A welcome is a line the persona says, so it enters the transcript the
     // way every other persona line does. Delivered before `start()`, which
     // means it is already there on the first render rather than arriving as an
@@ -222,6 +240,15 @@ function createSession(options: {
       // could never complete. The adapter's `destroy()` calls `raw.destroy?.()`
       // itself, so nothing is lost by going through it.
       ;(backend as { destroy?: () => void }).destroy?.()
+      tornDown = true
+    },
+    revive(): Session | null {
+      // Only an adapter this session built is ours to build again. A contract
+      // backend handed in is the caller's, and it refuses reuse after destroy by
+      // design (PersonaChatBackend: ci-destroy-authoritative) — reconnecting it
+      // behind the caller's back is exactly what that refusal is there to stop.
+      if (!tornDown || backend === raw) return null
+      return createSession({ ...options, transcript: orchestrator.messages })
     },
   }
 }
@@ -264,6 +291,10 @@ function adoptSession(
     destroyBackend(): void {
       // Not ours to close.
     },
+    revive(): null {
+      // Never torn down, so there is nothing to revive.
+      return null
+    },
   }
 }
 
@@ -277,26 +308,24 @@ export function useChatSession(options: UseChatSessionOptions): ChatSession {
     personaID = DEFAULT_PERSONA_ID,
   } = options
 
-  const sessionRef = useRef<Session | null>(null)
   const [version, bump] = useReducer((n: number): number => n + 1, 0)
 
-  // Built once and kept, the way the transcript used to be `useState`. A
-  // session rebuilt when `backend` changes identity would look reasonable and
-  // be a trap: `backend={new MockBackend()}` written inline in a render — which
-  // is how the modes are demoed — hands back a new object every pass, and the
-  // conversation would reset on each one. A backend swapped mid-conversation is
-  // not a thing the modes do; a re-rendered parent is.
-  if (sessionRef.current === null) {
-    sessionRef.current = createSession({
+  // Built once and kept. A session rebuilt when `backend` changes identity would
+  // look reasonable and be a trap: `backend={new MockBackend()}` written inline in
+  // a render — which is how the modes are demoed — hands back a new object every
+  // pass, and the conversation would reset on each one. A backend swapped
+  // mid-conversation is not a thing the modes do; a re-rendered parent is. The one
+  // replacement is the session effect's own revive, below.
+  const [session, setSession] = useState(() =>
+    createSession({
       backend,
       orchestrator,
       persona,
       user,
       personaID,
       welcomeMessage,
-    })
-  }
-  const session = sessionRef.current
+    }),
+  )
 
   const [selectedIndex, setSelectedIndex] = useState(-1)
 
@@ -312,7 +341,18 @@ export function useChatSession(options: UseChatSessionOptions): ChatSession {
   // finds the same orchestrator and the same transcript on the second pass —
   // which is the point. Only the subscription and the backend are torn down,
   // exactly as they were when the hook owned transport directly.
+  //
+  // But a torn-down backend stays torn down, and the second pass used to carry on
+  // over it: every send threw "has been destroyed", `sendMessage` swallowed it, and
+  // in a dev build nothing the reader typed ever reached the transcript. So a pass
+  // that finds its session torn down swaps in its revival — the same transcript on
+  // a fresh transport — and subscribes to that one when it renders.
   useEffect(() => {
+    const revived = session.revive()
+    if (revived) {
+      setSession(revived)
+      return
+    }
     const observer: ChatStateObserver = { chatDidUpdate: (): void => bump() }
     session.orchestrator.addObserver(observer)
     if (session.owned) session.orchestrator.start()

@@ -190,6 +190,25 @@ describe('useChatSession', () => {
     expect(destroy).toHaveBeenCalled()
   })
 
+  // Strict Mode runs the session effect mount → cleanup → mount, and the cleanup destroys the
+  // adapter. The session used to outlive that with its transport dead, so every send in a dev
+  // build threw "has been destroyed" — swallowed by `sendMessage` — and nothing the reader
+  // typed ever reached the transcript. The remount now rebuilds the transport it tore down,
+  // carrying over what was already said.
+  it('still sends after Strict Mode remounts it, keeping what was already said', async () => {
+    const backend = createMockBackend('still here')
+    const { result } = renderHook(
+      () => useChatSession({ backend, persona: { name: 'Bot' }, welcomeMessage: 'Hello!' }),
+      { reactStrictMode: true },
+    )
+
+    await act(async () => {
+      result.current.sendMessage('hi')
+    })
+
+    expect(result.current.messages.map((m) => m.text)).toEqual(['Hello!', 'hi', 'still here'])
+  })
+
   // The hook wraps a non-contract `ChatBackend` in a `ChatBackendAdapter`, and it is the
   // ADAPTER that owns the EventQueue whose closure is what actually ends `runEventLoop`'s
   // pending `iterator.next()`. Tearing down the raw backend directly left the adapter and its
