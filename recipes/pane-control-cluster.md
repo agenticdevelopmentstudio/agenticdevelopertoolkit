@@ -3,11 +3,11 @@ id: f7fbabba-4b48-4b6b-a99c-b888cedec056
 title: Pane Control Cluster
 domain: agenticdevelopertoolkit://recipes/pane-control-cluster
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,7 +50,7 @@ A horizontal cluster of three buttons at the leading edge of a pane's title bar:
 - **respond-to-state-changes**: The component MUST respond to changes in `isZoomed`, `isMinimized`, `canMinimize`, and `canClose` properties and update the button appearances and enabled states accordingly.
 - **borderless-icon-buttons**: The component MUST render each button borderless, with only its glyph visible (no title text, no bezel/border).
 - **tinted-glyph-color**: The component MUST tint each glyph using a single content color, so the color can be swapped centrally for enabled/disabled state and for theme changes (see **theme-aware-tinting**).
-- **theme-aware-tinting**: The component MUST observe theme changes and re-apply tinting to all buttons: secondary text color for enabled buttons, tertiary text color for disabled buttons.
+- **theme-aware-tinting**: The component MUST observe `ThemeManager.didChangeNotification` and `ThemeScope.didChangeNotification`, and re-apply tinting to all buttons whenever either fires: secondary text color for enabled buttons, tertiary text color for disabled buttons. These notifications post on an explicit theme selection, an in-place edit of the active theme, or a text-scale change — never directly from the OS's Increase Contrast setting or a bare system light/dark appearance switch, neither of which the component observes on its own (see Edge Cases).
 
 ## Appearance
 
@@ -71,8 +71,8 @@ A horizontal cluster of three buttons at the leading edge of a pane's title bar:
 | Minimized | Minimize button: "plus" glyph, label "Restore Pane", enabled regardless of `canMinimize`; minimize button appears in restore role |
 | Close disabled | Close button: tertiary text color tint, no interaction |
 | Minimize disabled | Minimize button: tertiary text color tint (only when not minimized) |
-| Dark mode | Tinting automatically adjusts to match dark theme; secondary/tertiary text colors recalculated |
-| Light mode | Tinting automatically adjusts to match light theme; secondary/tertiary text colors recalculated |
+| Dark mode | Tinting adjusts to match a dark theme once `ThemeManager.didChangeNotification`/`ThemeScope.didChangeNotification` fires (theme selection, in-place theme edit, or text-scale change); secondary/tertiary text colors recalculated from that notification, not from the OS appearance switch directly |
+| Light mode | Tinting adjusts to match a light theme once `ThemeManager.didChangeNotification`/`ThemeScope.didChangeNotification` fires (theme selection, in-place theme edit, or text-scale change); secondary/tertiary text colors recalculated from that notification, not from the OS appearance switch directly |
 
 ## Accessibility
 
@@ -102,7 +102,7 @@ A horizontal cluster of three buttons at the leading edge of a pane's title bar:
 | cluster-012 | disable-minimize-button | `isMinimized = true`, `canMinimize = false` | Minimize button enabled (restore state overrides `canMinimize` disable) |
 | cluster-013 | respond-to-state-changes | `isZoomed` changes from false to true | Zoom button glyph and label update immediately |
 | cluster-014 | respond-to-state-changes | `canClose` changes from true to false | Close button immediately disables and re-tints to the tertiary text color |
-| cluster-015 | theme-aware-tinting | System theme changes to dark mode | All button tints re-resolve to dark theme secondary/tertiary text colors |
+| cluster-015 | theme-aware-tinting | The app's active theme is switched to a dark `ColorTheme` via `ThemeManager.selectTheme(id:)` | All button tints re-resolve to dark theme secondary/tertiary text colors, driven by the resulting `ThemeManager.didChangeNotification` |
 | cluster-016 | borderless-icon-buttons, tinted-glyph-color | Component rendered | No border visible; buttons appear borderless; glyphs tinted, not filled |
 | cluster-017 | render-three-buttons | Component initialized | Close/minimize/zoom buttons expose accessibility IDs "pane.close"/"pane.minimize"/"pane.zoom" and labels "Close Pane"/"Minimize Pane"/"Zoom Pane" |
 | cluster-018 | render-three-buttons | Component initialized | Each button's tooltip equals its accessibility label |
@@ -114,7 +114,7 @@ A horizontal cluster of three buttons at the leading edge of a pane's title bar:
 | cluster-024 | respond-to-state-changes | `isMinimized` changes from false to true | Minimize button transitions from "minus" / "Minimize Pane" / "pane.minimize" / `canMinimize`-gated enabled state to "plus" / "Restore Pane" / "pane.restore" / always-enabled state |
 | cluster-025 | render-three-buttons | macOS button rendered with the `.accessoryBarAction` bezel | Hit area matches the compact accessory-bar sizing convention; no 44×44pt minimum is enforced, consistent with system window-control sizing |
 | cluster-026 | render-three-buttons | iOS UIKit port renders the equivalent buttons (see Platform Notes) | Each button's hit area is at least 44×44pt per Apple HIG |
-| cluster-027 | theme-aware-tinting | System Increase Contrast enabled | Button tint resolves through the semantic palette's secondary/tertiary tokens, which supply higher-contrast values automatically |
+| cluster-027 | theme-aware-tinting | System Increase Contrast enabled, with no theme-change notification posted | Button tint does not change: the component observes only `ThemeManager`/`ThemeScope` theme-change notifications, and nothing posts one for the OS Increase Contrast setting; the palette's colors are static sRGB values with no dynamic/high-contrast variant to switch to |
 | cluster-028 | render-minimized-state | Differentiate Without Color enabled | Minimize button's state is distinguished by glyph shape (minus vs. plus) and accessibility label, not by color alone |
 
 ## Edge Cases
@@ -123,7 +123,7 @@ A horizontal cluster of three buttons at the leading edge of a pane's title bar:
 - **Restore when isMinimized is true**: The minimize button is always enabled while `isMinimized = true`, even if `canMinimize = false`. This ensures the user can always restore a minimized pane.
 - **Close when canClose is false**: Component ignores clicks on the close button; the button appears disabled. The button remains visually reachable (disabled, not hidden) to communicate state, not capability, per principle-of-least-astonishment.
 - **Multiple state changes in sequence**: If `isZoomed`, `isMinimized`, `canClose`, and `canMinimize` are all modified before layout occurs, the component updates all three buttons in a single internal pass, rather than updating each one independently as its own property changes — see **respond-to-state-changes**.
-- **Theme changes during interaction**: If the system theme changes while a button is highlighted or being interacted with, the component re-applies tinting immediately — see **theme-aware-tinting**.
+- **Theme changes during interaction**: If a `ThemeManager`/`ThemeScope` theme-change notification fires while a button is highlighted or being interacted with, the component re-applies tinting immediately — see **theme-aware-tinting**.
 - **No actions configured**: All four closures (`onClose`, `onMinimize`, `onRestore`, `onZoom`) are optional. If a closure is nil, activating the corresponding button has no effect.
 
 ## Configuration
@@ -160,7 +160,7 @@ All user-visible text is produced by the accessibility labels and tooltips below
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: The component has no animations; it renders states instantly. Reduce Motion does not affect visual appearance. |
-| Increase Contrast | Supported: the component's tint is sourced from the semantic palette's secondary and tertiary text tokens, and the palette resolves those tokens to higher-contrast values when Increase Contrast is on; the component picks this up automatically — see **theme-aware-tinting**. |
+| Increase Contrast | Not supported: the component observes only `ThemeManager`/`ThemeScope` theme-change notifications, and nothing posts one for the OS Increase Contrast setting. The palette's secondary/tertiary text colors are fixed sRGB values with no dynamic/high-contrast variant, so the tint does not react to Increase Contrast — see **theme-aware-tinting**. |
 | Differentiate Without Color | Supported: state is conveyed by glyph shape (xmark, minus/plus, the two diagonal-arrow variants) and by accessibility labels, never by color alone. |
 
 ## Feature Flags
@@ -184,7 +184,7 @@ Not applicable: The component does not emit diagnostic logs. Hosting containers 
 - **SwiftUI**: Wrap `PaneControlCluster` (an `NSViewRepresentable`, macOS 14.0+) in a state-binding adapter: pass `@State` values for `isZoomed`, `isMinimized`, `canMinimize`, `canClose` in, and forward the four closures out. SwiftUI has no built-in `ButtonStyle` equivalent to AppKit's `.accessoryBarAction` bezel, so a pure-SwiftUI port needs a custom `ButtonStyle` that renders icon-only content (no title, no background, no border) and drives the glyph's foreground color from `isEnabled` the same way the AppKit source drives `contentTintColor`.
 - **Compose**: Build an equivalent using three composable buttons in a `Row` with a small fixed spacing (2dp). Use Material Design 3 icon buttons (`IconButton`) with appropriate icons (close, minimize, unfold less/more). Apply theme-aware tinting via the `contentColor` parameter. Keep the composable stateless: accept `isZoomed`, `isMinimized`, `canMinimize`, and `canClose` as parameters from the caller — never hold them in local `remember { mutableStateOf(...) }` state — and emit `onClose`/`onMinimize`/`onRestore`/`onZoom` callbacks. The host, not the composable, owns and mutates the state, matching the AppKit source.
 - **React/Web**: Render three buttons in a horizontal flex container with a 2px gap. Use specific SVG icon sets rather than ambiguous glyphs — for example Lucide's `x` (close), `minus`/`plus` (minimize/restore), and `maximize-2`/`minimize-2` (zoom/unzoom). Apply `aria-label` matching each state's accessibility label ("Close Pane", "Minimize Pane"/"Restore Pane", "Zoom Pane"/"Unzoom Pane"), and set `aria-pressed` (or swap the label, matching the platform pattern above) on the zoom button so its toggled state is exposed to assistive tech. Toggle `disabled` and `aria-disabled` based on the four state properties. Use CSS custom properties for theme-aware text-color tinting (secondary/tertiary).
-- **AppKit / UIKit**: The source `PaneControlCluster.swift` is the canonical AppKit implementation: `NSButton` with `bezelStyle = .accessoryBarAction`, `isBordered = false`, `imagePosition = .imageOnly`, and `contentTintColor` driving glyph color (see **borderless-icon-buttons**, **tinted-glyph-color**). State changes funnel through a single internal update pass so the three buttons never see the four flags in an inconsistent order, and a theme observer re-resolves tint on system appearance changes (see **theme-aware-tinting**). On UIKit (iOS 17.0+), adapt using three `UIButton` instances configured with system images and equivalent styling (`.plain()` configuration, no background, template image with `tintColor`). Manage state via observed properties, KVO, or Combine publishers if the hosting container uses reactive patterns. On macOS with AppKit, use `PaneControlCluster` directly from AgenticDeveloperToolkit.
+- **AppKit / UIKit**: The source `PaneControlCluster.swift` is the canonical AppKit implementation: `NSButton` with `bezelStyle = .accessoryBarAction`, `isBordered = false`, `imagePosition = .imageOnly`, and `contentTintColor` driving glyph color (see **borderless-icon-buttons**, **tinted-glyph-color**). State changes funnel through a single internal update pass so the three buttons never see the four flags in an inconsistent order, and a theme observer re-resolves tint on `ThemeManager`/`ThemeScope` theme-change notifications — not directly on OS Increase Contrast or a bare system appearance switch (see **theme-aware-tinting**). On UIKit (iOS 17.0+), adapt using three `UIButton` instances configured with system images and equivalent styling (`.plain()` configuration, no background, template image with `tintColor`). Manage state via observed properties, KVO, or Combine publishers if the hosting container uses reactive patterns. On macOS with AppKit, use `PaneControlCluster` directly from AgenticDeveloperToolkit.
 - **WinUI 3**: Use three `Button` controls in a `StackPanel` with `Orientation="Horizontal"` and `Spacing="2"`. Apply `Microsoft.UI.Xaml.Controls.FontIcon` with the Segoe Fluent Icons glyphs: `` (ChromeClose) for close, `` (ChromeMinimize) for minimize, `` (ChromeMaximize) for zoom, and `` (ChromeRestore) for unzoom. Set the `IsEnabled` binding for each button based on the four state flags. Use `Foreground` to apply theme-aware tinting (secondary/tertiary text from app theme resources). Bind `Click` (or `Command`) to a handler that dispatches to the four callbacks, giving the minimize button its dual minimize/restore role based on current state.
 
 ## Design Decisions
@@ -201,8 +201,8 @@ Not applicable: The component does not emit diagnostic logs. Hosting containers 
 **Rationale**: Keeps the control cluster compact while accessibility stays correct, since the identifier and label always match the button's current role.
 **Approved**: pending
 
-**Decision**: The component observes system theme changes and re-applies each button's tint automatically, rather than requiring the host to push an explicit update when the system appearance changes.
-**Rationale**: Keeps theme-responsiveness self-contained; the host only has to manage `isZoomed`, `isMinimized`, `canMinimize`, and `canClose` — appearance follow-through is the component's job.
+**Decision**: The component observes `ThemeManager`/`ThemeScope` theme-change notifications and re-applies each button's tint automatically, rather than requiring the host to push an explicit update whenever the app's own theme changes. It does not itself observe the OS Increase Contrast setting or a bare system light/dark appearance switch — `ThemeManager.refreshApplicationAppearance()`, the path a host uses for that case, deliberately posts no notification, so this component's tint only follows a theme change that goes through `ThemeManager.selectTheme(id:)`, an in-place theme edit, or a text-scale change.
+**Rationale**: Keeps theme-responsiveness self-contained for the changes the component's own semantic palette actually models; the host only has to manage `isZoomed`, `isMinimized`, `canMinimize`, and `canClose` — appearance follow-through for those changes is the component's job. OS-level Increase Contrast and appearance-only changes are out of scope because the palette has no dynamic/high-contrast variant to switch to.
 **Approved**: pending
 
 **Decision**: The component never infers `isZoomed` from a click; only the host sets it, after deciding whether to grant the zoom request.
@@ -221,12 +221,15 @@ Not applicable: The component does not emit diagnostic logs. Hosting containers 
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Screen-reader-support and the hard-coded-string findings come directly from the source (`setAccessibilityLabel`/`accessibilityID` calls on every button, versus inline English literals with no localization call); text-expansion-tolerance passes because the buttons are icon-only and carry no visible title text to overflow. Keyboard, contrast, touch-target, and RTL statuses are partial because they rely on default AppKit and palette behavior that `PaneControlCluster.swift` does not itself exercise or measure.
+Screen-reader-support and the hard-coded-string findings come directly from the source (`setAccessibilityLabel`/`accessibilityID` calls on every button, versus inline English literals with no localization call); text-expansion-tolerance passes because the buttons are icon-only and carry no visible title text to overflow. Keyboard, contrast, touch-target, and RTL statuses are partial because they rely on default AppKit and palette behavior that `PaneControlCluster.swift` does not itself exercise or measure; the view only renders host-supplied state via `applyState()` and reports clicks through closures, per its own "reports and does not decide" doc comment (separation-of-concerns: passed), and `PaneControlClusterTests.swift` exercises button wiring, click routing, the minimize/restore swap, and disabled state (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed theme-aware-tinting requirement/vectors/states/decision/platform-notes: re-tint follows ThemeManager/ThemeScope notifications only, not OS Increase Contrast or a bare system appearance switch (refreshApplicationAppearance posts none); Increase Contrast marked Not supported. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: restate AppKit implementation details (accessory-bar bezel, image-only tint) as platform-neutral behavioral requirements; rename all requirements to subject-only kebab-case; disambiguate the default-state glyph requirement; fix disabled-state wording from opacity to a tertiary-color tint; give the minimize-button anchor parameter a stated purpose and platform-neutral fallback; reformat Design Decisions into Decision/Rationale/Approved blocks and correct the "exact" window-control-glyph and race-condition claims; replace "Not applicable" in Compliance, Localization, and Accessibility Options with grounded findings; add missing conformance test vectors (accessibility IDs/labels, tooltips, disabled-tint, nil-closure, isMinimized transition, touch-target, contrast, differentiate-without-color); split the touch-target minimum by platform; make the Compose platform note stateless; correct the WinUI 3 namespace and glyph codes and the SwiftUI hedge; name concrete icons and add aria-pressed guidance to the Web note; replace "tapped" with "activated" throughout; fix the frontmatter `modified` date format; add related recipes. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from PaneControlCluster.swift source |

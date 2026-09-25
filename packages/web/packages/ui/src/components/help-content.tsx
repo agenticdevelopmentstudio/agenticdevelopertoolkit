@@ -23,7 +23,7 @@ export interface HelpEntry {
  *  NOT adh's other help store, which is easy to mistake this for. That one lives
  *  in the consuming application, over its own per-locale help content file, and is
  *  ROUTE-keyed — `<feature>` / `<feature>/<topic>` — and serves the hierarchical
- *  topic/detail views under the `must-source-help-from-config` rule, returning a
+ *  topic/detail views under the `source-help-from-config` rule, returning a
  *  bare string for a pane to show in place. This one is keyed by a UI element's
  *  id, spans a whole site rather than one feature's routes, and carries a flavor.
  *  Different key space, different surface; neither is a migration target for the

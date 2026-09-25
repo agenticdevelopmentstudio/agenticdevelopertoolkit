@@ -3,11 +3,11 @@ id: d9df7837-8e06-460a-a703-60441d74eeed
 title: Categories and Tags
 domain: agenticdevelopertoolkit://recipes/categories-and-tags
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -166,8 +166,10 @@ Not applicable: This component performs no logging. Logging is delegated to chil
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Focus-management passes because the source's render order (`CategoryField` before `TagSetField`, see **preserve-tab-order**) is what determines focus order and it is logical; keyboard-navigable and screen-reader-support are marked partial because full operability is owned by `CategoryField` and `TagSetField`, which this source file does not implement; no-hardcoded-strings passes because `label` and `noun` are required host-supplied props with no literal string fallback anywhere in the source.
+Focus-management passes because the source's render order (`CategoryField` before `TagSetField`, see **preserve-tab-order**) is what determines focus order and it is logical; keyboard-navigable and screen-reader-support are marked partial because full operability is owned by `CategoryField` and `TagSetField`, which this source file does not implement; no-hardcoded-strings passes because `label` and `noun` are required host-supplied props with no literal string fallback anywhere in the source. Best-practices statuses rest on `CategoriesAndTags` being pure composition of `CategoryField` and `TagSetField` with no embedded logic of its own (separation-of-concerns: passed), and on `categoriesAndTags.test.tsx` directly rendering the block and asserting its behavior across seven cases (unit-test-coverage: passed).
 
 ## Change History
 
@@ -175,3 +177,4 @@ Focus-management passes because the source's render order (`CategoryField` befor
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; documented prop types in Overview; made label/noun requirements compile-time-checked with corrected test vectors; restated className/gap requirements platform-neutrally; fixed SwiftUI/Compose/WinUI 3 platform notes; documented the Disabled state, tab order, and the CSS-cascade label-width override; replaced the N/A Compliance section with an evaluated table; reformatted Design Decisions; added depends-on/related links |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

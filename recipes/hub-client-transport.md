@@ -3,15 +3,15 @@ id: d9dfd305-be0d-4770-9db8-43a35218c8b7
 title: Hub Client Transport
 domain: agenticdevelopertoolkit://recipes/hub-client-transport
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: 'The Direct-vs-Daemon transport contract for AgenticDeveloperHubClient: APITransport,
+summary: 'The Direct-vs-Daemon transport contract for the hub client: APITransport,
   DaemonContract, and TransportResolver''s probe-and-cache selection.'
 platforms:
 - swift
@@ -39,17 +39,15 @@ a decision actor (`TransportResolver`) that together decide, and cache,
 whether a request goes straight to the backend over HTTPS ("Direct") or to a
 local caching proxy daemon over loopback HTTP ("Daemon").
 
-The three source files are:
+The three source files, all under the hub client package's
+`Sources/Transport/`, are:
 
-- `packages/apple/AgenticDeveloperHubClient/Sources/Transport/APITransport.swift`
-  — `TransportKind`, `APITransport`, and the `direct(serverURL:transport:)` /
-  `daemon(port:transport:)` factories.
-- `packages/apple/AgenticDeveloperHubClient/Sources/Transport/DaemonContract.swift`
-  — the constants and wire shape (`HealthStatus`) that define what a
-  conforming local daemon must implement.
-- `packages/apple/AgenticDeveloperHubClient/Sources/Transport/TransportResolver.swift`
-  — the `actor` that probes the daemon's `GET /health` and caches the
-  resulting `TransportKind`.
+- `APITransport.swift` — `TransportKind`, `APITransport`, and the
+  `direct(serverURL:transport:)` / `daemon(port:transport:)` factories.
+- `DaemonContract.swift` — the constants and wire shape (`HealthStatus`)
+  that define what a conforming local daemon must implement.
+- `TransportResolver.swift` — the `actor` that probes the daemon's
+  `GET /health` and caches the resulting `TransportKind`.
 
 Because swift-openapi-runtime takes the server URL on the generated `Client`
 itself (not on the transport), Direct and Daemon are fully captured by the
@@ -99,8 +97,10 @@ file set) is the consumer: `ADHClient.resolved(using:credentials:)` asks a
 
 ### DaemonContract
 
-- **backend-url-constant**: `DaemonContract.backendURL` MUST be the fixed
-  value `https://api.agenticdeveloperhub.com`.
+- **backend-url-constant**: `DaemonContract.backendURL` MUST be a fixed,
+  hardcoded `https` production backend base URL — declared as a
+  `static let`, never computed or overridable at runtime — and is the
+  `Direct` transport's target.
 - **daemon-port-constant**: `DaemonContract.port` MUST be the fixed value
   `22850`.
 - **daemon-url-construction**: `DaemonContract.daemonURL(port:)` MUST
@@ -219,15 +219,15 @@ visual component.
 | hct-011 | resolver-never-launches-daemon | Continuing hct-010, after `resolve()` returns | The dead port still has no listener — nothing in the resolver started one |
 | hct-012 | daemon-factory, daemon-session-is-ephemeral, daemon-request-forwarding-contract | `ADHClient(transport: .daemon(port: <live MockDaemonServer port>), credentials: <token "tok-daemon">)`; call `adh.api.getHealth()` | The call round-trips over loopback and decodes the daemon's `200`; `adh.transportKind == .daemon` |
 | hct-013 | daemon-request-forwarding-contract, health-path-constant | Continuing hct-012 with token `"tok-verbatim"`; inspect the last request `MockDaemonServer` recorded | `method == "GET"`, `path == DaemonContract.healthPath`, `headers["authorization"] == "Bearer tok-verbatim"` |
-| hct-014 | direct-factory, api-transport-shape | `ADHClient(transport: .direct(transport: <URLSessionTransport over StubURLProtocol returning 200>), credentials: <token "tok-direct">)`; call `adh.api.getHealth()` | Captured request URL `== "https://api.agenticdeveloperhub.com/health"`, method `GET`, `Authorization == "Bearer tok-direct"`; the `200` response decodes |
+| hct-014 | direct-factory, api-transport-shape | `ADHClient(transport: .direct(transport: <URLSessionTransport over StubURLProtocol returning 200>), credentials: <token "tok-direct">)`; call `adh.api.getHealth()` | Captured request URL equals `DaemonContract.backendURL` with the health path appended, method `GET`, `Authorization == "Bearer tok-direct"`; the `200` response decodes |
 | hct-015 | health-url-construction, health-path-constant, daemon-port-constant | `DaemonContract.healthURL(port: 22850)` | `== URL(string: "http://127.0.0.1:22850/health")!` |
-| hct-016 | daemon-url-construction, backend-url-constant | `DaemonContract.daemonURL(port: 9999)`, `DaemonContract.backendURL` | `daemonURL == URL(string: "http://127.0.0.1:9999")!`; `backendURL == URL(string: "https://api.agenticdeveloperhub.com")!` |
+| hct-016 | daemon-url-construction, backend-url-constant | `DaemonContract.daemonURL(port: 9999)`, `DaemonContract.backendURL` | `daemonURL == URL(string: "http://127.0.0.1:9999")!`; `backendURL` is a fixed `https` URL literal (a `static let` constant, not derived from `port` or any environment input) |
 | hct-017 | health-status-decoding | Decode `{"status":"ok","version":"mock","extra":"ignored"}` as `HealthStatus` | Decodes successfully; `status == "ok"`, `version == "mock"`; the unknown `extra` key does not fail decoding |
 | hct-018 | health-status-decoding | Decode `{"status":"ok"}` (no `version` key) as `HealthStatus` | Decodes successfully; `status == "ok"`, `version == nil` |
 | hct-019 | transport-kind-cases | `TransportKind(rawValue: "direct")`, `TransportKind(rawValue: "daemon")` | Both initialize to the matching case; `TransportKind.direct.rawValue == "direct"`, `TransportKind.daemon.rawValue == "daemon"` |
 | hct-020 | transport-is-the-sole-variation-point, transport-injectable-for-tests | Build `ADHClient`s from `.direct(transport: mockA)` and `.daemon(port: p, transport: mockB)` | Each client dispatches through the supplied mock transport (no real network call); the two clients differ only in `serverURL`/`kind`, not in the operations `api` exposes |
 | hct-021 | resolver-is-an-actor, resolver-nonisolated-config | From a non-actor-isolated context, read `resolver.override` and `resolver.port` on a constructed `TransportResolver` | Both reads compile and return the constructor-supplied values synchronously, without `await` |
-| hct-022 | default-probe-timeout | `TransportResolver(override: .auto, port: <a port with nothing listening>)` constructed with no `probeTimeout` argument; call `resolve()` and measure elapsed time | Returns `.direct`; elapsed time is close to but not less than 2 seconds (the default `probeTimeout`), not immediate and not unbounded |
+| hct-022 | default-probe-timeout | `TransportResolver(override: .auto, port: <a port with nothing listening>)` constructed with no `probeTimeout` argument; call `resolve()` and measure elapsed time | Returns `.direct`; elapsed time is milliseconds, not close to `2` seconds — a refused loopback connection fails at once and is never bound by `probeTimeout`, so this only confirms the default compiles and resolves, not that it equals `2` (only a non-responding, black-holed target would actually exercise the timeout, and the source has no test for that case) |
 
 ## Edge Cases
 
@@ -369,8 +369,8 @@ subsystem or category is defined by this source.
 
 ## Platform Notes
 
-- **SwiftUI**: The source lives in
-  `packages/apple/AgenticDeveloperHubClient/Sources/Transport/{APITransport,DaemonContract,TransportResolver}.swift`.
+- **SwiftUI**: The source lives in the hub client package's
+  `Sources/Transport/{APITransport,DaemonContract,TransportResolver}.swift`.
   It is UI-framework-agnostic — `APITransport` is a plain `Sendable` struct
   and `TransportResolver` a plain `actor`, with no dependency on SwiftUI. A
   SwiftUI host typically calls `await TransportResolver().resolve()` (or
@@ -512,3 +512,4 @@ Privacy), a distinction this check does not itself encode.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Removed 8 agenticdeveloperhub product-name mentions (private-scope leak, D_2) via code-identifier rephrasing; hct-022 corrected to reflect that a refused loopback connection fails immediately and does not exercise probeTimeout. |

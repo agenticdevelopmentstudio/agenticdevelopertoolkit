@@ -3,15 +3,15 @@ id: b118c7bc-e163-40f0-bcc8-eb079e835794
 title: MarkdownEditor
 domain: agenticdevelopertoolkit://recipes/markdown-editor
 type: recipe
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A labelled markdown-body textarea with an editor toolbar above it: a built-in upload control (.md, .markdown, .txt), a quick-reference popover, and a slot for extra controls."
+summary: "A labelled markdown-body textarea with an editor toolbar: built-in .md upload, a quick-reference popover, and a slot for extra toolbar controls."
 platforms:
 - typescript
 - web
@@ -175,33 +175,6 @@ derives a title from an upload when it wants one.
 - **AppKit / UIKit:** Start with `NSTextView` (macOS) or `UITextView` (iOS) for markdown source, `NSTextField` or `UILabel` for label. Add an `NSView` (macOS) or `UIView` (iOS) subclass for the toolbar, using `NSStackView` (macOS, `orientation: .horizontal`) or `UIStackView` (iOS, `axis: .horizontal`). Use `Combine` or property observers for value binding. Note: Native text views require a custom file picker for opening a file; use `NSOpenPanel` (macOS) or `UIDocumentPickerViewController` (iOS) with content types `net.daringfireball.markdown` and `public.plain-text` to accept markdown and plain text.
 - **WinUI 3:** Start with a `TextBox` (`AcceptsReturn="True"`, a monospace `FontFamily`, and `IsSpellCheckEnabled="False"` to match **default-spellcheck-off**) for markdown source, `TextBlock` for label. Create a `Grid` with `RowDefinitions` for the label row and the content row, and a secondary `Grid` or `StackPanel` with `Orientation="Horizontal"` for the toolbar controls. Bind value to `TextBox.Text` via `x:Bind` or `Binding`. Note: File picker uses `Windows.Storage.Pickers.FileOpenPicker`; set `FileTypeFilter` to `new[] { ".md", ".markdown", ".txt" }` and `SuggestedStartLocation` to `PickerLocationId.DocumentsLibrary`.
 
-## API
-
-`@agenticdevelopertoolkit/ui/blocks/markdown-editor`:
-
-```ts
-interface MarkdownEditorProps {
-  value: string
-  onChange: (next: string) => void
-  label?: React.ReactNode        // default "Markdown body"
-  placeholder?: string
-  rows?: number                  // default 16; ignored when `fill`
-  spellCheck?: boolean           // default false
-  onUpload?: (text: string, fileName: string) => void
-  quickReference?: boolean       // default true
-  toolbarExtras?: React.ReactNode
-  toolbarLabel?: string          // default "Markdown editor toolbar"
-  className?: string
-  textareaClassName?: string
-  disabled?: boolean
-  fill?: boolean                 // default false — root becomes `min-h-0 flex-1`
-                                  // and the textarea flexes to the parent's
-                                  // height instead of a fixed `rows` box; the
-                                  // parent MUST supply a bounded height
-}
-export function MarkdownEditor(props: MarkdownEditorProps): React.ReactElement
-```
-
 ## Design Decisions
 
 **Decision**: Upload reports `(text, fileName)` via `onUpload` instead of
@@ -240,6 +213,8 @@ and it keeps the block focused on composition.
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
 | [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy & Data |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 Statuses rest on the source: the textarea's accessible name comes from
 `htmlFor`/`id` (T1–T2) and the upload button pairs a visible "Upload .md"
@@ -259,11 +234,45 @@ encoding validation of the chosen file's content before calling `onUpload`
 passed). Touch-target sizing and toolbar keyboard-roving are governed by the
 composed Button and EditorToolbar recipes, not re-assessed here; User Safety
 is omitted because the editor neither moderates nor publicly displays content.
+`separation-of-concerns` passes: `markdown-editor.tsx` composes `Label`,
+`Textarea`, `EditorToolbar`, and `MarkdownQuickReference`, and its only
+non-presentational code — `UploadMarkdownControl`'s file read — is isolated
+in its own small subcomponent rather than entangled with the editor's
+layout. `unit-test-coverage` fails — no test file in the `ui` package
+exercises `MarkdownEditor` or `UploadMarkdownControl`.
+
+## API
+
+`@agenticdevelopertoolkit/ui/blocks/markdown-editor`:
+
+```ts
+interface MarkdownEditorProps {
+  value: string
+  onChange: (next: string) => void
+  label?: React.ReactNode        // default "Markdown body"
+  placeholder?: string
+  rows?: number                  // default 16; ignored when `fill`
+  spellCheck?: boolean           // default false
+  onUpload?: (text: string, fileName: string) => void
+  quickReference?: boolean       // default true
+  toolbarExtras?: React.ReactNode
+  toolbarLabel?: string          // default "Markdown editor toolbar"
+  className?: string
+  textareaClassName?: string
+  disabled?: boolean
+  fill?: boolean                 // default false — root becomes `min-h-0 flex-1`
+                                  // and the textarea flexes to the parent's
+                                  // height instead of a fixed `rows` box; the
+                                  // parent MUST supply a bounded height
+}
+export function MarkdownEditor(props: MarkdownEditorProps): React.ReactElement
+```
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Conventions_5: moved `## API` from between Platform Notes/Design Decisions to after Compliance, before Change History. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; add an API prop table; add accept-markdown-and-text-files requirement and vector; clarify disabled-scope for quick-reference/toolbarExtras; link ingredient domains; approve design decisions; rebuild Compliance from the catalog; correct SwiftUI/Compose/AppKit/WinUI 3 platform-note APIs; strengthen T8/T12 vectors; genericize consumer-specific naming; dedupe related; fix 1.1.0 author attribution |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Expand Platform Notes with SwiftUI, Compose, AppKit/UIKit, and WinUI 3 translation guidance; update domain to agenticdevelopercookbook; set status to review |
-| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared MarkdownEditor extracted from a host application's detail view. |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared MarkdownEditor extracted from hub's ResearchDetail (contract c9). |

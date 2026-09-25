@@ -3,11 +3,11 @@ id: 9e06ce25-a124-473e-9cf6-ea11a7c40b2d
 title: KeyWindowBorderView
 domain: agenticdevelopertoolkit://recipes/key-window-border-view
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -175,12 +175,15 @@ Not applicable: No logging is implemented in the source.
 | [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
 | [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`platform-design-language` and `platform-theming` rest on the source drawing with the system accent color and mirroring macOS's own key/inactive window semantics via `NSWindow.didBecomeKeyNotification` / `didResignKeyNotification` and `ThemePaletteObserver`. `fault-tolerance` is partial because out-of-range `cornerRadius` and alpha inputs (see Edge Cases) do not crash the view, but the source also does not validate or normalize them to a defined result.
+`platform-design-language` and `platform-theming` rest on the source drawing with the system accent color and mirroring macOS's own key/inactive window semantics via `NSWindow.didBecomeKeyNotification` / `didResignKeyNotification` and `ThemePaletteObserver`. `fault-tolerance` is partial because out-of-range `cornerRadius` and alpha inputs (see Edge Cases) do not crash the view, but the source also does not validate or normalize them to a defined result. `separation-of-concerns` passes because the `strokeColor` derivation is named apart from `draw(_:)` precisely so it can be asked about without rasterizing; `unit-test-coverage` passes on `KeyWindowBorderViewTests.swift`'s direct exercise of the accent color, the key/inactive alpha swap, the repaint-on-notification path, and click-through.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added an `initial-key-state` requirement and vector for reading key state on first window attachment; moved the `NSBezierPath`/`stroke()` implementation detail from Appearance into the AppKit/UIKit platform note; corrected the UIKit note's false "always key" claim to `UIWindow.isKeyWindow`/`UIScene.activationState`, the WinUI 3 note's UWP namespaces and nonexistent `Deactivated` event to `Microsoft.UI.Xaml`/`WindowActivationState` with a native `Border`, and the SwiftUI note to prefer a native `.overlay(RoundedRectangle.strokeBorder)` over `NSViewRepresentable`; replaced the Compose and React/Web "Not applicable" notes with minimal focus-based equivalents; rewrote the click-through and half-point-inset Design Decisions to drop UIKit-only APIs and the inaccurate 2-point-blur claim, and reformatted all Design Decisions into the Decision/Rationale/Approved form; rebuilt Compliance as a linked checks table (platform-design-language, platform-theming, fault-tolerance) and dropped the invented Usability/Concurrency categories; added a Detached state and fixed the rapid-key-state-toggle edge case to describe `needsDisplay` coalescing; split the "sharp"/"visible" test vectors into concrete assertions, turned main-actor-isolation into a build-time check, and added observer-cleanup vectors for deallocation and window removal; fixed the 1.0.0 row's author to Mike Fullerton |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial recipe extraction from KeyWindowBorderView.swift |

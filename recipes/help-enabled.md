@@ -3,11 +3,11 @@ id: fcb8a0a4-2446-46f9-99bb-49b0317529d4
 title: HelpEnabled
 domain: agenticdevelopertoolkit://recipes/help-enabled
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -239,12 +239,15 @@ Emitted once per missing `id` per session (see **warns-on-missing-entry**); neve
 | [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
 | [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source directly: the trigger's accessible name is children-only text with `aria-haspopup`/`aria-expanded` left to `PopoverTrigger` rather than confirmed here (partial); Tab focus and the visible gold ring are implemented (passed); badge contrast at `opacity-70` is called out in Accessibility Options as unverified against arbitrary backgrounds (partial); no `motion-reduce:` guard exists on any transition (failed); focus/overlay handling is delegated entirely to Popover rather than managed here (partial); the console warning is a static string plus a non-PII `id` lookup key (passed for logging and privacy); and no user-visible string is hardcoded — help copy and fallback text both arrive as props/store data (passed).
+Statuses rest on the source directly: the trigger's accessible name is children-only text with `aria-haspopup`/`aria-expanded` left to `PopoverTrigger` rather than confirmed here (partial); Tab focus and the visible gold ring are implemented (passed); badge contrast at `opacity-70` is called out in Accessibility Options as unverified against arbitrary backgrounds (partial); no `motion-reduce:` guard exists on any transition (failed); focus/overlay handling is delegated entirely to Popover rather than managed here (partial); the console warning is a static string plus a non-PII `id` lookup key (passed for logging and privacy); and no user-visible string is hardcoded — help copy and fallback text both arrive as props/store data (passed). `separation-of-concerns` is partial because the fallback-resolution decision (`stored ?? fallback`) and the warn-once `Set` bookkeeping sit inline in the component body rather than in an extracted hook; `unit-test-coverage` passes on `help-enabled.test.tsx`'s exercise of the badge, the popover open, the plain-text/fallback paths, and the once-per-id warning.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: resolved the hover/focus vs. click trigger contradiction in the summary and Overview; corrected the Reduce Motion, SwiftUI Popover, Compose accessibility, "use client", and WinUI `Glyph` claims; renamed all requirements to subject-only kebab-case and added badge-data-slot, fallback-wrapping, and warning-suppression requirements; moved Tailwind class names out of the badge-visibility requirements and test vectors into the React/Web platform note; added tags and depends-on, converted Design Decisions to the Decision/Rationale/Approved form and added a contrast decision, added the Compliance table, and rewrote Logging; fixed the test 003 implementation-coupled assertion and the test 017 requirement-name mismatch; and replaced the incoherent "fallback without id" edge case with a touch-device edge case |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

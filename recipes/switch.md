@@ -3,11 +3,11 @@ id: 951b86ac-cf75-46ec-9746-d15fcb4618b4
 title: Switch
 domain: agenticdevelopertoolkit://recipes/switch
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -67,17 +67,17 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 |-------|------------------|
 | Unchecked (default) | Track uses the unchecked color; thumb sits at its leftmost position |
 | Checked | Track uses the checked color; thumb translates 14px to the right — its full travel within the track |
-| Disabled | Track/thumb opacity reduced to 50%; pointer interaction is blocked via `pointer-events: none` |
+| Disabled | No visual change (track/thumb keep full opacity, cursor stays `pointer`); toggling is blocked by Base UI's internal guards, not by CSS |
 | Focus-visible (keyboard) | 2px focus ring around the track, in the checked color at 40% opacity |
-| Checked + Disabled | Combines checked appearance with disabled opacity |
+| Checked + Disabled | Checked appearance only; no dimming (see **Disabled**) |
 
 ## Accessibility
 
-- **Role**: The underlying base-ui `Switch.Root` renders as a button element with the ARIA `switch` role.
+- **Role**: The underlying base-ui `Switch.Root` renders as a `<span role="switch">` (plus a visually hidden native `<input type="checkbox">` beside it for form semantics); it is not a native button.
 - **State announcement**: The component exposes checked state via the `aria-checked` attribute, updated when state changes.
 - **Keyboard support**: The component MUST be keyboard accessible via Tab navigation and Space (optionally Enter) to toggle.
 - **Minimum tap target**: The outer container (36px × 20px) does not meet the 44×44pt minimum touch target on all platforms; consumers SHOULD wrap the Switch in a larger interactive area for mobile contexts.
-- **Disabled communication**: When disabled, the component exposes the native HTML `disabled` attribute (base-ui applies `disabled`, not `aria-disabled`) and blocks pointer interaction via `pointer-events: none`; because `pointer-events: none` removes the element from hit-testing, the CSS `cursor: not-allowed` rule never actually renders.
+- **Disabled communication**: When disabled, base-ui sets `aria-disabled="true"` and `data-disabled` on the `<span>` root and moves it out of the tab order (`tabindex="-1"`); the native HTML `disabled` attribute is applied only to the hidden `<input>`, not the visible root. Because the root never matches the CSS `:disabled` pseudo-class, the `disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50` Tailwind utilities never take effect — the track/thumb keep full opacity and the cursor stays `pointer`. Toggling is still blocked, but by Base UI's internal click/keydown guards, not by `pointer-events: none`.
 - **Label association**: The component itself has no text content; a label element or aria-label MUST be provided by the consumer.
 
 ## Conformance Test Vectors
@@ -88,12 +88,12 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 | switch-002 | toggles-on-click | Checked Switch, user clicks | State changes to unchecked; callback fires if controlled |
 | switch-003 | support-controlled | Controlled Switch with `checked={true}` and `onCheckedChange`; user clicks, parent does not update `checked` | `onCheckedChange` fires with the toggled value; the rendered state stays at `checked={true}` until the parent prop changes |
 | switch-004 | support-uncontrolled | Uncontrolled Switch with `defaultChecked={true}` | Clicking toggles visual state without external callback |
-| switch-005 | respect-disabled-state | Disabled Switch, user clicks | State does not change; pointer-events disabled prevents click handling |
+| switch-005 | respect-disabled-state | Disabled Switch, user clicks | State does not change; Base UI's internal disabled guard blocks the click handler (not CSS `pointer-events`) — the root shows no visual change |
 | switch-006 | animate-position | Toggle checked → unchecked | Thumb translates from 14px to 0px with a smooth transition |
 | switch-007 | animate-colors | Toggle checked → unchecked | Track color transitions from the checked color to the unchecked color smoothly |
 | switch-008 | render-inline | Switch rendered in text flow | Component displays as inline-flex (does not break text flow) |
 | switch-009 | class-prop | Switch with custom `className="my-custom-class"` | Custom class merges with internal classes; visual result reflects both |
-| switch-010 | respect-disabled-state | Disabled Switch (`disabled={true}`), controlled parent flips the `checked` prop | Track color and thumb position still animate to match the new `checked` value — `disabled` removes pointer-events/cursor/opacity, not the transition classes; user clicks remain ignored |
+| switch-010 | respect-disabled-state | Disabled Switch (`disabled={true}`), controlled parent flips the `checked` prop | Track color and thumb position still animate to match the new `checked` value — the transition classes are always active and unaffected by `disabled`, which shows no visual change of its own; user clicks remain ignored |
 | switch-011 | toggle-on-space | Enabled Switch, user presses Tab to focus then presses Space | State toggles; callback fires if controlled |
 | switch-012 | expose-switch-role | Switch rendered with an accessible name | Assistive technology reports role "switch" along with the provided name and current checked state |
 | switch-013 | respect-disabled-state | Disabled Switch, focused via Tab, user presses Space | State does not change; no callback fires |
@@ -114,7 +114,7 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 | `checked` | boolean | undefined | Controlled state; when present, component is controlled mode |
 | `onCheckedChange` | function | undefined | Callback fired when user toggles state; signature: `(checked: boolean) => void` |
 | `defaultChecked` | boolean | undefined | Initial state for uncontrolled mode |
-| `disabled` | boolean | false | Disables user interaction and applies disabled styling |
+| `disabled` | boolean | false | Blocks toggling via Base UI's internal guards; the intended dimmed styling (`disabled:opacity-50` etc.) never applies because the root is a `<span>`, not a native-disabled element — see **Disabled communication** |
 | `className` | string | "" | Additional CSS class names merged with component's internal styles |
 | `name` | string | — | Form field name; forwarded via `{...props}` to base-ui's `Switch.Root` for native form submission |
 | `value` | string | — | Form value submitted when checked; forwarded via `{...props}` to `Switch.Root` |
@@ -202,14 +202,17 @@ Not applicable: The component does not perform logging. Debugging state changes 
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on what `switch.tsx` itself shows: the fixed 36×20px track (below the 44×44pt minimum) and the absent `prefers-reduced-motion` check are directly visible in the source, while the switch role, keyboard handling, and label association depend on base-ui's `Switch.Root` contract and consumer-supplied props, which this file doesn't itself implement.
+Statuses rest on what `switch.tsx` itself shows: the fixed 36×20px track (below the 44×44pt minimum) and the absent `prefers-reduced-motion` check are directly visible in the source, while the switch role, keyboard handling, and label association depend on base-ui's `Switch.Root` contract and consumer-supplied props, which this file doesn't itself implement. `separation-of-concerns` passes because `switch.tsx` only themes and composes Base UI's `Switch.Root`/`Switch.Thumb` primitives, with no toggle or focus logic of its own. `unit-test-coverage` fails because no test file in the `ui` package imports or exercises `Switch`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Corrected disabled mechanism (span aria/data-disabled, no native disabled); added BP checks. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fixed nonexistent Platform Notes APIs; rewrote Appearance/States/test vectors as semantic values with Tailwind mapping confined to React/Web; corrected thumb-travel math to 14px; resolved the disabled cursor/pointer-events conflict and clarified the native disabled attribute; added toggle-on-space and expose-switch-role requirements with vectors; reformatted Design Decisions; rebuilt Compliance with real linked checks; corrected the Increase Contrast WCAG citation; listed forwarded form props in Configuration; populated related ingredients; fixed the 1.0.0 author and an RFC 2119 misuse |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Accessibility Options markers: state facts, keep genuine gaps only; update Platform Notes with Reduce Motion guidance |
 | 1.0.0 | 2026-09-22 | Generated | Initial creation, generated from base-ui React source |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

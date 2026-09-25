@@ -3,11 +3,11 @@ id: 4d0e04ff-39eb-472c-93a0-8070f1b64a6a
 title: "OptionMenu"
 domain: agenticdevelopertoolkit://recipes/option-menu
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -238,13 +238,16 @@ No logging. OptionMenu is a presentational form control; it emits no structured 
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`keyboard-navigable` and `focus-management` pass on the trigger's Enter/Space/ArrowDown activation, the full arrow/Enter/Escape/OK keyboard model, and focus returning to the trigger on close. `screen-reader-support` and `semantic-markup` are partial because the source's Other row is a `role="option"` that contains a focusable `<input>` and `<button>`, a nesting that departs from a plain listbox/option tree (see Accessibility). `no-hardcoded-strings` fails because the OK button's label is hard-coded with no prop (see Localization).
+`keyboard-navigable` and `focus-management` pass on the trigger's Enter/Space/ArrowDown activation, the full arrow/Enter/Escape/OK keyboard model, and focus returning to the trigger on close. `screen-reader-support` and `semantic-markup` are partial because the source's Other row is a `role="option"` that contains a focusable `<input>` and `<button>`, a nesting that departs from a plain listbox/option tree (see Accessibility). `no-hardcoded-strings` fails because the OK button's label is hard-coded with no prop (see Localization). The keyboard-nav/selection state machine is defined as local functions inline in the component body rather than an extracted hook (separation-of-concerns: partial), while `optionMenu.test.tsx` renders `OptionMenu` and exercises arrow-nav commit, click commit, Escape, and the Other-row input with real assertions (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: name Tab/click-outside/Home-End/typeahead behavior, resolve the selection-vs-focus ordering with `allowOther`, correct WinUI 3/Compose/AppKit-UIKit platform APIs, add `depends-on`/`related` links, add a Compliance table, reformat Design Decisions, generify the Overview's app-specific example, fix the internal roving-tabindex/aria-activedescendant contradiction, correct the Localization claim about the OK label, add missing test vectors and remap T9/T10, describe Appearance with semantic roles, and document the disabled-trigger requirement. |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Add full optional sections (marked Not applicable where appropriate), fix domain URI to use agenticdevelopercookbook, and expand Platform Notes with translation guidance for all platforms. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec. |

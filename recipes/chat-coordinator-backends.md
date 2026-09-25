@@ -3,15 +3,15 @@ id: 91891cc2-3511-4d00-888a-1ff7585c0b64
 title: Chat Coordinator Backends
 domain: agenticdevelopertoolkit://recipes/chat-coordinator-backends
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The chat package's transport layer: the legacy ChatBackend interface, the portable Backend contract, three ChatBackend implementations (FetchBackend, MockBackend, and the ShuffleBag/streamTokens streaming toolkit), and two Backend implementations (ChatBackendAdapter, PersonaChatBackend)."
+summary: "The chat package's transport layer: ChatBackend/Backend contracts, FetchBackend/MockBackend/streamTokens, and ChatBackendAdapter/PersonaChatBackend."
 platforms:
 - typescript
 - web
@@ -214,16 +214,19 @@ the rest of the package deals with is, in the end, a `Backend`.
   awaiting the turn it schedules.
 - **adapter-history-snapshot-at-send**: `send` MUST call
   `this.options.history()` synchronously at call time — before enqueueing the
-  turn on `tail` — and pass that snapshot into the turn, since the legacy
-  contract expects `history` to be what preceded the turn.
+  turn on `tail` — and pass that snapshot into the turn. This snapshot is
+  taken at `send`'s call time, not when the queued turn actually runs, so a
+  turn queued behind an unfinished prior turn runs with a history snapshot
+  that predates that prior turn's outcome (see **Two turns submitted back to
+  back** in Edge Cases).
 - **adapter-turn-serialization**: Turns MUST run one at a time, in submission
   order, by chaining each call's turn onto a private `tail: Promise<void>`
   (`this.tail = this.tail.then(() => this.runTurn(...))`); two turns
   overlapping would interleave their `draftUpdated` events into the one
   shared per-participant draft.
-- **adapter-setLocalTyping-noop**: `setLocalTyping` MUST resolve without
+- **adapter-set-local-typing-noop**: `setLocalTyping` MUST resolve without
   emitting any event; `ChatBackend` has no presence channel to forward to.
-- **adapter-submitWidgetResponse-throws**: `submitWidgetResponse` MUST throw
+- **adapter-submit-widget-response-throws**: `submitWidgetResponse` MUST throw
   `Error('ChatBackend does not support interactive widgets.')`.
 - **adapter-destroy-cascades**: `destroy()` MUST, exactly once (guarded by a
   `destroyed` flag), abort its internal `AbortController`, call
@@ -356,11 +359,15 @@ the rest of the package deals with is, in the end, a `Backend`.
   (success, `messageFailed`, `transportError`, or an uncaught throw handled
   by the `tail` chain's `.catch`) MUST result in `onStatus` being called with
   `null` before the turn is considered over, via the `finally` block.
-- **persona-transport-vs-message-failure**: A failure in `ensureConversation`
-  or in the initial message `POST` (nothing reached adh) MUST be reported as
-  `messageFailed` with the originating `localID`; a failure while consuming
-  the SSE body (already streaming) MUST be reported as `transportError` with
-  no `localID`.
+- **persona-transport-vs-message-failure**: A rejected `authorize` call in
+  `ensureConversation`, a non-`ok` response from `ensureConversation`'s
+  `POST` (checked explicitly and thrown), or a rejected `authorize` call for
+  the initial message `POST` (nothing reached adh in any of these) MUST be
+  reported as `messageFailed` with the originating `localID`; a failure
+  while consuming the SSE body (already streaming) MUST be reported as
+  `transportError` with no `localID`. A message `POST` that resolves with a
+  non-`ok` status is not checked at all — see **Error states** in Edge
+  Cases.
 - **persona-in-band-error-handling**: An `error` SSE event MUST be treated as
   a failure (`messageFailed`) regardless of the HTTP response's status code,
   since adh answers `200` and reports failure in-band.
@@ -368,9 +375,9 @@ the rest of the package deals with is, in the end, a `Backend`.
   cleared (`clearOpenInvocations()`) in `runTurn`'s `finally`, so a later
   turn never inherits a still-open invocation from an earlier, abandoned
   one.
-- **persona-setLocalTyping-noop**: `setLocalTyping` MUST resolve without
+- **persona-set-local-typing-noop**: `setLocalTyping` MUST resolve without
   emitting any event; adh has no typing channel for the local participant.
-- **persona-submitWidgetResponse-throws**: `submitWidgetResponse` MUST throw
+- **persona-submit-widget-response-throws**: `submitWidgetResponse` MUST throw
   `Error('PersonaChatBackend does not support widgets.')`.
 
 ### Cross-implementation divergence
@@ -466,7 +473,7 @@ exposes no interactive control.
 | ccb-041 | persona-transport-vs-message-failure | `authorize` for the `/conversations` path resolves with a `500` | A `messageFailed` carrying the `localID` from `send`. (personaChatConformance.test.ts, "ci-transport-vs-message") |
 | ccb-042 | persona-send-rejects-attachments | `send('hi', [{ id: 'a', ... } as Attachment])` | Rejects matching `/attachment/i`. (personaChatConformance.test.ts, "ci-attachments") |
 | ccb-043 | persona-status-cleared-on-every-exit | A successful turn and a turn that ends in an `error` event, both drained fully | `onStatus`'s last call in both cases is `null`. (personaChatConformance.test.ts, "status clears when a turn ends, on success and on failure") |
-| ccb-044 | adapter-error-event-commits-partial | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessageStream` yields `{type:'token',text:'partial'}` then `{type:'error',message:'boom'}`; drain events | A `messageReceived` commits with `text: 'partial'` (the accumulated text, not `'boom'`), followed by `draftCleared`; traced to `ChatBackendAdapter.ts`'s `case 'error': this.commit(turn.text || event.message, turn.display())` — no dedicated test file exists for `ChatBackendAdapter`, so this vector is traced to source rather than to an existing test. |
+| ccb-044 | adapter-error-event-commits-partial | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessageStream` yields `{type:'token',text:'partial'}` then `{type:'error',message:'boom'}`; drain events | A `messageReceived` commits with `text: 'partial'` (the accumulated text, not `'boom'`), followed by `draftCleared`; traced to `ChatBackendAdapter.ts`'s `case 'error': this.commit(turn.text \|\| event.message, turn.display())` — no dedicated test file exists for `ChatBackendAdapter`, so this vector is traced to source rather than to an existing test. |
 | ccb-045 | adapter-turn-throw-commits-generic-apology | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessage` rejects | A `messageReceived` commits with `text: "Sorry, something went wrong. Let's try again."`; traced to `ChatBackendAdapter.ts`'s `runTurn` catch block — no dedicated test file exists for `ChatBackendAdapter`, so this vector is traced to source rather than to an existing test. |
 
 ## Edge Cases
@@ -495,7 +502,15 @@ exposes no interactive control.
   immediately and queue the actual turn on a private promise `tail` chain,
   so the turns still run strictly one at a time (**adapter-turn-serialization**,
   **persona-turn-serialization**); nothing in either class rejects an
-  overlapping `send` call.
+  overlapping `send` call. For `ChatBackendAdapter`, the queued turn's
+  history was snapshotted back at its own `send` call
+  (**adapter-history-snapshot-at-send**), before the prior turn's reply
+  existed. In `useChatSession`, whose `history` callback is `project()`
+  (committed messages plus any active draft), the queued turn's snapshot
+  therefore omits the prior reply entirely for a unary backend, or carries
+  only the prior reply's in-progress partial draft for a streaming backend
+  — not the prior turn's committed outcome, despite running strictly after
+  it.
 - **Concurrent `sendMessage`/`sendMessageStream` calls directly on a bare
   `ChatBackend` implementation (concurrent access)**: `ChatBackend`
   (`types.ts`) states no concurrency contract for overlapping calls on the
@@ -507,19 +522,32 @@ exposes no interactive control.
   caller. Through `ChatBackendAdapter`, an unhandled rejection there is
   caught by `runTurn`'s catch-all and committed as the generic apology
   (**adapter-turn-throw-commits-generic-apology**). `PersonaChatBackend`
-  catches the equivalent failure explicitly at each `authorize` call site and
-  reports `messageFailed` or `transportError` per
-  **persona-transport-vs-message-failure**, never letting it propagate
-  uncaught.
+  catches a rejected `authorize` call at each call site and reports
+  `messageFailed` or `transportError` per
+  **persona-transport-vs-message-failure**, never letting a rejection
+  propagate uncaught. It has no equivalent check for a message `POST` that
+  *resolves* with a non-`ok` status: unlike `ensureConversation` (which
+  checks `res.ok` and throws), the message `POST`'s response goes straight
+  to the SSE reader with no status check. A non-SSE error body has no
+  `\n\n` separator, so the reader reaches EOF, `consumeStream` returns
+  `false`, and the turn ends with only a `draftCleared` and `onStatus(null)`
+  — neither `messageFailed` nor `transportError` is emitted, and the
+  message's `deliveryStatus` stays `'sending'` forever.
 - **Offline/disconnected state**: neither `FetchBackend` nor
   `PersonaChatBackend` detects connectivity proactively; both discover it
   only when a request throws or a stream ends abnormally, handled per the
   error-states cases above. `MockBackend` and `ShuffleBag`/`streamTokens`
   perform no network I/O and are unaffected by connectivity.
 - **Malformed SSE payload (malformed input)**: `PersonaChatBackend.parseData`
-  catches a `JSON.parse` failure and returns `null`; every SSE event handler
-  that calls it checks for `null` (`if (!d) break`) and drops the event
-  rather than throwing or crashing the stream.
+  catches a `JSON.parse` failure and returns `null`. Only the
+  `tool_call_started` and `tool_call_completed` handlers check for that
+  `null` (`if (!d) break`) and drop the event. The `token` and `error`
+  handlers instead use `?.`/`??` fallbacks and still act on a malformed
+  event: a malformed `token` still flips `onStatus` to `'responding'` on
+  first arrival and emits a `draftUpdated` (with the fragment falling back
+  to `''`, so `accumulated` is unchanged), and a malformed `error` still
+  emits `messageFailed` with `reason` falling back to `'Chat failed.'` and
+  ends the turn, per **persona-in-band-error-handling**.
 - **Tool completion with no matching open call (malformed/out-of-order
   input)**: `ChatBackendAdapter.Turn.close` synthesizes the missing
   invocation (**adapter-tool-completion-synthesizes-unmatched**);
@@ -845,3 +873,4 @@ handled.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe covering `types.ts`, `EventQueue.ts`, `FetchBackend.ts`, `MockBackend.ts`, `ShuffleBag.ts`, `ChatBackendAdapter.ts`, and `PersonaChatBackend.ts`; documents the cross-implementation divergences between `ChatBackendAdapter` and `PersonaChatBackend` and the open question around concurrent direct use of a bare `ChatBackend`.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Fixed ccb-044 pipe escape, history/transport-failure/SSE edge cases; kebab-cased 4 req names. |

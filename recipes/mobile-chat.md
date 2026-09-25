@@ -3,11 +3,11 @@ id: f6d46f16-65a6-4d19-80c7-1fc8b4d323fd
 title: Mobile Chat
 domain: agenticdevelopertoolkit://recipes/mobile-chat
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 summary: Full-screen chat surface with scrolling transcript, thinking indicator, and
   single-line composer for mobile devices.
@@ -229,8 +229,10 @@ Not applicable: this source does not call any logging API. No `Logger`/`os.log` 
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source shown: Return-key submission and tap-to-send both work but no other keyboard path exists, so keyboard navigation is partial; close/send buttons are system-default sized, so touch-target-size passes; surface and divider colors come from semantic palette tokens whose contrast is set by the theme system rather than verified in this component, so contrast-ratio is partial; the open/close animations run unconditionally with no reduced-motion check, so reduced-motion fails; the placeholder and default close label are hardcoded rather than externalized, so both internationalization checks fail; the component collects no more than the session already holds, so data-minimization passes; and the composer validates non-empty input but delegates message-content rendering and sanitization to `MobileMessageBubbleView`/`Transcript`, so input-sanitization is partial.
+Statuses rest on the source shown: Return-key submission and tap-to-send both work but no other keyboard path exists, so keyboard navigation is partial; close/send buttons are system-default sized, so touch-target-size passes; surface and divider colors come from semantic palette tokens whose contrast is set by the theme system rather than verified in this component, so contrast-ratio is partial; the open/close animations run unconditionally with no reduced-motion check, so reduced-motion fails; the placeholder and default close label are hardcoded rather than externalized, so both internationalization checks fail; the component collects no more than the session already holds, so data-minimization passes; and the composer validates non-empty input but delegates message-content rendering and sanitization to `MobileMessageBubbleView`/`Transcript`, so input-sanitization is partial; web delegates session/state logic to `useChatSession` and iOS delegates business logic to the injected `ChatViewModel`, with both sources owning only UI construction and wiring (separation-of-concerns: passed), and `MobileChat.test.tsx` and `MobileChatViewControllerTests.swift` both meaningfully exercise construction, transcript rebuild, and send/receive flows (unit-test-coverage: passed).
 
 ## Change History
 
@@ -238,3 +240,4 @@ Statuses rest on the source shown: Return-key submission and tap-to-send both wo
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web and iOS sources |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and moved UIKit-only theme/open-state details out of Behavioral Requirements into Platform Notes; reformatted Design Decisions to Decision/Rationale/Approved and resolved the opaque "Task 8" reference; rewrote Compliance with linked, one-word-category checks; corrected unverified Reduce Motion, Analytics, and Logging claims to match what the source actually does; wrote real Configuration and Localization sections in place of "Not applicable"; fixed the auto-scroll threshold wording, split its test vector, and gave bubble-width a single basis with per-platform units; corrected the Compose, WinUI 3, SwiftUI, and AppKit/UIKit platform notes; added missing test vectors for theme reapplication, whitespace-only Return, rapid-fire sends, and resize/rotation, and gave vector 016 concrete input |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

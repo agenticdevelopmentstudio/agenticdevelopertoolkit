@@ -3,11 +3,11 @@ id: 6579e030-0455-453c-81cf-177dae3dd82e
 title: Field Value
 domain: agenticdevelopertoolkit://recipes/field-value
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -121,7 +121,7 @@ FieldValue is a presentational component that renders a field's value in the app
 | field-value-027 | markdown-as-text | `{ type: 'markdown', value: '<script>alert(1)</script>', label: 'Bio' }` | `<p class="rp-field__prose">&lt;script&gt;alert(1)&lt;/script&gt;</p>` |
 | field-value-028 | boolean-as-yes-no | `{ type: 'boolean', value: 'false', label: 'Active' }` | `<span class="rp-field__text">Yes</span>` |
 | field-value-029 | boolean-as-yes-no | `{ type: 'boolean', value: null, label: 'Active' }` | `<span class="rp-field__text">No</span>` |
-| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | `<a class="rp-field__link" href="javascript:alert(1)" rel="noopener noreferrer nofollow" target="_blank">javascript:alert(1)</a>` |
+| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | `<a class="rp-field__link" href="javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')" rel="noopener noreferrer nofollow" target="_blank">javascript:alert(1)</a>` |
 
 ## Edge Cases
 
@@ -135,7 +135,7 @@ FieldValue is a presentational component that renders a field's value in the app
 - **Non-boolean truthy value for boolean type**: A truthy non-boolean value (for example, the string "false") renders "Yes" because the component performs a truthiness check, not a strict boolean comparison; see **boolean-as-yes-no**.
 - **Null or undefined boolean value**: Renders "No" because null and undefined are falsy in the truthiness check.
 - **Markdown or textarea containing HTML or script markup**: Rendered as literal, escaped text and never executed, because the component places the string as JSX text content rather than parsing or injecting it as HTML; see **markdown-as-text** and **textarea-as-text**.
-- **URL value with a non-http(s) scheme**: The href is set directly from the value with no scheme check, so a value such as `javascript:alert(1)` renders as a clickable link identically to any other URL, with its protocol prefix untouched by the http(s) stripping in **url-protocol-stripped**; the component does not validate or restrict the URL scheme.
+- **URL value with a non-http(s) scheme**: The `href` prop is set directly from the value with no scheme check in the component's own code; the component does not validate or restrict the URL scheme, and its protocol prefix is untouched by the http(s) stripping in **url-protocol-stripped**. For most non-http(s) schemes this renders a clickable link with that value verbatim. A `javascript:` value is the one case that renders differently: React 19's `sanitizeURL` intercepts every `javascript:`-scheme `href`/`src`/`action`/`formAction` prop at render time and replaces it with a throwing stub (`javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')`), regardless of what FieldValue itself does — see `field-value-030`. A non-React port has no equivalent sanitizer and would need one to avoid emitting a live `javascript:` link built from untrusted registry data.
 
 ## Configuration
 
@@ -222,12 +222,15 @@ Not applicable: FieldValue performs no logging.
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-These statuses rest on `FieldValue.tsx`: it sets `href` directly from the value with no scheme check (input-sanitization partial, see **url-as-link**); it renders semantic `<a>`, `<ul>`/`<li>`, and `<img>` elements with `alt` text from `field.label` (screen-reader-support, keyboard-navigable, semantic-markup), but applies no inline color or font size of its own, leaving contrast and dynamic type up to CSS classes this file does not define (both partial); and it hardcodes the `DELIVERY_LABEL` strings and "Yes"/"No" in source rather than reading them from a resource file, while the `date` type is displayed through raw `String()` coercion with no locale-aware formatting (string-externalization, no-hardcoded-strings, and locale-aware-formatting all failed), with Unicode text otherwise passed through untouched by any of the component's `String()` conversions (unicode-support passed).
+These statuses rest on `FieldValue.tsx`: it sets `href` directly from the value with no scheme check (input-sanitization partial, see **url-as-link**); it renders semantic `<a>`, `<ul>`/`<li>`, and `<img>` elements with `alt` text from `field.label` (screen-reader-support, keyboard-navigable, semantic-markup), but applies no inline color or font size of its own, leaving contrast and dynamic type up to CSS classes this file does not define (both partial); and it hardcodes the `DELIVERY_LABEL` strings and "Yes"/"No" in source rather than reading them from a resource file, while the `date` type is displayed through raw `String()` coercion with no locale-aware formatting (string-externalization, no-hardcoded-strings, and locale-aware-formatting all failed), with Unicode text otherwise passed through untouched by any of the component's `String()` conversions (unicode-support passed). `separation-of-concerns` passes because `FieldValue.tsx` is a single presentational component with no fetching, sanitization, or state logic of its own — it only switches on `field.type` and renders. `unit-test-coverage` is `partial`: there is no dedicated `FieldValue.test.tsx`, but `RegistryProfile.test.tsx` renders real `url`, `boolean`, `multi_select`, `email`, and `phone` fields through `FieldValue` and asserts on its actual output (link `href`, plain-text email/phone, "Yes"/"No"); the `date`, `image`, and `select` type branches are not exercised by any test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed field-value-030 and non-http(s)-scheme edge case: React 19 sanitizes javascript: hrefs. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added a new empty-email-or-phone requirement and boolean-truthiness clarification, linked related registry-profile and service-list recipes, reformatted Design Decisions to the three-line form and resolved the DELIVERY_LABEL/localization contradiction, filled in the Compliance table, corrected Platform Notes APIs (SwiftUI, Compose, AppKit/UIKit, WinUI 3) and renamed the Web bullet to React/Web, moved JavaScript-specific mechanics out of Behavioral Requirements and into the React/Web note, fixed the field-value-007 test vector's rendered `key` attribute, and added test vectors and edge cases for date/select, protocol stripping and scheme handling, an unset image resolver, additional address parts, empty email/phone, markdown script content, and boolean truthiness |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

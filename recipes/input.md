@@ -3,11 +3,11 @@ id: 0f5b7167-b375-4f44-977b-566f720a453d
 title: Input
 domain: agenticdevelopertoolkit://recipes/input
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -174,13 +174,16 @@ Not applicable: Input component does not perform logging. Debug logging for inpu
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`keyboard-navigable` passes because the source renders a native HTML `<input>`, which is keyboard-operable by default with no custom key handling to verify. `screen-reader-support`, `contrast-ratio`, and `touch-target-size` are `partial`: the source itself provides no accessible name (an external `<label>` is required), its M3 color tokens are resolved outside this file so contrast can't be confirmed here, and its fixed 36px height meets the WCAG 2.5.8 minimum but not Android's or iOS's native minimums.
+`keyboard-navigable` passes because the source renders a native HTML `<input>`, which is keyboard-operable by default with no custom key handling to verify. `screen-reader-support`, `contrast-ratio`, and `touch-target-size` are `partial`: the source itself provides no accessible name (an external `<label>` is required), its M3 color tokens are resolved outside this file so contrast can't be confirmed here, and its fixed 36px height meets the WCAG 2.5.8 minimum but not Android's or iOS's native minimums. `separation-of-concerns` passes because the component is a thin themed wrapper over the native `<input>` with no business logic beyond the `autoComplete`-precedence guard; `unit-test-coverage` passes on `autofill.test.tsx`'s direct exercise of that autofill opt-out/token behavior against `Input`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rewrote Behavioral Requirements as platform-neutral behavior and moved implementation detail (spread operator, `cn()`, `fieldShellClass`, Tailwind classes) into the React/Web note; renamed requirements to subject-only kebab-case and updated all citations, including the Conformance Test Vectors' state rows; listed the exact autofill opt-out attributes; corrected the `cn()` attribution (`clsx` + `tailwind-merge`) and cut the unsupported Deep Linking claim; corrected the tap-target minimum, the focus/invalid "inner shadow" (actually an outer ring), and the color-only Differentiate-Without-Color claim; corrected Design Decisions 1 and 2 against source and reformatted all five to Decision/Rationale/Approved; clarified the Reduce Motion transition; corrected the WinUI, SwiftUI, and Compose Platform Notes and added invalid-state and no-token-autofill parity across all native platforms; replaced Compliance's blanket "Not applicable" with a table of applicable checks |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove review marker from Compliance section; replace with concrete "Not applicable" statement |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

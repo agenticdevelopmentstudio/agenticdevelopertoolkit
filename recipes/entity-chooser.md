@@ -3,11 +3,11 @@ id: 79f7ed30-3193-49bc-856b-d7dd01303baa
 title: EntityChooser
 domain: agenticdevelopertoolkit://recipes/entity-chooser
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -237,12 +237,24 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 
 ## Design Decisions
 
-- **Compose `ListChooser`, don't fork it.** All list, filter, roving-keyboard, and add-new behavior is `ListChooser`'s; `EntityChooser` only layers selection semantics (single value vs. set + chips). One authoritative home for the list/keyboard logic; the chooser stays disposable.
-- **Multi = repeated single-accept, kept open across commits, not a bespoke multi-select.** Rather than re-writing `ListChooser` to toggle rows in a persistent selection list (a different keyboard model), multi mode reuses the single-accept engine and passes `keepOpenOnCommit` so the browser stays open after each accept — one open can add as many entries as needed (see **trigger-label-only-multi**, **add-to-set-multi**). The set lives in the parent, and selected options are hidden so the browser never re-offers them. Simpler, fully accessible, zero duplication of keyboard logic.
-- **Chips reuse `RemovableChip` component** so tag editing looks and reads the same everywhere the component is used.
-- **`value=null` on the inner `ListChooser` in multi mode** keeps the trigger reading "Choose…" (an add affordance) rather than echoing a single committed value.
-- **`selectionPlacement="host"` option for layout flexibility.** When the chip set is rendered inline with the trigger, a wrapping multi-line group cannot keep a fixed column width. Handing the chips to the host lets the host draw them in a separate area (e.g., a different row or column) and keep the trigger's width stable and aligned with fields above/below.
-- **No built-in async state.** `options` is a controlled in-memory prop; the caller owns fetching/loading/error — consistent with the sibling form controls.
+- **Decision**: Compose `ListChooser`, don't fork it.
+  **Rationale**: All list, filter, roving-keyboard, and add-new behavior is `ListChooser`'s; `EntityChooser` only layers selection semantics (single value vs. set + chips). One authoritative home for the list/keyboard logic; the chooser stays disposable.
+  **Approved**: pending
+- **Decision**: Multi mode is repeated single-accept, kept open across commits, not a bespoke multi-select.
+  **Rationale**: Rather than re-writing `ListChooser` to toggle rows in a persistent selection list (a different keyboard model), multi mode reuses the single-accept engine and passes `keepOpenOnCommit` so the browser stays open after each accept — one open can add as many entries as needed (see **trigger-label-only-multi**, **add-to-set-multi**). The set lives in the parent, and selected options are hidden so the browser never re-offers them. Simpler, fully accessible, zero duplication of keyboard logic.
+  **Approved**: pending
+- **Decision**: Chips reuse the `RemovableChip` component.
+  **Rationale**: So tag editing looks and reads the same everywhere the component is used.
+  **Approved**: pending
+- **Decision**: Pass `value=null` to the inner `ListChooser` in multi mode.
+  **Rationale**: Keeps the trigger reading "Choose…" (an add affordance) rather than echoing a single committed value.
+  **Approved**: pending
+- **Decision**: Offer a `selectionPlacement="host"` option for layout flexibility.
+  **Rationale**: When the chip set is rendered inline with the trigger, a wrapping multi-line group cannot keep a fixed column width. Handing the chips to the host lets the host draw them in a separate area (e.g., a different row or column) and keep the trigger's width stable and aligned with fields above/below.
+  **Approved**: pending
+- **Decision**: Provide no built-in async state.
+  **Rationale**: `options` is a controlled in-memory prop; the caller owns fetching/loading/error — consistent with the sibling form controls.
+  **Approved**: pending
 
 ## Compliance
 
@@ -251,13 +263,16 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`screen-reader-support` and `keyboard-navigable` rest on the `aria-label`/role wiring described in Accessibility and the delegation to `ListChooser`'s keyboard model (**delegate-list-behavior**); `touch-target-size` is `partial` because the source sets no explicit sizing for the trigger or chip-remove controls, so compliance depends on inherited styling this file can't verify.
+`screen-reader-support` and `keyboard-navigable` rest on the `aria-label`/role wiring described in Accessibility and the delegation to `ListChooser`'s keyboard model (**delegate-list-behavior**); `touch-target-size` is `partial` because the source sets no explicit sizing for the trigger or chip-remove controls, so compliance depends on inherited styling this file can't verify. `separation-of-concerns` is `passed` because the list/keyboard/add-new logic lives entirely in `ListChooser`, leaving this file only the single/multi selection semantics; `unit-test-coverage` is `passed` because `entityChooser.test.tsx` renders `EntityChooser` directly and exercises both single and multi selection.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Reshaped Design Decisions into `**Decision**`/`**Rationale**`/`**Approved**` line triples, marking each decision's approval status as pending. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and narrow forward-allow-create's scope; add show-trigger-value-single, trigger-label-only-multi, and host-mode-renders-trigger-only requirements; resolve the "browser stays open" contradiction between Overview/Design Decisions and the test vectors; add/renumber Conformance Test Vectors for value replacement, the null-trigger case, the multi trigger-label case, and host mode; add an EntitySelectionChips configuration table; rewrite Localization to list the hardcoded default strings; correct the Compliance table to canonical links, add missing accessibility checks, and mark touch-target-size partial; fix WinUI 3 (single native approach, real Symbol names) and Compose (InputChip) Platform Notes and drop the off-platform watchOS aside; move the guideline reference from references to related and set references to []; declare the RemovableChip dependency; remove list-chooser's duplicate related entry; fix the States/Localization empty-hint string mismatch; and remove the app-specific example from Overview. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise recipe: fix domain URI, add missing test vectors, document selectionPlacement host mode, clarify Platform Notes with all five platforms, add Edge Cases entry for host mode, refine Behavioral Requirements naming. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + recipe. |

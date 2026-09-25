@@ -3,11 +3,11 @@ id: fcd5062f-05c2-4877-adfb-9b77c75c6076
 title: Editable List
 domain: agenticdevelopertoolkit://recipes/editable-list
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -156,13 +156,13 @@ A configurable list/table component combining a button bar (with search, text fi
 | editable-list-022 | handle-error-no-rows | error={new Error("API failed")}, list.allRows=[], loading=false | Entire list replaced with error alert; bar and table not shown |
 | editable-list-023 | handle-error-with-rows | error={new Error("Refetch failed")}, list.allRows contains 3 rows | Error alert shown above table; table and all 3 rows still visible |
 | editable-list-024 | render-truncation-notice | truncationNotice="Showing 500 of 1000+" | Alert with truncation message shown above table |
-| editable-list-025 | render-details-pane | details={render: (row) => <div>{row.name}</div>} | Split view rendered with table on top, details pane on bottom |
+| editable-list-025 | render-details-pane | `details={render: (row) => <div>{row.name}</div>}` | Split view rendered with table on top, details pane on bottom |
 | editable-list-026 | show-single-row-details | details provided; 1 row selected with data {id: "1", name: "Alice"} | Details pane calls `render({id: "1", name: "Alice"})`; output shown in bottom pane |
 | editable-list-027 | show-details-empty-message | details provided with emptyLabel="Select a row"; 0 rows selected | Details pane shows "Select a row" |
 | editable-list-028 | show-details-many-message | details provided with manyLabel="Select one"; 2 rows selected | Details pane shows "Select one" |
 | editable-list-029 | render-details-header | details provided; 1 row selected; describeRow=(row) => row.name | Details header shows row's name; had describeRow been omitted or returned "", it would show details.label (default "Details") instead |
-| editable-list-030 | render-details-actions | details.actions=(row) => row ? <button>Edit</button> : null; 1 row selected | Header shows Edit button; passed the selected row object |
-| editable-list-031 | render-details-actions | details.actions=(row) => row ? <button>Edit</button> : null; 0 or 2+ rows selected | Header actions button not shown; passed null to actions() |
+| editable-list-030 | render-details-actions | `details.actions=(row) => row ? <button>Edit</button> : null`; 1 row selected | Header shows Edit button; passed the selected row object |
+| editable-list-031 | render-details-actions | `details.actions=(row) => row ? <button>Edit</button> : null`; 0 or 2+ rows selected | Header actions button not shown; passed null to actions() |
 | editable-list-032 | render-footer | footer=`<div>Total: 100</div>` | Footer rendered below table |
 | editable-list-033 | render-null-values | Column with value=(row) => row.optional (null value); row rendered | Cell displays em dash (—) in dim color |
 | editable-list-034 | preserve-selection-across-filter-changes | 2 rows selected; search filter applied hiding 1 selected row | Selection still includes both row IDs; count shows "2 selected (1 not shown)" |
@@ -198,7 +198,7 @@ A configurable list/table component combining a button bar (with search, text fi
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `list` | EditableListController<T> | — | Required. Controller managing rows, selection, search, filters, sorting — see the sub-table below. |
+| `list` | `EditableListController<T>` | — | Required. Controller managing rows, selection, search, filters, sorting — see the sub-table below. |
 | `ariaLabel` | string | — | Required. Name of the list for assistive tech (e.g., "Users", "Templates"). |
 | `onRowActivate` | (id: string) => void | undefined | Optional. Callback when user double-clicks a row or presses Enter on focused row. |
 | `actions` | ReactNode | undefined | Optional. Action button nodes to render in the bar. |
@@ -209,7 +209,7 @@ A configurable list/table component combining a button bar (with search, text fi
 | `loading` | boolean | false | Optional. Whether to show loading indicator in table. |
 | `columnWidthsKey` | string | — | Required. Storage key for persisting column widths. |
 | `maxHeightClass` | string | "max-h-[60vh]" | Optional. Tailwind class for table max height (ignored if details pane present). |
-| `details` | EditableListDetails<T> | undefined | Optional. Configuration for details pane showing single-row details — see the sub-table below. |
+| `details` | `EditableListDetails<T>` | undefined | Optional. Configuration for details pane showing single-row details — see the sub-table below. |
 | `footer` | ReactNode | undefined | Optional. Content to render below table or details pane. |
 | `describeRow` | (row: T) => string | undefined | Optional. Function to name each row for accessibility. If omitted, component guesses from first non-empty string field. |
 | `error` | unknown | undefined | Optional. Error object; if present and no rows and not loading, list is replaced with error alert; otherwise an error alert is shown above the table. |
@@ -219,7 +219,7 @@ A configurable list/table component combining a button bar (with search, text fi
 
 `list` is an `EditableListController<T>`, produced by the sibling `useEditableList()` hook:
 
-### EditableListController<T>
+### `EditableListController<T>`
 
 | Member | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -244,7 +244,7 @@ A configurable list/table component combining a button bar (with search, text fi
 | `setTextFilterValue` | `(id: string, next: string) => void` | — | Replaces one filter's text. |
 | `filtered` | `boolean` | `false` | True while a search term, filter value, or facet selection is narrowing the list. |
 
-### EditableListDetails<T>
+### `EditableListDetails<T>`
 
 | Member | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -375,8 +375,10 @@ Subsystem: `agenticdevelopertoolkit.ui.blocks` | Category: `EditableList`
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on: the ARIA roles/labels, `aria-live` region, and chevron sort icons in `editable-list.tsx`/`data-table.tsx` (the accessibility passes); the pointer-only column-resize handle with no keyboard fallback (`keyboard-navigable`: partial) and the 28–32px control heights against a 44px minimum (`touch-target-size`: failed); the component's own lack of network transmission (`data-minimization`: passed) set against log/error messages whose text content originates with the caller (`no-pii-in-logs`, `secure-log-output`: partial); and the literal English strings ("selected", "not shown", "Clear selection", "Select all", "No items.", "Resize column …") hardcoded into the component and its `DataTable`, with a single non-pluralized count template and physical (`right-0`) rather than logical resize-handle positioning (the internationalization failures).
+These statuses rest on: the ARIA roles/labels, `aria-live` region, and chevron sort icons in `editable-list.tsx`/`data-table.tsx` (the accessibility passes); the pointer-only column-resize handle with no keyboard fallback (`keyboard-navigable`: partial) and the 28–32px control heights against a 44px minimum (`touch-target-size`: failed); the component's own lack of network transmission (`data-minimization`: passed) set against log/error messages whose text content originates with the caller (`no-pii-in-logs`, `secure-log-output`: partial); and the literal English strings ("selected", "not shown", "Clear selection", "Select all", "No items.", "Resize column …") hardcoded into the component and its `DataTable`, with a single non-pluralized count template and physical (`right-0`) rather than logical resize-handle positioning (the internationalization failures). `separation-of-concerns` is partial because filtering/sorting/selection are delegated to the external `useEditableList` controller, but derivations like `hiddenSelected`, `detailRow`, and error branching remain inline in the component; `unit-test-coverage` passes because `editableListDetails.test.tsx` and `editableListSelectionCount.test.tsx` import `EditableList` directly and exercise its behavior with meaningful assertions.
 
 ## Change History
 
@@ -384,3 +386,4 @@ These statuses rest on: the ARIA roles/labels, `aria-live` region, and chevron s
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case; added `EditableListController`/`EditableListDetails` configuration sub-tables; fixed the `h-8`/`h-7` appearance px values and moved Tailwind-class detail out of Appearance into the React/Web platform note; corrected the null-value/no-value-column contradiction, the hidden-count color-only contradiction, and the details-header fallback ambiguity; added `select-all-scope`, `grid-role-and-focus`, `loading-preempts-error-replacement`, `error-with-rows-suffix`, and `default-error-title` requirements with test vectors; made the sort-toggle (009/041) and column-width-storage (011) test vectors concrete; corrected the unknown-typed error logging to use `errorMessage()`; corrected the SwiftUI (`.searchable`, native `Table` sort/resize), Compose (`Saver`, header row), and WinUI 3 (no built-in `DataGrid`, `Grid`+`GridSplitter`) platform notes; converted Design Decisions to Decision/Rationale/Approved form and retitled the search-persistence one; filled in `depends-on` and a real Compliance table; noted the locale-sensitivity of the `ariaLabel.toLowerCase()` casing transform; and reframed Analytics as non-normative guidance to drop the raw-query PII exposure. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Wrapped generics/JSX in code spans (EditableListController<T>/EditableListDetails<T> headings and table cells, details.actions JSX examples) so GitHub stops stripping them. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |

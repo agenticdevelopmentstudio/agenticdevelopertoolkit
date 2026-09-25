@@ -3,11 +3,11 @@ id: e9504a52-046c-4777-9704-20f611cf76f7
 title: FieldFootnote
 domain: agenticdevelopertoolkit://recipes/field-footnote
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -72,7 +72,7 @@ FieldFootnote is a display component that renders validation feedback or supplem
 
 - **Role**: No explicit ARIA role applied. The component is a passive display element and does not interact with the user.
 - **Error identification**: The error span carries an optional `id` attribute (via `errorId` prop) so that a form control can reference it with `aria-describedby`, allowing screen readers to announce the error message when the control is focused.
-- **Hint handling**: Hints are not assigned an `id` and are not referenced via `aria-describedby` by this component. A hint is an accessible *description*, not an accessible *name*, so folding it into a control's name is not the right mechanism; associating a hint's text with a control's description is the composing wrapper's responsibility (e.g. `Field`), not something FieldFootnote does on its own — FieldFootnote exposes no hint-side id for that association.
+- **Hint handling**: Hints are not assigned an `id` and are not referenced via `aria-describedby` by this component or by its composing wrapper — only the error gets that treatment. In the shipped composition a hint instead becomes part of the control's accessible *name*, not its description: `Field` renders the caption, the control, and `FieldFootnote`'s hint text all inside one native `<label>` element, and a native `<label>` contributes its full text content to the accessible name of whatever it labels. No code in this stack wires a hint's text into a control's accessible description.
 - **Semantics**: The component uses a generic `<span>` element; no `role="alert"` or `role="status"` is applied. The error line is not automatically announced on appearance; screen readers announce it when the control with `aria-describedby` is focused.
 - **Color dependence**: Error (red) and hint (dim) are currently distinguished only by color; no icon, prefix, or other non-color cue is present in the source. See **Accessibility Options** below for how this behaves under Differentiate Without Color.
 
@@ -164,12 +164,15 @@ Not applicable: The component does not emit debug logs or instrumentation.
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on the source directly: it renders arbitrary caller-supplied `ReactNode` content with no strings, truncation, or direction-specific styling of its own (the internationalization checks pass), uses a relative `text-[0.7rem]` size with no explicit Dynamic Type binding and named color tokens with no contrast values given (both partial, since the source cannot confirm the rest), and applies no ARIA role while correctly scoping `errorId` to only the error span (semantic-markup passed).
+Statuses rest on the source directly: it renders arbitrary caller-supplied `ReactNode` content with no strings, truncation, or direction-specific styling of its own (the internationalization checks pass), uses a relative `text-[0.7rem]` size with no explicit Dynamic Type binding and named color tokens with no contrast values given (both partial, since the source cannot confirm the rest), and applies no ARIA role while correctly scoping `errorId` to only the error span (semantic-markup passed). `separation-of-concerns` is `passed` because the component is pure presentation implementing only the error/hint precedence over props; `unit-test-coverage` is `failed` because no test exercises `field-footnote.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected Hint handling: a hint becomes part of the accessible name via Field's shared label, not a described-by description. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and reworded the class-merge and ReactNode requirements platform-neutrally; unified the font size to one logical 11.2 across platforms and replaced the hardcoded WinUI font; named semantic color tokens in place of raw Tailwind class names; reformatted Design Decisions and separated the layout-shift cause from the role="alert" consequence; corrected the hint accessible-description claim and the color-dependence description; replaced the made-up Compliance checks with real accessibility and internationalization checks; fixed test vectors to assert observable outcomes instead of raw class strings; added the errorId/hint edge case; added tags and related links |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from field-footnote.tsx source (drafted by Claude Haiku 4.5) |

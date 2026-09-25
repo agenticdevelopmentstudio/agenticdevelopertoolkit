@@ -3,11 +3,11 @@ id: 4d2b7231-1235-49e9-8b7d-1e7507c6eba7
 title: "Navigation Chrome (Bar + Drawer)"
 domain: agenticdevelopertoolkit://recipes/nav-chrome
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -38,14 +38,14 @@ NavChrome is a mobile-first navigation chrome consisting of a fixed bar with a b
 ## Behavioral Requirements
 
 - **render-bar**: Component MUST render a fixed bar containing a burger menu button and an optional brand container.
-- **render-burger**: Component MUST render a button to toggle the drawer open and closed, labeled via `openLabel` prop (default: 'Open menu').
+- **render-burger**: Component MUST render a button that opens the drawer, labeled via `openLabel` prop (default: 'Open menu'). The button only ever opens the drawer; it does not close it (see **drawer-toggle-controls**).
 - **render-drawer**: Component MUST render a navigation drawer containing an array of anchor links passed via the `links` prop.
 - **render-close-button**: Component MUST render a close button inside the drawer, labeled via `closeLabel` prop (default: 'Close menu').
 - **render-scrim**: Component MUST render a scrim overlay that covers the page when the drawer is open.
 - **render-optional-brand**: Component MUST render the `brand` prop content in the bar if provided; MUST NOT render a brand container if `brand` is undefined.
 - **render-optional-footer**: Component MUST render the `footer` prop content in the drawer if provided; MUST NOT render a footer container if `footer` is undefined.
 - **set-nav-label**: Component MUST set `aria-label` on the `<nav>` element to the `navLabel` prop (default: 'Site').
-- **drawer-toggle-controls**: The burger button MUST toggle the drawer's open state (open it when closed, close it when open). The scrim and the drawer's close button MUST close the drawer — not toggle it — when clicked while it is open.
+- **drawer-toggle-controls**: The burger button MUST only open the drawer (clicking it while the drawer is already open MUST have no effect — it does not close the drawer). The scrim, the drawer's close button, Escape, and clicking a navigation link MUST close the drawer when clicked/pressed while it is open. The close button sits in the same visual position the burger occupied, so closing reads as if the control itself changed, even though no single control both opens and closes.
 - **close-on-link-click**: Component MUST close the drawer when any navigation link is clicked, regardless of whether the link resolves to a same-page fragment, an off-page URL, or no target at all.
 - **trap-tab-inside-drawer**: While the drawer is open, Tab focus MUST stay inside it: pressing Tab on the last focusable element wraps focus to the first; pressing Shift+Tab on the first wraps focus to the last; and if focus is ever outside the drawer while it is open (for example, on the scrim), pressing Tab MUST bring focus back inside, to the first focusable element.
 - **close-on-escape**: Component MUST close the drawer when the Escape key is pressed while the drawer is open.
@@ -113,7 +113,7 @@ NavChrome provides semantic structure and class names for styling; visual appear
 | nav-002 | render-burger, aria-expand-burger | Render with drawer closed | Burger button has aria-expanded="false" |
 | nav-003 | render-burger, aria-expand-burger | Click burger to open drawer | Burger button has aria-expanded="true" |
 | nav-004 | drawer-toggle-controls | Render with drawer closed, click burger | Drawer className changes to include 'lp-drawer--open' |
-| nav-005 | drawer-toggle-controls | Drawer open, click burger again | Drawer className no longer includes 'lp-drawer--open' |
+| nav-005 | drawer-toggle-controls | Drawer open, click burger again | No-op: drawer className still includes 'lp-drawer--open' (the burger never closes the drawer) |
 | nav-006 | render-scrim, drawer-toggle-controls | Render with drawer open, click scrim | Drawer closes and scrim className no longer includes 'lp-scrim--show' |
 | nav-007 | render-optional-brand | Render with brand prop | Brand content appears in bar div with className 'lp-brand' |
 | nav-008 | render-optional-brand | Render with brand undefined | No 'lp-brand' div is rendered |
@@ -288,8 +288,10 @@ Not applicable: Logging is not implemented in source. The component provides no 
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Passed statuses rest on the source's explicit `aria-label`/`aria-expanded`/`aria-hidden`/`inert` attributes, its Tab-trap/Escape/focus-management effects, its `decodeURIComponent`-based fragment decoding, and its prop-driven default labels (documented in Localization above, so callers can override them); partial statuses reflect that visual styling (color, spacing, font, motion easing), RTL layout, and href content validation are left entirely to host CSS and host-supplied data, which the source neither constrains nor can attest to on its own.
+Passed statuses rest on the source's explicit `aria-label`/`aria-expanded`/`aria-hidden`/`inert` attributes, its Tab-trap/Escape/focus-management effects, its `decodeURIComponent`-based fragment decoding, and its prop-driven default labels (documented in Localization above, so callers can override them); partial statuses reflect that visual styling (color, spacing, font, motion easing), RTL layout, and href content validation are left entirely to host CSS and host-supplied data, which the source neither constrains nor can attest to on its own. `separation-of-concerns` is partial: the fragment-id parser (`fragmentId`) is extracted as a standalone pure function, but the open/close state, focus trap, and Escape/link-close handling all live inline in the one `NavChrome` component (a deliberate choice — see the Overview's "share one `open` boolean" note — not an extraction into hooks). `unit-test-coverage` is partial: `nav-chrome.test.tsx` covers open/close-on-link, focus movement, and off-page-link focus return, but has no case for clicking the burger while the drawer is already open, which is exactly the behavior this revision corrects (**drawer-toggle-controls**, nav-005).
 
 ## Change History
 
@@ -297,3 +299,4 @@ Passed statuses rest on the source's explicit `aria-label`/`aria-expanded`/`aria
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: merged duplicate requirements into drawer-toggle-controls, close-on-link-click, and trap-tab-inside-drawer; rewrote implementation-coupled requirements as observable, platform-neutral behavior; renamed all requirements to subject-only kebab-case; fixed the toggle/close ambiguity and three contradictions (fragment default-navigation, scroll-behavior ownership, Shift+Tab exit claim); reformatted Design Decisions to Decision/Rationale/Approved and corrected two decisions' rationale; added a Compliance table; corrected Platform Notes APIs and pointed each port at its native drawer control; fixed dangling and mis-scoped test-vector references and added two missing vectors; retitled the recipe; documented the drawer's intentional departure from the full ARIA dialog-modal pattern |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Burger only opens the drawer (never closes); nav-005 corrected to no-op. |

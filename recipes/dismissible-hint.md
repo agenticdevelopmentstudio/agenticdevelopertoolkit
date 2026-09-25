@@ -3,11 +3,11 @@ id: 17398d3a-df67-44c6-89c5-0edfc09bff7c
 title: Dismissible Hint
 domain: agenticdevelopertoolkit://recipes/dismissible-hint
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -182,13 +182,16 @@ Not applicable: Component logs no diagnostic messages.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Accessibility statuses rest on the container's `role="note"`, the button's `aria-label="Dismiss"`, and native `<button>` keyboard operability, versus type scaling/contrast/tap-target sizing which the source leaves entirely to external CSS it does not define. Privacy and Data statuses rest on the single boolean flag persisted per id, with retention documented above. Internationalization statuses rest on the hardcoded English `aria-label` (not externalized) versus React's native Unicode-safe rendering of caller-supplied `children`.
+Accessibility statuses rest on the container's `role="note"`, the button's `aria-label="Dismiss"`, and native `<button>` keyboard operability, versus type scaling/contrast/tap-target sizing which the source leaves entirely to external CSS it does not define. Privacy and Data statuses rest on the single boolean flag persisted per id, with retention documented above. Internationalization statuses rest on the hardcoded English `aria-label` (not externalized) versus React's native Unicode-safe rendering of caller-supplied `children`. `separation-of-concerns` passes because dismissal persistence lives in the standalone `readDismissed`/`writeDismissed` helpers rather than inline in the component; `unit-test-coverage` passes because `components.test.tsx` imports `DismissibleHint` directly and exercises dismissal and persistence-across-remount with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; fix write-failure state contradiction; template the aws- prefix as {{app_prefix}}; add render-close-glyph requirement and a keyboard test vector; rewrite the duplicate remount vector as an immediate-hide vector; correct the tap-target citation to WCAG 2.5.8; correct SwiftUI/Compose/AppKit-UIKit/WinUI 3 API references; clarify flash-on-mount, multi-instance, and id-change edge cases; reformat Design Decisions; mark Localization applicable; expand and link the Compliance table |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Fix marker on id prop: state type safety behavior from source |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

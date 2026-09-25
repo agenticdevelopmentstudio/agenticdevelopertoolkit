@@ -3,11 +3,11 @@ id: e82102a9-a60c-4498-aba3-7cd5a33ade3c
 title: Menu Button
 domain: agenticdevelopertoolkit://recipes/menu-button
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -95,7 +95,7 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 | menu-button-010 | menu-icon-default, close-icon-variant | Toggle `icon` prop from `'menu'` to `'close'` | Bar count changes from three to two; `menu-button--close` class is added |
 | menu-button-011 | plain-element-bars | Render with default props | Each `.mb-bar` element's tag name is `SPAN`; no `<svg>` element is present |
 | menu-button-012 | menu-icon-default | `icon="menu"` (explicit) | Three `<span class="mb-bar">` elements render, same as the default |
-| menu-button-013 | menu-icon-default | `icon="hamburger"` (value outside the type) | Three `<span class="mb-bar">` elements render; falls back to the menu icon because only `icon === 'close'` is checked |
+| menu-button-013 | menu-icon-default, close-icon-variant | `icon="hamburger"` (value outside the type) | Two `<span class="mb-bar">` elements render, and `menu-button--close` is NOT applied — the third bar is gated on `icon === 'menu'` specifically (not `icon !== 'close'`), so a value that is neither `'menu'` nor `'close'` renders neither the full menu icon nor the close variant |
 | menu-button-014 | custom-classname | No `className` prop | Button's `class` attribute is exactly `menu-button` with no extra whitespace or empty tokens |
 | menu-button-015 | relative-positioning | Default render | `.menu-button` computed `position` is `relative`; the `::after` element's computed size is 44×44px |
 | menu-button-016 | accessible-label | `label` prop omitted (bypassing the type system) | No `aria-label` attribute is present on the button |
@@ -105,7 +105,7 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 ## Edge Cases
 
 - **No label prop**: `label` is a required, non-optional `string` prop with no default, so omitting it is a TypeScript compile-time error; the component performs no runtime check. A caller outside TypeScript's reach that omits it renders a button with `aria-label={undefined}` — a button with no accessible name.
-- **Icon prop invalid value**: Component expects `icon` to be `'menu'` or `'close'`. Providing any other value (e.g., `icon="hamburger"`) will render with the default menu icon since the close state is checked explicitly (see menu-button-013).
+- **Icon prop invalid value**: Component expects `icon` to be `'menu'` or `'close'`, but the type is not enforced at runtime. The third bar and the `menu-button--close` class are gated independently — the third bar on `icon === 'menu'`, the class on `icon === 'close'` — so a value that is neither (e.g., `icon="hamburger"`) renders neither the full three-bar menu icon nor the close variant: only two bars, uncrossed, with no `menu-button--close` class (see menu-button-013). This is a source bug (logged), not a documented fallback.
 - **Empty string label**: An empty `label=""` satisfies the type requirement but results in an inaccessible button with no meaningful name. The component accepts this but the caller SHOULD provide a meaningful label.
 - **Disabled state interaction**: When disabled, the button MUST NOT respond to clicks; this is standard HTML button behavior and does not depend on component logic.
 - **Multiple class combinations**: Component combines `menu-button`, the conditional `menu-button--close`, and any custom `className` prop. Classes are filtered and joined with spaces; empty strings are removed (see menu-button-014 and menu-button-018).
@@ -190,13 +190,16 @@ Not applicable: Component performs no logging.
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | passed | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on `MenuButton.tsx` (the required `label` prop rendered as `aria-label` on a native `<button>`, with no custom ARIA roles needed) and `css/base.css` (`position: relative` plus the 44px `::after` hit area satisfy touch-target-size; the absence of any `prefers-reduced-motion` rule fails reduced-motion).
+Statuses rest on `MenuButton.tsx` (the required `label` prop rendered as `aria-label` on a native `<button>`, with no custom ARIA roles needed) and `css/base.css` (`position: relative` plus the 44px `::after` hit area satisfy touch-target-size; the absence of any `prefers-reduced-motion` rule fails reduced-motion). `separation-of-concerns` passes: the component is a single-purpose presentational element (bars in, click-through button out) with no owned business logic or state beyond the `icon` prop it renders from. `unit-test-coverage` fails: no test file in the `chrome` package, or anywhere else in the repo, renders `MenuButton`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Invalid icon renders 2 uncrossed bars, no close class, not a menu-icon fallback (bug logged). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-* requirements to subject-only kebab-case and drop the redundant icon-toggle requirement, add a relative-positioning requirement and vector for the hit area, correct the Reduce Motion/Increase Contrast claims against css/base.css, reformat Design Decisions to Decision/Rationale/Approved, replace the Compliance section with a real table, fix vector 009 and add the missing conformance vectors, recommend native platform glyphs first in Platform Notes and rename Web to React/Web, resolve the no-label edge case contradiction, add the consumer-managed aria-expanded/aria-controls guidance, and add button to related |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Resolve review markers: bar dimensions and tap target sourced from css/base.css |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from MenuButton.tsx source |

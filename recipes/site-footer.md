@@ -3,11 +3,11 @@ id: d80699f9-1020-4f8a-85ce-f6406e765631
 title: Site Footer
 domain: agenticdevelopertoolkit://recipes/site-footer
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -66,7 +66,7 @@ Not applicable: component is stateless and does not render interactive or state-
 ## Accessibility
 
 - **Role**: Landmark (`<footer>` renders the implicit `contentinfo` role)
-- **Landmark exposure**: The `<footer>` element only exposes the `contentinfo` landmark role when it is NOT nested inside `article`, `section`, `main`, `aside`, or `nav`. A host MUST render `SiteFooter` as a direct, page-level child (a sibling of the page's bands, not nested within one) for the landmark to reach assistive technology; the component itself renders only the element and does not enforce where it is mounted.
+- **Landmark exposure**: The `<footer>` element only exposes the `contentinfo` landmark role when it is NOT nested inside `article`, `section`, `main`, `aside`, or `nav`. `Flow` renders its own children (the page's bands) inside a `<main class="lp-flow">`, so a host MUST render `SiteFooter` as a sibling of the page's `Flow` container itself — outside that `<main>` — and not merely alongside the individual bands as one of `Flow`'s own children, or the footer loses its `contentinfo` role. The component itself renders only the element and does not enforce where it is mounted.
 - **Label requirements**: No explicit ARIA labeling required; a page normally has one `<footer>` landmark, so no accessible name is needed to disambiguate it.
 - **Keyboard navigation**: Not applicable; the component itself renders no interactive elements — see **style-descendant-links** for the descendant links it styles but does not create.
 - **Touch target size**: Not applicable; component is a container, not an interactive control.
@@ -143,8 +143,8 @@ Not applicable: component has no internal operations, async behavior, or error s
 **Rationale**: `Wrap` only constrains content width (see `wrap.md`); the footer needs a full-width band of chrome (ground color, hairline, dimmed ink) independent of that content column, matching the visual treatment of the rest of the page's bands.
 **Approved**: pending
 
-**Decision**: Dock clearance (`var(--lp-dock-clear)`) is added to `.lp-site-foot`'s own bottom padding, not to `.lp-band:last-child`'s, on a page that has a footer.
-**Rationale**: `flow.css`'s comment above `.lp-band:last-child` explains that only the last thing in the document — the one thing a fixed host dock can permanently cover, since everything before it can still be scrolled past — needs the clearance. On a host with a footer, the footer is that last thing, not the band before it; paying the clearance on both would double the wasted scroll space.
+**Decision**: Dock clearance (`var(--lp-dock-clear)`) is applied unconditionally to both `.lp-band:last-child`'s bottom padding and `.lp-site-foot`'s bottom padding; on a page that has both a last band and a footer, both pay it.
+**Rationale**: `flow.css`'s comment above `.lp-band:last-child` explains that only the last thing in the document — the one thing a fixed host dock can permanently cover, since everything before it can still be scrolled past — strictly needs the clearance: `.lp-site-foot` carries it for a host with a footer, and the `.lp-band:last-child` pair carries it for a host with none. The two rules are not conditioned on each other, so a host with both pays the last band's clearance a second time; the source's own comment accepts that as the safe direction, since the failure it guards against (content trapped under the dock) is worse than one band's worth of extra scroll space.
 **Approved**: pending
 
 **Decision**: The component composes `Wrap` non-configurably to constrain content width, the same pattern `Band` uses.
@@ -161,12 +161,15 @@ Not applicable: component has no internal operations, async behavior, or error s
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-`semantic-markup` passes because the component always renders a real `<footer>` element, which carries the correct implicit `contentinfo` landmark role when placed as a direct page-level child (see **Accessibility**). `contrast-ratio` is partial because `flow.css` pairs `--lp-ground`/`--lp-ink-dim` for the footer body and `--lp-ink`/`--lp-ground` for its links (see **Appearance**), but the actual rendered contrast depends on whichever values a host supplies for those custom properties, which the source neither computes nor verifies.
+`semantic-markup` passes because the component always renders a real `<footer>` element, which carries the correct implicit `contentinfo` landmark role when placed as a direct page-level child (see **Accessibility**). `contrast-ratio` is partial because `flow.css` pairs `--lp-ground`/`--lp-ink-dim` for the footer body and `--lp-ink`/`--lp-ground` for its links (see **Appearance**), but the actual rendered contrast depends on whichever values a host supplies for those custom properties, which the source neither computes nor verifies. `separation-of-concerns` passes because `SiteFooter.tsx` is pure presentation, wrapping its children with no business logic. `unit-test-coverage` is partial because `flow.test.tsx`'s `SiteFooter` block asserts only on the `.lp-site-foot a` CSS rule, not on the component's own render output — no test calls `render(<SiteFooter>)` directly.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed landmark bullet to require SiteFooter be a Flow sibling; corrected dock-clearance double-pay decision. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; rewrote Appearance and Design Decisions from `flow.css` to correct the padding/background/border/font/dock-clearance claims and cite the source; added requirements and test vectors for the descendant link and small styling and for the footer's own chrome and dock clearance; narrowed the whitespace-only className edge case and merge-classes requirement to falsy-value filtering only; folded the untested duplicate-class claim out of the test vectors and added vectors for the Wrap child, className="", and dock-clearance padding; added a landmark-exposure note requiring direct page-level placement; reformatted Design Decisions into Decision/Rationale/Approved records; corrected the WinUI 3, SwiftUI, and AppKit/UIKit platform notes; rebuilt Compliance as a linked passed/partial table; added tags, depends-on, and related |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |

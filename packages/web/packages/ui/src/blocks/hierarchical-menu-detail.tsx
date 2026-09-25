@@ -112,7 +112,7 @@ interface TopicLevel {
    *  to the DETAIL (a final choice)? A row's own `leadsTo` overrides it; unset on both means
    *  `"detail"` — the fail-safe (an undeclared row swaps the pane immediately; it can never hold
    *  it hostage). The cascade's detail hold and final-choice auto-collapse key off this AT CLICK
-   *  TIME (must-hold-the-detail-until-the-final-choice) — declared data, not render inference. */
+   *  TIME (hold-the-detail-until-the-final-choice) — declared data, not render inference. */
   leadsTo?: "list" | "detail"
   /** OPT-IN landing selection: the item to select the moment this level APPEARS with nothing chosen
    *  — i.e. when the parent topic that opens this list is picked (Work Items → List). It fires this
@@ -295,7 +295,7 @@ type SurfaceState = {
   hoverId: string | null
   /** How the open reveal was rooted: a pointer ENTER opens EVERY on-screen list (`true`), the
    *  covering CLICK opens only the clicked list's own branch (`false`) — a click on a visible row
-   *  must never spring the user's collapsed parents open (must-not-expand-parents-on-select). */
+   *  must never spring the user's collapsed parents open (not-expand-parents-on-select). */
   hoverAll: boolean
   /** NARROW mode: the pane index the stack was last PAINTED at. The slide animates from here to
    *  wherever the new selection puts the top pane — and since selecting is a route change that
@@ -308,14 +308,14 @@ type SurfaceState = {
    *  reason everything else here does: clearing the row IS a route change, so a per-instance memory
    *  would forget it was ever fired and immediately re-select the row the user just cleared. */
   autoSelected: Record<string, string>
-  /** THE DETAIL HOLD (must-hold-the-detail-until-the-final-choice, cascade only): the detail-pane
+  /** THE DETAIL HOLD (hold-the-detail-until-the-final-choice, cascade only): the detail-pane
    *  content captured by an INTERMEDIATE rail select (one whose row is declared to lead to another
    *  list), shown in place of the frontier overview / the host's landing until the gesture ends —
    *  the FINAL CHOICE's landing releases it (ONE swap, old content → new), and so do the other
    *  gesture-ending edges: a clear/✕/breadcrumb (up-navigation is not a choosing gesture) and the
    *  pointer leaving the menus. It lives HERE for the ground's reason: an intermediate select is a
    *  route change that remounts the subtree, and the hold must survive exactly that remount
-   *  (must-keep-view-state-across-a-selection). `null` = no hold armed (a deep link therefore
+   *  (keep-view-state-across-a-selection). `null` = no hold armed (a deep link therefore
    *  still shows the overview — nothing was ever captured). */
   heldDetail: ReactNode | null
   /** An ARMED FINAL CHOICE: the selection chain captured when a leaf row was clicked. The swap
@@ -604,7 +604,7 @@ export function HierarchicalMenuDetail({
   // matter what autoHide says, so with the pointer parked inside it the flip would change
   // nothing on screen until the pointer happened to leave — the toggle read as dead. Closing
   // the reveal settles the stack to the new mode on the click itself
-  // (must-apply-disclosure-toggles-immediately).
+  // (apply-disclosure-toggles-immediately).
   const toggleAutoHide = useCallback(
     () =>
       patchSurface((p) => {
@@ -615,7 +615,7 @@ export function HierarchicalMenuDetail({
           pins: {},
           hoverId: null,
           hoverAll: false,
-          // An explicit toggle SETTLES the cascade's machine too (must-apply-disclosure-toggles-
+          // An explicit toggle SETTLES the cascade's machine too (apply-disclosure-toggles-
           // immediately): the new mode must show its work on the click, not at the next pointer exit.
           mode: settleModeOn("toggle"),
         }
@@ -747,7 +747,7 @@ export function HierarchicalMenuDetail({
         {frontierLevel.overviewHelp}
       </TopicSelectHint>
     ) : null
-  // THE DETAIL HOLD (must-hold-the-detail-until-the-final-choice, cascade only): until the FINAL
+  // THE DETAIL HOLD (hold-the-detail-until-the-final-choice, cascade only): until the FINAL
   // CHOICE — a select whose row is DECLARED to lead to no further topic list (`leadsTo`) — the
   // detail pane must not change. An intermediate select (a row declared `leadsTo: "list"`)
   // CAPTURES what the pane is showing into the surface store, and every later render shows that
@@ -826,7 +826,7 @@ export function HierarchicalMenuDetail({
   // Land an armed final choice (`planLeafSettle`): the first render where the click's navigation
   // has applied (the chain changed) and the path is complete releases the hold — ONE swap — and in
   // auto-collapse mode SETTLES the machine on that same click (the one click-driven closure,
-  // must-auto-collapse-menus-on-final-choice); with auto-collapse off, no select collapses
+  // auto-collapse-menus-on-final-choice); with auto-collapse off, no select collapses
   // anything (T60). Nothing is confirmed across renders: the click DECLARED itself final, so a
   // merged stack's late (un)registration only delays the swap by the commit it needs, never
   // mis-reads it. Not cascade-gated on release: a choice armed in the cascade still lands if the
@@ -1121,7 +1121,7 @@ type PointerRegions = {
 }
 
 /**
- * THE POINTER AUTHORITY (must-collapse-from-one-pointer-authority), v1.16.0: an IDEMPOTENT QUERY,
+ * THE POINTER AUTHORITY (collapse-from-one-pointer-authority), v1.16.0: an IDEMPOTENT QUERY,
  * not stream inference. The document-level pointermove handler only RECORDS the last coordinates;
  * the decision is evaluated (rAF-coalesced) against SETTLED model rects supplied by `getRegions` —
  * so remounts and live scale animations cannot feed it. That closes both of v1.15.x's windows at
@@ -1162,7 +1162,7 @@ function useCascadePointerAuthority({
   const loggedNullRegion = useRef(false)
   useEffect(() => {
     // Fail closed on every settle: the pointer must be SEEN outside the zones once before an entry
-    // can fire (the re-open clause of must-auto-collapse-menus-on-final-choice).
+    // can fire (the re-open clause of auto-collapse-menus-on-final-choice).
     if (!engaged) wasInside.current = true
   }, [engaged])
   useEffect(() => {
@@ -1307,7 +1307,7 @@ function DetailContent({
 /** DEV-ONLY overlay: one labelled mouse-detection rectangle (see the debug frames block in
  *  CascadingStack). Inert and `fixed`, because the rects are measured in viewport coords.
  *
- *  `armed` is the whole point of the overlay (must-draw-every-detection-frame). A region that exists
+ *  `armed` is the whole point of the overlay (draw-every-detection-frame). A region that exists
  *  but is currently INERT is drawn dashed and labelled "off" rather than omitted: "no rect on screen"
  *  and "the rect is disarmed, so nothing can trigger it" look identical when the answer is to draw
  *  nothing — and the second one is the diagnosis. Omitting them is how the trigger rect sat dead for
@@ -1482,7 +1482,7 @@ interface StackProps {
   engageClick: (clickedIndex: number, base: EngagedBase) => void
   pointerExit: () => void
   settleToggle: () => void
-  /** The detail hold's edges (must-hold-the-detail-until-the-final-choice), decided at the click
+  /** The detail hold's edges (hold-the-detail-until-the-final-choice), decided at the click
    *  from declared leafness: capture on an intermediate select, release on any up-navigation, arm
    *  the one swap on a final choice. The frame owns the store; the cascade reports the clicks. */
   captureHold: (trigger?: string) => void
@@ -1624,7 +1624,7 @@ function useSelectionConnectors(
         const c = anchor(i + 1)
         // A connector normally joins a selected PARENT row to a selected CHILD row. When the child
         // list is open with NOTHING selected, the ORIGINAL rule drew nothing (spec:
-        // must-connect-selected-rows-only — a line pointing at whatever row happens to sit at the
+        // connect-selected-rows-only — a line pointing at whatever row happens to sit at the
         // parent's height reads as a phantom selection). The cascade now instead points at the
         // SUBMENU AS A WHOLE (Mike): it lands ON the list's left edge, at the point nearest the
         // parent's row, where that list's gold rail runs. That keeps the parent→child chain visible
@@ -1685,7 +1685,7 @@ function SelectionConnectorOverlay({ paths, zIndex = 30 }: { paths: string[]; zI
       data-htd-connectors
       style={{ zIndex }}
       className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-      // THE CHAIN IS ONE LINE (must-draw-one-chain-line): these strokes must be indistinguishable
+      // THE CHAIN IS ONE LINE (draw-one-chain-line): these strokes must be indistinguishable
       // from the selected row's `border-l-2` and the submenu's gold rail — both CSS boxes, both
       // crisp. Matching the WIDTH alone did not do it: an anti-aliased stroke spreads 2px of gold
       // across 3 device pixels at partial alpha, so it came out both softer and DIMMER than the
@@ -2041,7 +2041,7 @@ function CoveredStack({
 
   // The frontier list stays uncovered while it has no selection (its "detail" is only a landing, so
   // the user needs the list to pick from), and is never shifted off-screen for it
-  // (must-not-hide-frontier-choosing-list).
+  // (not-hide-frontier-choosing-list).
   const coverableCount = firstUnselected === -1 ? rendered.length : frontier
   // The detail's minimum is FIXED, whatever is selected — see HTDV's covered stack
   // (hierarchical-topic-detail.tsx) for the jump a selection-dependent minimum caused.
@@ -2227,7 +2227,7 @@ function CoveredStack({
     // full width regardless of pins, so a pin flip alone changes nothing until the pointer
     // happens to leave — the click reads as dead and its effect "turns up later". Dropping the
     // reveal settles the stack to the new pin state immediately; the pointer hasn't moved, so
-    // no enter re-opens it (must-apply-disclosure-toggles-immediately).
+    // no enter re-opens it (apply-disclosure-toggles-immediately).
     setHoverId(null)
     if (e.metaKey || e.ctrlKey) {
       setPins(Object.fromEntries(rendered.map((l) => [l.id, target])))
@@ -2585,7 +2585,7 @@ function CascadingStack({
   // replaces v1.15.x's ground latch, covering freeze and frozen-frontier ratchet outright.
   // The indent is the tighter CASCADE_INDENT, and the pressure/off-screen budgets contain only the
   // LISTS — the detail sits beside the root UNDER the deeper lists (see `detailLeft`). The
-  // frontier stays uncovered while it has no selection (must-not-hide-frontier-choosing-list).
+  // frontier stays uncovered while it has no selection (not-hide-frontier-choosing-list).
   const coverableCount = firstUnselected === -1 ? rendered.length : frontier
 
   // THE MODE — the stored machine (see `CascadeMode` in cascade-rules), read from the surface
@@ -2702,7 +2702,7 @@ function CascadingStack({
   })
 
   // THE GROUND — the root list's right edge, where the detail begins. Settled: tracks the resting
-  // stack live. Engaged: frozen at the captured base (must-hold-the-ground-under-the-pointer) —
+  // stack live. Engaged: frozen at the captured base (hold-the-ground-under-the-pointer) —
   // it recomputes only at the machine's settle transitions, never mid-gesture, and the frozen
   // value survives the remount because the mode lives in the surface store.
   const groundRight = engaged ? base!.groundRight : restingStackRight
@@ -2896,7 +2896,7 @@ function CascadingStack({
   // The TRIGGER rect (Mike): the approach lane LEFT of the topmost (frontier) menu — below the
   // breadcrumbs (the container's top) down to the bottom of the TALLEST menu (the menus are one
   // stack; the region that opens them is one rect over all of them). Measuring and arming stay
-  // separate questions (must-draw-every-detection-frame): the rect always exists for the debug
+  // separate questions (draw-every-detection-frame): the rect always exists for the debug
   // overlay; `triggerArmed` decides whether entering opens anything — with nothing covered the
   // region is correctly DEAD, drawn dashed.
   //
@@ -3017,7 +3017,7 @@ function CascadingStack({
   }, [debugSig, showDebugFrames])
 
   // The `«`/`»` toggle — an explicit toggle SETTLES the machine on the click, so the stack shows
-  // the new pin state immediately (must-apply-disclosure-toggles-immediately).
+  // the new pin state immediately (apply-disclosure-toggles-immediately).
   const setCover = (parentIndex: number, e: ReactMouseEvent) => {
     const target = !isCovered(parentIndex)
     settleToggle()
@@ -3404,7 +3404,7 @@ function CascadingStack({
                 // surface was settled, the click captures the resting layout as the frozen base;
                 // either way the reveal root ratchets no deeper than this list, so the select that
                 // discloses a child cannot cover or move the list it was clicked in
-                // (must-not-move-the-menus-on-an-intermediate-select) — structurally, with no
+                // (not-move-the-menus-on-an-intermediate-select) — structurally, with no
                 // pointer movement required. The machine lives in the surface store, so the freeze
                 // survives the remount this select causes.
                 //
@@ -3555,7 +3555,7 @@ function CascadingStack({
                      leaving it is what settles the stack.
             GREEN  = the DISCLOSE/trigger rect — the approach lane; crossing INTO it (or a covered
                      peek) engages the cascade.
-          Both are drawn whether or not ARMED (must-draw-every-detection-frame) — dashed and "(off)"
+          Both are drawn whether or not ARMED (draw-every-detection-frame) — dashed and "(off)"
           when inert rather than omitted. Omitting them is how the switch came to look broken: with
           `autoHideTopics={false}` nothing is covered, so the trigger has nothing to disclose; a
           dashed frame says that out loud, an empty screen doesn't. */}

@@ -3,11 +3,11 @@ id: dc548100-af44-4d93-9cb9-93c35546e08c
 title: Text Field
 domain: agenticdevelopertoolkit://recipes/text-field
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -222,8 +222,10 @@ Not applicable: The component does not emit diagnostic logs. Logging of user inp
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on: the source's native `<input>`/`<textarea>` semantics and keyboard operability (passed); the missing `aria-label`/`aria-labelledby` pass-through and unassociated hint (Accessibility rows marked partial); the CSS-controlled properties (contrast, dynamic type, touch target, RTL, text expansion) living outside this component's source (partial); the component performing no validation, sanitization, or rate limiting on typed input, per its own "Rapid onChange calls" edge case (Security and User Safety rows marked failed); the autofill-prevention default requiring an explicit opt-in token (User Safety `safe-defaults` passed); and all label/hint/placeholder text being caller-supplied with no strings hardcoded in the component (Internationalization rows marked passed).
+Statuses rest on: the source's native `<input>`/`<textarea>` semantics and keyboard operability (passed); the missing `aria-label`/`aria-labelledby` pass-through and unassociated hint (Accessibility rows marked partial); the CSS-controlled properties (contrast, dynamic type, touch target, RTL, text expansion) living outside this component's source (partial); the component performing no validation, sanitization, or rate limiting on typed input, per its own "Rapid onChange calls" edge case (Security and User Safety rows marked failed); the autofill-prevention default requiring an explicit opt-in token (User Safety `safe-defaults` passed); and all label/hint/placeholder text being caller-supplied with no strings hardcoded in the component (Internationalization rows marked passed); `TextField`/`SecureTextField` are pure presentation over props with no business logic of their own (separation-of-concerns passed), and `components.test.tsx` exercises `onChange`, the multiline-textarea branch, and the password-input rendering directly (unit-test-coverage passed).
 
 ## Change History
 
@@ -231,3 +233,4 @@ Statuses rest on: the source's native `<input>`/`<textarea>` semantics and keybo
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, corrected the `useId` and autofill-token design-decision claims, cited WCAG SC 2.5.5 instead of the document alone, replaced the "Not applicable" Compliance section with a real check table, reformatted Design Decisions into Decision/Rationale/Approved triplets, fixed frontmatter dates, added related sibling-recipe links, corrected and split the CSS-class test vectors, fixed the `text-field-009` requirement citation and the single-onChange claim in `text-field-002`, added test vectors for explicit `id`, `autoComplete="off"`, `SecureTextField` masking alone, and label/hint ordering, narrowed `bind-value` to remove its overlap with `call-on-change`, documented `SecureTextField`'s accepted configuration, corrected the Appearance section with real stylesheet values, and fixed the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes including password-manager-save prevention for every platform. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

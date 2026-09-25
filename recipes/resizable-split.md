@@ -3,11 +3,11 @@ id: c21473ee-a075-4800-96db-ff3de0888515
 title: "ResizableSplit"
 domain: agenticdevelopertoolkit://recipes/resizable-split
 type: ingredient
-version: 2.2.0
+version: 2.2.1
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -242,13 +242,16 @@ No logging. ResizableSplit is a presentational layout primitive; it emits no str
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Keyboard, ARIA, and reduced-motion statuses rest on the `role="separator"`/native-`<button>` markup and the `document.documentElement.dataset.reduceMotion` check in `resizable-split.tsx`; touch-target is partial because only the seam's 24px grab band is confirmed at the WCAG 2.5.8 minimum, while the header-bar row's height isn't; dynamic-type and both internationalization checks fail because the header-bar title uses a fixed `text-[11px]` size and `bottomLabel` defaults to the hardcoded English string `"Details"`.
+Keyboard, ARIA, and reduced-motion statuses rest on the `role="separator"`/native-`<button>` markup and the `document.documentElement.dataset.reduceMotion` check in `resizable-split.tsx`; touch-target is partial because only the seam's 24px grab band is confirmed at the WCAG 2.5.8 minimum, while the header-bar row's height isn't; dynamic-type and both internationalization checks fail because the header-bar title uses a fixed `text-[11px]` size and `bottomLabel` defaults to the hardcoded English string `"Details"`. The reveal-ratio math is extracted into the standalone, exported `revealRatioForContent`, but the drag handling and the `window.localStorage` persistence (`persist`/the load effect) are direct data access inline in the component rather than pulled into a separate hook (separation-of-concerns partial); `resizableSplit.test.tsx` directly exercises collapse toggling, the storageKey round-trip, the separator's clamped aria values, and `revealRatioForContent`'s own edge cases (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 2.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 2.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: shorten summary; correct drag-cursor-and-no-select, collapse-controlled-or-internal, and keyboard-nudges-ratio to match source; add chevron-toggle-suppressed-by-drag requirement and vector; add missing test vectors for drag-releases-on-pointerup, drag-maps-to-ratio, collapse-remembers-ratio, and bottom-stays-mounted; add restored-value-clamped edge case; remove internal identifier names from requirements and edge cases; rewrite AppKit/UIKit, WinUI 3, SwiftUI, and Compose platform notes for correct APIs and consistent reduce-motion gating; rename touch-target bullet and correct target-size claim; correct Localization and Privacy sections; reformat Design Decisions to Decision/Rationale/Approved; replace Compliance prose with a checks table. |
 | 2.1.0 | 2026-09-22 | Mike Fullerton | Correct domain URI to agenticdevelopercookbook://recipes/resizable-split; add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) marked not applicable; expand conformance test vectors to 18 (separate keyboard up/down, add drag-over-chevron, reduce-motion with and without); document edge cases including animation timer cleanup; clarify platform notes with specific control names and patterns for SwiftUI, Compose, WinUI 3; strengthen requirements with implementation details (latest.current, scrollHeight, moved flag, flex-basis). |
 | 2.0.0 | 2026-07-10 | Mike Fullerton | Header-bar divider variant (always-visible details header, drag anywhere, chevron far right); animated collapse gated on app-level reduce-motion; expand-to-content reveal; bottom pane stays mounted (inert) while collapsed; documented the shipped grip-pill + 24px grab-band seam. |

@@ -3,11 +3,11 @@ id: dcf1a793-0a47-466b-8b09-0bcf091fd55a
 title: Topics Pane
 domain: agenticdevelopertoolkit://recipes/topics-pane
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -205,12 +205,15 @@ Subsystem: `chat.topics-pane` | Category: `TopicsPane`
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Passed rows rest on the source's use of semantic `<button>`, `<ul>`, and `<li>` elements whose accessible names come from topic title text content; partial rows reflect that touch-target sizing, color contrast, and font scaling are defined in an external stylesheet this component's source does not show; the failed rows reflect the "Topics" header being a hardcoded string literal in `TopicsPane.tsx` rather than a resource lookup.
+Passed rows rest on the source's use of semantic `<button>`, `<ul>`, and `<li>` elements whose accessible names come from topic title text content; partial rows reflect that touch-target sizing, color contrast, and font scaling are defined in an external stylesheet this component's source does not show; the failed rows reflect the "Topics" header being a hardcoded string literal in `TopicsPane.tsx` rather than a resource lookup. `separation-of-concerns` passes because `TopicsPane.tsx` is pure presentation over its props with no business logic of its own, while `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; clarified the connector-anchor id format and reworded the selection-callback requirement; corrected Configuration to reflect that all props are required with no defaults; fixed the WinUI visibility API and made SwiftUI/Compose selection parent-controlled; rebuilt Compliance with valid checks and links; reformatted Design Decisions and recorded index-based selection as known debt; marked Feature Flags/Analytics/Logging as recommendations rather than observed behavior; corrected the web tap-target guidance to WCAG 2.5.8; resolved the Deep Linking/Platform Notes contradiction; clarified the Localization key as a recommended externalization target; and added connector-anchor to depends-on |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code analysis |

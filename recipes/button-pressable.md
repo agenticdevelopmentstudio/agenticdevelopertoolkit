@@ -3,11 +3,11 @@ id: f483dfb7-d60e-4b12-8b17-2eb150b550db
 title: PressableButton
 domain: agenticdevelopertoolkit://recipes/button-pressable
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -256,6 +256,8 @@ forwarded pointer handler, not in this file.
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 All three statuses rest on `button-pressable.tsx` forwarding every prop other
 than the five intercepted pointer handlers unchanged (so any `aria-*`/label
@@ -263,6 +265,12 @@ props a caller supplies reach the rendered element untouched), never
 registering its own keyboard handling (Space/Enter activation stays with the
 underlying Base UI `Button` primitive), and reflecting press state via the
 plain `data-pressed` data attribute rather than any ARIA role or state.
+Best-practices statuses reflect that the held/pressed pointer state machine
+is inlined in this component's own render rather than separated apart from
+it — splitting the file from `button.tsx` keeps interactivity apart from the
+plain module, but not apart from this file's own rendering
+(separation-of-concerns: partial) — and that no test in the suite exercises
+`PressableButton` (unit-test-coverage: failed).
 
 ## Change History
 
@@ -270,3 +278,4 @@ plain `data-pressed` data attribute rather than any ARIA role or state.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: restated requirements over the observable `data-pressed`/active-press contract instead of the internal `held` state, renamed all requirements to subject-only kebab-case, replaced the ad hoc Compliance table with real accessibility checks, reformatted Design Decisions to the three-line form, cited `button-pressable.tsx` directly instead of "the source comment", softened unreferenced cross-platform API claims to "typically", dropped the untestable handler-ordering requirement in favor of a Design Decision, fixed the invalid `setPointerCapture` test vector, added a States row and two edge cases for multi-pointer overlap and post-release re-entry, declared this recipe the single owner of the press-tracking contract, and linked the Accessibility Options reference |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: failed). |

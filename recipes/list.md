@@ -3,11 +3,11 @@ id: 3785363d-118e-4d7e-98e6-afaca8bf0838
 title: List
 domain: agenticdevelopertoolkit://recipes/list
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -146,8 +146,10 @@ Not applicable: List and ListItem do not emit any logs.
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Status rests on `list.tsx`: it renders plain `<ul>`/`<li>` elements with correct implicit roles, but it forwards an overridable `role` prop (**prop-forwarding**) and does not add `role="list"` to guard against Safari/VoiceOver dropping list semantics on a flexed `<ul>` (see Accessibility).
+Status rests on `list.tsx`: it renders plain `<ul>`/`<li>` elements with correct implicit roles, but it forwards an overridable `role` prop (**prop-forwarding**) and does not add `role="list"` to guard against Safari/VoiceOver dropping list semantics on a flexed `<ul>` (see Accessibility). `separation-of-concerns` passes because `List`/`ListItem` are pure presentation over their props with no logic beyond prop forwarding; `unit-test-coverage` fails because no test file imports `components/list`.
 
 ## Change History
 
@@ -155,3 +157,4 @@ Status rests on `list.tsx`: it renders plain `<ul>`/`<li>` elements with correct
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated all citations; corrected the className-collision edge case and added a tailwind-merge test vector (list-007); reformatted Design Decisions into Decision/Rationale/Approved entries; corrected the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes; marked Accessibility applicable with role-override and WebKit list-semantics guidance; corrected the Compliance entry to semantic-markup/partial |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

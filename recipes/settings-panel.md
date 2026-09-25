@@ -3,11 +3,11 @@ id: 24f42d31-dd5f-4e1e-a95c-3327e136ad46
 title: Settings Panel
 domain: agenticdevelopertoolkit://recipes/settings-panel
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -59,7 +59,7 @@ The Settings Panel is a tabbed navigation component that presents multiple setti
 - **registered-panes-fallback**: When no explicit `panes` prop is provided, the component MUST use panes registered via the context to populate `SettingsPanel.Sidebar`'s rendering.
 - **child-mode-rendering**: When in child-mode (no `panes` prop), the component MUST render its `children` directly instead of generating a default sidebar and detail layout; a caller that wants a sidebar in child-mode MUST include `SettingsPanel.Sidebar` explicitly among those children (see **registered-panes-fallback**).
 - **tab-panel-linkage**: Each tab button in the sidebar MUST carry an attribute linking it to its panel's id (see the React/Web platform note for the reference attribute/id pattern).
-- **panel-labelledby**: Each detail panel rendered by a child pane MUST reference its controlling tab via a labelling attribute (see the React/Web platform note for the reference attribute pattern).
+- **panel-labelledby**: Each detail panel rendered by a child pane sets an `aria-labelledby` attribute of the form `<tab-id>-tab`, intended to reference its controlling tab (see the React/Web platform note) — but no tab `<button>` is ever given that id, or any id, so the reference is dangling: it resolves to no element and the tabpanel's accessible name is empty. This is a defect, not a working linkage; see the **Compliance** screen-reader-support entry.
 
 ## Appearance
 
@@ -86,7 +86,7 @@ The Settings Panel is a tabbed navigation component that presents multiple setti
 ## Accessibility
 
 - **Role**: The sidebar is a `<nav>` with `aria-label="Settings sections"`. Each section's panes are wrapped in a `role="tablist"` container. Each pane item is a `<button>` with `role="tab"`. Each detail area is a `<div>` with `role="tabpanel"`.
-- **Label requirements**: Each tab button MUST have visible text via the pane `title`. The nav MUST have an `aria-label`. Each tabpanel MUST have an `aria-labelledby` reference to its controlling tab.
+- **Label requirements**: Each tab button MUST have visible text via the pane `title`. The nav MUST have an `aria-label`. In child-mode, each tabpanel carries an `aria-labelledby` attribute intended to reference its controlling tab, but the reference is dangling (see **panel-labelledby**): the tab is never given the id it points at, so the tabpanel gets no accessible name from this mechanism. In data-mode, the auto-rendered tabpanel carries neither `id` nor `aria-labelledby` at all.
 - **Keyboard navigation**: Users can tab to each tab button and activate with Enter/Space. Disabled buttons are skipped by tab order.
 - **Announce selected state**: Screen readers announce `aria-selected="true"` when a pane is selected.
 - **Minimum touch target**: Not specified in source. Platform guidelines MUST be followed (44×44pt on iOS, 48×48dp on Android, 40×40px on web per WCAG).
@@ -117,7 +117,7 @@ The Settings Panel is a tabbed navigation component that presents multiple setti
 | panel-019 | disabled-pane-selection-guard | `panes=[{id:'a',isDisabled:true},{id:'b'}]`; user clicks pane 'a' | `onSelect` is not called for 'a'; selection unchanged |
 | panel-020 | registered-panes-fallback | No `panes` prop; two `SettingsPanel.Pane` children register, `SettingsPanel.Sidebar` included among children | Sidebar shows both registered panes |
 | panel-021 | selection-precedence (`defaultPaneId`) | `panes=[{id:'a'},{id:'b'}]`, `defaultPaneId='b'`, uncontrolled, no persisted value | Pane 'b' is selected on mount |
-| panel-022 | panel-labelledby | Child-mode pane with id='a' selected | The panel's labelling attribute references pane 'a's tab |
+| panel-022 | panel-labelledby | Child-mode pane with id='a' selected | The panel's `aria-labelledby` is `aws-pane-a-tab`, but no element carries that id (the tab button has no id); the reference is dangling and the panel's accessible name is empty |
 
 ## Edge Cases
 
@@ -224,15 +224,15 @@ Not applicable: This component does not emit log messages. Application code inte
    **Rationale**: This lets parents track every selection change, which is essential for analytics and for keeping parent-owned state in controlled mode synchronized.
    **Approved**: pending
 
-7. **Decision**: Each tab button links to its corresponding panel via an `aria-controls`-style attribute, and, in child-mode, the panel sets a matching `aria-labelledby`-style attribute back to its tab, per **tab-panel-linkage** and **panel-labelledby**.
-   **Rationale**: This gives assistive technology a clear tab-panel association wherever the linkage is wired up.
+7. **Decision**: Each tab button links to its corresponding panel via an `aria-controls` attribute (`aws-pane-<id>`), and, in child-mode, the panel sets an `aria-labelledby` attribute pointing at `aws-pane-<id>-tab`, intended as the reverse link back to its tab, per **tab-panel-linkage** and **panel-labelledby**.
+   **Rationale**: The forward link (`aria-controls`) does give assistive technology a tab-to-panel association. The reverse link is unfinished: no tab button is ever given the id `aria-labelledby` points at, so it always references a nonexistent element and the tabpanel gets no accessible name from it — see the screen-reader-support gap under **Compliance**.
    **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | failed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
@@ -245,12 +245,15 @@ Not applicable: This component does not emit log messages. Application code inte
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These rest on the source: native `<button>`/`role="tab"` elements with `aria-selected` and `aria-controls` give a working screen-reader and keyboard baseline (passed/partial); the source defines no color tokens, contrast handling, dynamic-type accommodation, or minimum hit-target sizing of its own, so those checks can only be partial; the `aria-label="Settings sections"` string is hardcoded in JSX with no localization hook, failing both internationalization string checks; RTL and text-expansion behavior depend entirely on consumer-supplied CSS the source doesn't define; React's native Unicode-safe text rendering satisfies unicode-support; and only a single pane-id string is written to the persisted store with no other data collected, passing data-minimization, while data-retention-policy is partial because retention is stated (Privacy section) but no explicit deletion API is offered.
+These rest on the source: native `<button>`/`role="tab"` elements with `aria-selected` and `aria-controls` give a working screen-reader and keyboard baseline (passed/partial); the source defines no color tokens, contrast handling, dynamic-type accommodation, or minimum hit-target sizing of its own, so those checks can only be partial; the `aria-label="Settings sections"` string is hardcoded in JSX with no localization hook, failing both internationalization string checks; RTL and text-expansion behavior depend entirely on consumer-supplied CSS the source doesn't define; React's native Unicode-safe text rendering satisfies unicode-support; and only a single pane-id string is written to the persisted store with no other data collected, passing data-minimization, while data-retention-policy is partial because retention is stated (Privacy section) but no explicit deletion API is offered. `separation-of-concerns` is partial because persistence is cleanly extracted into `readPersisted`/`writePersisted`, but the auto-select effect and the by-section pane grouping (`SettingsPanelRoot`'s effect, `SettingsPanelSidebar`'s `groups` memo) are computed inline alongside the render logic rather than pulled into their own hooks; `unit-test-coverage` is passed on `SettingsPanel.test.tsx`, which renders the real `SettingsPanel` and asserts default selection, click-to-switch, section grouping, disabled-pane handling, controlled/uncontrolled selection, and localStorage persistence.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | panel-labelledby is a dangling aria-labelledby, not a working link; requirement, panel-022, Accessibility, Decision 7, screen-reader-support corrected. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and added a selection-precedence requirement resolving the auto-select/controlled-mode conflict; moved React/DOM specifics (classes, ids, storage keys) out of Behavioral Requirements and Appearance into the React/Web platform note with `{{app_prefix}}` templating; named concrete SwiftUI (`NavigationSplitView`/`Settings` scene) and AppKit (`NSSplitViewController`/`NSTabViewController`) APIs; replaced the Compliance "Not applicable" with a checks table; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; corrected the Accessibility Options wording for Increase Contrast and Differentiate Without Color; added edge cases for a disabled/missing persisted or default selection, duplicate pane ids, and corrected the empty-section-name edge case; fixed test vectors panel-004 and panel-009 and added seven vectors (panel-016 through panel-022) for previously untested requirements; added related sibling recipes and real localization keys |
 | 1.0.0 | 2026-09-22 | (pending) | Initial creation from React SettingsPanelRoot source |

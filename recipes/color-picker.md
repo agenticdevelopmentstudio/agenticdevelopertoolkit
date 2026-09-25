@@ -3,11 +3,11 @@ id: f8b8792e-12f2-4ca1-80a8-9ae7f2c5b31d
 title: Color Picker
 domain: agenticdevelopertoolkit://recipes/color-picker
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -38,7 +38,7 @@ The Color Picker is a form field component that wraps the native HTML5 `<input t
 - **render-label**: The component MUST render a label element associated to the input when a `label` prop is provided.
 - **accept-value**: The component MUST accept a `value` prop containing a valid hex color string (e.g., `#ff0000`); the native color input normalizes any accepted value to a 6-digit lowercase hex string (`#rrggbb`).
 - **fire-change**: The component MUST invoke the `onChange` callback with the new hex color string, as reported by the native input in lowercase `#rrggbb` form, when the user selects a color from the picker.
-- **render-hex-display**: The component MUST display the current hex color value, normalized to lowercase `#rrggbb` by the native input, as text adjacent to the picker.
+- **render-hex-display**: The component MUST display the `value` prop verbatim, as text adjacent to the picker; this text is not normalized by the native input — only the input element itself receives the browser's lowercase `#rrggbb` sanitization.
 - **support-disabled**: The component MUST respect a `disabled` prop and prevent interaction when `true`.
 - **render-hint**: The component MUST render hint text when a `hint` prop is provided.
 - **generate-id**: The component MUST generate a unique `id` for the color input if no `id` prop is provided.
@@ -79,7 +79,7 @@ The Color Picker is a form field component that wraps the native HTML5 `<input t
 | color-001 | render-label | label="Choose Color" | Label element rendered with matching htmlFor |
 | color-002 | accept-value | value="#FF0000" | Input value normalized and set to "#ff0000" |
 | color-003 | fire-change | User selects RGB (0, 255, 0) from the picker | onChange callback invoked with "#00ff00" |
-| color-004 | render-hex-display | value="#FF0000" | Hex text "#ff0000" displayed next to picker |
+| color-004 | render-hex-display | value="#FF0000" | Hex text "#FF0000" (the raw `value` prop, unchanged) displayed next to picker |
 | color-005 | support-disabled | disabled={true} | Input is disabled and not interactive; onChange is not invoked |
 | color-006 | render-hint | hint="Select brand color" | Hint text is rendered in the field |
 | color-007 | generate-id | No id prop supplied | Unique id generated and applied to input |
@@ -88,7 +88,7 @@ The Color Picker is a form field component that wraps the native HTML5 `<input t
 
 ## Edge Cases
 
-- **Empty or invalid value**: The component performs no validation or parsing of `value`; it passes the prop straight through to the native `<input type="color">`. Per the HTML value-sanitization algorithm, any value that is not a valid 6-digit lowercase hex color — including an empty string — is reset to `#000000` by the browser itself; the component does not detect or surface this fallback.
+- **Empty or invalid value**: The component performs no validation or parsing of `value`; it passes the prop straight through to the native `<input type="color">`. Per the HTML value-sanitization algorithm, any value that is not a valid 6-digit lowercase hex color — including an empty string — is reset to `#000000` by the browser itself; the component does not detect or surface this fallback. The hex text display is unaffected by this sanitization: it always shows the raw `value` prop (see **render-hex-display**), so an empty or non-lowercase `value` renders a swatch showing `#000000` next to hex text that does not match it, until a controlled parent updates `value` from `onChange`'s already-lowercased argument.
 - **Null or undefined label/hint**: Component gracefully skips rendering label or hint if props are not provided; no error or empty placeholder is shown.
 - **Disabled with active focus**: On some platforms, a disabled input may retain focus; the browser's native input handles this state.
 - **Rapid value changes**: Multiple onChange calls in quick succession (e.g., from drag in the picker) are all propagated immediately; the component does not debounce.
@@ -167,11 +167,14 @@ Not applicable. The component does not emit diagnostic logs; browser DevTools an
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: the native input is keyboard-focusable and operable with no custom handling needed (passed); the ambiguous ARIA role and the unverified `aria-hidden` assumption on the hex text mean screen-reader and ARIA semantics are only partially certain (partial); text color, contrast, and control sizing all depend on the external `.aws-*` CSS classes that the component references but does not define, so those cannot be confirmed from the source alone (partial); and the component's `label`/`hint` props are plain `ReactNode` with no string literals in the source (passed).
+Statuses rest on the source: the native input is keyboard-focusable and operable with no custom handling needed (passed); the ambiguous ARIA role and the unverified `aria-hidden` assumption on the hex text mean screen-reader and ARIA semantics are only partially certain (partial); text color, contrast, and control sizing all depend on the external `.aws-*` CSS classes that the component references but does not define, so those cannot be confirmed from the source alone (partial); and the component's `label`/`hint` props are plain `ReactNode` with no string literals in the source (passed). separation-of-concerns passes because `ColorPicker.tsx` is pure presentation over its `value`/`onChange`/`label`/`hint` props with no logic beyond an id fallback and a class-name join, and unit-test-coverage passes because `components.test.tsx`'s `ColorPicker` suite exercises the `onChange` emission with a meaningful assertion.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected render-hex-display: shows raw value prop verbatim, not native-input-normalized lowercase. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case names and updated every citation, corrected the ARIA role and aria-hidden announcement claims in Accessibility, corrected the Compose/AppKit-UIKit/WinUI 3 platform notes to name real native APIs, specified the accepted hex format and the native fallback for empty/invalid values, normalized hex casing across requirements and test vectors, added a disabled-state onChange assertion and dropped an unstated layout claim in the test vectors, reworded the Disabled state row, marked Increase Contrast applicable, replaced the CSS-coupled Appearance section with platform-neutral tokens, reformatted Design Decisions into Decision/Rationale/Approved form, added a Compliance table, and added tags |

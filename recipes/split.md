@@ -3,11 +3,11 @@ id: 8F4C2B7A-9D3E-4C5F-B2E8-7F6A3C1D5E9B
 title: Split
 domain: agenticdevelopertoolkit://recipes/split
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -153,12 +153,15 @@ Not applicable: Split is a presentation component with no runtime state changes 
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on `Split.tsx` rendering a bare `<div>` with no ARIA role or attributes (semantic-markup), and on `css/base.css` defining the two-column grid with no explicit `direction` override, which gives native RTL mirroring but is not yet exercised by an automated test (rtl-layout-support).
+Statuses rest on `Split.tsx` rendering a bare `<div>` with no ARIA role or attributes (semantic-markup), and on `css/base.css` defining the two-column grid with no explicit `direction` override, which gives native RTL mirroring but is not yet exercised by an automated test (rtl-layout-support). `separation-of-concerns` passes because `Split.tsx` is pure presentation, with all layout values living in CSS rather than the component. `unit-test-coverage` fails because no test in the repository renders `Split` — the landing package's `deck.test.tsx` covers `Screen` and `Deck` but not `Split`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: stated concrete breakpoint/column/gap values from `css/base.css`; collapsed Appearance to a single CSS Grid model; renamed requirements to subject-only kebab-case everywhere they're cited; reformatted Design Decisions to Decision/Rationale/Approved; corrected Platform Notes to real native APIs (WinUI `Grid`+`AdaptiveTrigger`, Compose `BoxWithConstraints`, UIKit `registerForTraitChanges`, SwiftUI `ViewThatFits`) and aligned WinUI with the declarative Design Decision; linked Compliance rows to real catalog checks; added a reading-order requirement and RTL edge case with vectors; added missing edge-case test vectors; added related landing-layout siblings |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

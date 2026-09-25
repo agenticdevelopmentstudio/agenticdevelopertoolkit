@@ -3,11 +3,11 @@ id: 1a044d34-d585-46b4-b703-dea3fb9b9642
 title: StatusDot
 domain: agenticdevelopertoolkit://recipes/status-dot
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -228,16 +228,25 @@ carries the status and a second announcement would be noise.
 |---|---|---|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
 Statuses rest on the source's conditional `role="img"` / `aria-label` /
 `aria-hidden="true"` rendering (`semantic-markup`), and on the fact that the
 component never embeds a literal user-facing string — `label` is always a
-value the consumer passes in (`no-hardcoded-strings`).
+value the consumer passes in (`no-hardcoded-strings`). `separation-of-concerns`
+passes: `StatusDot` is a memoized, pure presentational component, and its
+tone-to-class mapping is delegated to the shared `lib/tone` table rather than
+computed inline. `unit-test-coverage` is partial: `stat.test.tsx` covers the
+decorative/accessible-image split and the size-driven glow, but not the
+`color-mix` glow color, the small-size threshold, or the `neutral` tone
+override.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History wording ("Initial recipe" not "Initial ingredient"); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix the small-size threshold to `size < 10` in States and Edge Cases, cite MDN for `color-mix` support, rewrite Compliance as a real catalog-check table, reformat Design Decisions to the Decision/Rationale/Approved form, reorder Platform Notes and correct the SwiftUI/Compose/AppKit-UIKit/WinUI 3 APIs, add `passes-label-through-verbatim` and `memoizes-render` requirements with new test vectors and a rewritten Localization section, add missing tone/empty-label/boundary conformance vectors, fix the 1.0.0 Change History summary, and trim the frontmatter summary. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise: fix domain (cookbook), add missing "not applicable" sections, complete Platform Notes for all platforms, set status to review. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the currentColor-driven glowing StatusDot. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the currentColor-driven glowing StatusDot. |

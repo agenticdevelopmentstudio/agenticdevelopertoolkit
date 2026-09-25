@@ -3,11 +3,11 @@ id: 1f14e4d7-07ea-4f59-8365-5a15eb162def
 title: Chat Contract
 domain: agenticdevelopertoolkit://recipes/chat-contract
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -334,7 +334,7 @@ Not applicable — this is a chat protocol contract, not a visual component.
 |---|---|---|---|
 | chat-contract-001 | scripted-backend-start-timing | `ScriptedBackend(script: [...], start: .immediately)` at `init`, no `send` call | Replay begins immediately; `ScriptedBackendTests` exercises this as the `.immediately` case |
 | chat-contract-002 | scripted-backend-start-timing | `ScriptedBackend(script: [...], start: .onFirstSend)`, then one `send` | Stream stays silent until the first `send`; that `send` triggers the one-time replay, and a second `send` does not replay again |
-| chat-contract-003, scripted-backend-local-id-sequence | `send(text: "a", attachments: [])` then `send(text: "b", attachments: [])` on a fresh `ScriptedBackend(localIDPrefix: "local")` | First call returns `"local-1"` and appends `("local-1", "a", [])` to `sent`; second returns `"local-2"` and appends `("local-2", "b", [])` |
+| chat-contract-003 | scripted-backend-local-id-sequence | `send(text: "a", attachments: [])` then `send(text: "b", attachments: [])` on a fresh `ScriptedBackend(localIDPrefix: "local")` | First call returns `"local-1"` and appends `("local-1", "a", [])` to `sent`; second returns `"local-2"` and appends `("local-2", "b", [])` |
 | chat-contract-004 | scripted-backend-serial-replay-chain | Two `send` calls issued back to back against an `opening`/`turn` `ScriptedBackend` | The second turn's beats do not interleave with the first turn's; `ScriptedBackendTests` pins this as the two turns' events arriving in-order, never interspersed |
 | chat-contract-005 | scripted-backend-beat-delay-leads | `Beat(.messageReceived(...), after: .milliseconds(50))` as the first beat of a script | The 50ms delay elapses before the event is yielded, not after |
 | chat-contract-006 | draft-replaces-not-appends | `draftUpdated(participantID: "p1", text: "Hel")` then `draftUpdated(participantID: "p1", text: "Hello")` | The observed draft text for `"p1"` becomes `"Hello"`, not `"HelHello"`; `ObservableChatViewModelTests` pins replace-not-append |
@@ -588,13 +588,13 @@ communicate failure to the caller directly rather than through a log.
 
 | Check | Status | Category |
 |---|---|---|
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-frontmatter-complete) | passed | artifact-formatting |
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-behavioral-requirements) | passed | artifact-formatting |
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-test-vectors) | passed | artifact-formatting |
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-platform-notes) | passed | artifact-formatting |
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-design-decisions) | passed | artifact-formatting |
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-compliance) | passed | artifact-formatting |
-| [ingredient-formatting](agenticdevelopercookbook://compliance/artifact-formatting#if-change-history) | passed | artifact-formatting |
+| [if-frontmatter-complete](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-frontmatter-complete) | passed | artifact-formatting |
+| [if-behavioral-requirements](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-behavioral-requirements) | passed | artifact-formatting |
+| [if-test-vectors](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-test-vectors) | passed | artifact-formatting |
+| [if-platform-notes](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-platform-notes) | passed | artifact-formatting |
+| [if-design-decisions](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-design-decisions) | passed | artifact-formatting |
+| [if-compliance](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-compliance) | passed | artifact-formatting |
+| [if-change-history](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-change-history) | passed | artifact-formatting |
 | [best-practices](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
 | [best-practices](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
 | [best-practices](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
@@ -622,3 +622,4 @@ defined at this layer — each `Backend` conformer owns that decision.
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Split merged chat-contract-003 cell; fixed 7 if-* compliance URLs missing ingredient-formatting. |

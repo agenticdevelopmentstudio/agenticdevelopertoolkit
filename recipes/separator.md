@@ -3,11 +3,11 @@ id: da56ecc7-18f6-412e-9368-3beb29309d8d
 title: Separator
 domain: agenticdevelopertoolkit://recipes/separator
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -77,6 +77,7 @@ A related component, `agenticdevelopertoolkit://recipes/divider`, comes from a d
 | separator-002 | vertical-orientation, orientation-sync | `orientation="vertical"` | Renders with separator role and vertical orientation exposed to assistive technology; on web: `<div role="separator" aria-orientation="vertical" ...>` with 1px width and full height |
 | separator-003 | custom-style-override | `className="custom-class"` (web) | Rendered element includes `custom-class` in its className alongside base styles |
 | separator-004 | forwarded-props | `data-testid="my-sep" id="sep1"` (web) | Rendered element includes `data-testid="my-sep"` and `id="sep1"` |
+| separator-005 | semantic-role, orientation-sync | `orientation="diagonal"` (unrecognized value, web) | Renders with separator role; `aria-orientation="diagonal"` and `data-orientation="diagonal"` are set verbatim (no validation), but no `data-[orientation=...]` CSS rule matches, so the element receives no explicit height/width beyond `shrink-0` |
 
 ## Edge Cases
 
@@ -144,8 +145,10 @@ Not applicable: The Separator component has no logging behavior.
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`separator.tsx` sets `role="separator"` and keeps `aria-orientation` synced to the `orientation` prop on every render, which is correct ARIA usage for a non-interactive separator. The other Accessibility checks (screen-reader-support, keyboard-navigable, touch-target-size, focus-management) do not apply because the component has no interactive functionality, and dynamic-type-support/contrast-ratio do not apply because it renders no text.
+`separator.tsx` sets `role="separator"` and keeps `aria-orientation` synced to the `orientation` prop on every render, which is correct ARIA usage for a non-interactive separator. The other Accessibility checks (screen-reader-support, keyboard-navigable, touch-target-size, focus-management) do not apply because the component has no interactive functionality, and dynamic-type-support/contrast-ratio do not apply because it renders no text. `separation-of-concerns` passes because `separator.tsx` is pure presentation with no business logic, and `unit-test-coverage` fails because no test exercises it — its only consumer, `user-card.tsx`, itself has no test.
 
 ## Change History
 
@@ -153,3 +156,4 @@ Not applicable: The Separator component has no logging behavior.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: cross-link divider recipe and explain the difference; neutralize and rename Behavioral Requirements off must-/should- prefixes with citations updated everywhere; reformat Design Decisions into Decision/Rationale/Approved; convert Compliance to a check table; correct shrink behavior (shrink-0 means it does not shrink) and rename the background bullet to a semantic token; ground the invalid-orientation edge case in actual source/CSS behavior instead of leaving it undefined; fix SwiftUI accessibility trait, AppKit background/accessibility guidance, WinUI AccessibilityView value, and Compose color token in Platform Notes |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added a fifth Conformance Test Vector row covering an unrecognized `orientation` value. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

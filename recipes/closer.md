@@ -3,11 +3,11 @@ id: 688cd8dc-2927-4a8a-9931-807fe283ed01
 title: Closer
 domain: agenticdevelopertoolkit://recipes/closer
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -163,12 +163,15 @@ Not applicable: the component performs no operations that require event logging.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on the source: `<h2>{title}</h2>` is correct semantic markup; `.lp-closer h2` uses a `clamp()`-based responsive `font-size` (partial confidence on dynamic type, since the component sets no fixed pixel size but the full scaling chain isn't visible from the component alone); `title`/`children` are always caller-supplied ReactNode with no strings owned or hardcoded by the component; and `.lp-closer`'s `text-align: center` and lack of directional (left/right) properties impose no RTL-breaking layout, while `h2`'s `text-wrap: balance` and the paragraph's `max-width: 48ch` suggest — but cannot fully confirm — tolerance for expanded translated text.
+Statuses rest on the source: `<h2>{title}</h2>` is correct semantic markup; `.lp-closer h2` uses a `clamp()`-based responsive `font-size` (partial confidence on dynamic type, since the component sets no fixed pixel size but the full scaling chain isn't visible from the component alone); `title`/`children` are always caller-supplied ReactNode with no strings owned or hardcoded by the component; and `.lp-closer`'s `text-align: center` and lack of directional (left/right) properties impose no RTL-breaking layout, while `h2`'s `text-wrap: balance` and the paragraph's `max-width: 48ch` suggest — but cannot fully confirm — tolerance for expanded translated text. separation-of-concerns passes because `Closer.tsx` is pure presentation over its `title`/`children`/`className` props with no logic of its own, while unit-test-coverage is partial: no test renders `Closer` directly, and it is exercised only indirectly through `Contact`'s `.lp-closer` assertion in `blocks-close.test.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: cite the real `lp-closer`/`lp-closer h2` CSS in Appearance instead of an unsupported source-comment claim, correct the Border description (a border-top is applied) and drop the false CSS-specificity claim from the className design decision, reformat Design Decisions into Decision/Rationale/Approved form, add a Compliance table (accessibility + internationalization), replace the web-only "CSS class name string" platform-note pattern with each native platform's own styling hook and add heading-semantics guidance, fix the WinUI StackPanel/TextAlignment mismatch and the Compose ColumnScope type, rename requirements to subject-only kebab-case and fold filter-empty-strings into merge-optional-classname, add test vectors for null children and ReactNode title, soften the empty-title edge case to a caller SHOULD NOT, and move "positioned after hero content" out of Overview into a usage note. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

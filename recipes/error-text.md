@@ -3,11 +3,11 @@ id: c9e70ad4-89c9-4c44-a2d6-a64da32a64af
 title: Error Text
 domain: agenticdevelopertoolkit://recipes/error-text
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -192,8 +192,10 @@ Not applicable: Error Text does not perform any logging. Diagnostic or debugging
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Status rests on the source: `role="alert"` and the element's classes are read directly from `error-text.tsx`, so `semantic-markup` passes; the actual color and font-size *values* behind the error-color and text-size tokens are defined in the design system's token files, not in this component's source, so `contrast-ratio` and `dynamic-type-support` are `partial`; and `no-hardcoded-strings`/`unicode-support` pass because the component never embeds a literal user-facing string of its own — `error` is caller-supplied and rendered as plain JSX text content.
+Status rests on the source: `role="alert"` and the element's classes are read directly from `error-text.tsx`, so `semantic-markup` passes; the actual color and font-size *values* behind the error-color and text-size tokens are defined in the design system's token files, not in this component's source, so `contrast-ratio` and `dynamic-type-support` are `partial`; and `no-hardcoded-strings`/`unicode-support` pass because the component never embeds a literal user-facing string of its own — `error` is caller-supplied and rendered as plain JSX text content. `separation-of-concerns` is `passed` because both exports are pure presentation over a caller-supplied `error` string with no logic beyond a truthy guard; `unit-test-coverage` is `passed` because `errorText.test.tsx` renders both `ErrorText` and `DialogErrorText` directly.
 
 ## Change History
 
@@ -201,3 +203,4 @@ Status rests on the source: `role="alert"` and the element's classes are read di
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web implementation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: folded duplicate requirements (alert role, dialog treatment) into their survivors; renamed all requirements to subject-only kebab-case; split the color/size requirement so it matches the documented `className` override policy, grounded in `cn()`'s `tailwind-merge` behavior; moved Tailwind class names out of Behavioral Requirements and into the React/Web platform note; corrected the SwiftUI, UIKit/AppKit, Compose, and WinUI 3 accessibility-announcement APIs; hedged two edge cases that stated uncertain screen-reader/DOM behavior as fact; reformatted Design Decisions into named Decision/Rationale/Approved entries; added a Compliance table; added test vectors for `className` merging on `DialogErrorText`, the size-override behavior, and the hidden-container DOM-presence case |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

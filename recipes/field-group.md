@@ -3,11 +3,11 @@ id: 781740e8-c83f-40a1-8215-43abfb8d8f56
 title: FieldGroup
 domain: agenticdevelopertoolkit://recipes/field-group
 type: recipe
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -198,6 +198,8 @@ export function FieldGroup(props: FieldGroupProps): React.ReactElement
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 `semantic-markup` and `contrast-ratio` are partial because the source renders a
 correct `<h3>` heading and resolves every color through `apt-*` tokens, but the
@@ -207,12 +209,15 @@ the source does not state the tokens' resolved contrast values.
 `text-[0.7rem]`, a `rem`-based size that scales with the user's base font
 setting. `platform-theming` is passed because every color in the source
 (`apt-border`, `apt-surface-2`) resolves through a theme token, with no raw hex
-and no `!important`.
+and no `!important`. `separation-of-concerns` is passed because the component
+is pure layout over `title`/`trailing`/`children` props with no business logic;
+`unit-test-coverage` is failed because no test exercises `field-group.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; give SwiftUI/Compose/AppKit-UIKit real native grouping-container guidance in place of "Not applicable"; correct WinUI 3 spacing, title-row layout, and border-brush binding; reformat Design Decisions into Decision/Rationale/Approved blocks and add a decision documenting the fixed h3/assumed-h2-parent heading level; rebuild Compliance as linked, canonically-categorized catalog checks; sharpen the T1 and T3 test vector assertions; correct the React/Web note's "use client" rationale. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete translation guidance — control names, properties, layout pattern, and XAML structure. Remove "Not applicable" wording. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Expand Platform Notes to all five platforms with translation guidance; set status to review. |

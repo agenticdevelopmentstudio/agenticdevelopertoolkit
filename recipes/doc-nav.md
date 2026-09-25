@@ -3,11 +3,11 @@ id: ef7191ff-63a9-442a-b6d0-f8452a0aa1d6
 title: Document Navigation Tree
 domain: agenticdevelopertoolkit://recipes/doc-nav
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,12 +40,12 @@ A hierarchical navigation component that renders document structure as a tree wi
 - **render-leaves**: Component MUST render leaf nodes (children with no further children) as navigable links.
 - **render-headings**: Component MUST render a leaf node's inline page headings (from `node.headings` array) as a sub-list of links indented beneath that leaf.
 - **track-active-page**: Component MUST accept an `activePath` prop and highlight the current page link (using `aria-current="page"` and visual styling) when `activePath` matches the node's `href`.
-- **track-ancestor**: Component MUST apply ancestor styling to branch nodes whose `href` is a prefix of `activePath` (e.g., `/docs/guides/` is an ancestor of `/docs/guides/getting-started`).
+- **track-ancestor**: Component MUST apply ancestor styling to branch nodes whose `href` is a segment-boundary prefix of `activePath` — `activePath` MUST equal `node.href` followed by `/` and additional path segments, not merely start with the same characters (e.g., `/docs/guides` is an ancestor of `/docs/guides/getting-started`, but `/docs/guide` is not an ancestor of `/docs/guides/getting-started`).
 - **support-heading-scrolling**: When a heading link's page is already active (`activePath` matches the leaf's `href`), clicking the heading MUST prevent default navigation and scroll the target heading element into view smoothly; when the page is not active, the link MUST navigate normally.
 - **set-hash-on-heading-scroll**: When scrolling to a heading on the active page, component MUST update `window.history.replaceState` to set the URL hash without triggering navigation.
 - **preserve-section-state-on-route-change**: Section expansion state MUST NOT change when `activePath` updates; it MUST only change when the toggle control is clicked.
 - **manage-drawer-open-state**: Component MUST accept an `open` prop to control drawer visibility and MUST call `onClose` when the scrim backdrop is clicked or the close button is clicked.
-- **initialize-expanded-sections**: On mount, component MUST set expanded sections to include all sections whose `href` matches `activePath` or is a prefix of it.
+- **initialize-expanded-sections**: On mount, component MUST set expanded sections to include all sections whose `href` matches `activePath` exactly, or is a segment-boundary prefix of it (`activePath` equals `node.href` followed by `/` and additional path segments — see **track-ancestor**).
 - **order-children**: Component MUST render a node's children in a fixed order: leaf nodes first, then branch nodes; the order does NOT follow the input array order.
 - **distinguish-link-component**: Component MUST accept a `LinkComponent` prop and use it for all navigation links; if omitted, MUST default to a plain `<a href>` element.
 - **support-top-and-bottom-links**: Component MUST render fixed navigation rows (`topLinks` and `bottomLinks`) above and below the tree respectively, each behind its own divider rule.
@@ -97,12 +97,12 @@ A hierarchical navigation component that renders document structure as a tree wi
 | doc-nav-002 | render-branches | node with children that have children | Branch links render without collapse control; appear when parent section is expanded |
 | doc-nav-003 | render-leaves | node with children that have no further children | Leaf links render |
 | doc-nav-004 | track-active-page | activePath="/docs/guides" with matching node href | Link styled with semibold, primary color, and left accent bar; aria-current="page" set |
-| doc-nav-005 | track-ancestor | activePath="/docs/guides/getting-started" with ancestor node href="/docs/guides/" | Ancestor link styled with medium weight and primary color; no accent bar |
+| doc-nav-005 | track-ancestor | activePath="/docs/guides/getting-started" with ancestor node href="/docs/guides" | Ancestor link styled with medium weight and primary color; no accent bar |
 | doc-nav-006 | support-heading-scrolling | activePath matches leaf, heading link clicked | preventDefault called, target element scrolled into view smoothly, history.replaceState called with hash |
 | doc-nav-007 | support-heading-scrolling | activePath does NOT match leaf, heading link clicked | Link navigates normally (default behavior not prevented) |
 | doc-nav-008 | preserve-section-state-on-route-change | Section expanded, activePath changed | Expanded state unchanged; only toggle control changes it |
 | doc-nav-009 | manage-drawer-open-state | open=true, onClose callback provided | Drawer rendered and visible; clicking scrim calls onClose; clicking close button calls onClose |
-| doc-nav-010 | initialize-expanded-sections | activePath="/section1/page" on mount | Sections whose `href` matches `activePath` or is a prefix of it are auto-expanded; other sections collapsed |
+| doc-nav-010 | initialize-expanded-sections | activePath="/section1/page" on mount | Sections whose `href` equals `activePath` exactly, or is a segment-boundary prefix of it (e.g. `href="/section1"`), are auto-expanded; other sections collapsed |
 | doc-nav-011 | order-children | node with mixed leaves and branches in arbitrary input order | Leaves rendered first, then branches, regardless of input order |
 | doc-nav-012 | distinguish-link-component | LinkComponent prop with custom link component provided | Custom component used for all links; defaulting to `<a href>` if omitted |
 | doc-nav-013 | support-top-and-bottom-links | topLinks array with entries | Fixed rows render above tree with divider below them |
@@ -137,12 +137,6 @@ A hierarchical navigation component that renders document structure as a tree wi
 | closeLabel | string | "Close navigation" | aria-label for drawer close button |
 | className | string | undefined | CSS class applied to desktop aside only; not copied to drawer |
 | ...rest | HTMLAttributes | {} | Standard HTML attributes (id, data-*, etc.) applied to desktop aside only |
-
-## Data Model
-
-- **HdvNavNode**: `{ label: string; href: string; headings?: HeadingEntry[]; children?: HdvNavNode[] }`. A node with a non-empty `children` array is a branch (or, at depth 0, a section); a node with no `children` is a leaf. There is no `kind` discriminator — depth and the presence of `children` are the only distinctions the tree draws.
-- **HeadingEntry**: `{ id: string; text: string; depth: number }`. One heading extracted from the rendered document; `id` is the DOM id the component scrolls to and writes onto the URL hash.
-- **DocNavTopLink**: `{ label: ReactNode; href: string }`. One fixed row for `topLinks` or `bottomLinks`.
 
 ## Deep Linking
 
@@ -237,13 +231,22 @@ Not applicable: the component does not perform any logging.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on: theme-token text colors used throughout for contrast; every interactive control (section toggle, links, drawer close button) being reachable and operable via tab and enter, with the scrim providing only a redundant pointer-only dismiss path alongside the keyboard-operable close button; semantic `<nav>`/`<ul>`/`<li>` markup with the host's `LinkComponent` (defaulting to `<a href>`) and `aria-expanded`/`aria-label` on the section toggle plus `aria-current="page"` on selected links; section-toggle buttons padded to 44×44px while link rows measure roughly 24-28px tall, short of that minimum (see Accessibility); and no `prefers-reduced-motion` handling anywhere in the source for the chevron rotation or heading scroll (see Accessibility Options).
+These statuses rest on: theme-token text colors used throughout for contrast; every interactive control (section toggle, links, drawer close button) being reachable and operable via tab and enter, with the scrim providing only a redundant pointer-only dismiss path alongside the keyboard-operable close button; semantic `<nav>`/`<ul>`/`<li>` markup with the host's `LinkComponent` (defaulting to `<a href>`) and `aria-expanded`/`aria-label` on the section toggle plus `aria-current="page"` on selected links; section-toggle buttons padded to 44×44px while link rows measure roughly 24-28px tall, short of that minimum (see Accessibility); and no `prefers-reduced-motion` handling anywhere in the source for the chevron rotation or heading scroll (see Accessibility Options). separation-of-concerns passes because `DocNavTree` (pure tree rendering and expansion state) and `DocNav` (drawer chrome and fixed top/bottom rows) are split apart, and neither pulls in the host's router beyond the injected `LinkComponent`. unit-test-coverage passes because `docNav.test.tsx` exercises both components across rendering, active/ancestor tracking, expansion persistence, heading scroll, drawer open/close, and accessibility.
+
+## Data Model
+
+- **HdvNavNode**: `{ label: string; href: string; headings?: HeadingEntry[]; children?: HdvNavNode[] }`. A node with a non-empty `children` array is a branch (or, at depth 0, a section); a node with no `children` is a leaf. There is no `kind` discriminator — depth and the presence of `children` are the only distinctions the tree draws.
+- **HeadingEntry**: `{ id: string; text: string; depth: number }`. One heading extracted from the rendered document; `id` is the DOM id the component scrolls to and writes onto the URL hash.
+- **DocNavTopLink**: `{ label: ReactNode; href: string }`. One fixed row for `topLinks` or `bottomLinks`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-09-25 | Mike Fullerton | track-ancestor/initialize-expanded-sections corrected to segment-boundary prefix matching (T005/T010 fixed); moved Data Model after Compliance per template order. |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; moved styling out of render-sections into Appearance; added a Data Model section; reformatted Design Decisions to Decision/Rationale/Approved form; rebuilt the Compliance table with catalog check names, corrected categories, and removed unverified claims; fixed the Localization table's Default (en) column; removed platform-specific class tokens from Appearance; split test vector doc-nav-003 and added doc-nav-016 for render-headings; fixed the section-label appearance contradiction; removed the unverified deep-nesting performance claim; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,11 +3,11 @@ id: d431934e-d64c-4dcf-bdab-b7c3465ee71b
 title: Radio Group
 domain: agenticdevelopertoolkit://recipes/radio-group
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -132,7 +132,7 @@ A radio group component presents a set of mutually exclusive options; native rad
 | hint | ReactNode | undefined | Optional field-level guidance text rendered below choices |
 | value | T (string \| number) | required | The currently selected choice value; SHOULD match one of the choice values so that choice renders as checked. If it does not match any choice, no radio input is checked (see Edge Cases: Value not in choices). |
 | onChange | (value: T) => void | required | Callback invoked when the user selects a different choice |
-| choices | Choice<T>[] | required | Array of choice objects, each with value, label, and optional disabled and hint properties |
+| choices | `Choice<T>[]` | required | Array of choice objects, each with value, label, and optional disabled and hint properties |
 | disabled | boolean | false | When true, disables all radio inputs and the fieldset |
 | className | string | undefined | Optional CSS class string applied to the root fieldset element |
 | name | string | undefined | Optional name attribute for all radio inputs; if omitted, a unique name is generated via useId |
@@ -212,8 +212,10 @@ Not applicable: The component does not emit any log messages.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The `passed` statuses rest on the native `fieldset`/`legend`/`label` semantics and the keyboard-operable `<input type="radio">` visible in the source. The `screen-reader-support` status is `partial` because the `role="radiogroup"` container carries no `aria-labelledby` of its own (see Accessibility). The `contrast-ratio` and `touch-target-size` statuses are `partial` because the `apt-*`/`aws-*` token values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in this source file.
+The `passed` statuses rest on the native `fieldset`/`legend`/`label` semantics and the keyboard-operable `<input type="radio">` visible in the source. The `screen-reader-support` status is `partial` because the `role="radiogroup"` container carries no `aria-labelledby` of its own (see Accessibility). The `contrast-ratio` and `touch-target-size` statuses are `partial` because the `apt-*`/`aws-*` token values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in this source file. `separation-of-concerns` passes because `RadioGroup` only renders the `choices` it is given and reports selection via `onChange`, with no logic for how `value`/`choices` are produced. `unit-test-coverage` passes because `components.test.tsx`'s `RadioGroup` suite renders it with choices and asserts clicking a choice's label calls `onChange` with that choice's value.
 
 ## Change History
 
@@ -221,3 +223,4 @@ The `passed` statuses rest on the native `fieldset`/`legend`/`label` semantics a
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source (`packages/web/packages/controls/src/user-settings/components/RadioGroup.tsx`) |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update every citation; reconcile the exactly-one-selected vs. unmatched-value contradiction across Overview/Configuration/Edge Cases; correct the Enter/Space keyboard claim and cite WCAG 2.5.5 by name; rebuild Compliance as a linked, honestly-scoped table instead of blanket `passed`; replace the SwiftUI/Compose/WinUI platform notes' non-native suggestions with the real native radio-group APIs and state the AppKit mutual-exclusivity mechanism explicitly; reformat Design Decisions into Decision/Rationale/Approved form; fix test vector 003's undefined choice and vector 013's implementation-detail assertion, and add vectors for every untested edge case; fill `related` with the sibling form-control recipes and `references` with the cited WCAG/HTML sources; state the Border appearance entry as caller-owned instead of "may". |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Wrapped Choice<T>[] in code span; added best-practices Compliance rows. |

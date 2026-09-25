@@ -3,11 +3,11 @@ id: 26c4eb3c-9af9-4092-9546-bb5c5532b59c
 title: DocMetadata
 domain: agenticdevelopertoolkit://recipes/doc-metadata
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -171,12 +171,15 @@ Not applicable: The component performs no logging or error reporting.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Semantic-markup passes because the source renders proper `<dl>`/`<dt>`/`<dd>` elements; contrast-ratio is partial because the label and value colors are unresolved theme CSS variables (`--color-text-dim`, `--color-text-secondary`) whose computed ratio the source cannot tell you; dynamic-type-support fails because the source hardcodes a fixed 11px font size (`text-[11px]`) that does not scale with system text-size settings.
+Semantic-markup passes because the source renders proper `<dl>`/`<dt>`/`<dd>` elements; contrast-ratio is partial because the label and value colors are unresolved theme CSS variables (`--color-text-dim`, `--color-text-secondary`) whose computed ratio the source cannot tell you; dynamic-type-support fails because the source hardcodes a fixed 11px font size (`text-[11px]`) that does not scale with system text-size settings. `separation-of-concerns` passes because `DocMetadata` renders the caller-supplied `fields` with no formatting logic of its own; `unit-test-coverage` passes because `docMetadata.test.tsx` imports `DocMetadata` directly and exercises its behavior with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added the `DocMetadataField` type before requirements; converted Compliance to a table; split Design Decisions into Decision/Rationale/Approved entries; corrected the Appearance margin, added the array-item gap, and clarified per-field row layout; fixed Platform Notes APIs (SwiftUI font size, Compose FlowRow, WinUI ItemsRepeater, native monospace fonts, color-token mappings); fixed test-vector syntax; clarified null/undefined value passthrough as deterministic, not unguarded. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

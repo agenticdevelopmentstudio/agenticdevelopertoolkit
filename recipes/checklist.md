@@ -3,11 +3,11 @@ id: 5182f5ec-186b-4605-8c40-ea70a49262c2
 title: Checklist
 domain: agenticdevelopertoolkit://recipes/checklist
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -156,8 +156,10 @@ Not applicable: Checklist does not perform any logging. Subsystem-level logging 
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`dynamic-type-support` and `semantic-markup` pass because the component sizes text in `rem` units and renders through native `h3` / `ul` / `li` / `span` elements (`Checklist.tsx`, `css/blocks.css`); `contrast-ratio` is `partial` because the actual computed contrast depends on the host's `--lp-ink-dim` / `--lp-accent` token values, which the source does not fix.
+`dynamic-type-support` and `semantic-markup` pass because the component sizes text in `rem` units and renders through native `h3` / `ul` / `li` / `span` elements (`Checklist.tsx`, `css/blocks.css`); `contrast-ratio` is `partial` because the actual computed contrast depends on the host's `--lp-ink-dim` / `--lp-accent` token values, which the source does not fix. separation-of-concerns passes because `Checklist.tsx` is pure presentation over its `groups` prop with no logic beyond a length check, and unit-test-coverage passes because `blocks-argument.test.tsx`'s `Checklist` suite exercises grouping, the `soon` modifier, and the empty-group case with meaningful assertions.
 
 ## Change History
 
@@ -166,3 +168,4 @@ Not applicable: Checklist does not perform any logging. Subsystem-level logging 
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added stable-group-order; reformatted Design Decisions to Decision/Rationale/Approved; populated Compliance and Accessibility Options tables; documented the grid column layout; corrected checklist-001/checklist-008 test vectors and added checklist-009; fixed Compose and WinUI platform notes; clarified heading-level wording and simplified the soon edge case and summary |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

@@ -3,11 +3,11 @@ id: 4a2dcdee-4d2a-4f3f-a3a5-d243ec2b799b
 title: SendIcon
 domain: agenticdevelopertoolkit://recipes/send-icon
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -68,6 +68,7 @@ Not applicable: SendIcon is a static presentation component with no interactive 
 | send-icon-002 | use-current-color | Render in context with `color: red` | Icon stroke appears red (inherits currentColor) |
 | send-icon-003 | maintain-aspect-ratio | Render inside a container sized differently than 20×20 (e.g., 40×40) | Icon stays fixed at 20×20 pixels; it does not resize to fill the container, because `width`/`height` are hardcoded on the `<svg>` |
 | send-icon-004 | remain-static | Inspect the rendered `<svg>` | No `on*` event-handler attributes are present, no `tabindex` attribute is set, and `pointer-events` is not overridden |
+| send-icon-005 | render-svg-arrow, maintain-aspect-ratio | Inspect the rendered `<svg>`'s `viewBox` attribute | `viewBox="0 0 24 24"` — a 24-unit coordinate space rendered into a 20×20 box (`width="20" height="20"`), so the arrow is drawn slightly smaller than its own coordinate grid rather than at 1:1 scale. |
 
 ## Edge Cases
 
@@ -134,8 +135,10 @@ Not applicable: SendIcon performs no logging.
 |-------|--------|----------|
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | failed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`screen-reader-support` is partial because SendIcon itself supplies no label and relies on a wrapping control to provide one — the reference usage in `ChatInput.tsx` does this correctly with `aria-label="Send"` on its `<button>`. `semantic-markup` fails because the `<svg>` in `SendIcon.tsx` sets no `aria-hidden` or `focusable` attribute, so nothing tells assistive technology to skip this purely decorative graphic.
+`screen-reader-support` is partial because SendIcon itself supplies no label and relies on a wrapping control to provide one — the reference usage in `ChatInput.tsx` does this correctly with `aria-label="Send"` on its `<button>`. `semantic-markup` fails because the `<svg>` in `SendIcon.tsx` sets no `aria-hidden` or `focusable` attribute, so nothing tells assistive technology to skip this purely decorative graphic. `separation-of-concerns` passes because `SendIcon.tsx` is a pure, prop-less presentational SVG with no logic at all, and `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
@@ -143,3 +146,4 @@ Not applicable: SendIcon performs no logging.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; resolved the fixed-size vs. scaling contradiction in favor of the source's fixed dimensions; corrected the geometry description and the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; de-duplicated geometry into Appearance; reformatted Design Decisions; added a real Compliance table; linked the related chat-input recipe; removed the untestable color-fallback and dead comment-only accessibility edge cases |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added a fifth Conformance Test Vector row covering the SVG's viewBox/size mismatch. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

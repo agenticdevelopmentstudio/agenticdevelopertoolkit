@@ -3,11 +3,11 @@ id: f8cbc576-a5ef-4e8c-90a0-7d0712b24b72
 title: FlowHero
 domain: agenticdevelopertoolkit://recipes/flow-hero
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -208,12 +208,15 @@ Not applicable: FlowHero does not perform logging.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`semantic-markup` and `no-hardcoded-strings` rest on `FlowHero.tsx` rendering `<div>`/`<h1>`/`<p>` with every string passed through as a ReactNode prop, not a literal in source; `text-expansion-tolerance` rests on `flow.css` sizing the headline/sub/meta with `rem`/`ch`/`clamp()`, `text-wrap: balance`/`pretty`, and no truncation or overflow rule; `dynamic-type-support` is `partial` because the CSS uses relative (`rem`) units, which scale with a browser's font-size setting, but the source shows no explicit platform Dynamic Type integration; `contrast-ratio` is `partial` because the actual foreground/background pairing comes from host-supplied `--lp-ink*`/`--lp-hero-wash` tokens the source cannot verify.
+`semantic-markup` and `no-hardcoded-strings` rest on `FlowHero.tsx` rendering `<div>`/`<h1>`/`<p>` with every string passed through as a ReactNode prop, not a literal in source; `text-expansion-tolerance` rests on `flow.css` sizing the headline/sub/meta with `rem`/`ch`/`clamp()`, `text-wrap: balance`/`pretty`, and no truncation or overflow rule; `dynamic-type-support` is `partial` because the CSS uses relative (`rem`) units, which scale with a browser's font-size setting, but the source shows no explicit platform Dynamic Type integration; `contrast-ratio` is `partial` because the actual foreground/background pairing comes from host-supplied `--lp-ink*`/`--lp-hero-wash` tokens the source cannot verify. `separation-of-concerns` is `passed` because the component is pure layout over props with no business logic; `unit-test-coverage` is `passed` because `flow.test.tsx` renders `FlowHero` directly.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; corrected the null/empty-string suppression contradiction (only `undefined` hides a section) in Design Decisions and Edge Cases; corrected the uppercase-meta opt-out mechanism (child-element override, not the component's own `<p>`); verified the Reduce Motion claim against `flow.css` and corrected it (component has no motion of its own); linked the no-section-element decision to `agenticdevelopertoolkit://recipes/hero`; populated `related` with Wrap/Btn/Bleed/Cta/Hero; replaced the made-up compliance checks with catalog-linked accessibility and internationalization checks plus a sourcing sentence; reformatted Design Decisions to Decision/Rationale/Approved; renamed the Platform Notes bullet to React/Web and corrected WinUI/SwiftUI/Compose/AppKit-UIKit heading-semantics APIs; named the hero background's CSS custom property; added `render-order` and `single-per-page` requirements with a matching test vector; added null/empty-string test vectors and fixed vector 011's self-contradictory input; replaced app-specific test-vector copy with `{{placeholder}}` tokens; added a locale-sensitivity note for the meta uppercase transform; fixed an unescaped `\|` breaking the Configuration table |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source analysis |

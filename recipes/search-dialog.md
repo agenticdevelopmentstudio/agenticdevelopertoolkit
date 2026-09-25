@@ -3,11 +3,11 @@ id: 88dc87c9-8058-446d-9513-acfa618c950f
 title: Search Dialog
 domain: agenticdevelopertoolkit://recipes/search-dialog
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,12 +44,12 @@ Search Dialog is a modal component that presents a full-screen search interface 
 - **open-as-modal**: When the `open` prop is `true`, the component MUST render as a modal dialog with `role="dialog"` and `aria-modal="true"` on the root container.
 - **dismissible-backdrop**: The component MUST render a full-screen backdrop element. Clicking the backdrop MUST invoke the `onClose` callback.
 - **focus-input-on-open**: When the `open` prop transitions from `false` to `true`, the input field MUST receive focus once the dialog has rendered. (See **requestAnimationFrame for focus** under Design Decisions for the timing mechanism.)
-- **reset-search-state-on-open**: When the `open` prop transitions from `false` to `true`, the component MUST reset the search state to its initial values (empty query, no results, no selection).
+- **reset-search-state-on-open**: When the `open` prop transitions from `false` to `true`, the component MUST reset the search state to its initial values: empty query, no results, and `state.selectedIndex` reset to `0` — the same value the state starts at and that `setQuery` also resets to on every keystroke, not an unselected/`-1` state. Because the results section only renders when `state.query` is truthy, no row is visibly highlighted right after reset, but the first ranked result becomes pre-selected the instant any results exist, even before an arrow key is pressed.
 - **input-row-with-search-icon**: The input row MUST render as a form element containing a search icon (magnifying glass SVG) and an input field with placeholder text. (For the form's `role="search"`, see **search-role-on-form**.)
 - **escape-hint**: The input row MUST display a keyboard hint showing "Esc" to indicate the escape key can dismiss the dialog.
 - **placeholder-prop**: The component MUST accept an optional `placeholder` prop. If not provided, it MUST default to `"Search documentation..."`.
 - **escape-dismisses**: When the user presses the Escape key in the input field, the component MUST immediately invoke `onClose()`.
-- **enter-selects-highlighted-result**: When the user presses Enter in the input field, if there is a selected result (by index), the component MUST invoke `onSelect()` with the selected entry. If no result is selected, Enter MUST have no other effect. Enter never submits the form (see **prevent-form-submission**).
+- **enter-selects-highlighted-result**: When the user presses Enter in the input field, if `state.selectedIndex` is a valid index into `state.results` (the flat, ungrouped, rank-ordered top-20 array), the component MUST invoke `onSelect()` with `state.results[state.selectedIndex]`. If no result is selected, Enter MUST have no other effect. Enter never submits the form (see **prevent-form-submission**). This is rank order, not the grouped-by-section render order used for the highlight — see **highlight-selected-result** and the edge case **Highlight and Enter target can diverge**.
 - **delegate-other-keys**: When the user presses any key other than Escape or Enter, the component MUST delegate handling to `state.handleKey(e)`.
 - **update-query-on-input**: As the user types in the input field, the component MUST update the search state by calling `state.setQuery(e.target.value)` for each change event.
 - **show-results-only-when-querying**: The results section MUST only render when `state.query` is truthy (non-empty string).
@@ -59,7 +59,7 @@ Search Dialog is a modal component that presents a full-screen search interface 
 - **empty-state-when-no-results**: When `state.query` is truthy but no results exist (top 20 is empty), the component MUST display a `No results for "{query}"` message.
 - **result-title-and-summary**: Each result MUST display `entry.frontmatter.title`. If `entry.frontmatter.summary` exists, it MUST also be displayed below the title.
 - **result-as-button**: Each result MUST be rendered as a `<button>` element with `type="button"`. Clicking a result MUST invoke `onSelect(entry)`.
-- **highlight-selected-result**: The currently selected result (by `state.selectedIndex`) MUST be visually distinguished by applying the `awt-search-dialog__result--selected` CSS class modifier.
+- **highlight-selected-result**: The row at flat position `state.selectedIndex` within the results as GROUPED by section (see **group-results-by-section**) MUST be visually distinguished by applying the `awt-search-dialog__result--selected` CSS class modifier. Because grouping reorders results by section before this position is counted, the highlighted row is not necessarily `state.results[state.selectedIndex]` — see the edge case **Highlight and Enter target can diverge**.
 - **stable-result-identity**: Each rendered result MUST derive a stable identity from `entry.slug`, so reconciliation stays correct if the same entries reorder or reappear across renders. (Implemented as the React `key` prop; see **Slug as React key** under Design Decisions.)
 - **prevent-form-submission**: The search form wrapper MUST have an `onSubmit` handler that calls `e.preventDefault()`, so an implicit form submission never navigates the page.
 - **search-role-on-form**: The form element containing the input field MUST have `role="search"` to declare its semantic purpose.
@@ -84,7 +84,7 @@ Search Dialog is a modal component that presents a full-screen search interface 
 | Open (empty query) | Input field focused, results section not shown. |
 | Open (with query, results found) | Results grouped by section are visible; selected result highlighted. |
 | Open (with query, no results) | "No results for "{query}"" message displayed. |
-| Result selected via keyboard | Result button receives `awt-search-dialog__result--selected` class. |
+| Result selected (default or via keyboard) | Result button receives `awt-search-dialog__result--selected` class. `selectedIndex` starts at, and every query change resets it to, `0`, so the top-ranked result is pre-selected as soon as results exist — arrow keys move the selection from there. |
 | Result hovered | Controlled by CSS; source does not specify hover behavior. |
 
 ## Accessibility
@@ -104,14 +104,14 @@ Search Dialog is a modal component that presents a full-screen search interface 
 | search-dialog-002 | open-as-modal | `open: true` | Root div has `role="dialog"` and `aria-modal="true"`. |
 | search-dialog-003 | dismissible-backdrop | `open: true`, click backdrop | `onClose()` callback is invoked. |
 | search-dialog-004 | focus-input-on-open | `open: false` → `true` | Input field is focused after the dialog renders (implementation defers via `requestAnimationFrame`; see Design Decisions). |
-| search-dialog-005 | reset-search-state-on-open | `open: false` → `true` | Search state is reset to its initial values (query cleared, no results, no selection). |
+| search-dialog-005 | reset-search-state-on-open | `open: false` → `true` | Search state is reset to its initial values: query cleared, no results, `state.selectedIndex` reset to `0` (not `-1`) — nothing is visibly highlighted only because the results section is empty until a query is typed. |
 | search-dialog-006 | input-row-with-search-icon | `open: true` | Form renders containing the SVG search icon and the input field (form's `role="search"` verified in search-dialog-032). |
 | search-dialog-007 | escape-hint | `open: true` | Keyboard hint element displaying "Esc" is rendered. |
 | search-dialog-008 | placeholder-prop | `open: true`, no `placeholder` prop | Input field displays "Search documentation..." placeholder. |
 | search-dialog-009 | placeholder-prop | `open: true`, `placeholder: "Find items"` | Input field displays "Find items" placeholder. |
 | search-dialog-010 | escape-dismisses | `open: true`, user presses Escape in input | `onClose()` is invoked immediately. |
 | search-dialog-011 | enter-selects-highlighted-result | `open: true`, result selected, user presses Enter | `onSelect(selectedEntry)` is invoked; page does not navigate. |
-| search-dialog-012 | enter-selects-highlighted-result | `open: true`, `state.selectedIndex: -1` (no result selected), user presses Enter | No callback is invoked; page does not navigate. |
+| search-dialog-012 | enter-selects-highlighted-result | `open: true`, `state.selectedIndex: -1` (an out-of-range value the component's own reset/`setQuery` never produce — `state.selectedIndex` otherwise starts at, and resets to, `0` — exercised here as a defensive bounds check), user presses Enter | No callback is invoked; page does not navigate. |
 | search-dialog-013 | delegate-other-keys | `open: true`, user presses ArrowDown | `state.handleKey(e)` is called with the keyboard event. |
 | search-dialog-014 | update-query-on-input | `open: true`, user types "test" | `state.setQuery()` is called for each keystroke; input value updates. |
 | search-dialog-015 | show-results-only-when-querying | `open: true`, `state.query: ""` | Results section is not rendered. |
@@ -127,12 +127,13 @@ Search Dialog is a modal component that presents a full-screen search interface 
 | search-dialog-025 | result-title-and-summary | `open: true`, result without summary | Result displays title only; summary section not rendered. |
 | search-dialog-026 | result-as-button | `open: true`, result visible | Result is a `<button type="button">` element. |
 | search-dialog-027 | result-as-button | `open: true`, user clicks result | `onSelect(entry)` is invoked with that result's entry. |
-| search-dialog-028 | highlight-selected-result | `open: true`, `state.selectedIndex: 2` | Third result (index 2) has class `awt-search-dialog__result--selected`. |
+| search-dialog-028 | highlight-selected-result | `open: true`, `state.selectedIndex: 2` | The row at grouped render position 2 (not necessarily `state.results[2]`) has class `awt-search-dialog__result--selected`. |
 | search-dialog-029 | highlight-selected-result | `open: true`, `state.selectedIndex: 999` (≥ number of rendered results) | No result is highlighted. |
 | search-dialog-030 | stable-result-identity | `open: true`, results rendered, then re-rendered with the same entries reordered | Each result's identity stays tied to its `slug` rather than its position (implementation detail: React `key`; verified via reconciliation, not a DOM attribute). |
 | search-dialog-031 | prevent-form-submission | `open: true`, user presses Enter with form focused | Form's `onSubmit` prevents default; no page navigation. |
 | search-dialog-032 | search-role-on-form | `open: true` | Form element has `role="search"`. |
 | search-dialog-033 | suppress-autofill-suggestions | `open: true` | Input field carries the attributes needed to suppress the browser's autofill suggestion UI (`noAutofillProps` in source; see Design Decisions). |
+| search-dialog-034 | enter-selects-highlighted-result, highlight-selected-result | `open: true`, ranked results `[A(guides), B(api), C(api), D(guides)]` (grouped render order: guides → A, D; api → B, C), `state.selectedIndex: 1` | Row D (grouped position 1) is highlighted, but Enter invokes `onSelect(B)` — `state.results[1]` in rank order — not `onSelect(D)`; the highlighted row and the Enter target diverge whenever sections interleave. |
 
 ## Edge Cases
 
@@ -140,6 +141,8 @@ Search Dialog is a modal component that presents a full-screen search interface 
 - **Zero results from search**: When top 20 results array is empty but query is truthy, "No results" message is shown. **MUST**.
 - **Large result set**: Component slices to top 20 results; remaining results are discarded and never rendered. Implementor should verify that `state.results` provides results in descending relevance order. **MUST**.
 - **Out-of-bounds selectedIndex**: If `state.selectedIndex` is greater than or equal to the number of rendered results, no result is highlighted. Source does not bounds-check selection. Caller is responsible for keeping index in range. **MUST**.
+- **Selection is a cursor, not an opt-in pick**: `state.selectedIndex` starts at `0` and both `reset()` and `setQuery()` set it back to `0` — it is never set to `-1` or otherwise cleared by the source. So typing a query and pressing Enter with no arrow key selects and opens the top-ranked result; a consumer or port that models "no selection" after reset/query-change as an explicit empty state (e.g. `-1`) diverges from the source, which always has a selection cursor once results exist.
+- **Highlight and Enter target can diverge**: The highlight is applied to the row at flat position `state.selectedIndex` in the GROUPED (by-section) render order, while Enter invokes `onSelect` with `state.results[state.selectedIndex]` in the flat RANK order the results arrived in. These are the same entry only when the results in front of `state.selectedIndex` are not split across sections. Once sections interleave (as in **group-results-by-section**'s own example, `["guides", "api", "api", "guides"]`), the two orders diverge and the highlighted row and the Enter target are different entries (see search-dialog-034). **MUST** be treated as two independent index spaces, not one shared "selected result."
 - **Rapid open/close toggle**: Each `open: false → true` transition resets the search state (see **reset-search-state-on-open**). Multiple rapid toggles will reset state multiple times. Intended behavior per source comment. **MUST**.
 - **Focus loss and regain**: When dialog closes and `open` prop changes to `false`, component returns `null`. Focus management on reopening is handled per **focus-input-on-open**. **MUST**.
 - **Missing entry.slug**: Result rendering derives each item's stable identity from `entry.slug` (see **stable-result-identity**). Caller MUST provide a valid, unique slug for every entry; a missing or duplicate slug is a caller precondition violation, not a supported input.
@@ -280,14 +283,17 @@ Logging is not implemented in the component source. The events above describe su
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
 | [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | partial | Privacy and Data |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on `SearchDialog.tsx`: keyboard handling (Escape, Enter, arrow-key delegation) and the ARIA attributes present in the source (`role="dialog"`, `aria-modal`, `role="search"`, `aria-label`) give keyboard-navigable and semantic-markup a pass; screen-reader-support and focus-management are partial because the source has no live-region announcements (see **Announce state changes**) and implements neither a focus trap nor focus restoration on close; touch-target-size is partial because sizing is stylesheet-driven and absent from the source; string-externalization fails because every user-facing string (placeholder, empty-state message, escape hint, aria-label) is a hardcoded literal in the component; unicode-support passes because result text renders through standard React text nodes with no encoding restriction; data-minimization passes because the only data handled is the query string the search needs; and no-pii-in-logs is partial because logging is not implemented in the source, so the query-containing message template documented under Logging would need redaction if it were ever wired up.
+Statuses rest on `SearchDialog.tsx`: keyboard handling (Escape, Enter, arrow-key delegation) and the ARIA attributes present in the source (`role="dialog"`, `aria-modal`, `role="search"`, `aria-label`) give keyboard-navigable and semantic-markup a pass; screen-reader-support and focus-management are partial because the source has no live-region announcements (see **Announce state changes**) and implements neither a focus trap nor focus restoration on close; touch-target-size is partial because sizing is stylesheet-driven and absent from the source; string-externalization fails because every user-facing string (placeholder, empty-state message, escape hint, aria-label) is a hardcoded literal in the component; unicode-support passes because result text renders through standard React text nodes with no encoding restriction; data-minimization passes because the only data handled is the query string the search needs; no-pii-in-logs is partial because logging is not implemented in the source, so the query-containing message template documented under Logging would need redaction if it were ever wired up; separation-of-concerns passes because selection/query state lives in the `useSearchState` model hook, entirely separate from `SearchDialog.tsx`'s rendering; and unit-test-coverage is partial — `SearchDialog.test.tsx`/`SearchDialogConnected.test.tsx` cover open/close, typing, and single-match Enter, but the only Enter test has a single match, so the grouped-highlight-vs-ranked-Enter divergence this revision documents (search-dialog-034) had no prior test vector.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Highlight (grouped) vs Enter (ranked) index divergence documented; selectedIndex resets to 0, not -1. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case and cross-referenced the duplicates it removed; corrected the focus-trap and WCAG tap-target claims in Accessibility; converted Design Decisions to the Decision/Rationale/Approved form and softened unsupported claims within them; rebuilt Compliance as canonical linked checks with partial status where the source can't confirm; corrected Platform Notes API names (WinUI 3, AppKit/UIKit, Compose) and added the missing AppKit mapping; fixed the localization empty-state quoting and its forking advice; reworded the caller-owned state's retention and reset rationale to remove the contradiction; marked Analytics and Logging as unimplemented documentation rather than a caller MUST contract; fixed edge-case bound precision and restated defect-flavored edge cases as caller preconditions; and linked the related dialog and search-dialog-connected recipes. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Clarify review marker with evidence criteria; relabel Platform Notes Windows bullet to WinUI 3; clarify "Not applicable" sections; remove implementation-specific language from Accessibility Options |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

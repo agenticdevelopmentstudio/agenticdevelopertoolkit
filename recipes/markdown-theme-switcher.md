@@ -3,11 +3,11 @@ id: 3562bffe-c137-4f4e-91da-f9ef27a5b712
 title: Markdown Theme Switcher
 domain: agenticdevelopertoolkit://recipes/markdown-theme-switcher
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -163,12 +163,15 @@ Not applicable: The component does not emit any log messages. Debugging theme ch
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on the source's explicit ARIA and native semantics (`aria-label`, `<label htmlFor>`, native `<select>`) and Tailwind sizing classes (`h-8`, `text-xs`) visible in `MarkdownThemeSwitcher.tsx`; the `Select` primitive's actual color tokens and root font-size behavior are not visible from this file, and the hardcoded "Theme" string has no externalization mechanism in the source.
+Statuses rest on the source's explicit ARIA and native semantics (`aria-label`, `<label htmlFor>`, native `<select>`) and Tailwind sizing classes (`h-8`, `text-xs`) visible in `MarkdownThemeSwitcher.tsx`; the `Select` primitive's actual color tokens and root font-size behavior are not visible from this file, and the hardcoded "Theme" string has no externalization mechanism in the source; the component is pure presentation over `activeThemeId`/`onThemeChange` props with no inline logic (separation-of-concerns: passed), and no test file exercises `MarkdownThemeSwitcher` (unit-test-coverage: failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; platform-neutralized Behavioral Requirements; corrected accessibility, states, and platform-notes technical errors; rebuilt Compliance with real catalog checks; reformatted Design Decisions; fixed Appearance units and Conformance Test Vectors |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

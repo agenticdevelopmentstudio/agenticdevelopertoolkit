@@ -3,11 +3,11 @@ id: 2ad7c681-6a9e-43ae-a9d9-b448939d3455
 title: InfoPanel
 domain: agenticdevelopertoolkit://recipes/info-panel
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -285,6 +285,8 @@ panel owning that behavior.
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
 `platform-theming` is `passed`: the source styles exclusively with `apt-*`
 theme tokens (no raw hex, no `!important`), which theme correctly in light and
@@ -294,6 +296,12 @@ region unnamed for a non-string `title` with no `ariaLabel` (see
 **label-region**). `keyboard-navigable` is `partial`: the scroll body is a
 real `overflow-y-auto` container, but the source adds no `tabIndex` to it, so
 keyboard reachability depends on focusable content the host renders inside.
+`separation-of-concerns` is `passed`: the component is pure presentation over
+its header/body slot props, with only the trivial `aria-label` precedence
+computed inline. `unit-test-coverage` is `partial`: `infoPanel.test.tsx`
+exercises only the host-attribute passthrough and the `aria-label` precedence
+chain, with no test covering the icon, count, center, actions, or scroll-mode
+rendering.
 
 ## Change History
 
@@ -303,3 +311,4 @@ keyboard reachability depends on focusable content the host renders inside.
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Host-attribute passthrough: remaining HTML attributes spread onto the root `<section>` (data-* tagging without a wrapper). |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Complete recipe sections: add Deep Linking, Localization, Accessibility Options, Feature Flags, Privacy; expand Platform Notes with translation guidance for all five platforms; set status to review. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; resolve the label-region contradiction with Edge Cases and state the aria-label precedence, with new test vectors T15-T18; correct the keyboard-scrollable overclaim; write a Logging statement distinct from Analytics; reformat Design Decisions and Compliance to the canonical forms; fix WinUI 3's Grid/MinHeight, the SwiftUI/AppKit min-height wording, AppKit-vs-UIKit padding APIs, and Compose's scroll-gated fillMaxHeight; mark T6/T8 as Playwright/E2E and reword T5 behaviorally; rewrite Appearance in neutral terms and move Tailwind classes into the React/Web note; drop the unsupported "manages layout state" phrase from Privacy. |
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |

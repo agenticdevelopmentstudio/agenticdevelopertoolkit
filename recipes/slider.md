@@ -3,11 +3,11 @@ id: 25816370-14ff-454a-83d4-ebd588a2ff01
 title: Slider
 domain: agenticdevelopertoolkit://recipes/slider
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -230,13 +230,16 @@ Not applicable: The component does not include any logging or debugging output.
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The `passed` statuses rest on the native `<input type="range">` role and keyboard semantics, the `id`/`htmlFor` association visible in the source, and the fact that `label`/`hint`/`caption` content is entirely caller-supplied and rendered unmodified. The `partial` statuses reflect that the component has no fallback accessible name when `label` is omitted, and that color, contrast, text sizing, touch-target dimensions, and RTL mirroring are all delegated to CSS rules not present in this source file.
+The `passed` statuses rest on the native `<input type="range">` role and keyboard semantics, the `id`/`htmlFor` association visible in the source, and the fact that `label`/`hint`/`caption` content is entirely caller-supplied and rendered unmodified. The `partial` statuses reflect that the component has no fallback accessible name when `label` is omitted, and that color, contrast, text sizing, touch-target dimensions, and RTL mirroring are all delegated to CSS rules not present in this source file. `separation-of-concerns` passes because `Slider.tsx` is pure presentation over props with no business logic, and `unit-test-coverage` passes because `components.test.tsx` renders it directly and asserts on its emitted numeric value and dynamic caption.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and update every citation; document the missing accessible-name fallback and the hint/aria-describedby and caption/aria-valuetext gaps as facts rather than inventing new required ARIA props; name `Slider` as the canonical export and `CaptionedSlider` as its alias, with a matching Design Decision; correct the touch-target citation to WCAG 2.2 SC 2.5.8 (AA, 24×24) alongside WCAG 2.1 SC 2.5.5 (AAA, 44×44) and add the new reference; remove source-code-literal phrasing from Edge Cases and Accessibility Options and state behavior directly, including native browser clamping for out-of-range, off-step, and min-greater-than-max values; reformat Design Decisions to the Decision/Rationale/Approved form; rebuild Compliance as a catalog-linked table with lowercase statuses; add the missing hint class and DOM order to Appearance; correct `htmlFor`-vs-`for` and value-attribute-vs-property test assertions and add a Number-type vector and keyboard vectors; correct the WinUI 3 namespace and caption approach, the AppKit/UIKit platform split, and the Compose label/caption API; replace the "Not applicable" Localization section with the native RTL-inheritance and locale-aware caption-formatting notes; and link sibling form-control recipes in `related` |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Resolved label accessibility marker: labels are optional as per source code |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

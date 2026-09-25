@@ -3,11 +3,11 @@ id: 9f87b4cd-f3a0-482b-830d-c1482ed51bbe
 title: Create Resource Dialog
 domain: agenticdevelopertoolkit://recipes/create-resource-dialog
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -51,7 +51,7 @@ A reusable modal dialog component for creating new resources. The dialog renders
 - **display-create-error**: When `create` throws, Component MUST derive an error message — the thrown value's `message` property if it is an `Error`, otherwise the string "Failed to create." — and pass it to `renderForm` the same way `validate-on-save` does, for the callback to display.
 - **invoke-onsaveerror-on-create-failure**: Component MUST invoke the `onSaveError` callback with the exception when `create` fails, if the callback is provided.
 - **guard-close-on-dirty**: Component MUST show the `UnsavedChangesAlert` component when the user attempts to close (via Cancel, ×, or Escape) and the draft has unsaved changes.
-- **discard-closes-dialog**: Component MUST invoke `onClose` when the user chooses Discard in the `UnsavedChangesAlert`.
+- **discard-invokes-onclose**: Component MUST invoke `onClose` when the user chooses Discard in the `UnsavedChangesAlert`. The component does not reset `confirming` on this path, so `UnsavedChangesAlert` itself stays open; it disappears only if the host responds to `onClose` by unmounting the dialog.
 - **stay-dismisses-alert**: Component MUST dismiss the `UnsavedChangesAlert` and leave the dialog open with the draft intact when the user chooses Stay; `onClose` MUST NOT be invoked.
 - **ignore-backdrop-click**: Component MUST NOT close when the backdrop (overlay background) is clicked.
 - **route-escape-through-guard**: Component MUST route Escape key presses through the same close guard as Cancel and ×, respecting the unsaved-changes alert state.
@@ -128,7 +128,7 @@ A reusable modal dialog component for creating new resources. The dialog renders
 | create-resource-023 | support-optional-save-gate | saveEnabled returns false | Save button is disabled even if draft is dirty |
 | create-resource-024 | support-optional-save-gate | saveEnabled returns true and draft is dirty | Save button is enabled |
 | create-resource-025 | render-only-on-client | Component is rendered on server (document is undefined) | Component returns null |
-| create-resource-026 | discard-closes-dialog | User clicks Discard in UnsavedChangesAlert | onClose is invoked; UnsavedChangesAlert closes |
+| create-resource-026 | discard-invokes-onclose | User clicks Discard in UnsavedChangesAlert | onClose is invoked; UnsavedChangesAlert itself is not dismissed by this click and remains visible unless the host unmounts the dialog in response to onClose |
 | create-resource-027 | stay-dismisses-alert | User clicks Stay in UnsavedChangesAlert | UnsavedChangesAlert closes; dialog remains open with the draft unchanged; onClose is not invoked |
 | create-resource-028 | escape-active-during-save | User presses Escape while `saving` is true and draft is dirty | UnsavedChangesAlert is shown even though Cancel and Save are currently disabled |
 | create-resource-029 | render-form-content | Component is mounted with draft state, an onChange handler, and error=null | `renderForm` is invoked with `(draft, onChange, error)` in that order; its returned content renders between the header and footer |
@@ -156,7 +156,7 @@ A reusable modal dialog component for creating new resources. The dialog renders
 | `heading` | string | Yes | — | Dialog heading/title rendered as h2 |
 | `blank` | () => TInput | Yes | — | Factory function that returns the initial pristine state for the form |
 | `validate` | (draft: TInput) => string \| null | Yes | — | Validation function; returns null if valid, error message string if invalid |
-| `create` | (draft: TInput) => Promise<TResult> | Yes | — | Async resource creation function; throws on error |
+| `create` | (draft: TInput) => `Promise<TResult>` | Yes | — | Async resource creation function; throws on error |
 | `onClose` | () => void | Yes | — | Callback invoked when the dialog is closed without a successful create: directly via Cancel, ×, or Escape while the draft is pristine, or via Discard in the `UnsavedChangesAlert` after confirming a dirty draft. Never invoked after `onCreated` fires. |
 | `onCreated` | (result: TResult) => void | Yes | — | Callback invoked when create succeeds |
 | `renderForm` | (draft: TInput, onChange: (next: TInput) => void, error: string \| null) => ReactNode | Yes | — | Render function for form fields; receives draft state, onChange handler, and error message |
@@ -256,14 +256,17 @@ Not implemented: Component does not emit logs. Errors from `create` are surfaced
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on the source: interactive elements carry meaningful labels and the correct `role`/`aria-modal`/`aria-label` (screen-reader-support, semantic-markup); every action is reachable through native buttons and a global Escape handler (keyboard-navigable); no code moves, traps, or restores focus (focus-management, documented above under Focus management); and the close button's `icon-sm` size measures 28×28px against the 44×44/48×48 guideline unless a host raises `--adh-button-min-height`/`--adh-button-min-width` (touch-target-size). All five user-visible strings ("Cancel", "Save", "Saving…", "Close", "Failed to create.") are hardcoded literals in the component rather than resource lookups (string-externalization, no-hardcoded-strings).
+Statuses rest on the source: interactive elements carry meaningful labels and the correct `role`/`aria-modal`/`aria-label` (screen-reader-support, semantic-markup); every action is reachable through native buttons and a global Escape handler (keyboard-navigable); no code moves, traps, or restores focus (focus-management, documented above under Focus management); and the close button's `icon-sm` size measures 28×28px against the 44×44/48×48 guideline unless a host raises `--adh-button-min-height`/`--adh-button-min-width` (touch-target-size). All five user-visible strings ("Cancel", "Save", "Saving…", "Close", "Failed to create.") are hardcoded literals in the component rather than resource lookups (string-externalization, no-hardcoded-strings). separation-of-concerns passes because the dialog owns only dirty-tracking, save orchestration, and the close guard, delegating all field presentation to the host's `renderForm` and the confirm/discard UI to `UnsavedChangesAlert`. unit-test-coverage is partial: `createResourceDialogExit.test.tsx` covers only the close-guard paths (Cancel/Discard/Stay); no test in the repo exercises the save flow (`display-create-error`, `invoke-onsaveerror-on-create-failure`, `support-optional-save-gate`, and related requirements).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Renamed discard-closes-dialog to discard-invokes-onclose; T026 now reflects that the alert stays open unless the host unmounts; wrapped Promise<TResult> in a code span. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirement names to subject-only kebab-case and added three requirements (plus vectors) for the alert's Discard/Stay outcomes and Escape-during-save; corrected the unmount-while-saving, callback-identity, draft-mutation, and portal-target Edge Cases to match actual React/DOM behavior; corrected touch-target size, keyboard tab order, and error-display ownership (delegated to renderForm) across Accessibility, States, and Appearance; removed the async claim from the saveEnabled design decision and explained the host re-render mechanism instead; reformatted every Design Decision to the Decision/Rationale/Approved form; added a real Compliance table; added the missing fallback-error localization entry and noted the strings are hardcoded; corrected two test vectors and added five more |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Answer the blank-state, validate-throw, and Reduce Motion questions from the source; keep modal focus management as the one open gap; rewrite Platform Notes to the template's five bullets with concrete per-platform guidance |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,11 +3,11 @@ id: 3b509297-83b2-4a5b-a331-56d0d4be548d
 title: Radio
 domain: agenticdevelopertoolkit://recipes/radio
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,7 +41,7 @@ A radio button is a single-selection control used within a radio group to allow 
 - **indicate-selection**: RadioGroupItem MUST display a visual indicator (filled dot) when selected.
 - **hide-indicator-when-unselected**: The inner indicator MUST NOT be visible when the radio button is unselected.
 - **single-selection**: Within a RadioGroup, selecting one RadioGroupItem MUST deselect any previously selected item, so at most one item in the group is selected at a time.
-- **disabled-state**: RadioGroupItem MUST be disableable; a disabled item MUST ignore pointer clicks and keyboard input (Space/Enter) and MUST render at reduced opacity.
+- **disabled-state**: RadioGroupItem MUST be disableable; a disabled item MUST ignore pointer clicks and keyboard input (Space/Enter). Because Base UI's `RadioPrimitive.Root` renders as a `<span role="radio">` rather than a native button, the disabled state is exposed via `aria-disabled`/`data-disabled` and `tabindex="-1"`, not the native `disabled` attribute, so the wrapper's `disabled:` opacity/cursor utilities never match and the control is not visually dimmed.
 - **focus-visible**: RadioGroupItem MUST display a focus-visible border and ring styling when focused via keyboard navigation.
 - **space-selects**: RadioGroupItem MUST become selected when it has keyboard focus and the user presses Space.
 - **theme-token-styling**: RadioGroupItem MUST use the toolkit's border, background, and accent theme tokens to visually distinguish its default, checked, and focused states.
@@ -68,8 +68,8 @@ A radio button is a single-selection control used within a radio group to allow 
 | Default | 16×16px circle, `apt-border` border, `apt-bg` background, no indicator |
 | Checked | Border changes to `apt-gold`, inner `apt-gold` dot appears (8×8px) |
 | Focused | Border and ring added with `apt-gold`, ring opacity set to 25% |
-| Disabled | Opacity reduced to 50%, pointer events disabled, cursor changes to not-allowed |
-| Checked + Disabled | Checked appearance combined with disabled opacity |
+| Disabled | No visual dimming (the `disabled:opacity-50`/`disabled:cursor-not-allowed`/`disabled:pointer-events-none` utilities target a native `:disabled` state the rendered `<span role="radio">` never has); disabled state is `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`; toggling is still blocked by Base UI's internal guards |
+| Checked + Disabled | Checked appearance (border/dot) combined with the Disabled row's `aria-disabled`/`data-disabled`/`tabindex="-1"` state; no additional dimming |
 
 ## Accessibility
 
@@ -95,16 +95,16 @@ A radio button is a single-selection control used within a radio group to allow 
 | radio-009 | color-transitions | RadioGroupItem state change from unchecked to checked | Color change animates smoothly via CSS transition |
 | radio-010 | edge case: no initial selection | RadioGroup rendered with neither `value` nor `defaultValue` set | No RadioGroupItem in the group renders its selected indicator |
 | radio-011 | edge case: value matches no item | RadioGroup's `value` does not match any item's `value` | No RadioGroupItem displays as checked |
-| radio-012 | edge case: all items disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; all render at 50% opacity |
-| radio-013 | edge case: disabled item already checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled opacity and non-interactive styling |
+| radio-012 | edge case: all items disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; none render dimmed, but each carries `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"` |
+| radio-013 | edge case: disabled item already checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled item's `aria-disabled`/`data-disabled`/`tabindex="-1"` state, without visual dimming |
 | radio-014 | edge case: boundary size | RadioGroupItem rendered inside a shrinking flex container | Item stays fixed at 16×16px (`shrink-0` prevents resizing) |
 
 ## Edge Cases
 
 - **No initial selection**: When neither `value` nor `defaultValue` is set on the group, no RadioGroupItem in the set renders its selected indicator.
 - **Value matches no item**: When the group's `value` does not match any item's `value`, no RadioGroupItem displays as checked; this is a valid state, e.g., before a default is chosen.
-- **All items disabled**: When every RadioGroupItem in the group has `disabled` set, none can be selected via pointer or keyboard; all render at 50% opacity.
-- **Disabled item already checked**: A RadioGroupItem can be both checked and disabled simultaneously; it shows the selected indicator combined with the disabled opacity and non-interactive styling (see States: Checked + Disabled).
+- **All items disabled**: When every RadioGroupItem in the group has `disabled` set, none can be selected via pointer or keyboard; because the rendered root is a `<span role="radio">` rather than a native button, none render dimmed — each is instead marked `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`.
+- **Disabled item already checked**: A RadioGroupItem can be both checked and disabled simultaneously; it shows the selected indicator combined with the disabled item's non-interactive, non-dimmed state (see States: Checked + Disabled).
 - **Boundary values**: Size is fixed at 16×16px via `shrink-0`; no resizing or scaling occurs even inside a shrinking flex container.
 
 ## Configuration
@@ -179,8 +179,8 @@ Not applicable: The component does not implement logging. Debug logging is the r
   **Approved**: pending
 
 - **Disabled state**
-  **Decision**: Opacity reduction (50%) is the sole visual indicator for disabled state, combined with `pointer-events-none` and `cursor-not-allowed` to prevent interaction.
-  **Rationale**: Keeps the disabled treatment simple and consistent with other controls in the toolkit; high-contrast themes may need to override this with additional border or background changes to meet WCAG contrast requirements.
+  **Decision**: `RadioGroupItem` carries `disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`, but Base UI's `RadioPrimitive.Root` (`nativeButton=false`) renders as a `<span role="radio">`, which never matches the native `:disabled` selector these utilities target, so no visual dimming occurs; the disabled state is instead exposed via `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`, and selection is still blocked by Base UI's internal pointer/keyboard guards rather than by CSS.
+  **Rationale**: This is the wrapper's existing styling, carried over unchanged from the other form controls; it is dead code for Radio's actual DOM shape, so consumers needing a visible disabled treatment MUST add a `data-disabled:` (or `aria-disabled:`) variant themselves.
   **Approved**: pending
 
 ## Compliance
@@ -193,8 +193,10 @@ Not applicable: The component does not implement logging. Debug logging is the r
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-These statuses rest on the source's use of Base UI's semantic radio primitives and native label-click/Space-select behavior (screen-reader-support, semantic-markup, keyboard-navigable), its theme tokens having no literal color values and its fixed 16×16px size being below the 24×24px minimum (contrast-ratio and touch-target-size as partial), and its color-only, non-transform `transition-colors` (reduced-motion).
+These statuses rest on the source's use of Base UI's semantic radio primitives and native label-click/Space-select behavior (screen-reader-support, semantic-markup, keyboard-navigable), its theme tokens having no literal color values and its fixed 16×16px size being below the 24×24px minimum (contrast-ratio and touch-target-size as partial), and its color-only, non-transform `transition-colors` (reduced-motion). `separation-of-concerns` passes because `radio.tsx` only themes and composes Base UI's `Radio`/`RadioGroup` primitives, with no selection or focus logic of its own. `unit-test-coverage` fails because no test file in the `ui` package imports or exercises `RadioGroup`/`RadioGroupItem`; the tests that mention "radio" (e.g. `dropdownMenu.test.tsx`) cover the unrelated `DropdownMenuRadioGroup`/`DropdownMenuRadioItem`.
 
 ## Change History
 
@@ -202,3 +204,4 @@ These statuses rest on the source's use of Base UI's semantic radio primitives a
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from Base UI radio primitives |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: scoped this file to RadioGroupItem only, moving group spacing/layout out and linking radio-group/checkbox/field via `related`; corrected WCAG citations (SC 2.5.8 24×24px target, SC 1.4.11 3:1 contrast); made theme-token and color-transition requirements platform-neutral with Tailwind specifics moved to the React/Web platform note; added `single-selection` and `space-selects` requirements with test vectors and rewrote the disabled-state vectors to test ignored interaction instead of class names; replaced the SwiftUI/UIKit/Compose/WinUI platform notes with real, correct APIs; corrected the Compliance check IDs and expanded coverage; reformatted Design Decisions into Decision/Rationale/Approved form; replaced the Configuration table with Base UI's real API; replaced filler edge cases with real ones and added their test vectors; resolved the Reduce Motion contradiction between Accessibility Options and Design Decisions. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Disabled state: no dimming, aria/data-disabled+tabindex=-1; added best-practices rows. |

@@ -3,11 +3,11 @@ id: 8d76adce-493b-4e44-9b15-826c4899d3cd
 title: ConnectorAnchor
 domain: agenticdevelopertoolkit://recipes/connector-anchor
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -165,12 +165,15 @@ Not applicable: The source code contains no logging statements.
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The status rests on the source setting `aria-hidden="true"` on the rendered `<span>` and using no other ARIA roles, states, or properties, which is correct markup for a non-interactive layout anchor hidden from assistive technologies.
+The status rests on the source setting `aria-hidden="true"` on the rendered `<span>` and using no other ARIA roles, states, or properties, which is correct markup for a non-interactive layout anchor hidden from assistive technologies. separation-of-concerns passes because `ConnectorAnchor.tsx` delegates all registration behavior to the injected `ConnectorRegistry` contract and its own effect is minimal ref-registration wiring, and unit-test-coverage passes because `ConnectorRegistry.test.tsx` directly renders `ConnectorAnchor` and exercises registration, re-registration on id change, and unregistration on unmount with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; defined the registry contract and made unregister-on-unmount unconditional; reworded the null-return rationale to optional-provider tolerance; reformatted Design Decisions into Decision/Rationale/Approved blocks; added tags and registry-ingredient cross-references; added a Compliance table; replaced untestable vectors, added missing unregister/re-register vectors, and corrected vector-011's reversed outcome; fixed the Compose, AppKit/UIKit, and WinUI 3 platform notes; rewrote the rapid-id-change edge case to describe synchronous cleanup; generalized the Overview wording away from "three-pane". |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

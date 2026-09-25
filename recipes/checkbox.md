@@ -3,11 +3,11 @@ id: a105b6cf-307d-4156-8b73-468f627f3c9b
 title: Checkbox
 domain: agenticdevelopertoolkit://recipes/checkbox
 type: ingredient
-version: 1.4.1
+version: 1.4.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ The recipe covers two source files that together make up "Checkbox": the form-fi
 - **switch-appearance** (Wrapper): The component MUST support an `appearance` prop set to `'switch'` to render a switch-mode toggle with `role="switch"` on the input (`Checkbox.tsx`, `appearance` prop; `role={appearance === 'switch' ? 'switch' : undefined}`).
 - **check-appearance** (Wrapper): The component MUST support an `appearance` prop set to `'check'` to render a checkbox-mode input without the switch role (`Checkbox.tsx`, same `role` expression).
 - **default-appearance** (Wrapper): The component MUST default the `appearance` prop to `'switch'` when not specified (`Checkbox.tsx`, `appearance = 'switch'` default parameter).
-- **disabled-state** (Wrapper, Primitive): The component MUST accept a `disabled` prop that prevents user interaction when true (`Checkbox.tsx`, `disabled` prop; `disabled={disabled}` on the input) and MUST visibly dim the control while disabled (`checkbox.tsx`, `disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50` on `CheckboxPrimitive.Root`).
+- **disabled-state** (Wrapper, Primitive): The component MUST accept a `disabled` prop that prevents user interaction when true (`Checkbox.tsx`, `disabled` prop; `disabled={disabled}` on the input). The Wrapper's native `<input>` carries the standard `disabled` attribute directly. The Primitive (`checkbox.tsx`) forwards `disabled` to Base UI's `CheckboxPrimitive.Root`, which renders as a `<span role="checkbox">`: the native `disabled` attribute lands only on Base UI's hidden companion `<input>`, so the `disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50` Tailwind utilities written on `CheckboxPrimitive.Root` never match, and the control is NOT visibly dimmed. Base UI instead marks the span `aria-disabled`/`data-disabled` and gives it `tabindex="-1"`, and blocks toggling internally via its own click guard rather than via CSS.
 - **optional-label** (Wrapper): The component MUST conditionally render a label element when the `label` prop is provided as a ReactNode (`Checkbox.tsx`, `label` prop; `{label && <span className="aws-checkbox__label">{label}</span>}`).
 - **optional-hint** (Wrapper): The component MUST conditionally render a hint element when the `hint` prop is provided as a ReactNode (`Checkbox.tsx`, `hint` prop; `{hint && <p className="aws-field__hint">{hint}</p>}`).
 - **label-input-association** (Wrapper): The component MUST use a `htmlFor` attribute on the label element to associate it with the input's `id`, generating a unique ID when no explicit `id` is provided (`Checkbox.tsx`, `fieldId = id ?? generatedId` from `useId()`; `<label htmlFor={fieldId}>` and `<input id={fieldId}>`).
@@ -75,7 +75,7 @@ The recipe covers two source files that together make up "Checkbox": the form-fi
 | Default | Border and background render from the `apt-border`/`apt-bg` tokens; checkmark not rendered (React/Web: `border-apt-border bg-apt-bg`) |
 | Checked | Border and background render from the `apt-gold` token; checkmark renders in the `apt-bg` glyph color (React/Web: `data-[checked]:border-apt-gold data-[checked]:bg-apt-gold`) |
 | Focused | A visible focus indicator appears (React/Web: 2px ring at `apt-gold/25` opacity) |
-| Disabled | Control is visibly dimmed and non-interactive (React/Web: 50% opacity, `cursor-not-allowed`, pointer events disabled) |
+| Disabled | Non-interactive. The Wrapper's native `<input>` carries the standard browser `disabled` attribute. The Primitive shows no visual dimming: Base UI marks its rendered `<span>` `aria-disabled`/`data-disabled` with `tabindex="-1"` rather than native `disabled`, so its `disabled:` opacity/cursor/pointer-events Tailwind utilities never apply; toggling is still blocked internally either way |
 | Switch Mode | Wrapper's input carries `role="switch"`; the rendered look (track/thumb vs. box) is set by the `aws-field--checkbox-switch` stylesheet rule, outside both source files |
 | Check Mode | Wrapper's input keeps the implicit checkbox role; the rendered look is set by the `aws-field--checkbox-check` stylesheet rule, outside both source files |
 
@@ -83,7 +83,7 @@ The recipe covers two source files that together make up "Checkbox": the form-fi
 
 - **Role**: The input element MUST have `role="switch"` when `appearance='switch'`, or implicit `role="checkbox"` when `appearance='check'` (Wrapper, `role={appearance === 'switch' ? 'switch' : undefined}`).
 - **Label Association**: The label MUST be associated with the input via the `htmlFor` attribute matching the input's `id` (Wrapper, `<label htmlFor={fieldId}>` / `<input id={fieldId}>`).
-- **Disabled Announcement**: The `disabled` attribute on the input element signals disabled state to assistive technologies (Wrapper, `disabled={disabled}`).
+- **Disabled Announcement**: The Wrapper signals disabled state to assistive technologies via the native `disabled` attribute on its `<input>` (Wrapper, `disabled={disabled}`). The Primitive signals it instead via `aria-disabled` and `data-disabled` on the rendered `<span role="checkbox">`, with `tabindex="-1"` removing it from the tab order; Base UI puts the native `disabled` attribute only on its hidden companion `<input>`, never on the span assistive technology inspects (Primitive, `CheckboxPrimitive.Root`).
 - **Focus Indicator**: A visible focus indicator MUST appear on keyboard focus to aid keyboard navigation (Primitive, `focus-visible:ring-2 focus-visible:ring-apt-gold/25`; React/Web renders this as a 2px ring at 25% opacity).
 - **Hint Association**: Not yet wired in the source — see the `hint-description-association` SHOULD requirement above and Design Decision 4.
 - **State Changes**: The checked state is communicated to assistive technology by the native `checked` attribute on the wrapper's input (Wrapper, `checked={value}`) and visually by the `Check` glyph rendered inside the primitive's indicator (Primitive, `CheckboxPrimitive.Indicator` / `Check`). The glyph is present in addition to the `apt-gold` fill, so the state does not depend on color perception alone.
@@ -116,14 +116,14 @@ The recipe covers two source files that together make up "Checkbox": the form-fi
 | checkbox-020 | custom-classname | Primitive | `className="my-custom-class"` passed to the primitive | Custom class is merged into `CheckboxPrimitive.Root`'s class list via `cn()` |
 | checkbox-021 | hint-description-association | Wrapper | `hint="Required to proceed"`, input receives focus | Input's `aria-describedby` (or platform equivalent) references the hint element, so assistive technology announces the hint text |
 | checkbox-022 | controlled-and-uncontrolled | Primitive | `defaultChecked={true}` passed, no `checked`/`onCheckedChange` | Primitive renders checked initially and manages its own state internally (uncontrolled mode) |
-| checkbox-023 | disabled-state | Primitive | `disabled={true}` passed to `CheckboxPrimitive.Root` | Root renders at 50% opacity (`disabled:opacity-50`) with `pointer-events-none` and `cursor-not-allowed`; toggling is blocked |
+| checkbox-023 | disabled-state | Primitive | `disabled={true}` passed to `CheckboxPrimitive.Root` | Root renders as a `<span role="checkbox">` with `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`; no opacity/cursor/pointer-events change occurs, since `disabled:opacity-50`/`disabled:pointer-events-none`/`disabled:cursor-not-allowed` never match a `<span>`; toggling is still blocked internally |
 
 ## Edge Cases
 
 - **No label or hint provided**: The component renders the checkbox without optional elements. The root container still has `aws-field` and `aws-field--checkbox` classes (Wrapper). MUST render the input and indicator regardless.
 - **Very long label text**: No truncation or wrapping specified in source. Text flows according to container width and CSS (`label` is a ReactNode, Wrapper). Implementations MUST NOT truncate, since the source applies no truncation.
 - **Very long hint text**: No truncation specified. Hint paragraph wraps according to CSS (Wrapper, `<p className="aws-field__hint">`). Implementations MUST NOT truncate.
-- **Disabled state during user interaction**: The wrapper forwards `disabled` to the native `<input>` (Wrapper, `disabled={disabled}`), so the browser suppresses change events and `onChange` is never invoked. The primitive additionally applies three `disabled:` utilities — `pointer-events-none`, `cursor-not-allowed`, and `opacity-50` (Primitive); there are no `data-[disabled]` selectors in either source. Implementations MUST suppress the toggle and MUST render the control visibly dimmed while disabled (React/Web: 50% opacity via `disabled:opacity-50`).
+- **Disabled state during user interaction**: The wrapper forwards `disabled` to the native `<input>` (Wrapper, `disabled={disabled}`), so the browser suppresses change events and `onChange` is never invoked. The primitive forwards `disabled` to Base UI's `CheckboxPrimitive.Root`, which renders as a `<span role="checkbox">` carrying `aria-disabled`/`data-disabled` and `tabindex="-1"`; the native `disabled` attribute lands only on Base UI's hidden companion `<input>`, so the `disabled:pointer-events-none`/`disabled:cursor-not-allowed`/`disabled:opacity-50` Tailwind utilities written on `CheckboxPrimitive.Root` never match and produce no visible dimming (Primitive). Toggling is still blocked, but internally by Base UI's own click guard rather than by CSS. Implementations MUST suppress the toggle while disabled; they MUST NOT assume the Primitive dims visually, since the source does not achieve that.
 - **Custom className conflicts with aws-field classes**: All wrapper classes are joined with `filter` and a space separator; the custom `className` is appended last, so it wins in the cascade (Wrapper, `cls` array). Custom classes MUST be appended after the built-in classes.
 - **Missing onChange callback**: `onChange` is a required (non-optional) member of `CheckboxProps` (Wrapper), so TypeScript rejects a call site that omits it, and the change handler invokes it unguarded (`onChange={(e) => onChange(e.target.checked)}`). Implementations MUST treat the change callback as a required parameter rather than tolerating its absence.
 - **Null or undefined label/hint**: Conditionally rendered via `{label &&` and `{hint &&` checks; no rendering occurs otherwise (Wrapper). The component MUST omit the elements entirely rather than rendering empty ones.
@@ -138,7 +138,7 @@ The recipe covers two source files that together make up "Checkbox": the form-fi
 | `value` (Wrapper) | boolean | Required | Controlled checked state. MUST be provided. |
 | `onChange` (Wrapper) | (value: boolean) => void | Required | Callback invoked when user toggles the checkbox. MUST be provided. |
 | `appearance` (Wrapper) | 'switch' \| 'check' | 'switch' | Visual and semantic mode: switch toggles with switch role, check renders as checkbox. |
-| `disabled` (Wrapper) | boolean | false | When true, prevents user interaction and applies disabled styling. |
+| `disabled` (Wrapper) | boolean | false | When true, prevents user interaction via the native `disabled` attribute on the input. The same value forwarded to the Primitive produces no visual dimming — see **disabled-state**. |
 | `label` (Wrapper) | ReactNode | undefined | Optional label text rendered adjacent to checkbox with associated `htmlFor`. |
 | `hint` (Wrapper) | ReactNode | undefined | Optional hint text rendered below checkbox in a paragraph element. |
 | `className` (Wrapper) | string | undefined | Custom CSS class(es) appended to the wrapper's root container. |
@@ -231,16 +231,19 @@ Not applicable: No logging or debugging output is present in the component sourc
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The `passed` statuses rest on the native `role`/`htmlFor` semantics and the keyboard-operable `<input type="checkbox">` visible in both source files. The two `partial` statuses reflect that the `apt-*` token contrast values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in either source file.
+The `passed` statuses rest on the native `role`/`htmlFor` semantics and the keyboard-operable `<input type="checkbox">` visible in both source files. The two `partial` statuses reflect that the `apt-*` token contrast values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in either source file. The Wrapper's own logic — id generation, conditional label/hint rendering, and appearance-driven role selection — is kept out of the Primitive, which delegates all checked/disabled behavior to Base UI and limits its own file to `apt-*` styling (separation-of-concerns). `components.test.tsx`'s `Checkbox` suite exercises the Wrapper's only behavioral logic — the toggle callback and the switch/check role switch — with meaningful assertions; the Primitive is a thin styling pass-through over Base UI with no independent logic of its own to test (unit-test-coverage).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.2 | 2026-09-25 | Mike Fullerton | Corrected disabled-state: Primitive dims via no CSS, only aria-disabled span; added compliance rows. |
+| 1.4.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: tag every requirement, appearance note, configuration option, and test vector with the layer (wrapper vs. primitive) it describes instead of merging the two components; scope `controlled-and-uncontrolled` to the primitive; rename requirements to subject-only kebab-case and update every citation to package path + symbol/prop name instead of invented line numbers; add the `hint-description-association` SHOULD requirement and its test vector; restate the disabled-opacity, focus-ring, and switch/check-mode rules as intents with React/Web notes so they no longer contradict the Platform Notes or the test vectors; fix the Compose note's role selection and inner-control double-fire gap; correct the `checked` prop's controlled/uncontrolled labeling, the `id` default, and the checkmark-color description; rewrite Design Decisions in the three-line Decision/Rationale/Approved form; rebuild Compliance as a linked table scoped to the Accessibility checks that apply; fix WinUI 3 terminology ("recipe" → "ingredient"), link the `switch` ingredient under `related`, retag `disabled-state` to cover the primitive's own dimming, and add test vectors for `controlled-and-uncontrolled` and the primitive's disabled-opacity behavior. |
 | 1.3.0 | 2026-09-22 | Claude Haiku 4.5 | Standardize review marker format in Accessibility Options table; keep genuine gaps (touch target size depends on external CSS, token-defined contrast requires theme verification) |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks form-field wrapper alongside ui-primitives styled primitive; ensure complete platform guidance |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Answer source-visible questions in place (disabled selectors, color transition, checked-state signalling, required change callback); add Windows platform guidance; promote to review |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.4.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

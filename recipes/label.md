@@ -3,11 +3,11 @@ id: c5703986-6d14-4341-8719-b89e44f2ab80
 title: Label
 domain: agenticdevelopertoolkit://recipes/label
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -49,7 +49,7 @@ The Label component is a reusable HTML `label` element wrapper that applies defa
 - **Corner radius**: None
 - **Padding**: None (explicit padding not applied; flexbox layout provides spacing)
 - **Font**: Medium weight (font-medium), small size (text-sm), line-height 1 (leading-none)
-- **Foreground/Text**: `text-apt-text`, a design system color token defined as `--color-apt-text` in `packages/themes/src/tailwind.css` and mapped per theme (e.g. to `--color-text-primary` or `--color-on-surface`)
+- **Foreground/Text**: `text-apt-text`, a design system color token defined as `--color-apt-text` in `packages/web/packages/themes/src/tailwind.css` and mapped per theme (e.g. to `--color-text-primary` or `--color-on-surface`)
 - **Gap between children**: 2 units (via `gap-2` flex gap)
 - **User select**: None (text is not user-selectable)
 - **Text alignment**: Flexbox centered vertically on the cross-axis (items-center)
@@ -163,8 +163,10 @@ Not applicable: Label does not perform any logging.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The source renders a native `label` element with `htmlFor`/nesting-based focus-forwarding to its control, which is what passes screen-reader-support, keyboard-navigable, and semantic-markup. The `text-sm`/`font-medium` classes and the `text-apt-text` token resolve to values defined outside this file, so the source alone cannot confirm the resulting type scale honors system font-size settings or that the token meets WCAG AA contrast against every theme background (dynamic-type-support, contrast-ratio: partial); the clickable label area's size depends on consumer-supplied content rather than an enforced minimum (touch-target-size: partial).
+The source renders a native `label` element with `htmlFor`/nesting-based focus-forwarding to its control, which is what passes screen-reader-support, keyboard-navigable, and semantic-markup. The `text-sm`/`font-medium` classes and the `text-apt-text` token resolve to values defined outside this file, so the source alone cannot confirm the resulting type scale honors system font-size settings or that the token meets WCAG AA contrast against every theme background (dynamic-type-support, contrast-ratio: partial); the clickable label area's size depends on consumer-supplied content rather than an enforced minimum (touch-target-size: partial). separation-of-concerns passes because `Label` does nothing but forward props/classes onto a native `label` element, with no logic of its own to entangle with anything else. unit-test-coverage fails because no test file in the `ui` package exercises `Label` at all.
 
 ## Change History
 
@@ -172,3 +174,4 @@ The source renders a native `label` element with `htmlFor`/nesting-based focus-f
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-based names and updated all citations; restated styling/disabled requirements and test vectors as behavior, moving Tailwind class names into the React/Web platform note; corrected inaccurate SwiftUI, Compose, AppKit, and WinUI 3 platform APIs and reordered Platform Notes to convention order; added peer-disabled-style sibling-order preconditions, a nested/after-label edge case, and a focuses-associated-control requirement with test vector; reformatted Design Decisions into Decision/Rationale/Approved form and added a Compliance table; corrected the className-collision edge case to override semantics, linked the text-apt-text token to its source, fixed the ESLint provenance reference, rewrote the summary to drop implementation detail, and added sibling recipes to related |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected --color-apt-text source path to packages/web/packages/themes/src/tailwind.css. |

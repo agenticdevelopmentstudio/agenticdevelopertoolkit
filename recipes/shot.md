@@ -3,11 +3,11 @@ id: 53a37583-e86d-41ca-8dd2-8394ba530091
 title: Shot
 domain: agenticdevelopertoolkit://recipes/shot
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -73,20 +73,20 @@ Not applicable: Shot is a presentational container with no interactive states. I
 |----|-------------|-------|----------|
 | shot-001 | frame-chrome | title="My App" | Renders `.lp-shot` with a `.lp-shot__bar` containing three `.lp-shot__dot` spans and a title |
 | shot-002 | title-in-bar | title="MyWindow" | "MyWindow" appears as text in `.lp-shot__name` |
-| shot-003 | media-verbatim | media={<img src="x.png" />} | The `<img>` element is rendered directly as the child of `.lp-shot`, replacing the placeholder; no wrapping element, no CSS class added |
+| shot-003 | media-verbatim | `media={<img src="x.png" />}` | The `<img>` element is rendered directly as the child of `.lp-shot`, replacing the placeholder; no wrapping element, no CSS class added |
 | shot-004 | placeholder-when-no-media | media undefined | `.lp-shot__placeholder` renders with the diagonal hatch background instead of media |
 | shot-005 | caption-in-placeholder | caption="Screenshot pending" | Placeholder contains "Screenshot pending" inside a `<b>` element |
 | shot-006 | pending-label-above-caption | pendingLabel="Capture in progress" | "Capture in progress" renders before (above) the `<b>` caption inside `.lp-shot__placeholder` |
 | shot-007 | pending-label-above-caption | pendingLabel undefined | Placeholder renders only the `<b>` caption; no pending-label content precedes it |
-| shot-008 | pending-label-verbatim | pendingLabel={<span className="custom">Loading</span>} | Renders the `<span>` with its class unmodified |
+| shot-008 | pending-label-verbatim | `pendingLabel={<span className="custom">Loading</span>}` | Renders the `<span>` with its class unmodified |
 | shot-009 | falsy-pending-label-omitted | pendingLabel="" | No visible pending-label text renders; placeholder shows only the caption |
-| shot-010 | media-verbatim | media={<video src="x.mp4" />} | `.lp-shot__placeholder` is absent; only the given `<video>` element renders |
+| shot-010 | media-verbatim | `media={<video src="x.mp4" />}` | `.lp-shot__placeholder` is absent; only the given `<video>` element renders |
 | shot-011 | caption-in-placeholder | caption="" | Placeholder renders an empty `<b>` element; no caption text is visible |
 | shot-012 | title-in-bar | title="" | `.lp-shot__name` renders empty; the frame and dots still display |
 
 ## Edge Cases
 
-- **Media is null/undefined**: Placeholder renders; this is the design's primary state until a capture exists.
+- **Media is undefined (or the prop is omitted)**: Placeholder renders; this is the design's primary state until a capture exists. The check is `media === undefined`, not a general falsy/nullish check: passing `media={null}` or `media={false}` takes the `media` branch and renders nothing, leaving a bare title bar with no placeholder and no caption — a host that wants the placeholder must leave `media` undefined (e.g. `capture ?? undefined`, not `capture ?? null`).
 - **Caption is empty string**: Placeholder still renders with an empty caption area.
 - **PendingLabel is empty string or falsy**: See **falsy-pending-label-omitted**; no visible content renders and the placeholder shows only the caption, the same visible result as pendingLabel being omitted.
 - **Title is empty string**: Renders with an empty title bar; frame still displays.
@@ -162,12 +162,15 @@ Not applicable: Shot performs no operations requiring diagnostic logging.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on `Shot.tsx` and its CSS: text sizes are set in `rem` (`.lp-shot__name` 0.7rem, `.lp-shot__placeholder` 0.78rem), so `dynamic-type-support` passes; foreground/background colors are CSS custom properties with fallback values whose final computed contrast depends on the host theme, so `contrast-ratio` is partial; and the component applies no explicit ARIA roles or `aria-hidden`, relying on the dots being empty (no accessible name) and the title/caption/pendingLabel being ordinary text nodes, so `semantic-markup` is partial.
+Statuses rest on `Shot.tsx` and its CSS: text sizes are set in `rem` (`.lp-shot__name` 0.7rem, `.lp-shot__placeholder` 0.78rem), so `dynamic-type-support` passes; foreground/background colors are CSS custom properties with fallback values whose final computed contrast depends on the host theme, so `contrast-ratio` is partial; and the component applies no explicit ARIA roles or `aria-hidden`, relying on the dots being empty (no accessible name) and the title/caption/pendingLabel being ordinary text nodes, so `semantic-markup` is partial. `separation-of-concerns` passes: `Shot` is a pure presentational function with no business logic, data fetching, or state, rendering exactly the `media`/`caption`/`pendingLabel` props it is given. `unit-test-coverage` is partial: `blocks-frame.test.tsx` covers frame-chrome/title-in-bar, media-verbatim (the `<video>` case), and pending-label-above-caption, but not the `<img>` media variant or the falsy/empty caption and pendingLabel edge cases.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed Media-is-null/undefined edge case: the placeholder check is media === undefined only; media={null}/{false} renders nothing. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added falsy-pending-label-omitted with a vector, added vectors for media-present/empty-caption/empty-title, corrected Compose/UIKit/WinUI 3 Platform Notes APIs and macOS-chrome parity, resolved the media-wrapping contradiction between Platform Notes and shot-003, reformatted Design Decisions and quoted the source JSDoc instead of pointing at it, replaced Compliance/Configuration/Accessibility Options "Not applicable" with a grounded table, grounded Appearance in actual CSS values, reworded summary, and added Clip to related |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from Shot.tsx source |

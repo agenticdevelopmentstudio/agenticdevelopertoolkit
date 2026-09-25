@@ -3,11 +3,11 @@ id: a3645ff4-19c2-4b30-a828-93a56191f656
 title: TagSetField
 domain: agenticdevelopertoolkit://recipes/tag-set-field
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -53,7 +53,7 @@ This component extracts a pattern used consistently across features that manage 
 - **render-chips-row**: Component MUST render selected items as removable chips below the control row using `EntitySelectionChips`.
 - **render-chips-from-value**: Component MUST render all items in the `value` array as chips, maintaining their order.
 - **remove-chip-on-delete**: Component MUST remove an item from `value` and call `onChange` with the updated array when the user clicks the remove action on a chip.
-- **empty-chips-row-renders-blank**: Component MUST render the chips row (the flex container stays in the DOM) but display no content when `value` is empty — there is no "No tags yet" label.
+- **empty-chips-row-renders-nothing**: When `value` is empty, `EntitySelectionChips` (given no `emptySelectionLabel`) MUST render nothing at all — no chips-row element in the DOM, not an empty one — so a field with no selection yet costs no height; there is no "No tags yet" label or placeholder row.
 - **pass-label-to-chips**: Component MUST pass the `label` prop as the `ariaLabel` to `EntitySelectionChips`.
 - **pass-label-to-chooser**: Component MUST pass the `label` prop as the `ariaLabel` to `EntityChooser`.
 - **noun-in-placeholders**: Component MUST build every piece of microcopy from the singular `noun` prop: the Combobox's `ariaLabel` (`Add a ${noun}`) and `placeholder` (`Add a ${noun}…`), and the EntityChooser's `inputLabel` (`Filter or add a ${noun}`) and `placeholder` (`Filter or add a ${noun}…`).
@@ -97,14 +97,14 @@ This component extracts a pattern used consistently across features that manage 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| tag-set-001 | render-combobox, render-entity-chooser, render-chips-row | Render with `label="Tags"`, `noun="tag"`, `options=["foo", "bar"]`, `value=[]`. | Two controls render in the top row; the chips row renders below (empty). |
+| tag-set-001 | render-combobox, render-entity-chooser, render-chips-row | Render with `label="Tags"`, `noun="tag"`, `options=["foo", "bar"]`, `value=[]`. | Two controls render in the top row; no chips-row element exists below them (see **empty-chips-row-renders-nothing**). |
 | tag-set-002 | show-filtered-suggestions | `options=["foo", "bar", "baz"]`, `value=["foo"]`. | Combobox suggestions are filtered to `["bar", "baz"]`; "foo" is not offered. |
 | tag-set-003 | accept-exact-match-in-combobox | Precondition `options=["foo", "bar"]`, `value=["foo"]`. The Combobox's text becomes exactly "bar" (typed, or the result of clicking a suggestion — both raise the same `onValueChange` event). | `onChange` is called once with `["foo", "bar"]`. |
 | tag-set-004 | clear-combobox-on-acceptance | Precondition `options=["foo", "bar"]`, `value=["foo"]`. Combobox text reaches the exact match "bar" (as in tag-set-003). | Combobox text field is cleared to empty. |
 | tag-set-005 | no-create-on-enter | Precondition `options=["foo", "bar"]`, `value=[]`. User types "newlabel" (not an exact match to any option) and presses Enter. | `onChange` is NOT called; the Combobox text remains "newlabel". |
 | tag-set-006 | render-chips-from-value | `value=["foo", "bar", "baz"]`. | Three chips render in the chips row, in order: "foo", "bar", "baz". |
 | tag-set-007 | remove-chip-on-delete | `value=["foo", "bar", "baz"]`; user clicks remove on chip "bar". | `onChange` is called with `["foo", "baz"]`; the "bar" chip is removed. |
-| tag-set-008 | empty-chips-row-renders-blank | `value=[]`. | The chips row (a flex container) is present in the DOM but displays nothing. |
+| tag-set-008 | empty-chips-row-renders-nothing | `value=[]`. | No chips-row element exists in the DOM at all — `EntitySelectionChips` renders nothing. |
 | tag-set-009 | noun-in-placeholders | `noun="label"`. | Combobox `ariaLabel` is "Add a label" and placeholder is "Add a label…"; EntityChooser `inputLabel` is "Filter or add a label" and placeholder is "Filter or add a label…". |
 | tag-set-010 | pass-disabled-to-controls | `disabled=true`. | Combobox, EntityChooser, and `EntitySelectionChips` all receive `disabled={true}`. |
 | tag-set-011 | accept-layout-prop | `layout="inline"`. | The shared `Field` component receives `layout="inline"`; the caption renders beside the controls instead of above them. |
@@ -122,7 +122,7 @@ This component extracts a pattern used consistently across features that manage 
 ## Edge Cases
 
 - **Empty options list**: If `options=[]` and `value=[]`, the component renders with both controls enabled. The Combobox shows no suggestions; the EntityChooser's browse list is empty (`allowCreate` remains available if EntityChooser supports it).
-- **Empty value array**: If `value=[]`, the chips row is present in the DOM but renders nothing (see **empty-chips-row-renders-blank**). The component is ready to accept new selections.
+- **Empty value array**: If `value=[]`, no chips-row element exists in the DOM at all (see **empty-chips-row-renders-nothing**). The component is ready to accept new selections.
 - **Value contains items not in options**: If `value=["custom"]` and `"custom"` is not in `options`, the component displays the chip anyway — the label was created outside this component or by another surface (see **options-as-suggestion**). The Combobox continues to filter `options` normally.
 - **Large value array**: No explicit limit is defined in the source; the component maintains all items and renders all chips. Performance depends on the parent's render optimization and on `EntitySelectionChips`'s own implementation.
 - **Duplicate item attempted via Combobox**: If `value=["foo"]` and the user types "foo" again, **show-filtered-suggestions** has already removed "foo" from the suggestion list, so there is nothing left to match — the duplicate is prevented by omission, not by a separate check.
@@ -232,12 +232,15 @@ Not applicable: Component does not emit debug or error logs. Logging is delegate
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: `ariaLabel` props reach the Combobox, EntityChooser, and EntitySelectionChips directly and each sub-control provides its own keyboard support, but this component adds no ARIA live-region announcement on add/remove, and chip-removal keyboard behavior is EntitySelectionChips's own to confirm; no color, contrast, or type-scale tokens are set at this level (all delegated to Tailwind utility classes and sub-components, which this source cannot confirm); every placeholder and label string is a hardcoded English template literal built from `noun`, not an externalized key; and the fixed 176px EntityChooser width could truncate a longer translated string, which this component does nothing to accommodate.
+Statuses rest on the source: `ariaLabel` props reach the Combobox, EntityChooser, and EntitySelectionChips directly and each sub-control provides its own keyboard support, but this component adds no ARIA live-region announcement on add/remove, and chip-removal keyboard behavior is EntitySelectionChips's own to confirm; no color, contrast, or type-scale tokens are set at this level (all delegated to Tailwind utility classes and sub-components, which this source cannot confirm); every placeholder and label string is a hardcoded English template literal built from `noun`, not an externalized key; and the fixed 176px EntityChooser width could truncate a longer translated string, which this component does nothing to accommodate; the acceptance-matching logic (`onText`, the `suggestions` filter) is inline in the component rather than extracted apart from rendering (separation-of-concerns partial), and `tagSetField.test.tsx` exercises the autocomplete-acceptance rule, the chooser's add/remove/mint paths, and the layout fix directly (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed empty-chips-row-renders-blank to -renders-nothing; matches source's no-DOM-element behavior. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, merged the duplicate exact-match/onChange requirements, renamed the empty-chips-row requirement to match its actual behavior, and added a case-sensitivity requirement; corrected the acceptance-trigger wording and test vectors (exact text match, not click/Enter) and added vectors for a prefix-of-a-longer-option, case/whitespace handling, and previously uncovered className/chip-aria-label requirements, each with full input-state preconditions; expanded disabled propagation and noun-based microcopy to cover EntitySelectionChips and the Combobox aria-label; reformatted Design Decisions to the three-line form; replaced the "Not applicable" Compliance section with a table; corrected invalid APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; resolved the "stateless" contradiction with the local Combobox text state; fixed the `{{noun}}` template-variable syntax to `${noun}`; expanded depends-on/related to the composed ingredients and CategoryField; renamed the two malformed edge-case bullets; and switched frontmatter dates to bare ISO form. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |

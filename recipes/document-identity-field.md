@@ -3,11 +3,11 @@ id: 054522c7-53c8-45e4-9003-8c317a93b674
 title: Document Identity Field
 domain: agenticdevelopertoolkit://recipes/document-identity-field
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -176,13 +176,7 @@ Not applicable: Component handles no sensitive data. Title and slug values are a
 
 ## Logging
 
-Subsystem: `packages/web/packages/ui/blocks` | Category: `DocumentIdentityField`
-
-| Event | Level | Message |
-|-------|-------|---------|
-| Verdict change | debug | `DocumentIdentityField: slug verdict changed to "${verdict.status}"` |
-
-No logging is implemented in the source code; this table is provided for implementors on other platforms.
+Not applicable: No logging is implemented in the source code.
 
 ## Platform Notes
 
@@ -226,8 +220,10 @@ No logging is implemented in the source code; this table is provided for impleme
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`passed` rests on the ARIA wiring and relative font units visible in `document-identity-field.tsx` (`aria-live`, `aria-labelledby`, `aria-describedby`, and the relative units `text-[0.8rem]`/`text-xs`); `contrast-ratio` and `touch-target-size` are `partial` because those values are inherited from the tone tokens and the `Input` component rather than verified in this file; the internationalization statuses rest on the `STATUS_TEXT` map in the same source, which externalizes `titleLabel`/`slugLabel` as props but hardcodes the status text itself.
+`passed` rests on the ARIA wiring and relative font units visible in `document-identity-field.tsx` (`aria-live`, `aria-labelledby`, `aria-describedby`, and the relative units `text-[0.8rem]`/`text-xs`); `contrast-ratio` and `touch-target-size` are `partial` because those values are inherited from the tone tokens and the `Input` component rather than verified in this file; the internationalization statuses rest on the `STATUS_TEXT` map in the same source, which externalizes `titleLabel`/`slugLabel` as props but hardcodes the status text itself. `separation-of-concerns` passes because the debounce/stale-verdict logic lives in the exported `useSlugAvailability` hook, not in the `DocumentIdentityField` component itself. `unit-test-coverage` passes because `documentIdentityField.test.tsx` imports and exercises both `DocumentIdentityField` and `useSlugAvailability` directly, including the FOLLOW-rule and stale-verdict behavior.
 
 ## Change History
 
@@ -235,3 +231,4 @@ No logging is implemented in the source code; this table is provided for impleme
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they are cited; corrected platform-notes API errors in SwiftUI, Compose, UIKit, AppKit, and WinUI 3; fixed test-vector inaccuracies and added vectors for className, custom labels, idle verdict, and aria-describedby; reformatted Design Decisions to the three-line convention form; corrected compliance check names and statuses and added internationalization checks; clarified the differing title/slug labelling techniques and the non-focusable status message; attributed debounce/stale-verdict/throw behavior in Edge Cases to `useSlugAvailability` rather than the component; corrected the localization claim about status-text props; expressed Appearance in platform-neutral terms with the web values as a reference implementation; added `depends-on` entries for `field` and `input`. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Logging section: replaced invented Subsystem/table with Not applicable (no logging in source). |

@@ -3,11 +3,11 @@ id: 6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a
 title: Split View Control
 domain: agenticdevelopertoolkit://recipes/split-view-control
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -209,8 +209,10 @@ Not applicable: This component does not emit log messages or diagnostic output. 
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `split-view-control.tsx`: `aria-label`, `aria-controls`, and the toggle-group/button roles are set explicitly in the source (screen-reader-support, semantic-markup passed); keyboard handling, dynamic-type scaling, color contrast, and touch-target sizing are all delegated to the `ToggleGroup` component and are not implemented in this file, so they cannot be verified here (partial); `editLabel`/`previewLabel` are externalized as props but the layout-toggle `title`/`aria-label` strings ("Single tabbed view", "Side by side view") are hardcoded, so `no-hardcoded-strings` fails and `string-externalization` is only partial.
+Statuses rest on `split-view-control.tsx`: `aria-label`, `aria-controls`, and the toggle-group/button roles are set explicitly in the source (screen-reader-support, semantic-markup passed); keyboard handling, dynamic-type scaling, color contrast, and touch-target sizing are all delegated to the `ToggleGroup` component and are not implemented in this file, so they cannot be verified here (partial); `editLabel`/`previewLabel` are externalized as props but the layout-toggle `title`/`aria-label` strings ("Single tabbed view", "Side by side view") are hardcoded, so `no-hardcoded-strings` fails and `string-externalization` is only partial; the state (`useSplitView`) lives apart from the rendering component, which is presentation over the hook's output (separation-of-concerns passed), and `splitViewControl.test.tsx` exercises both the hook and the component directly across narrow and wide layouts (unit-test-coverage passed).
 
 ## Change History
 
@@ -218,3 +220,4 @@ Statuses rest on `split-view-control.tsx`: `aria-label`, `aria-controls`, and th
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | (generated) | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and merged the redundant separator and pane-toggle render/hide pairs; reformatted Design Decisions into Decision/Rationale/Approved triples; rebuilt the Compliance table against real accessibility and internationalization checks instead of unlinked recipe-quality checks; fixed the wide/narrow breakpoint wording to ≥/< 64rem and added an exactly-64rem test vector; corrected Platform Notes for React/Web (hooks live in `useSplitView`, not the control), WinUI 3 (`Window.Current.Bounds` replaced with `AdaptiveTrigger`/`XamlRoot.Size` and named `SegmentedControl`/`RadioButtons`), SwiftUI and AppKit/UIKit (measured-width threshold instead of `horizontalSizeClass`/`keyWindow` lookups); corrected the Appearance section's "no visual changes" claim; dropped the "defined behavior" framing from the empty/undefined `subject` and missing `panesId` edge cases; trimmed the Accessibility touch-target note to the WCAG web minimum; deleted the speculative "if somehow" ToggleGroup edge case; added `depends-on` for ToggleGroup |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

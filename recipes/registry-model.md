@@ -3,11 +3,11 @@ id: 3828874a-ce76-4e8d-a106-97a867ed583d
 title: Registry Model
 domain: agenticdevelopertoolkit://recipes/registry-model
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -187,8 +187,8 @@ Not applicable — this is a data-model and validation package with no visual su
 | registry-model-042 | show-if-ops | `[...SHOW_IF_OPS]` | `['eq','ne','truthy','falsy','in','contains']` |
 | registry-model-043 | deep-value-equality | `op:'eq'` with `value: {line1:'1 Main St',city:'Seattle',country:'US'}` against a field-for-field identical but distinct object, then against one with `city:'Portland'` | `true`, then `false` |
 | registry-model-044 | deep-value-equality | `op:'eq'` with a 4-level-nested `value: {a:{b:{c:[1,2,{d:'deep'}]}}}` against a structurally identical distinct object, then one differing only at the deepest key | `true`, then `false` |
-| registry-model-045 | compare-depth-cap | Two distinct object references nested 40 levels deep with identical structure down to level 32 and differing only below it, compared via `op:'eq'` | `true` (levels beyond 32 are compared with `===` on the sub-objects, so the difference below depth 32 goes undetected — the documented depth-cap trade-off) |
-| registry-model-046 | own-property-membership | `op:'eq'` with `value: {}` against `mode: Object.create({ constructor: 'poisoned' })` (an object whose only `constructor` is inherited, not its own) | `false` (an inherited `constructor` is not treated as an own key present on either side) |
+| registry-model-045 | compare-depth-cap | Two distinct object references nested 40 levels deep with identical structure down to level 32 and differing only below it, compared via `op:'eq'` | `false` (levels beyond 32 fall back to `===` on the distinct sub-objects, which is false for two different object references — the cap fails closed: even structurally identical but distinct values nested 33+ levels deep compare unequal) |
+| registry-model-046 | own-property-membership | `op:'eq'` with `value: {}` against `mode: Object.create({ constructor: 'poisoned' })` (an object whose only `constructor` is inherited, not its own) | `true` (both sides have zero own keys — `Object.keys` excludes the inherited `constructor` on either side — so the own-key-set comparison is vacuously equal; `Object.hasOwn` is never reached because the key sets already match) |
 | registry-model-047 | visibility-enum | `[...FIELD_VISIBILITIES]` | `['public', 'authenticated', 'private']` |
 | registry-model-048 | visibility-admits, viewer-scope-excludes-private | `visibilityAdmits('public','public')`, `visibilityAdmits('authenticated','public')`, `visibilityAdmits('private','authenticated')` | `true`, `false`, `false` |
 | registry-model-049 | tightest-visibility | `tightestVisibility('public','authenticated')`, `tightestVisibility('authenticated','public')`, `tightestVisibility('public','public')` | `'authenticated'`, `'authenticated'`, `'public'` |
@@ -307,11 +307,14 @@ This is a non-UI logic package with no network calls, no rendered surface, and n
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
 | [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`input-sanitization` is partial: `validateFieldValue` gates every value before `coerceFieldValue` or `searchableText` act on it (**validate-before-coerce**), but address sub-fields and the `showIf` field lookup go unchecked (the open questions under **address-subfield-validation** and **show-if-field-lookup**). `fault-tolerance` passes because an unrecognized field type, an unrecognized `show_if` operator, a malformed `in` rule, and a pathologically deep comparison value are all handled with a defined return value rather than a thrown exception (**unrecognized-type-rejected**, **show-if-unknown-op-fails-open**, **show-if-malformed-in-fails-open**, **compare-depth-cap**). `no-hardcoded-strings` fails because every `validateFieldValue` error message is a hardcoded English literal with no localization hook — see Localization above.
+`input-sanitization` is partial: `validateFieldValue` gates every value before `coerceFieldValue` or `searchableText` act on it (**validate-before-coerce**), but address sub-fields and the `showIf` field lookup go unchecked (the open questions under **address-subfield-validation** and **show-if-field-lookup**). `fault-tolerance` passes because an unrecognized field type, an unrecognized `show_if` operator, a malformed `in` rule, and a pathologically deep comparison value are all handled with a defined return value rather than a thrown exception (**unrecognized-type-rejected**, **show-if-unknown-op-fails-open**, **show-if-malformed-in-fails-open**, **compare-depth-cap**). `no-hardcoded-strings` fails because every `validateFieldValue` error message is a hardcoded English literal with no localization hook — see Localization above. `show-if.ts`, `types.ts`, `validate.ts`, and `visibility.ts` are non-UI logic with no rendering to entangle (separation-of-concerns passed); the package's own `src/__tests__/show-if.test.ts`, `validate.test.ts`, and `visibility.test.ts` (566 lines across the three files, not the unrelated candidates the evidence search surfaced) directly and thoroughly exercise every one of these source files (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-09-25 | Mike Fullerton | Corrected compare-depth-cap and own-property-membership test vector expected results to match show-if.ts's actual comparison logic. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

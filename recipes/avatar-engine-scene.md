@@ -3,11 +3,11 @@ id: c708a65f-4d6c-40e4-b1b8-a24584cd45a1
 title: Avatar Engine Scene
 domain: agenticdevelopertoolkit://recipes/avatar-engine-scene
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -82,8 +82,7 @@ Two independent implementations conform to this contract:
 - **Web** (TypeScript): `buildScene`, `compose`, `cropList`, and
   `seedChannels` in
   `packages/web/packages/avatar-engine/src/scene/rig.ts`, re-exported for
-  import-site clarity by `packages/web/packages/avatar-engine/src/scene/
-  compose.ts`.
+  import-site clarity by `packages/web/packages/avatar-engine/src/scene/compose.ts`.
 
 Both implementations MUST agree on the verdict (a `DisplayList`, or a raised
 error) for the same `CharacterConfig`, variant, and `Channels` state. They
@@ -171,8 +170,7 @@ are not required to agree on exact error message text.
 - **bend-damping-applied-upstream**: `compose`/`resolvePath` MUST NOT apply
   a bend's inward damping to the `.bend` channel's value itself; damping is
   applied exactly once, where the channel value is written
-  (`CharacterConfig.respond`, `agenticdevelopertoolkit://recipes/
-  avatar-engine-config`), never at composition time.
+  (`CharacterConfig.respond`, `agenticdevelopertoolkit://recipes/avatar-engine-config`), never at composition time.
 - **unsupported-shape-kind-rejected** (web): the web `resolvePath`'s
   `switch` MUST throw `unknown shape kind: <kind>` for a `Shape.kind` value
   outside the six handled cases. The equivalent Apple code path is
@@ -424,8 +422,7 @@ shown to a user.
 Not applicable: Scene/`compose`/`crop` expose nothing to assistive
 technology and read no accessibility display setting (Reduce Motion,
 Increase Contrast, Differentiate Without Color); that concern belongs to the
-render/host layer downstream (`agenticdevelopertoolkit://recipes/
-avatar-engine-render`), not to this component.
+render/host layer downstream (`agenticdevelopertoolkit://recipes/avatar-engine-render`), not to this component.
 
 ## Feature Flags
 
@@ -575,6 +572,7 @@ were ever violated, not a load-bearing runtime check of Scene's own.
 |---|---|---|
 | [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
 | [animation-frame-rate](agenticdevelopercookbook://compliance/performance#animation-frame-rate) | partial | Performance |
 
@@ -587,7 +585,10 @@ a swallowed error (explicit-error-handling). Scene delegates path
 construction to `avatar-engine-path` and matrix arithmetic to
 `avatar-engine-math`, keeping its own responsibility limited to tree
 walking, transform composition, and paint/ink resolution
-(separation-of-concerns). `compose` is a synchronous, O(node-count)-per-call
+(separation-of-concerns). Both platforms carry a dedicated Scene test
+suite (`SceneTests.swift`, `compose.test.ts`) with meaningful per-behavior
+assertions covering composition, cropping, channel seeding, and the error
+paths above (unit-test-coverage). `compose` is a synchronous, O(node-count)-per-call
 function with no I/O of any kind (main-thread-freedom). This is the hot
 per-frame path a `CADisplayLink`/`requestAnimationFrame` loop calls at a
 60fps target, but neither source file measures or enforces a time budget
@@ -600,3 +601,4 @@ the same subject (animation-frame-rate: partial).
 |---|---|---|---|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation, covering the Apple and web avatar-engine scene compositors, with the open question about an unenforced seed-before-compose precondition carried for a future revision to resolve. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Joined 3 hard-wrapped recipe:// code spans; added missing unit-test-coverage compliance row. |

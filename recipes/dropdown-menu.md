@@ -3,11 +3,11 @@ id: 25de0c8f-b6cb-4e9f-ba30-38afca642232
 title: Dropdown Menu
 domain: agenticdevelopertoolkit://recipes/dropdown-menu
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -55,6 +55,11 @@ A dropdown menu is a positioned overlay component that displays a list of action
 - **support-inset-items**: Menu items and labels MUST support an `inset` prop that adds the `adh-dropdown-menu__item--inset` class for visual indentation.
 - **support-accent-items**: Menu items MUST support an `accent` prop that applies the theme's accent styling on hover/focus via the `adh-dropdown-menu__item--accent` class.
 - **close-on-click-default**: CheckboxItem, RadioItem, and LinkItem SHOULD default `closeOnClick` to `true`, closing the menu when the item is clicked. MenuItem's `closeOnClick` has no explicit default and inherits Base UI's default of `true` (see close-on-item-select).
+- **keyboard-navigation**: The component MUST support arrow-key navigation of menu items: ArrowDown/ArrowUp move focus between items, and ArrowRight/ArrowLeft open/close submenus.
+- **focus-management**: The component MUST move focus into the menu, onto the first focusable item, when the menu opens via the trigger, and MUST return focus to the trigger when the menu closes.
+- **checkbox-state-announcement**: Checkbox items MUST announce their checked state to assistive technology via `aria-checked`.
+- **disabled-state-announcement**: Disabled items MUST announce their disabled state via `aria-disabled`. This does not guarantee they are skipped by keyboard navigation; see the **Focus on disabled item** edge case.
+- **submenu-indication**: Submenu triggers MUST indicate that they open a submenu, via the ChevronRight icon and `aria-haspopup="menu"`.
 
 ## Appearance
 
@@ -119,7 +124,7 @@ A dropdown menu is a positioned overlay component that displays a list of action
 | dropdown-019 | keyboard-navigation | Open menu; press ArrowDown then ArrowUp | Focus moves to the next item, then back to the previous item |
 | dropdown-020 | focus-management | Open menu via trigger click | Focus moves into the menu, landing on the first focusable item |
 | dropdown-021 | checkbox-state-announcement | Render CheckboxItem with checked={true}; inspect DOM | Item exposes aria-checked="true" |
-| dropdown-022 | disabled-state-announcement | Render MenuItem with disabled={true}; attempt to move focus to it via ArrowDown | Item is skipped by keyboard navigation and exposes aria-disabled="true" |
+| dropdown-022 | disabled-state-announcement | Render MenuItem with disabled={true}; attempt to move focus to it via ArrowDown | Focus moves onto the disabled item (Base UI's list navigation does not skip disabled items) and it exposes aria-disabled="true" |
 | dropdown-023 | submenu-indication | Render SubmenuTrigger | Trigger exposes aria-haspopup="menu" and renders the ChevronRight icon |
 | dropdown-024 | support-submenus | Open SubmenuRoot; move focus outside the submenu (e.g. ArrowLeft to the parent item) | Submenu closes while the parent menu remains open |
 
@@ -131,7 +136,7 @@ A dropdown menu is a positioned overlay component that displays a list of action
 - **No trigger provided**: `MenuPrimitive.Root` renders without error. Without a Trigger child, the menu has no interactive control that opens it and MUST remain closed unless opened programmatically via a controlled `open` prop; Base UI emits no dev-time warning for this case.
 - **Multiple submenus**: Nested submenus at depth >1 position relative to their parent submenu; no depth limit enforced by component.
 - **Rapid item clicks**: Clicking multiple items rapidly before menu closes closes menu on first click; subsequent clicks do not interact with menu items if menu is already closed.
-- **Focus on disabled item**: Keyboard navigation skips disabled items; focus cannot be moved to a disabled item.
+- **Focus on disabled item**: Arrow-key navigation (ArrowUp/ArrowDown/Home/End) does NOT skip disabled items — Base UI's list navigation runs with an empty `disabledIndices` set, so a disabled item can still receive focus and is exposed via `aria-disabled="true"`; it is only dimmed visually (`pointer-events: none`, reduced opacity). The one exception: when the menu opens via the keyboard and the first item is disabled, that initial focus placement skips it.
 - **Menu with only separators**: Menu renders separators without error; visually appears as empty menu with dividers.
 - **Checkbox item without checked prop**: CheckboxItem without explicit `checked` prop behaves as unchecked (no indicator icon shown).
 - **Radio item without value**: A RadioItem in a RadioGroup without a `value` prop MUST NOT participate in group selection: it renders and remains clickable, but selecting it does not change the RadioGroup's value and it never renders the selected indicator.
@@ -239,12 +244,15 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The `partial` statuses reflect that keyboard navigation, focus management, ARIA state announcements, text sizing, and contrast are delegated to Base UI's `Menu` primitive and the external `components.css` theme layer rather than implemented in this wrapper's source; `semantic-markup` is `passed` because the wrapper directly applies the `adh-dropdown-menu__*` classes in source, and `rtl-layout-support` is `passed` because the `side`/`align` props accept the logical `inline-start`/`inline-end` values shown in the Configuration table.
+The `partial` statuses reflect that keyboard navigation, focus management, ARIA state announcements, text sizing, and contrast are delegated to Base UI's `Menu` primitive and the external `components.css` theme layer rather than implemented in this wrapper's source; `semantic-markup` is `passed` because the wrapper directly applies the `adh-dropdown-menu__*` classes in source, and `rtl-layout-support` is `passed` because the `side`/`align` props accept the logical `inline-start`/`inline-end` values shown in the Configuration table. `separation-of-concerns` passes because every export is a thin wrapper around Base UI's `MenuPrimitive.*` with no internal state or business logic; `unit-test-coverage` passes because `dropdownMenu.test.tsx` imports the dropdown-menu components directly and exercises them with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added missing keyboard-navigation/focus-management/checkbox-state-announcement/disabled-state-announcement/submenu-indication requirements; fixed dropdown-022 and Focus-on-disabled-item edge case (Base UI does not skip disabled items). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and merged the three closeOnClick-default requirements into one; fixed the SwiftUI and WinUI 3 platform notes; replaced stale line-number and unsourced touch-target citations with symbol names and WCAG/Base UI references; described accent styling via the theme's accent token instead of a fixed color; resolved the two undefined edge cases; converted Design Decisions to the Decision/Rationale/Approved format and added two new decisions; filled in tags, related, and Compliance; added test vectors for accessibility and submenu-close coverage; fixed the ambiguous closeOnClick default and moved platform-specific paths out of Configuration and Platform Notes. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

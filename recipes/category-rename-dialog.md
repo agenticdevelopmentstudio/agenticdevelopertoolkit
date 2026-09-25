@@ -3,11 +3,11 @@ id: 526da033-2f0d-4bd7-b2c2-99faba4783a3
 title: Category Rename Dialog
 domain: agenticdevelopertoolkit://recipes/category-rename-dialog
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -49,7 +49,7 @@ A modal dialog that allows renaming a single category or item. The component val
 - **handle-async-rename**: Component MUST support async `onRename` (returns `Promise<void>`), display the error message if the promise rejects, and keep the dialog open on error.
 - **call-onrenamed**: Component MUST call `onRenamed(node, trimmedName)` after a successful rename.
 - **call-onclose-after-success**: Component MUST call `onClose()` after a successful rename.
-- **prevent-close-while-busy**: Component MUST not close the dialog (via close button, escape key, or backdrop click) if a rename operation is in progress (`busy === true`).
+- **prevent-close-while-busy**: Component MUST not close the dialog (via the close (`×`) affordance or the Escape key) if a rename operation is in progress (`busy === true`). A backdrop click never closes the dialog at all, regardless of `busy` — the shared `Dialog` primitive disables pointer-based outside dismissal unconditionally.
 - **disable-confirm-when-empty**: Component MUST set `disabled={true}` on the confirm button when the trimmed input is an empty string; the confirm button is not otherwise disabled while a validation or operation error is showing.
 - **show-error-text**: Component MUST display validation and operation error messages in an error text component.
 
@@ -110,7 +110,7 @@ A modal dialog that allows renaming a single category or item. The component val
 | rename-018 | require-non-empty-name | Input is whitespace only ("   "), user clicks Confirm | Trimmed to ""; error message: "A category needs a name." |
 | rename-019 | handle-async-rename | `onRename` rejects with a non-`Error` value (e.g., a plain string) | Error message: "Could not rename the category."; dialog remains open |
 | rename-020 | prevent-close-while-busy | `busy={true}` | `DialogActions` renders only a loading spinner; Cancel and Confirm buttons are not present to click |
-| rename-021 | prevent-close-while-busy | User clicks the dialog backdrop while `busy={true}` | `onOpenChange` fires but does not call `onClose()`; dialog remains open |
+| rename-021 | prevent-close-while-busy | User clicks the dialog backdrop, both while `busy={false}` and while `busy={true}` | `onOpenChange` never fires from the backdrop press in either case (pointer-based outside dismissal is disabled unconditionally); `onClose()` is not called; dialog remains open |
 | rename-022 | reject-unchanged-name | Input "INVENTORY" when `node.name` is "inventory" | `onRename(node, "INVENTORY")` is called — a case-only change is not treated as unchanged |
 | rename-023 | prefill-current-name | Dialog closes with edited (unsaved) text present; host later reopens it with a different `node` | Input displays the new node's name, not the previous session's edited text |
 
@@ -121,7 +121,7 @@ A modal dialog that allows renaming a single category or item. The component val
 - **Unchanged name with different casing**: Input "INVENTORY" when current is "inventory" — these differ under the case-sensitive comparison in **reject-unchanged-name**, and the case-only match is excluded from the duplicate check by node id, so `onRename` is called per **call-onrename**.
 - **Extra names and node name coincidence**: If `extraNames` contains the original node name, the `extraNames` check in `commit()` excludes it (case-insensitively) from the taken check, per **validate-extra-names** — allowing the user to "rename" to the same name, which then closes silently per **reject-unchanged-name**.
 - **Async onRename rejection fallback**: If `onRename` throws or rejects, `commit()`'s `catch` block displays the rejection's `message` when it is an `Error` instance; otherwise it shows the fallback message `Could not rename the ${noun}.`. Displaying an error on rejection is required by **handle-async-rename**; the specific Error/non-Error split is an implementation detail of `commit()`, not a separately named requirement.
-- **Dialog close while busy**: The `onOpenChange` callback passed to `Dialog` calls `onClose()` only when `busy` is `false`, so Escape and backdrop-triggered closes are blocked while busy, per **prevent-close-while-busy**. The Cancel and Confirm buttons are also removed from the DOM while busy (`DialogActions` renders only a loading spinner), so there is nothing to click.
+- **Dialog close while busy**: The `onOpenChange` callback passed to `Dialog` calls `onClose()` only when `busy` is `false`, so an Escape-triggered or close-affordance-triggered close is blocked while busy, per **prevent-close-while-busy**. A backdrop click never reaches `onOpenChange` at all — the shared `Dialog` primitive sets `disablePointerDismissal` unconditionally — so it is inert whether or not `busy` is set, not merely blocked while busy. The Cancel and Confirm buttons are also removed from the DOM while busy (`DialogActions` renders only a loading spinner), so there is nothing to click.
 - **Held node survives target going null**: `useLastPresent(target)` keeps rendering the last non-null node after the host clears `target`, so the exit animation completes before the component unmounts (see **Design Decisions**, "useLastPresent for exit animation"). This is an implementation detail supporting the exit transition, not itself a separately named behavioral requirement.
 - **Input re-seeding on re-open**: The `React.useEffect` that seeds `text` only re-seeds when `open` becomes `true` with a non-null `target`, per **prefill-current-name**, so reopening on a `null` target does not restore stale text from a previous session.
 
@@ -134,7 +134,7 @@ A modal dialog that allows renaming a single category or item. The component val
 | `nodes` | readonly CategoryTreeNode[] | (required) | The full vocabulary for duplicate-name validation. |
 | `extraNames` | readonly string[] | [] | Additional names to treat as taken (e.g., names known to the host but not yet in `nodes`). |
 | `noun` | string | (required) | Singular, lowercase term for microcopy (e.g., "category", "folder"). Interpolated into error messages and dialog title. |
-| `onRename` | (node, nextName) => void &#124; Promise<void> | (required) | Async or sync callback to persist the rename. Receives the node and trimmed new name. |
+| `onRename` | (node, nextName) => void &#124; `Promise<void>` | (required) | Async or sync callback to persist the rename. Receives the node and trimmed new name. |
 | `onRenamed` | (node, nextName) => void &#124; undefined | undefined | Optional callback invoked after successful rename with the node and new name. |
 | `onClose` | () => void | (required) | Callback invoked when the dialog closes (success, cancel, or unchanged name). |
 
@@ -238,12 +238,15 @@ Not applicable: Component has no logging implementation in source code. Host is 
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on: the source's `onKeyDown`/`onOpenChange` handling, `aria-label`, and `role="alert"` usage plus the base-ui `Dialog`'s own focus trap (Accessibility, passed/partial where pixel sizing and motion-reduction can't be confirmed from source); the literal `${noun}`-style template strings baked into `commit()` and the JSX with no i18n resource lookup, despite Unicode-safe `.trim()`/`.toLowerCase()` string handling (Internationalization); and the empty/duplicate-name validation in `commit()` running with no explicit sanitization step (Security, partial).
+Statuses rest on: the source's `onKeyDown`/`onOpenChange` handling, `aria-label`, and `role="alert"` usage plus the base-ui `Dialog`'s own focus trap (Accessibility, passed/partial where pixel sizing and motion-reduction can't be confirmed from source); the literal `${noun}`-style template strings baked into `commit()` and the JSX with no i18n resource lookup, despite Unicode-safe `.trim()`/`.toLowerCase()` string handling (Internationalization); the empty/duplicate-name validation in `commit()` running with no explicit sanitization step (Security, partial); the dialog composes `Dialog`/`Input`/`ErrorText`/`useLastPresent` from lower tiers and delegates the vocabulary it validates against to `category-tree`, keeping its own file to orchestration and the rename form (separation-of-concerns); and `categoryRenameDialog.test.tsx` asserts the duplicate-name guard, the async `onRename` failure path, and the close/cancel flows (unit-test-coverage).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Backdrop clicks never fire onOpenChange (disablePointerDismissal), busy or not; corrected prevent-close-while-busy, rename-021, and the busy edge case to stop framing backdrop as busy-gated. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case (dropped `must-` prefix) everywhere they're cited; replaced line-number citations with source symbol/function names; reformatted Design Decisions into Decision/Rationale/Approved form and corrected the case-only-rename claim; rewrote Compliance as real catalog checks with a plain Category column; marked Analytics "Not applicable" to match Privacy/Feature Flags/Logging; fixed the render-null, confirm-disabled, and extra-names-case-insensitivity ambiguities; added test vectors for whitespace input, the non-Error rejection fallback, busy-state backdrop/cancel, case-only rename, and re-seeding on reopen; unified localization placeholders on `{noun}`/`{nextName}`; grounded Appearance's foreground and max-width claims in theme tokens; and corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes' APIs |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

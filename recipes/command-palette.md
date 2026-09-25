@@ -3,11 +3,11 @@ id: 059093ee-8776-4e6a-b2a2-3fe1e20c2ee9
 title: Command Palette
 domain: agenticdevelopertoolkit://recipes/command-palette
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -275,12 +275,15 @@ Not applicable: CommandPalette does not emit logs. Debugging is delegated to hos
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on: the source's ARIA roles and attributes plus `autoFocus` and the `onKeyDown` handlers (`screen-reader-support`, `keyboard-navigable`, `semantic-markup`); the ~24px-tall item rows from `py-1.5 px-2` (`touch-target-size`); the design-token colors and the Dialog primitive's focus trap, neither of which this file can verify (`contrast-ratio`, `focus-management`, `dynamic-type-support`); the `placeholder`/`emptyLabel` props versus the hardcoded `"Searching…"` string (`string-externalization`, `no-hardcoded-strings`); plain-text rendering with no character filtering (`unicode-support`); the `truncate` CSS class applied to long labels and descriptions, which clips rather than accommodates expanded text (`text-expansion-tolerance`); and the physical-direction Tailwind classes (`pl-9`, `left-6`, `pr-10`) used for the input and its icon (`rtl-layout-support`).
+These statuses rest on: the source's ARIA roles and attributes plus `autoFocus` and the `onKeyDown` handlers (`screen-reader-support`, `keyboard-navigable`, `semantic-markup`); the ~24px-tall item rows from `py-1.5 px-2` (`touch-target-size`); the design-token colors and the Dialog primitive's focus trap, neither of which this file can verify (`contrast-ratio`, `focus-management`, `dynamic-type-support`); the `placeholder`/`emptyLabel` props versus the hardcoded `"Searching…"` string (`string-externalization`, `no-hardcoded-strings`); plain-text rendering with no character filtering (`unicode-support`); the `truncate` CSS class applied to long labels and descriptions, which clips rather than accommodates expanded text (`text-expansion-tolerance`); and the physical-direction Tailwind classes (`pl-9`, `left-6`, `pr-10`) used for the input and its icon (`rtl-layout-support`). separation-of-concerns passes because the matching rule (`filterCommandItems`) is exported as a standalone pure function outside the component, leaving only ordinary highlighted-row bookkeeping inline, and unit-test-coverage passes because `commandPalette.test.tsx` exercises structure, keyboard navigation, mouse/keyboard interplay, loading/empty/error states, and `filterCommandItems` itself with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: merged the first-item/reopen preselection requirements and the group-order/heading requirements and the escape/onOpenChange requirements into single named requirements; renamed every requirement to subject-only kebab-case; added a Props and Types section covering `CommandPaletteProps`, `CommandGroup`, and `CommandItem`; specified the `filterCommandItems` contract in Design Decision 1; reformatted Design Decisions to the Decision/Rationale/Approved form; added a Compliance table; fixed the `max-w-xl` pixel value and the 44pt tap-target claim; corrected the ARIA structure and the Differentiate Without Color description; fixed the States table's hover contradiction; corrected Design Decision 2's keystroke count; fixed the SwiftUI/Compose/WinUI 3 platform-note APIs; promoted four untraced edge-case MUSTs to named requirements with test vectors; added vectors for input focus and dismiss/onSelect callback order; rewrote cp-026 to assert concretely; reframed the React/Web platform note as a reference-implementation contract instead of a hardcoded path and hook list |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

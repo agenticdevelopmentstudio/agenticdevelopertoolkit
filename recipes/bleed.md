@@ -3,11 +3,11 @@ id: feee183a-6488-489e-8e20-c7150bb3e914
 title: Bleed
 domain: agenticdevelopertoolkit://recipes/bleed
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -158,12 +158,15 @@ Not applicable: The component source contains no logging or debug output.
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The source renders a plain, role-less `div` with no ARIA misuse (semantic-markup); it performs no check on whether the region it crops still leaves focusable content reachable, so that depends entirely on the caller keeping the bled area decorative-only (keyboard-navigable, see **Accessibility**).
+The source renders a plain, role-less `div` with no ARIA misuse (semantic-markup); it performs no check on whether the region it crops still leaves focusable content reachable, so that depends entirely on the caller keeping the bled area decorative-only (keyboard-navigable, see **Accessibility**). Best-practices statuses rest on `Bleed` being pure presentation over its `side`/`children`/`className` props with no embedded logic (separation-of-concerns: passed), and on `flow.test.tsx` directly rendering `Bleed` and asserting its side-modifier class output (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added a `side-passthrough` requirement documenting the unvalidated `side` passthrough as undefined-by-the-type behavior; filled in Appearance and Accessibility with real content; fixed the `bleed-009` test-vector bug and added vectors for previously uncovered edge cases; replaced the Compliance section with a real check table; corrected the Platform Notes to layout-affecting mechanisms consistent with the margin-over-transform decision and fixed the WinUI 3 API citation; reformatted Design Decisions into the three-line form; linked the `Band` ingredient in `related`. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

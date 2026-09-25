@@ -3,11 +3,11 @@ id: 120ac7e5-949e-40c9-bb15-b24350356763
 title: Site Model
 domain: agenticdevelopertoolkit://recipes/site-model
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -404,11 +404,18 @@ smoothing it into an idealized merge rule would violate source fidelity.
 |-------|--------|----------|
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 Both statuses rest on the Localization section above: `titleCase` in
 `lib/breadcrumbs.ts` and `lib/nav.ts` builds every label this module emits
 directly from a URL segment, in English, with no string-table lookup or
-externalization seam of any kind.
+externalization seam of any kind. `separation-of-concerns` passes because every
+source file (`useSearchState.ts`, `breadcrumbs.ts`, `lookup.ts`, `nav.ts`,
+`search.ts`) is pure logic with no rendering of its own, and `unit-test-coverage`
+passes because each file has a matching direct test (`useSearchState.test.ts`,
+`breadcrumbs.test.ts`, `lookup.test.ts`, `nav.test.ts`, `search.test.ts`) with
+meaningful assertions.
 
 ## Change History
 
@@ -416,3 +423,4 @@ externalization seam of any kind.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation from web sources: `hooks/useSearchState.ts`, `lib/breadcrumbs.ts`, `lib/lookup.ts`, `lib/nav.ts`, `lib/search.ts`. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

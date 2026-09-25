@@ -3,15 +3,15 @@ id: 88d69611-4a12-4777-9509-8af6c0626dc7
 title: CategoryPickerDialog
 domain: agenticdevelopertoolkit://recipes/category-picker-dialog
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-08-23'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Modal tree browser that returns a PLACE in the owner's category hierarchy — a category id or the top level — with filter search, keyboard tree navigation, and OK/Cancel."
+summary: "Modal tree browser that returns a place in the category hierarchy (a category id or the top level), with filter search, keyboard navigation and OK/Cancel."
 platforms:
 - typescript
 - web
@@ -71,16 +71,16 @@ Compliance and Localization-adjacent notes below.
 - **filter-by-substring-with-trail**: Typing in the field MUST narrow the list to nodes whose name contains the typed text (case-insensitive substring), each option showing the "/"-joined names of its ancestors; a node filed under more than one parent MUST appear once, keeping its first (sibling-order) trail.
 - **offer-a-root-row-only-when-allowed**: The "top level" row (`rootLabel`, default "Top level") MUST render only when `allowRoot` is set, and selecting it MUST make `null` the pending selection.
 - **disable-forbidden-rows**: A node whose id is in `disabledIds` MUST render visibly disabled and MUST NOT become selectable, in both browse and filter mode.
-- **preselect-initial-id**: On open, the pending selection MUST start at `initialSelectedId` (or no selection when it is `null`).
+- **preselect-initial-id**: On open, the pending selection MUST start at `initialSelectedId` (default `null`). A `null` selection IS the root row, not "no selection": when `allowRoot` is set, the "Top level" row renders selected and highlighted from open, and is confirmable while the filter text is empty (see **disable-confirm-when-unpickable**); when `allowRoot` is not set, there is no root row to render, so a `null` selection shows no highlighted row and Confirm stays disabled.
 - **tree-keyboard-nav**: In browse mode, ArrowDown/ArrowUp MUST move the roving tab stop to the next/previous VISIBLE row (collapsed children skipped); ArrowRight on a collapsed parent MUST expand it, on an expanded parent MUST move into its first child; ArrowLeft on an expanded parent MUST collapse it, on a leaf or collapsed node MUST move to its parent; Home/End MUST move to the first/last visible row.
 - **filter-mode-arrow-nav**: In filter mode, ArrowDown/ArrowUp MUST move the roving tab stop to the next/previous option in the flat hit list (the same shared row list and key handler browse mode uses), and Home/End MUST move it to the first/last option; arrow keys have no effect while focus is still in the filter field itself — reaching the list requires Tab (to the roving tab stop) or a pointer click first. No `aria-activedescendant` is used; each option is an independently focusable `<button>` using the same roving-tabindex pattern browse mode uses.
 - **native-row-activation**: Every row, in either mode, MUST be a native `<button>`, so Enter, Space, a click, and a double-click all activate it identically — there is no separate keydown handler for row selection, only the browser's own button-activation behavior.
 - **filter-field-enter-inert**: Enter pressed in the filter field MUST NOT select or confirm anything — the field is not enclosed in a `<form>`, so Enter performs no default action and the dialog defines none of its own.
-- **disable-confirm-when-unpickable**: The confirm button MUST be disabled unless the pending selection is confirmable — the root row when `allowRoot`, or a node not in `disabledIds`.
+- **disable-confirm-when-unpickable**: The confirm button MUST be disabled unless the pending selection is confirmable — the root row when `allowRoot` is set AND the filter text is empty, or a node not in `disabledIds`. (The empty-filter condition on the root row exists to prevent a silent move-to-root once the list has been filtered down to something else.)
 - **reset-on-reopen**: Each transition to `open=true` MUST clear the filter text, the expanded set and the roving focus, and MUST reset the pending selection to `initialSelectedId` — a reopen is a fresh question, not a resumed one.
 - **roving-focus-origin**: The roving tab stop MUST start on the first visible row after a reset — the root row when `allowRoot` is set, otherwise the first top-level category — regardless of `initialSelectedId`; a collapsed branch containing `initialSelectedId` is NOT auto-expanded to reveal it, so a nested preselection starts off-screen and unfocused until the user navigates to it.
-- **report-write-errors-inline**: A non-null `error` MUST render above the button bar without closing the dialog; `busy` MUST disable the field and both buttons while a confirm is in flight.
-- **cancel-without-confirming**: Esc, the Cancel button, or a non-busy outside dismiss MUST call `onCancel` and MUST NOT call `onConfirm`; while `busy`, all three are blocked instead — the Cancel button is disabled (see **report-write-errors-inline**) and Esc/outside dismissal are suppressed by the same busy check, so none of them call `onCancel` either.
+- **report-write-errors-inline**: A non-null `error` MUST render above the button bar without closing the dialog; `busy` MUST disable the filter field and MUST replace both the Cancel and Confirm buttons with a `role="status"` loading indicator (via `DialogActions`) while a confirm is in flight — there is no disabled button in the DOM, only the field is actually disabled.
+- **cancel-without-confirming**: Esc, the Cancel button, or a non-busy outside dismiss MUST call `onCancel` and MUST NOT call `onConfirm`; while `busy`, all three are blocked instead — Cancel and Confirm are both replaced by the loading indicator (see **report-write-errors-inline**), so there is no Cancel button to click, and Esc/outside dismissal are suppressed by the same busy check, so none of the three call `onCancel` either.
 - **show-empty-messages**: With no categories at all, browse mode MUST show "No categories yet."; with a filter that matches nothing, filter mode MUST show a message naming the typed text.
 
 ## Appearance
@@ -115,7 +115,8 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
 | State | Appearance change |
 |---|---|
 | Closed | not rendered |
-| Open, no selection | confirm disabled; no row shows `bg-apt-gold/15` |
+| Open, `allowRoot` unset, no `initialSelectedId` | confirm disabled; no row shows `bg-apt-gold/15` (there is no root row to highlight) |
+| Open, `allowRoot` set, no `initialSelectedId` | `null` selection is the root row: "Top level" shows `bg-apt-gold/15` from open; confirm enabled while the filter is empty, disabled once it isn't |
 | Row selected (allowed) | `bg-apt-gold/15`; confirm enabled |
 | Row selected (forbidden) | cannot occur — a forbidden row cannot be clicked into selection |
 | Node collapsed | `ChevronRight`; children not in the DOM or the keyboard order |
@@ -123,7 +124,7 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
 | Filtering | tree replaced by a flat `listbox` of trail-annotated matches |
 | No categories | "No categories yet." (browse mode only) |
 | No filter match | `No categories match "<text>".` |
-| `busy=true` | field and both buttons disabled |
+| `busy=true` | field disabled; Cancel and Confirm both replaced by a `role="status"` loading spinner (no buttons in the DOM) |
 | `error` set | `ErrorText` renders above the button bar |
 
 ## Accessibility
@@ -158,7 +159,7 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
 | T8 | tree-keyboard-nav | roving stop on an expanded parent's child; ArrowLeft, ArrowLeft again | first collapses the parent; second moves the stop to the parent |
 | T9 | tree-keyboard-nav | Home, then End | roving stop moves to the first, then the last, visible row |
 | T10 | preselect-initial-id, reset-on-reopen | open with `initialSelectedId="x"`, close, reopen with the same prop | selection starts at x both times; filter/expanded state is empty each open |
-| T11 | report-write-errors-inline | `error="conflict"`, `busy` | error text shown above the buttons; field and both buttons disabled |
+| T11 | report-write-errors-inline | `error="conflict"`, `busy` | error text shown above the buttons; field disabled; Cancel/Confirm replaced by a `role="status"` loading spinner — no Cancel/Confirm buttons exist in the DOM |
 | T12 | show-empty-messages | `nodes=[]` (browse); a filter matching nothing | "No categories yet."; `No categories match "<text>".` |
 | T13 | roving-focus-origin | open with `initialSelectedId` inside a collapsed branch, `allowRoot` unset | roving tab stop is the first top-level category, not the (invisible) preselected node |
 | T14 | native-row-activation | focus a row, press Enter (then, on another row, Space) | row selects, identical to a click |
@@ -170,6 +171,8 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
 | T20 | disable-forbidden-rows | `disabledIds=[x]`, filter to a hit that includes x | row x renders disabled and unselectable in the option list too |
 | T21 | offer-a-root-row-only-when-allowed | open with `allowRoot` unset (default `false`) | no "Top level" row renders; the first visible row is the first top-level category |
 | T22 | cancel-without-confirming | press Esc while not busy; then press Esc (and attempt an outside click) while `busy` | not busy: `onCancel` fires; busy: dialog remains open and `onCancel` does not fire either time |
+| T23 | preselect-initial-id, disable-confirm-when-unpickable | `allowRoot`, no `initialSelectedId` (default `null`) | "Top level" renders `aria-selected="true"` and `bg-apt-gold/15` on open; Confirm is enabled; clicking it calls `onConfirm(null)` |
+| T24 | disable-confirm-when-unpickable | continuing from T23, type any filter text | Confirm becomes disabled (the root row is confirmable only while the filter is empty) |
 
 ## Edge Cases
 
@@ -197,6 +200,7 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
   cannot offer the nodes that were never drawn.
 - **Whitespace-only filter text.** Trimmed before matching; an all-whitespace
   filter behaves as no filter (browse mode, not an empty-match message); see T18.
+- **`null` selection is the root row, not "nothing picked."** With `allowRoot` set and no `initialSelectedId`, the dialog opens with "Top level" already selected and confirmable — clicking Confirm immediately calls `onConfirm(null)`. Typing any filter text makes the root row unconfirmable again (see **disable-confirm-when-unpickable**) even though it stays the pending selection, closing what would otherwise be a silent move-to-root once the list no longer shows the root row as the obvious pick; see T23, T24.
 - **Reopening on a stale `initialSelectedId`.** If the id no longer exists in
   `nodes`, no row renders as selected — the lookup that drives the highlight
   finds nothing to match — but **disable-confirm-when-unpickable** checks only
@@ -218,13 +222,51 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
 | `disabledIds` | `readonly string[]` | `[]` | Ids that cannot be picked — for a move, the category itself and its descendants. |
 | `allowRoot` | `boolean` | `false` | Offers a "no parent" row that confirms with `null`. |
 | `rootLabel` | `string` | `"Top level"` | Copy for the root row. |
-| `initialSelectedId` | `string \| null` | `null` | Pre-selected category id. |
+| `initialSelectedId` | `string \| null` | `null` | Pre-selected category id. `null` selects the root row — highlighted and confirmable (while the filter is empty) when `allowRoot` is set; unhighlighted with Confirm disabled when it is not. |
 | `error` | `string \| null` | `null` | A rejected confirm's message — the host owns it. |
-| `busy` | `boolean` | `false` | Disables the field and both buttons while a confirm is in flight. |
+| `busy` | `boolean` | `false` | Disables the field and replaces both action buttons with a `role="status"` loading spinner (`DialogActions`) while a confirm is in flight. |
 | `onConfirm` | `(categoryId: string \| null) => void` | — | Fired on confirm with the pending selection. |
 | `onCancel` | `() => void` | — | Fired on Cancel, Esc, or a non-busy outside dismiss. |
 
 Exports: `CategoryPickerDialog`, `CategoryPickerDialogProps`.
+
+## Deep Linking
+
+None: the dialog is invoked imperatively by the host via its `open` prop. The
+source subscribes to no router and reads/writes no URL.
+
+## Localization
+
+None: `title`, `description`, `confirmLabel`, and `rootLabel` are host-supplied
+strings, so the host controls their translation. But the source also carries its
+own hardcoded English strings that are not run through any i18n mechanism: the
+filter's placeholder ("Filter categories…") and `aria-label` ("Filter
+categories"), and the two empty-state messages ("No categories yet." and `No
+categories match "{filter}".`).
+
+## Accessibility Options
+
+| Option | Behavior |
+|--------|----------|
+| Reduce Motion | Not handled: the source contains no `prefers-reduced-motion` check, and the `Dialog`/`DialogContent` primitives it composes carry no open/close transition of their own in this file. |
+| Increase Contrast | Depends on the `apt-*` design tokens (e.g. `apt-gold`, `apt-text-muted`, `apt-border`); the component itself does no `prefers-contrast` handling. |
+| Differentiate Without Color | A selected row's `aria-selected` and a forbidden row's `aria-disabled`/`opacity-40` are both readable independent of color; the chevron's direction (right = collapsed, down = expanded) also carries state without relying on color. |
+
+## Feature Flags
+
+None: the dialog is a presentational control invoked by the host. Feature-gating
+whether it opens at all is the host's concern, not the source's.
+
+## Analytics
+
+None: the source calls only `onConfirm`/`onCancel`. It emits no analytics or
+telemetry events of its own; any tracking around a pick is the host's, driven by
+those callbacks.
+
+## Privacy
+
+None: the dialog transmits nothing. `nodes`, `disabledIds`, and the confirmed id
+are held and passed in memory by the host, which owns any request to a backend.
 
 ## Logging
 
@@ -317,6 +359,8 @@ consistent with the sibling form controls
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 Statuses rest on `category-picker-dialog.tsx`: the `role`/`aria-*` attributes on
 tree and listbox rows, the inherited `Dialog` focus trap, and the full arrow-key
@@ -328,12 +372,18 @@ expand/collapse toggle's `size-6` (24×24px) hit area and the row buttons'
 touch-target-size fails; and the hardcoded, non-overridable built-in strings
 ("No categories yet.", the filter-match message, `aria-label="Filter
 categories"`/`"Categories"`, the placeholder, and the Expand/Collapse `title`)
-fail both internationalization checks.
+fail both internationalization checks. separation-of-concerns is partial
+because `flattenWithTrails`/`dedupeById` are extracted but the roving-tabindex
+keyboard state machine (`onRowsKeyDown`, `visibleRows`) still lives inside the
+component, while unit-test-coverage is passed because
+`categoryPickerDialog.test.tsx` exercises expansion, filtering, selection,
+disabled rows, and every arrow-key interaction with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | busy replaces Cancel/Confirm with a status spinner (field-only disabled), not two disabled buttons (T11 corrected); null initialSelectedId is the root-row selection (confirmable only while filter is empty) not "no selection" (T23/T24 added). Added the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; added filter-mode-arrow-nav, native-row-activation, filter-field-enter-inert and roving-focus-origin requirements with new test vectors T13-T16; added vectors T17-T22 for multi-parent filter dedupe, whitespace-only filter, a stale initialSelectedId, disabled rows in filter mode, no root row when allowRoot is unset, and Esc/outside-dismiss under busy; corrected the Appearance diagram's glyphs and dropped its unclear title annotation; corrected the chevron button's Accessibility citation from aria-label to title/aria-hidden; resolved the buildCategoryTree double-fold contradiction between the Edge Cases and Design Decisions and restated the fold's actual useMemo-based memoization; corrected the stale-initialSelectedId and empty-vocabulary Edge Cases against source; replaced wiki-link cross-references with full domain URLs, linked "the rail" to Topic Detail, and added alert-and-dialog to related; trimmed tags from seven to four; reformatted Design Decisions into Decision/Rationale/Approved blocks; rebuilt Compliance as linked accessibility/internationalization checks with a supporting sentence; corrected the SwiftUI/Compose/AppKit-UIKit/WinUI 3 Platform Notes to real, tree-and-search-capable APIs |
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Add concrete WinUI 3 and other platform translation guidance to Platform Notes |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revised recipe per writer guidelines for Phase 2 ui-blocks recipes. |

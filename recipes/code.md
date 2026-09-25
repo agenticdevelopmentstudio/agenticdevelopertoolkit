@@ -3,11 +3,11 @@ id: 335f37a4-cd9e-4575-a78a-8717b34e5a2d
 title: Code
 domain: agenticdevelopertoolkit://recipes/code
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -81,7 +81,7 @@ These are CSS custom properties supplied by the host page/theme, each with the l
 | code-003 | accept-string-prop | `text: "$ echo hello"` | Component renders without error; text appears as `$ echo hello` |
 | code-004 | no-markup-interpretation | `text: "# Heading\n**bold** <html>"` | Output renders literally as `# Heading\n**bold** <html>` with no markdown or HTML interpretation |
 | code-005 | use-monospace-font | `text: "code"` | Computed `font-family` on the `<pre>` resolves to the mono token (`var(--lp-font-mono)`), distinct from the deck's body `font-family` |
-| code-006 | render-as-preformatted (empty-string edge case) | `text: ""` | Renders `<pre><code></code></pre>` with no children; computed height equals one line-height (`min-height: 1.48rem`, i.e. `0.8rem × 1.85`), so layout does not collapse |
+| code-006 | render-as-preformatted (empty-string edge case) | `text: ""` | Renders `<pre><code></code></pre>` with no children; the source sets no `min-height` on `.lp-code` or `.lp-code code`, so the content box collapses to `0` height and only the block's own padding (`1.1rem` top and bottom) and `1px` border remain — visibly shorter than a populated one-line block (`1.48rem`, i.e. `0.8rem × 1.85`), so a layout shift occurs going from empty to non-empty text |
 | code-007 | render-as-preformatted (whitespace-only edge case) | `text: "   \t\n  "` | All spaces, the tab, and the newline are preserved exactly; rendered text length and line count match the input |
 | code-008 | no-wrap (tabs edge case) | `text: "a\tb\tc"` | Tab renders at the CSS default `tab-size: 8` (not overridden by `lp-code`); columns are not collapsed to a single space |
 | code-009 | no-markup-interpretation (Unicode edge case) | `text: "café 日本語 🎉"` | All characters render literally and unmodified, including the emoji and non-Latin script; no transformation or substitution occurs |
@@ -89,7 +89,7 @@ These are CSS custom properties supplied by the host page/theme, each with the l
 
 ## Edge Cases
 
-- **Empty string**: If `text` is an empty string, the component MUST render an empty `<pre><code>` block with `min-height` equal to one line-height (`0.8rem × 1.85` ≈ `1.48rem`) so the block does not collapse and no layout shift occurs.
+- **Empty string**: If `text` is an empty string, the component MUST render an empty `<pre><code>` block. Neither `.lp-code` nor `.lp-code code` sets a `min-height`, so the block's content box collapses to `0` and only its own padding and border remain — shorter than a populated one-line block (`0.8rem × 1.85` ≈ `1.48rem`) — so a layout shift does occur when `text` transitions between empty and non-empty.
 - **Whitespace-only input**: If `text` contains only whitespace (spaces, tabs, newlines), the component MUST render and preserve all whitespace exactly as provided.
 - **Very long lines**: If a single line exceeds the container width significantly, the component MUST provide horizontal scrolling without breaking the line.
 - **Tabs and special characters**: The component MUST preserve tabs, multiple spaces, and other whitespace characters exactly as provided, rendering per CSS `white-space: pre`. Tab width follows the CSS default `tab-size: 8`, which `lp-code` does not override; a host needing a different width must set `tab-size` explicitly.
@@ -163,12 +163,15 @@ Not applicable: the Code component does not perform any operations that warrant 
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on the React source: `<pre className="lp-code"><code>{text}</code></pre>` correctly nests semantic markup and React's string rendering preserves the full Unicode range without transformation (passed); the `<pre>` carries no `tabIndex` for keyboard scrolling and no `dir`/`direction` override for right-to-left contexts (partial and failed, respectively); and `font-size`/color are theme tokens (`--lp-font-mono`, `--lp-ink`, `--lp-card`) whose resolved scaling and contrast ratio cannot be verified from this source alone (partial).
+Statuses rest on the React source: `<pre className="lp-code"><code>{text}</code></pre>` correctly nests semantic markup and React's string rendering preserves the full Unicode range without transformation (passed); the `<pre>` carries no `tabIndex` for keyboard scrolling and no `dir`/`direction` override for right-to-left contexts (partial and failed, respectively); and `font-size`/color are theme tokens (`--lp-font-mono`, `--lp-ink`, `--lp-card`) whose resolved scaling and contrast ratio cannot be verified from this source alone (partial). `separation-of-concerns` passes because `Code.tsx` is a 20-line component with no logic beyond rendering its `text` prop into `<pre><code>`. `unit-test-coverage` fails because no test file exercises `Code` in the `landing` package.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Empty-block vector/edge case now describes true 0-height collapse (no min-height in source); Compliance added. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; named the concrete `lp-code` CSS tokens in Appearance; reformatted Design Decisions into Decision/Rationale/Approved form; rebuilt Compliance with real, linked catalog checks; resolved the empty-string RFC 2119 contradiction and downgraded the unenforceable parent-heading and keyboard-focus MUSTs to SHOULD; split and added Conformance Test Vectors (code-006 to code-010); specified tab-size and documented the RTL/localization gap; corrected the SwiftUI, Compose, AppKit, UIKit, and WinUI 3 platform notes; and added forced-colors guidance to Accessibility Options |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

@@ -4,11 +4,11 @@ title: Avatar Engine Config
 domain: agenticdevelopertoolkit://recipes/avatar-engine-config
 type: ingredient
 category: engine
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -144,26 +144,37 @@ to assistive technology.
   scaleY, pivotX, pivotY, bend, ink, alpha, shape, family` — 13 properties),
   the loader MUST derive one concrete channel name `"<nodeId>.<prop>"` and
   add it to the returned `channels` set.
-- **rest-value-derivation**: the returned `rest` map MUST supply a resting
-  value for every concrete channel: authored transform overrides where
-  present, else the fixed numeric defaults (`x=0, y=0, rotation=0, scaleX=1,
-  scaleY=1, bend=0, alpha=1`, pivot defaulting to `(0,0)`), and for `.shape`
-  a computed rest path (see rest-shape-computed below) rather than a numeric
-  default.
+- **rest-value-derivation**: for every node, the returned `rest` map MUST
+  supply a resting value for its `x`, `y`, `rotation`, `scaleX`, `scaleY`,
+  `bend`, `alpha`, `pivotX`, `pivotY` channels: authored transform overrides
+  where present, else the fixed numeric defaults (`x=0, y=0, rotation=0,
+  scaleX=1, scaleY=1, bend=0, alpha=1`, pivot defaulting to `(0,0)`). It
+  MUST additionally supply an `.ink` rest value only for a node that
+  authors an `ink`, and a `.family` rest value (plus, for a
+  non-bend-driven node, a computed `.shape` rest path — see
+  rest-shape-computed below) only for a node whose shape resolves to a
+  family (see bend-driven-node-has-no-shape-rest-channel). A node's
+  derived `.scale` channel MUST NOT receive a rest value; nothing reads it
+  directly (see group-expansion).
 - **empty-group-rejected**: a `rig.groups` entry with an empty member list
   MUST reject, naming the group.
 - **group-name-collision-rejected**: an authored group name that collides
-  with a concrete channel name, or with the derived `.scale` group name every
-  node receives automatically, MUST reject.
+  with a concrete channel name, or with the derived `.scale` channel name
+  every node receives automatically, MUST reject.
 - **group-member-must-be-concrete-channel**: every member listed in a
-  `rig.groups` entry MUST itself be a concrete channel (a real
-  `"<nodeId>.<prop>"` name) — never another group name. A group naming
-  another group as a member MUST reject; group nesting is not supported by
-  this loader.
+  `rig.groups` entry MUST itself be a concrete channel — either a leaf
+  `"<nodeId>.<prop>"` name, or a node's derived `<nodeId>.scale` channel
+  (which `expand` flattens one further level; see group-expansion) — never
+  an authored group name. A group naming another authored group as a
+  member MUST reject; authored group nesting is not supported by this
+  loader.
 - **group-expansion**: `expand(name)` MUST flatten any group name to its
-  full set of concrete channel members, and a derived `.scale` group MUST be
-  synthesized for every node, fanning out to that node's `.scaleX` and
-  `.scaleY` channels.
+  full set of leaf channel members. A derived `.scale` channel MUST be
+  synthesized for every node, mapping it to that node's `.scaleX` and
+  `.scaleY` channels; when an authored group's member list names a node's
+  `<nodeId>.scale` channel, `expand` MUST flatten it through that same
+  mapping, so the group's final member set never contains a `.scale`
+  channel, only leaves.
 - **primitive-with-family-rejected**: a node whose shape kind is a primitive
   (`ring`, `disc`, or `arc`) MUST NOT also declare a `family`; the load
   rejects a primitive shape carrying family metadata.
@@ -202,8 +213,8 @@ independently testable at any of its listed call sites.
   each be a real rig node id), and `crop` feature names (which MUST be a
   feature some node actually declares).
 - **pair-fields-exactly-two**: every field documented as a two-number pair
-  (`gaze.reachCurious`, `gaze.reachIdle`, `idleFidget.settle.durationRange`,
-  `idleFidget.rearm.gapMs`, `moodEffects.*.durationRange`,
+  (`gaze.reachCurious`, `gaze.reachIdle`, `idleFidget.durationRange`,
+  `idleFidget.rearm.gapMs`, a mood-effect step's own `durationRange`,
   `moodEffects.*.firstDelayMs`/`rearmMs` when present,
   `speech.bubble.distance`) MUST contain exactly two numbers; one, three, or
   more MUST reject.
@@ -241,11 +252,13 @@ independently testable at any of its listed call sites.
 
 ### Timelines
 
-- **promote-step-shape**: a timeline step whose `family` differs from the
-  channel's currently in-force family (a promotion) MUST NOT also carry a
-  `to` value, MUST target only a `.shape` channel, and MUST have `duration`
-  equal to `0` — a family change is always an instantaneous snap, never a
-  tween.
+- **promote-step-shape**: a timeline step is a promotion only when it
+  carries an explicit `promote` field (not merely a `family` that differs
+  from the channel's currently in-force family); such a step MUST NOT also
+  carry a `to` value, and MUST target only a `.shape` channel. A step that
+  changes a channel's `family` without a `promote` field is not a
+  promotion and MAY carry a `to` value (see
+  timeline-step-value-processing and family-change-requires-snap).
 - **timeline-step-value-processing**: a non-promote step's `to` value MUST
   be present, and MUST pass through the same colourize/canonicalize/
   value-type-matches-channel pipeline as a pose value.
@@ -271,18 +284,21 @@ independently testable at any of its listed call sites.
 ### Behavior: predicates, loops, and gates
 
 - **predicate-resolution**: every predicate reference (`enabledWhen`,
-  `disabledWhen`, `activeWhen`, `shownWhen`, `suppressedIn`, and similar
-  gates) MUST resolve to one of the two builtin predicates (`"eyesShut"`,
-  `"curious"`) or to a `behavior.params` entry of boolean (`gt`/`select`)
-  form; any other name MUST reject.
+  `disabledWhen`, `activeWhen`, `shownWhen`, and similar boolean gates —
+  but not `suppressedIn`, which names moods rather than a predicate; see
+  blink-suppression-moods-real) MUST resolve to one of the two builtin
+  predicates (`"eyesShut"`, `"curious"`) or to a `behavior.params` entry of
+  boolean (`gt`) form; any other name, including a `select` param's name
+  (which resolves to a number, not a boolean; see
+  amplitude-ref-resolution), MUST reject.
 - **gt-param-operand-pose-supplied**: the left-hand operand name of a `gt`
   param MUST be a numeric key that every pose supplies via that pose's
   `loops`; a `gt` param referencing a name even one pose omits MUST reject.
 - **select-param-guard-resolves**: a `select` param's guard predicate MUST
   itself resolve via predicate-resolution.
 - **amplitude-ref-resolution**: an amplitude or duration reference that
-  names a `behavior.params` entry MUST resolve to a `select` (boolean) param
-  when a param of that name exists, and otherwise MUST resolve to a
+  names a `behavior.params` entry MUST resolve to a `select` (numeric)
+  param when a param of that name exists, and otherwise MUST resolve to a
   per-pose numeric value (the same mechanism as gt-param-operand-pose-
   supplied).
 - **loop-fields-validated**: every `behavior` loop definition's `channel`,
@@ -297,9 +313,9 @@ independently testable at any of its listed call sites.
   eases MUST satisfy reference-integrity, and `reachCurious`/`reachIdle`
   MUST each satisfy pair-fields-exactly-two.
 - **idle-fidget-fields-validated**: `behavior.idleFidget`'s breath channel
-  and ease, sway channel, `brow.nodes`, settle ease, `settle.durationRange`,
-  and `rearm.gapMs` MUST each satisfy reference-integrity and/or
-  pair-fields-exactly-two as applicable.
+  and ease, sway channel, `brow.nodes`, settle ease, the top-level
+  `durationRange`, and `rearm.gapMs` MUST each satisfy reference-integrity
+  and/or pair-fields-exactly-two as applicable.
 - **pinpricks-fields-validated**: `behavior.pinpricks.nodes` MUST each be a
   real rig node id, and its `ease` MUST satisfy reference-integrity.
 - **mood-effect-target-validated**: every `moodEffects` key MUST be a real
@@ -564,9 +580,10 @@ it is one mechanism, not many.
 requirement as a documented asymmetry rather than a defect to flag.
 **Rationale**: the behavior is real, source-observable, and consistently
 reproducible (an un-wrapped Foundation/`JSONDecoder` error from
-`RawFiles.read(fromDirectory:)`); it does not meet the bar for a NEEDS
-REVIEW marker because the source fully answers what happens, it simply
-answers it inconsistently with `CharacterConfig.load(_:)`'s own wrapping.
+`RawFiles.read(fromDirectory:)`); it does not meet the bar for an
+unimplemented-behavior marker because the source fully answers what
+happens, it simply answers it inconsistently with
+`CharacterConfig.load(_:)`'s own wrapping.
 **Approved**: pending
 
 ## Compliance
@@ -588,3 +605,4 @@ answers it inconsistently with `CharacterConfig.load(_:)`'s own wrapping.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe, covering the Apple and web avatar-engine config loaders. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
 | 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.3 | 2026-09-25 | Mike Fullerton | Corrected promote-step-shape (promote field, not family diff), rest-value-derivation (.ink/.family/.shape conditional, no .scale rest), group-member/group-expansion (.scale flattening), predicate-resolution (suppressedIn is moods not a predicate; select is numeric), and pair-fields/idle-fidget field names (idleFidget.durationRange, per-step durationRange). Reworded a Design Decisions rationale sentence that spelled out "NEEDS REVIEW" as prose (word-wrapped across a line break), which was tripping the marker checker; verified the points-count NEEDS REVIEW marker itself already matches the required one-line bullet form and the gap it documents is real (`requireShapeFields` checks field presence only, not count validity), so left it unchanged. |

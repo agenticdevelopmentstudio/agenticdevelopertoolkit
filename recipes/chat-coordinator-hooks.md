@@ -3,20 +3,16 @@ id: 259f4a99-1b18-44a2-a102-e14e0fd8e30f
 title: Chat Coordinator Hooks
 domain: agenticdevelopertoolkit://recipes/chat-coordinator-hooks
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: Thirteen headless React hooks that give a chat surface its transport (useChatSession,
-  wrapping the shared orchestrator/backend contract) and its peripheral behaviors
-  — a connection ritual, caret tracking and block-cursor rendering, mouse/caret gaze,
-  persona mood, adaptive sizing, scroll-to-bottom, focus reclaim, rotating idle phrases,
-  and image-load gating — with no DOM of their own beyond reading and writing caller-supplied
-  refs.
+summary: Thirteen headless React hooks for a chat surface — transport (useChatSession),
+  caret/gaze tracking, mood, sizing, scroll, focus, idle phrases, image gating.
 platforms:
 - typescript
 - web
@@ -130,9 +126,15 @@ built on top of `useCaretTracker`/`useMouseGaze`/`useCaretGaze`.
   one `messageReceived` event carrying the full, untruncated `text`.
 - **session-say-landing-on-teardown**: Every in-flight `say`/`sayStream` call
   MUST be tracked in a pending set, and on unmount the hook MUST "land" (not
-  abandon) each one — delivering its final `messageReceived` event and
-  resolving its promise — even though the component driving it has already
-  unmounted.
+  abandon) each one — delivering its final `messageReceived` event — even
+  though the component driving it has already unmounted. For `say`, landing
+  also resolves the call's returned promise. For `sayStream`, landing only
+  delivers the `messageReceived` event; the call's returned promise is the
+  `for await` loop over the caller's chunk generator, and it settles only
+  when that loop next wakes (a new yielded chunk, or the generator ending)
+  and observes that the line already landed — so a `sayStream` call stalled
+  on a generator that never yields or completes leaves its promise
+  unsettled after unmount.
 - **session-say-stream**: `sayStream(chunks)` MUST accumulate text across
   yielded chunks, deliver a `draftUpdated` event after each chunk (skipping
   it if already landed), and MUST deliver exactly one final
@@ -332,8 +334,9 @@ built on top of `useCaretTracker`/`useMouseGaze`/`useCaretGaze`.
   checks.
 - **caret-gaze-computation**: When focused with a non-empty value and an
   anchor, the hook MUST compute `x` as the horizontal offset between the
-  caret and the anchor's center, normalized by half the anchor's width and
-  clamped to `[-1, 1]`, and MUST report `y` as the fixed `downBias`.
+  caret and the anchor's center, normalized by half the input element's own
+  width (falling back to `1` for a zero-width input) and clamped to
+  `[-1, 1]`, and MUST report `y` as the fixed `downBias`.
 - **caret-gaze-always-tracked**: The hook MUST track the caret with
   `useCaretTracker`'s `enabled` fixed to `true`, regardless of any
   caller-level engagement gating (that gating is the caller's
@@ -578,8 +581,13 @@ reading `useAllImagesLoaded.ts` itself, per **images-loaded-empty-set** and
   failed to submit" from the hook's return value alone
   (**session-send-message**).
 - **Unmounting mid-`say`/`sayStream`**: Every pending line is landed, not
-  abandoned, on teardown, so an `await`ing caller's promise still resolves
-  after the component is gone rather than hanging forever
+  abandoned, on teardown, delivering its final `messageReceived` event
+  either way. For `say`, an `await`ing caller's promise also resolves after
+  the component is gone. For `sayStream`, landing does not itself resolve
+  the caller's promise — that promise settles only when the underlying
+  `for await` loop over the caller's chunk generator next wakes, so a
+  `sayStream` call stalled on a generator that never yields or completes
+  can still hang after unmount despite the line having landed
   (**session-say-landing-on-teardown**).
 - **Concurrent in-flight lines at teardown**: The pending set is iterated
   over a snapshot copy so multiple simultaneous `say`/`sayStream` calls are
@@ -828,62 +836,37 @@ none of these hooks writes to the console or any logging facility.
 
 ## Design Decisions
 
-- **Decision**: `useChatSession` lands, rather than abandons, every
-  in-flight `say`/`sayStream` line in a final unmount-only effect.
-  **Rationale**: source comments document that an `await`ing caller must
-  still see its promise resolve after teardown — particularly under React
-  Strict Mode's mount→cleanup→mount cycle — rather than hang forever
-  waiting on a line whose owning component is already gone.
-  **Approved**: pending
-- **Decision**: `destroyBackend()` calls `destroy()` on the wrapped backend
-  (the `ChatBackendAdapter` instance, when one was created), never directly
-  on the raw backend passed in as an option. **Rationale**: source comments
-  explain that destroying the raw backend directly was a prior bug — it
-  skipped the adapter's own teardown of its `AbortController` and event
-  queue, leaking one adapter/loop per mount cycle. **Approved**: pending
-- **Decision**: `useChatSession` builds its internal session object exactly
-  once (`sessionRef.current === null` guard) and never rebuilds it when
-  `backend`/`orchestrator` identity changes across renders. **Rationale**:
-  source comments explain that an inline `new MockBackend()` literal in a
-  demo render would otherwise reset the whole conversation on every render.
-  **Approved**: pending
-- **Decision**: `useRotatingPhrase` performs its first roll in a mount-only
-  effect but re-rolls synchronously during render on a `rerollKey` change
-  (React's "adjust state during render" pattern), instead of doing both
-  rolls in effects. **Rationale**: the source's own comment states the
-  initial pick happens on mount "so server and client agree on the first
-  frame," while later key changes re-roll during render "so the new phrase
-  lands in the same paint as its trigger, with no one-frame lag from an
-  effect." **Approved**: pending
-- **Decision**: `useConnectRitual` re-arms its `alive` flag at the start of
-  every effect run rather than setting it once forever at initial mount.
-  **Rationale**: this makes the ritual safe under React Strict Mode's
-  deliberate double-invoke without disabling that check — a stale first
-  mount's `alive` flag is correctly left `false` after its cleanup runs,
-  while the second, genuine mount re-arms its own flag and completes the
-  ritual normally. **Approved**: pending
-- **Decision**: `useBlockCursor` only updates its caret-box state when the
-  newly measured box differs from the previous one in position or size,
-  otherwise keeping the exact same object reference. **Rationale**: the
-  underlying `useCaretTracker` measurement is coalesced to one
-  `requestAnimationFrame` per relevant DOM event, but an unchanged caret
-  position (e.g., a `selectionchange` that doesn't actually move the caret)
-  would otherwise still produce a new object and re-render every consumer
-  on every such event. **Approved**: pending
-- **Decision**: `useAllImagesLoaded` treats a watched image's `onerror`
-  identically to its `onload` — both mark that source "loaded."
-  **Rationale**: a broken image `src` is a terminal outcome, not a pending
-  one; treating it the same as a successful load prevents whatever gate
-  depends on "all images loaded" (e.g., an initial-render reveal) from
-  waiting forever on an image that will never fire `onload`.
-  **Approved**: pending
-- **Decision**: `useMouseGaze` never itself decides whether to defer to a
-  caret-driven gaze source; `usePersonaGaze` composes `useMouseGaze` and
-  `useCaretGaze` and performs that arbitration one level up.
-  **Rationale**: keeps `useMouseGaze` a single-source, independently
-  reusable and testable hook; the mutual-exclusion policy (mouse silenced
-  while engaged, caret gated while disengaged) only makes sense to a caller
-  that already knows about both sources. **Approved**: pending
+**Decision**: `useChatSession` lands, rather than abandons, every in-flight `say`/`sayStream` line in a final unmount-only effect.
+**Rationale**: source comments document that an `await`ing caller must still see its promise resolve after teardown — particularly under React Strict Mode's mount→cleanup→mount cycle — rather than hang forever waiting on a line whose owning component is already gone.
+**Approved**: pending
+
+**Decision**: `destroyBackend()` calls `destroy()` on the wrapped backend (the `ChatBackendAdapter` instance, when one was created), never directly on the raw backend passed in as an option.
+**Rationale**: source comments explain that destroying the raw backend directly was a prior bug — it skipped the adapter's own teardown of its `AbortController` and event queue, leaking one adapter/loop per mount cycle.
+**Approved**: pending
+
+**Decision**: `useChatSession` builds its internal session object exactly once (`sessionRef.current === null` guard) and never rebuilds it when `backend`/`orchestrator` identity changes across renders.
+**Rationale**: source comments explain that an inline `new MockBackend()` literal in a demo render would otherwise reset the whole conversation on every render.
+**Approved**: pending
+
+**Decision**: `useRotatingPhrase` performs its first roll in a mount-only effect but re-rolls synchronously during render on a `rerollKey` change (React's "adjust state during render" pattern), instead of doing both rolls in effects.
+**Rationale**: the source's own comment states the initial pick happens on mount "so server and client agree on the first frame," while later key changes re-roll during render "so the new phrase lands in the same paint as its trigger, with no one-frame lag from an effect."
+**Approved**: pending
+
+**Decision**: `useConnectRitual` re-arms its `alive` flag at the start of every effect run rather than setting it once forever at initial mount.
+**Rationale**: this makes the ritual safe under React Strict Mode's deliberate double-invoke without disabling that check — a stale first mount's `alive` flag is correctly left `false` after its cleanup runs, while the second, genuine mount re-arms its own flag and completes the ritual normally.
+**Approved**: pending
+
+**Decision**: `useBlockCursor` only updates its caret-box state when the newly measured box differs from the previous one in position or size, otherwise keeping the exact same object reference.
+**Rationale**: the underlying `useCaretTracker` measurement is coalesced to one `requestAnimationFrame` per relevant DOM event, but an unchanged caret position (e.g., a `selectionchange` that doesn't actually move the caret) would otherwise still produce a new object and re-render every consumer on every such event.
+**Approved**: pending
+
+**Decision**: `useAllImagesLoaded` treats a watched image's `onerror` identically to its `onload` — both mark that source "loaded."
+**Rationale**: a broken image `src` is a terminal outcome, not a pending one; treating it the same as a successful load prevents whatever gate depends on "all images loaded" (e.g., an initial-render reveal) from waiting forever on an image that will never fire `onload`.
+**Approved**: pending
+
+**Decision**: `useMouseGaze` never itself decides whether to defer to a caret-driven gaze source; `usePersonaGaze` composes `useMouseGaze` and `useCaretGaze` and performs that arbitration one level up.
+**Rationale**: keeps `useMouseGaze` a single-source, independently reusable and testable hook; the mutual-exclusion policy (mouse silenced while engaged, caret gated while disengaged) only makes sense to a caller that already knows about both sources.
+**Approved**: pending
 
 ## Compliance
 
@@ -928,4 +911,5 @@ persist nothing (see Privacy).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-09-25 | Mike Fullerton | Trimmed summary <=160c; fixed caret-gaze input-width normalization; corrected sayStream teardown. |
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the thirteen hook sources in `@agenticdevelopertoolkit/chat`'s `src/hooks/` and their test suites; documents the hardcoded English apology string on `useChatSession`'s legacy-backend error path under Localization. |

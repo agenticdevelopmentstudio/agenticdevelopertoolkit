@@ -3,11 +3,11 @@ id: d8f2a1c3-9e4b-4a7b-8c6d-2f9a1e5b3c7d
 title: Drag-and-Drop
 domain: agenticdevelopertoolkit://recipes/dnd
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -233,8 +233,10 @@ Not applicable: No logging subsystem is built into the component. Errors (e.g., 
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source directly: the keyboard sensor, `aria-live` Announcements, and dnd-kit's `role`/`tabIndex`/`aria-label` attributes back the passed and partial accessibility checks (partial on keyboard-navigable because DragItem's `keyboard` prop defaults to false and needs a host-provided alternative path); the grip's `h-6 w-4` dimensions and its reliance on dnd-kit's own CSS transitions with no `prefers-reduced-motion` handling back the two failed checks, and the `apt-gold/25` focus ring's self-admitted possible AA shortfall backs the partial contrast-ratio check; and the hardcoded English announcement sentences (`Picked up …`, `… is over …`, etc.) alongside the fully overridable item/zone/target names back the partial internationalization check.
+Statuses rest on the source directly: the keyboard sensor, `aria-live` Announcements, and dnd-kit's `role`/`tabIndex`/`aria-label` attributes back the passed and partial accessibility checks (partial on keyboard-navigable because DragItem's `keyboard` prop defaults to false and needs a host-provided alternative path); the grip's `h-6 w-4` dimensions and its reliance on dnd-kit's own CSS transitions with no `prefers-reduced-motion` handling back the two failed checks, and the `apt-gold/25` focus ring's self-admitted possible AA shortfall backs the partial contrast-ratio check; and the hardcoded English announcement sentences (`Picked up …`, `… is over …`, etc.) alongside the fully overridable item/zone/target names back the partial internationalization check. `separation-of-concerns` passes because sorting/dragging logic (`landsAfter`, `asHandleProps`, `useDragSensors`) is extracted into standalone helpers and hooks, leaving the exported components as thin, mostly stateless wrappers; `unit-test-coverage` passes because `dnd.test.tsx` imports `DragGrip`, `DragItem`, `DragSurface`, `DropTarget`, `SortableItem`, `SortableSurface`, and `SortableZone` directly and exercises them with meaningful assertions.
 
 ## Change History
 
@@ -242,3 +244,4 @@ Statuses rest on the source directly: the keyboard sensor, `aria-live` Announcem
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only names; split drag-surface config into input and drop-payload requirements with typed shapes; moved dnd-kit implementation values (closestCorners, opacity 0.4, zIndex 20, touch-none) out of requirements into the React/Web platform note; corrected grip dimensions, appearance token roles, and touch-target status; rewrote Platform Notes to the five required bullets with accurate native APIs; converted Design Decisions to Decision/Rationale/Approved format; added Compliance and Localization tables; sharpened ambiguous test vectors and edge-case wording |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

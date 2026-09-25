@@ -3,11 +3,11 @@ id: afb50b48-af7a-4bc1-a13c-ae36759268c8
 title: Markdown Preview Header
 domain: agenticdevelopertoolkit://recipes/markdown-preview-header
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,7 +41,7 @@ The markdown preview header is a metadata surface that displays the selected sea
 - **title-attribute**: The h3 heading MUST have a `title` attribute for tooltip display on hover. The attribute always carries the raw `hit.title` value — it is never replaced by the "Untitled" fallback, so a missing title produces an empty tooltip attribute alongside the "Untitled" visible text.
 - **kind-badge**: Component MUST render a Badge component with variant and label from the per-kind renderer.
 - **author-attribution**: Component MUST render author attribution in the format "by @slug" if displayName is empty, whitespace-only, `null`, or `undefined`, or "by displayName" if displayName is present and non-empty after trimming.
-- **optional-date**: Component MUST render "Updated [formatted-date]" only if `hit.updatedAt` is present (non-empty); MUST omit the date entirely if updatedAt is `null`, `undefined`, or an empty string. The date is formatted via the shared `formatDate` helper, which is NOT locale-aware — it always formats using the `en-US` locale (e.g. "Sep 20, 2026") regardless of the active UI locale.
+- **optional-date**: Component MUST render "Updated [formatted-date]" only if `hit.updatedAt` is present (non-empty); MUST omit the date entirely if updatedAt is `null`, `undefined`, or an empty string. The date is formatted via the shared `formatDate` helper, which is NOT locale-aware — it always formats using the `en-US` locale (e.g. "Sep 20, 2026") regardless of the active UI locale. `formatDate` also passes no `timeZone` option: a date-only ISO string (e.g. `"2026-09-20"`) is parsed as UTC midnight by `new Date(iso)` and then formatted in the viewer's local time zone, so in any zone west of UTC the displayed calendar day is one day earlier than the ISO date (e.g. "Sep 19, 2026" under `America/Los_Angeles`).
 - **optional-summary**: Component MUST render the summary paragraph only if the summary is non-empty after trimming; MUST render nothing if summary is null, empty string, or whitespace-only.
 - **summary-label**: When the summary paragraph renders, it MUST be prefixed with a "Summary:" label in a distinct (medium-weight, dimmed) style, immediately followed by the summary text in a muted style.
 - **metadata-row-order**: The kind badge, author attribution, and optional update date MUST render together in a single wrapping row, in that fixed order: badge, then author, then date.
@@ -51,7 +51,7 @@ The markdown preview header is a metadata surface that displays the selected sea
 ## Appearance
 
 - **Layout**: Vertical stack with 8pt gap between sections (title row, metadata row, summary, per-kind extra).
-- **Title row**: Horizontal stack, space-between alignment, 12pt gap; the title is allowed to shrink below its content width so it can truncate with an ellipsis.
+- **Title row**: Horizontal stack, space-between alignment, 12pt gap; the title is allowed to shrink below its content width (`min-w-0`), but nothing on the heading or its ancestors sets `truncate`, `overflow-hidden`, `text-overflow`, `white-space: nowrap`, or a line-clamp, so a title that exceeds the available width wraps onto additional lines instead of eliding with an ellipsis.
 - **Title text**: Small text size, semibold weight, primary text color.
 - **Metadata row**: Horizontal stack that wraps, 8pt horizontal / 4pt vertical gap, small text size, dimmed secondary text color. Contains the kind badge, author attribution, then the optional update date, in that fixed order (see **metadata-row-order**).
 - **Author text**: Regular weight; the author value itself uses a muted text color.
@@ -94,7 +94,7 @@ Concrete Tailwind classes and `apt-*` design tokens for this layout are given in
 | header-009 | author-attribution | hit.author = {displayName: "  ", slug: "bob"} | Text shows "by @bob" |
 | header-010 | author-attribution | hit.author = {displayName: null, slug: "charlie"} | Text shows "by @charlie" |
 | header-011 | author-attribution | hit.author = {displayName: undefined, slug: "dave"} | Text shows "by @dave" |
-| header-012 | optional-date | hit.updatedAt = "2026-09-20" | Text displays "Updated Sep 20, 2026" (formatDate's en-US short-month format) |
+| header-012 | optional-date | hit.updatedAt = "2026-09-20", viewer time zone UTC (or any zone at or east of UTC) | Text displays "Updated Sep 20, 2026" (formatDate's en-US short-month format); under a time zone west of UTC (e.g. `America/Los_Angeles`) the same input instead displays "Updated Sep 19, 2026", because `formatDate` parses the date-only string as UTC midnight and formats with no `timeZone` option |
 | header-013 | optional-date | hit.updatedAt = null | Date text does not render |
 | header-014 | optional-date | hit.updatedAt = undefined | Date text does not render |
 | header-015 | optional-date | hit.updatedAt = "" | Date text does not render |
@@ -117,10 +117,11 @@ Concrete Tailwind classes and `apt-*` design tokens for this layout are given in
 - **Title attribute vs. displayed text**: The h3 `title` attribute always mirrors the raw `hit.title` value, even when the visible text has fallen back to "Untitled" — a missing title therefore produces an empty tooltip attribute alongside the fallback text.
 - **Null or undefined author fields**: Author slug is always available as fallback; if displayName is null, undefined, or empty/whitespace after trim, fallback to slug with @ prefix.
 - **Null, undefined, or empty updatedAt**: Date section is entirely omitted; no placeholder or default date is shown.
-- **Truncated title**: The h3 is allowed to shrink below its content width within the flex container, enabling text ellipsis when title exceeds available space; the full (raw) title remains available via the title attribute.
+- **Long title wraps, does not truncate**: The h3 is allowed to shrink below its content width within the flex container (`min-w-0`), but the source applies no ellipsis, `overflow-hidden`, or line-clamp to it — a title exceeding available space wraps onto multiple lines instead. The full (raw) title is nonetheless available via the `title` attribute for hover-tooltip display, independent of how the visible text wraps.
 - **Per-kind renderer fallback**: kindRendererFor returns a neutral default renderer for unknown kinds; previewExtra may return null or undefined for kinds without extra content — both render nothing.
 - **Missing public route**: Link is not rendered when `hit.publicRoute` (a string) is empty; href and route values are independent — href may be a well-formed string even when route is empty.
 - **Non-locale-aware date formatting**: `formatDate` always renders dates using `en-US` formatting regardless of the active UI locale (see Compliance: locale-aware-formatting).
+- **Time-zone-dependent day for date-only input**: Because `formatDate` parses a date-only ISO string as UTC midnight and formats it with no `timeZone` option, the rendered calendar day depends on the viewer's local time zone — any zone west of UTC displays the day before the ISO date. See header-012.
 
 ## Configuration
 
@@ -168,9 +169,9 @@ Not applicable: This component performs no async operations, external calls, or 
 
 - **Source (TypeScript/Web)**: Implemented in `packages/web/packages/search/src/components/markdown/MarkdownPreviewHeader.tsx` as a React functional component using inline Tailwind CSS classes (`flex flex-col gap-2` root, `flex items-start justify-between gap-3` title row, `flex flex-wrap items-center gap-x-2 gap-y-1` metadata row, `min-h-6 shrink-0 rounded-sm` on the link hit target). Styled with `apt-*` design tokens (`apt-text`, `apt-gold`, `apt-text-dim`, `apt-text-muted`). Integrates Badge from `@agenticdevelopertoolkit/ui/components/badge` and uses `kindRendererFor` from the search package's per-kind registry for per-kind customization.
 - **SwiftUI**: Implement as a view composition using a VStack for vertical layout and HStack for the title row. Author and date-formatted text are computed properties (derived from `hit`, e.g. a computed `var` or a value derived at `init`), not `@State` — they hold no independent mutable state. The per-kind badge becomes a SwiftUI view parameter. Conditional rendering with `if` statements for optional date, summary, and public link. Text styling via `.font`, `.foregroundColor` modifiers.
-- **Compose**: Implement as a Composable function using Column for vertical layout and Row for the title section. Author and date-formatted text are plain computed values derived from `hit` (no `remember`/mutable state needed). Use `Modifier` for layout constraints (allowing the title to shrink for ellipsis). Conditional composition with `if` statements for optional content. Badge is an imported Composable. Text styling via `Text()` and `Modifier`.
-- **AppKit / UIKit**: Implement with `NSStackView` (AppKit) or `UIStackView` (UIKit) for vertical layout. Title uses `NSTextField` (AppKit) or `UILabel` (UIKit) with truncation to ellipsis. The public link should be a real link, not a generic button: an `NSAttributedString` run carrying a `.link` attribute inside a clickable `NSTextField`/`NSTextView` (AppKit), or a `UIButton` configured with a `.plain()` `UIButton.Configuration` and an underlined attributed title (UIKit) — underline-on-hover only exists as a concept on AppKit (via link cursor tracking); UIKit has no hover state, so omit it there and rely on system link semantics instead. Author and summary-label formatting via `NSAttributedString`, which is a Foundation type available identically on both AppKit and UIKit, not a UIKit-only type.
-- **WinUI 3**: Implement as a StackPanel with Orientation="Vertical" and Spacing="8". Title in a TextBlock with TextTrimming="CharacterEllipsis" and ToolTip binding to hit.title. Public link as a HyperlinkButton styled with Underline on PointerOver state, custom focus ring with VisualState. Badge as a UserControl or custom template. Author attribution in a TextBlock with Foreground bound to theme brush for dimmed text.
+- **Compose**: Implement as a Composable function using Column for vertical layout and Row for the title section. Author and date-formatted text are plain computed values derived from `hit` (no `remember`/mutable state needed). Use `Modifier` for layout constraints, letting the title `Text` wrap onto additional lines like the web source (no `Modifier.width` clamp or `overflow = TextOverflow.Ellipsis`), unless a port deliberately chooses to diverge and truncate instead. Conditional composition with `if` statements for optional content. Badge is an imported Composable. Text styling via `Text()` and `Modifier`.
+- **AppKit / UIKit**: Implement with `NSStackView` (AppKit) or `UIStackView` (UIKit) for vertical layout. Title uses `NSTextField` (AppKit) or `UILabel` (UIKit) configured to wrap across multiple lines, matching the web source's unclamped `min-w-0` heading, unless a port deliberately chooses to diverge and truncate instead. The public link should be a real link, not a generic button: an `NSAttributedString` run carrying a `.link` attribute inside a clickable `NSTextField`/`NSTextView` (AppKit), or a `UIButton` configured with a `.plain()` `UIButton.Configuration` and an underlined attributed title (UIKit) — underline-on-hover only exists as a concept on AppKit (via link cursor tracking); UIKit has no hover state, so omit it there and rely on system link semantics instead. Author and summary-label formatting via `NSAttributedString`, which is a Foundation type available identically on both AppKit and UIKit, not a UIKit-only type.
+- **WinUI 3**: Implement as a StackPanel with Orientation="Vertical" and Spacing="8". Title in a TextBlock with TextWrapping="Wrap" (not `TextTrimming="CharacterEllipsis"`, which the web source does not use) and ToolTip binding to hit.title, unless a port deliberately chooses to diverge and truncate instead. Public link as a HyperlinkButton styled with Underline on PointerOver state, custom focus ring with VisualState. Badge as a UserControl or custom template. Author attribution in a TextBlock with Foreground bound to theme brush for dimmed text.
 
 ## Design Decisions
 
@@ -213,12 +214,15 @@ Not applicable: This component performs no async operations, external calls, or 
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best-practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best-practices |
 
-Passed/failed statuses rest on the source's native semantic elements (`h3`, `<a>`, `<p>`) and design-token-based colors for accessibility, and on the hardcoded `en-US` locale in the shared `formatDate` helper plus literal English strings in the JSX ("Untitled", "by", "Summary: ", "View full paper") for internationalization; contrast, dynamic-type, RTL, and text-expansion statuses are partial because the token values and layout behavior aren't verifiable from this component's source alone.
+Passed/failed statuses rest on the source's native semantic elements (`h3`, `<a>`, `<p>`) and design-token-based colors for accessibility, and on the hardcoded `en-US` locale in the shared `formatDate` helper plus literal English strings in the JSX ("Untitled", "by", "Summary: ", "View full paper") for internationalization; contrast, dynamic-type, RTL, and text-expansion statuses are partial because the token values and layout behavior aren't verifiable from this component's source alone. `separation-of-concerns` passes: this component only formats and lays out an already-fetched `hit`, delegating the kind badge to `Badge`, per-kind extra content to `kindRendererFor`'s registry, and date formatting to the shared `formatDate` helper. `unit-test-coverage` fails: no test file in `packages/web/packages/search` references `MarkdownPreviewHeader`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed title-row/Truncated-title/platform notes: source h3 has no ellipsis/truncate, long titles wrap instead; optional-date/header-012 now note formatDate's missing timeZone shifts the displayed day west of UTC. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; corrected public-link/title-fallback/date-locale behavior against the source; added summary-label and metadata-row-order requirements plus missing test vectors; replaced the compliance section with a checked table; reformatted design decisions to Decision/Rationale/Approved; rewrote appearance in semantic tokens and moved Tailwind specifics to the platform note; fixed the SwiftUI (computed properties, not @State) and AppKit/UIKit (attributed-string link, Foundation type) platform notes; added badge to depends-on and markdown-preview to related; unified frontmatter date formatting |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

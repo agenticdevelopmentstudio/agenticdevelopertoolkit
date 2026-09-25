@@ -3,11 +3,11 @@ id: e3a2394d-d0d0-4495-bde4-59197f9d7866
 title: Avatar
 domain: agenticdevelopertoolkit://recipes/avatar
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -80,17 +80,25 @@ The wrapper adds no accessibility defaults of its own — it forwards every prop
 |----|-------------|-------|----------|
 | avatar-001 | render-root-with-semantic-class | Render `<Avatar />` with no props | Rendered root element has class `adh-avatar` |
 | avatar-002 | render-image-with-semantic-class | Render `<Avatar><AvatarImage src="<1x1 stub already loaded>" /></Avatar>` | Rendered image element has class `adh-avatar__image` |
-| avatar-003 | render-fallback-with-semantic-class | Render `<AvatarFallback />` with no props | Rendered fallback element has class `adh-avatar__fallback` |
+| avatar-003 | render-fallback-with-semantic-class | Render `<Avatar><AvatarFallback /></Avatar>` | Rendered fallback element has class `adh-avatar__fallback` |
 | avatar-004 | merge-consumer-classname | Render `<Avatar className="ring-2" />` | Rendered root element has both `adh-avatar` and `ring-2` classes |
 | avatar-005 | merge-consumer-classname | Render `<Avatar><AvatarImage className="opacity-0" src="<1x1 stub already loaded>" /></Avatar>` | Rendered image element has both `adh-avatar__image` and `opacity-0` classes |
-| avatar-006 | merge-consumer-classname | Render `<AvatarFallback className="bg-muted" />` | Rendered fallback element has both `adh-avatar__fallback` and `bg-muted` classes |
+| avatar-006 | merge-consumer-classname | Render `<Avatar><AvatarFallback className="bg-muted" /></Avatar>` | Rendered fallback element has both `adh-avatar__fallback` and `bg-muted` classes |
 | avatar-007 | forward-remaining-props | Render `<Avatar data-testid="a1" />` | Rendered root element carries `data-testid="a1"` |
 | avatar-008 | forward-remaining-props | Render `<Avatar><AvatarImage alt="Ada Lovelace" src="<1x1 stub already loaded>" /></Avatar>` | Rendered image element carries `alt="Ada Lovelace"` |
 
 ## Edge Cases
 
 - **Null/empty `className`**: `Avatar`, `AvatarImage`, and `AvatarFallback` MUST still render when `className` is omitted (`undefined`), passing `undefined` as the second argument to `cn`; the wrapper performs no validation of `className` before doing so.
-- **No other props supplied**: `Avatar`, `AvatarImage`, and `AvatarFallback` MUST render correctly when called with no props beyond (or including) `className`, since `{...props}` is spread unconditionally and the wrapper performs no required-prop checking of its own.
+- **No other props supplied**: `Avatar` MUST render correctly when called
+  with no props beyond (or including) `className`, since `{...props}` is
+  spread unconditionally and the wrapper performs no required-prop checking
+  of its own. `AvatarImage` and `AvatarFallback` MUST likewise render
+  correctly with no props beyond `className`, but only when nested inside
+  `<Avatar>`: both delegate to a Base UI part that reads `Avatar`'s root
+  context, so either one MUST throw ("Base UI: AvatarRootContext is
+  missing. Avatar parts must be placed within `<Avatar.Root>`.") when
+  rendered standalone, regardless of what other props it receives.
 - **Boundary values**: Not applicable: Component defines no numeric, length, or size-constrained props of its own (e.g. no `size`, `min`, `max`); any such constraints belong to the underlying Base UI `Avatar.Root`/`Image`/`Fallback` API.
 - **Concurrent access**: Not applicable: `Avatar`, `AvatarImage`, and `AvatarFallback` are stateless functional components with no internal state, refs, or module-level mutable data; each render is an independent, pure function call.
 - **Error states**: `AvatarImage` MUST unmount when its underlying `<img>` fails to load, which is what reveals `AvatarFallback`; this load-failure-to-fallback handoff is Base UI's `Avatar.Image`/`Avatar.Fallback` behavior (`@base-ui/react/avatar`), not logic this wrapper adds.
@@ -167,13 +175,16 @@ Not applicable: Component performs no logging.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`unicode-support` passes because `AvatarFallback` forwards `children` unprocessed with no string manipulation of its own. `dynamic-type-support`, `contrast-ratio`, and `semantic-markup` are partial because sizing, color, and font scaling are defined externally in `../styles/components.css`, and ARIA semantics are owned by Base UI's `Avatar.Root`/`Image`/`Fallback` — none of which this wrapper's source can confirm. `text-expansion-tolerance` is partial because the wrapper imposes no width constraint of its own on fallback text, but the source also cannot show whether a caller-constrained layout truncates expanded text.
+`unicode-support` passes because `AvatarFallback` forwards `children` unprocessed with no string manipulation of its own. `dynamic-type-support`, `contrast-ratio`, and `semantic-markup` are partial because sizing, color, and font scaling are defined externally in `../styles/components.css`, and ARIA semantics are owned by Base UI's `Avatar.Root`/`Image`/`Fallback` — none of which this wrapper's source can confirm. `text-expansion-tolerance` is partial because the wrapper imposes no width constraint of its own on fallback text, but the source also cannot show whether a caller-constrained layout truncates expanded text. Best-practices statuses rest on the wrapper being pure presentation delegating entirely to Base UI's `Avatar.Root`/`Image`/`Fallback` with no logic of its own (separation-of-concerns: passed), and on `dropdownMenu.test.tsx` directly rendering `Avatar`/`AvatarFallback` and asserting on the result (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | avatar-003/006 vectors and the no-props Edge Case corrected: AvatarFallback/AvatarImage throw outside <Avatar> (Base UI AvatarRootContext), so vectors now nest them inside <Avatar>. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped invented Base UI retry/timeout behavior in favor of the actual load-failure-to-fallback handoff; quoted the in-source comment once with its location instead of repeating unquoted references to it; replaced "refer to the source for details" pointers with inline behavior statements; documented the consumer-facing accessibility contract (required `alt`, decorative fallback) instead of marking Accessibility not applicable; deleted the duplicate class-name-stability requirement and folded its rationale into a note under the three class requirements; renamed all requirement names to subject-only kebab-case; fixed avatar-002/005/008 to nest `AvatarImage` inside `Avatar` with a loaded stub; moved the client-module check out of the conformance table to a static-check note and removed the source-text-only avatar-010 vector; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; replaced the prose Compliance section with a checks table; rewrote MUST-tagged edge cases as normative MUST clauses; fixed the WinUI 3 bullet's "this recipe" noun; added reference URLs for Base UI Avatar and WinUI 3 PersonPicture |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Phase 1: replace library-delegation markers with plain statements; update status to review |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

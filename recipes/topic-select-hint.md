@@ -3,11 +3,11 @@ id: 86b4d53c-8122-480c-9a33-43e08b063469
 title: TopicSelectHint
 domain: agenticdevelopertoolkit://recipes/topic-select-hint
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -206,12 +206,15 @@ Not applicable: TopicSelectHint does not emit log events or debug output.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on `topic-select-hint.tsx`: headline/description sizes use relative Tailwind units but are not verified against OS-level type scaling (dynamic-type-support); the `apt-*` tokens are referenced by name only with no resolved color values in source, so contrast cannot be confirmed (contrast-ratio); the headline renders as a plain `<div>` rather than a semantic heading or paragraph element (semantic-markup); and the computed headline's English words are literal string fragments in source, not externalized resources (no-hardcoded-strings).
+Statuses rest on `topic-select-hint.tsx`: headline/description sizes use relative Tailwind units but are not verified against OS-level type scaling (dynamic-type-support); the `apt-*` tokens are referenced by name only with no resolved color values in source, so contrast cannot be confirmed (contrast-ratio); the headline renders as a plain `<div>` rather than a semantic heading or paragraph element (semantic-markup); and the computed headline's English words are literal string fragments in source, not externalized resources (no-hardcoded-strings); `TopicSelectHint` is presentation assembled over the `Card` primitive, with only simple string-building (`article`, the headline fallback) and no business logic or data access (separation-of-concerns passed), and no test file in the web workspace exercises this source (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and dropped a duplicate; corrected the `title`/`selectable` precedence and the empty-string `noun`/`listTitle` fallthrough to match source; fixed the listTitle headline's missing edit-suffix in test 005; documented the `htd` test-hook prefix, the naive article rule, and hardcoded English strings as a Localization limitation; reformatted Design Decisions and Compliance to convention; added `related` links; added test vectors 015-018. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

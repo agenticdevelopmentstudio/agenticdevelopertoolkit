@@ -3,11 +3,11 @@ id: c61a220c-b63e-4dcd-a12b-715de20f7b5d
 title: Popover
 domain: agenticdevelopertoolkit://recipes/popover
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -87,7 +87,7 @@ The lightweight variant's paint and geometry are custom properties declared on `
 These requirements describe the full-featured variant only, which wraps Base UI's Popover. The lightweight variant renders a plain `<div>` with mouse handlers and has no ARIA role, no focus management, and no keyboard equivalent to its hover trigger — it is a pointer-only affordance.
 
 - **dialog-role** (full-featured): The popover content MUST be assigned the `dialog` role via Base UI's `Popover.Popup`.
-- **return-focus-on-close** (full-featured): The popover is non-modal by default (Base UI `Popover.Root`'s `modal` prop, not set by this wrapper, defaults to `false`), so opening it does not trap focus inside the panel. When the popover closes — via Escape, an outside interaction, or focus leaving the panel — focus MUST return to the trigger element (Base UI's default `finalFocus` behavior).
+- **return-focus-on-close** (full-featured): The popover is non-modal by default (Base UI `Popover.Root`'s `modal` prop, not set by this wrapper, defaults to `false`), so opening it does not trap focus inside the panel. When the popover closes via Escape, or via an outside interaction that lands on a non-focusable area, focus MUST return to the trigger element (Base UI's default `finalFocus` behavior). When the popover instead closes because focus itself left the panel (Tab past the last focusable element, Base UI's `focus-out` dismissal), Base UI suppresses the return-focus behavior and forwards focus to the next tabbable element after the trigger instead — the closing Tab keypress is left to complete its forward navigation rather than being undone (see popover-022).
 - **escape-closes** (full-featured): The Escape key MUST close the popover (Base UI Popover's native keyboard handling).
 - **aria-expanded** (full-featured): The trigger element MUST have `aria-expanded="true"` when the popover is open and `aria-expanded="false"` when closed (Base UI `Popover.Trigger` handles this automatically).
 - **label-association** (full-featured): The popover SHOULD be associated with a descriptive label via `aria-labelledby` or `aria-label` on `Popover.Popup` for screen reader users.
@@ -118,7 +118,7 @@ These requirements describe the full-featured variant only, which wraps Base UI'
 | popover-019 | arrow | `arrow={false}` (full-featured, default) | No pointer element is rendered |
 | popover-020 | dialog-role | Popover rendered via `PopoverContent` (full-featured) | Inspect DOM; the `Popover.Popup` element has `role="dialog"` |
 | popover-021 | return-focus-on-close | Popover open (full-featured, non-modal), Tab from the first focusable element inside the panel through the last | Focus moves forward through the panel's focusable elements in DOM order; it does not cycle back to the first panel element (no focus trap) |
-| popover-022 | return-focus-on-close | Popover open (full-featured), focus on the last focusable element inside the panel, press Tab | Focus leaves the panel and moves to the next element in document tab order outside the popover; the popover closes (Base UI's `focus-out` dismissal) and focus returns to the trigger element |
+| popover-022 | return-focus-on-close | Popover open (full-featured), focus on the last focusable element inside the panel, press Tab | Focus leaves the panel and moves to the next tabbable element after the trigger in document tab order; the popover closes (Base UI's `focus-out` dismissal); return-focus is suppressed, so focus does NOT go back to the trigger element (contrast Escape, which does return focus to the trigger) |
 | popover-023 | escape-closes | Popover open (full-featured, controlled via `open`/`onOpenChange`), press Escape | `onOpenChange(false, ...)` is called; the consumer setting `open` to `false` in response causes `PopoverContent` to unmount |
 | popover-024 | aria-expanded | Popover open (full-featured) | Trigger element has `aria-expanded="true"` |
 | popover-025 | aria-expanded | Popover closed (full-featured) | Trigger element has `aria-expanded="false"` |
@@ -130,6 +130,7 @@ These requirements describe the full-featured variant only, which wraps Base UI'
 - **Empty children** (full-featured, lightweight): If no children are provided, the popover MUST render as an empty panel; no fallback content is added.
 - **Rapid visibility toggles** (lightweight): If `open` toggles rapidly, the panel MUST remain stable without layout thrashing, since it stays mounted throughout (see **hide-on-close-visibility**).
 - **Arrow orientation per placement** (full-featured): When `arrow={true}`, the arrow MUST be rotated per the active `side`: 45deg for top, 225deg for bottom, 315deg for left, 135deg for right.
+- **Tab-out closes without returning focus** (full-featured): Tabbing forward past the last focusable element inside the panel closes the popover via Base UI's `focus-out` dismissal; unlike Escape or an outside press on a non-focusable area, this path does not return focus to the trigger — focus instead lands on the next tabbable element after the trigger, continuing the forward Tab (see **return-focus-on-close**, popover-022).
 
 ## Configuration
 
@@ -220,13 +221,16 @@ Not applicable: No logging behavior is specified in the source implementation.
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-The full-featured variant satisfies these checks through Base UI's `dialog` role, non-modal focus handling (return-focus-on-close), and automatic `aria-expanded`, but its colors come from `apt-*` tokens whose actual contrast values the source does not define; the lightweight variant has no ARIA role, no focus management, and no keyboard path to its hover trigger. Because this recipe covers both variants, each check is only partly satisfied overall.
+The full-featured variant satisfies these checks through Base UI's `dialog` role, non-modal focus handling (return-focus-on-close), and automatic `aria-expanded`, but its colors come from `apt-*` tokens whose actual contrast values the source does not define; the lightweight variant has no ARIA role, no focus management, and no keyboard path to its hover trigger. Because this recipe covers both variants, each check is only partly satisfied overall. Both `Popover.tsx` and `popover.tsx` are pure presentation with no business logic or data access (separation-of-concerns passed), but neither has a dedicated test rendering the component itself — `useHoverPopoverGroup.test.tsx` exercises only the pairing hook, and `entityChooser.test.tsx` reaches the full-featured variant only through its parent `EntityChooser` (unit-test-coverage partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | return-focus-on-close and popover-022 corrected: focus-out (Tab past last panel element) does not return focus to the trigger, only Escape/outside-press do; added Edge Case and popover-022 expected result. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: tag requirements, configuration, and platform notes by variant (full-featured vs. lightweight); rename requirements to subject-only kebab-case; correct hide-on-close and focus behavior to match Base UI defaults (non-modal, `keepMounted={false}`); fix SwiftUI/Compose/UIKit/WinUI 3 platform APIs; add `onOpenChange`/`defaultOpen` configuration; reformat Design Decisions to Decision/Rationale/Approved; populate Compliance as a table; add related recipes and Base UI references; move Tailwind class names into the React/Web platform note; split ambiguous test vectors by variant |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Revise Accessibility section: state Base UI delegation as requirements (dialog role, focus trap, Escape handling, aria-expanded); add test vectors for accessibility features; drop review marker |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

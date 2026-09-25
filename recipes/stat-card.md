@@ -3,11 +3,11 @@ id: b7a4a259-620f-42a3-8bc2-9e5c07c1819d
 title: StatCard
 domain: agenticdevelopertoolkit://recipes/stat-card
 type: recipe
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -222,6 +222,8 @@ site back onto raw InfoPanel + a duplicated footnote.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 Statuses rest on `stat-card.tsx`: it composes InfoPanel's labeled region and
 aria-hidden icon and ExternalLink's native `<a>` (screen-reader-support,
@@ -229,7 +231,11 @@ keyboard-navigable, semantic-markup pass); its own colors/typography are `apt-*`
 design tokens whose rendered contrast the source can't confirm (contrast-ratio
 partial); and the component defines no literal user-facing string of its own —
 `title`, `label`, `value`, and `footnote` are all caller-supplied props
-(string-externalization, no-hardcoded-strings pass).
+(string-externalization, no-hardcoded-strings pass); the component is, per its own
+comment, "pure assembly" of InfoPanel/StatRow/ExternalLink with no logic of its own
+(separation-of-concerns passed), and `stat.test.tsx`'s `StatCard` suite renders it
+with rows, links, actions, and footnote and asserts on the composed output
+(unit-test-coverage passed).
 
 ## Change History
 
@@ -240,3 +246,4 @@ partial); and the component defines no literal user-facing string of its own —
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Correct domain URIs to agenticdevelopercookbook:// and complete Platform Notes with all five platform bullets and explanations. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Rewrite WinUI 3 platform note with concrete translation guidance: Border, Grid header, StackPanel body, TextBlock pairs for stats, Visibility bindings for optional elements. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: strip `must-` from every requirement name and its citations; add title-as-accessible-name requirement; straighten summary quotes; add related domains for the recipe-as-ingredient pattern; rewrite Compliance as linked catalog checks with passed/partial statuses; add Approved: pending to each Design Decision; add three Integration Test Vectors (actions-slot omission, children-before-footnote order, actions-without-link); rewrite WinUI 3 header/actions/host-attribute guidance and give SwiftUI, Compose, and AppKit/UIKit concrete translation guidance in place of Not applicable; clarify the footnote is always last in the body stack. |
+| 1.4.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

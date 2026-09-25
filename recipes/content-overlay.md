@@ -3,11 +3,11 @@ id: bd17a89e-aac9-475d-adcd-98b61d24f941
 title: Content Overlay
 domain: agenticdevelopertoolkit://recipes/content-overlay
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -173,13 +173,16 @@ Not applicable: The component does not emit log messages.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The close button is a native `<button>` (keyboard-navigable, dynamic-type via `rem` sizing), but the source defines no fallback accessible name for an empty `closeLabel`, no `prefers-reduced-motion` gating for the root's opacity transition, no explicit touch-target sizing or resolvable contrast values (colors depend on unresolved `--text-muted`/`--accent` custom properties), no ARIA dialog role for the overlay container, and no focus containment when closed (see the non-modal Design Decision) — and the default `closeLabel` of `'← back'` is a hardcoded, non-externalized English string.
+The close button is a native `<button>` (keyboard-navigable, dynamic-type via `rem` sizing), but the source defines no fallback accessible name for an empty `closeLabel`, no `prefers-reduced-motion` gating for the root's opacity transition, no explicit touch-target sizing or resolvable contrast values (colors depend on unresolved `--text-muted`/`--accent` custom properties), no ARIA dialog role for the overlay container, and no focus containment when closed (see the non-modal Design Decision) — and the default `closeLabel` of `'← back'` is a hardcoded, non-externalized English string. separation-of-concerns passes because `ContentOverlay.tsx` is a stateless controlled component that toggles CSS classes from its `open` prop with no business logic of its own, and unit-test-coverage passes because `ContentOverlay.test.tsx` exercises the open/closed classes, the close callback, custom and default labels, and rendered children with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and promoted className to MUST; added tags and a related link to persona-chat; reformatted Design Decisions and added one documenting the non-modal tradeoff; built the Compliance table; resolved the missing-onClose edge-case contradiction; corrected the Reduce Motion and Responsive claims; rewrote the native Platform Notes as full-bleed overlays instead of modal dialogs; added test vectors for empty label, rapid clicks, and null children; and reworded the render-structure requirement and Localization/Accessibility Options sections around observable behavior |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Filled Appearance and States from content-overlay.css; dropped the review marker |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

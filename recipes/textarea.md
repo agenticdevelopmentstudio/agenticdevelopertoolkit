@@ -3,11 +3,11 @@ id: 1e323e69-44d2-4a15-a11e-22a68e8e6a8c
 title: Textarea
 domain: agenticdevelopertoolkit://recipes/textarea
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -194,12 +194,15 @@ Not applicable: Textarea does not emit structured logs. Debugging textarea state
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: it renders a native `<textarea>` with `data-slot`, `aria-invalid`-driven state styling, and a fixed 64px minimum height regardless of viewport (semantic-markup, keyboard-navigable, and touch-target-size passed), and it forwards all user-facing text via props with nothing hardcoded (no-hardcoded-strings passed); but it defers label association to the caller and defines no explicit contrast values or `motion-reduce:` variant (screen-reader-support and contrast-ratio partial, reduced-motion failed).
+Statuses rest on the source: it renders a native `<textarea>` with `data-slot`, `aria-invalid`-driven state styling, and a fixed 64px minimum height regardless of viewport (semantic-markup, keyboard-navigable, and touch-target-size passed), and it forwards all user-facing text via props with nothing hardcoded (no-hardcoded-strings passed); but it defers label association to the caller and defines no explicit contrast values or `motion-reduce:` variant (screen-reader-support and contrast-ratio partial, reduced-motion failed); the component is a themed pass-through of native `<textarea>` props with no logic beyond the autofill opt-out (separation-of-concerns passed), and `autofill.test.tsx` renders `Textarea` directly and asserts on its autocomplete-opt-out attributes (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; corrected the reduced-motion, disabled-focus, className-specificity, and WCAG-AA claims; gave the invalid state a non-color-cue recommendation; moved Tailwind/JS implementation details out of requirement text and into Platform Notes; reformatted Design Decisions and specified the autoComplete undefined/off/token tri-state behavior; replaced the Compliance section with a checks table; added test vectors for autoComplete forwarding and suppression, padding, font size, text color, placeholder, outline removal, transitions, and className dedup; corrected the null-value edge case and an unbalanced-backtick label; fixed the label and tap-target accessibility guidance; corrected the SwiftUI, Compose, and WinUI 3 platform-note APIs; fixed "This ingredient" terminology; unquoted `modified` |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

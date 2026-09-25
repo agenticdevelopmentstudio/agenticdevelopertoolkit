@@ -3,11 +3,11 @@ id: 56828ee6-f522-45da-a9d8-6e1a99adf4e2
 title: Help Popover
 domain: agenticdevelopertoolkit://recipes/help-popover
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -203,12 +203,15 @@ Not applicable; the component does not emit logs.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Screen-reader-support and semantic-markup rest on the `aria-label`/`aria-hidden="true"` usage visible in `help-popover.tsx`. Contrast-ratio is partial because the component applies the `apt-text`/`apt-text-muted` tokens but the source cannot confirm their contrast values. No-hardcoded-strings fails and string-externalization is partial because the `FLAVORS` table hardcodes the English flavor labels ("Help", "Information", "What's new") with no localization hook, while `entry.title`/`entry.body` are already externalized to the caller.
+Screen-reader-support and semantic-markup rest on the `aria-label`/`aria-hidden="true"` usage visible in `help-popover.tsx`. Contrast-ratio is partial because the component applies the `apt-text`/`apt-text-muted` tokens but the source cannot confirm their contrast values. No-hardcoded-strings fails and string-externalization is partial because the `FLAVORS` table hardcodes the English flavor labels ("Help", "Information", "What's new") with no localization hook, while `entry.title`/`entry.body` are already externalized to the caller. `separation-of-concerns` passes because the component is pure presentation over its `entry`/`side`/`align` props, with the `FLAVORS` lookup as its only non-rendering data; `unit-test-coverage` passes on `help-popover.test.tsx`'s exercise of every flavor, the title/no-title cases, and the dialog's computed accessible name.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: de-webified requirements/test vectors and moved mechanics into Platform Notes, fixed Appearance unit math, resolved title-truncation and focus-attribution contradictions, added test vectors for omitted title/null flavor/empty body/invalid flavor, corrected SwiftUI/AppKit/UIKit/Compose/WinUI platform notes and the React import specifier, filled in Configuration and Compliance tables, corrected the Localization claim, reformatted Design Decisions, renamed requirements to subject-only kebab-case, and added the popover ingredient to depends-on |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (AI-assisted) |

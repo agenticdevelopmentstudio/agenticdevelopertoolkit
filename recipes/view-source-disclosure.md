@@ -3,11 +3,11 @@ id: 16e99364-8af3-40cb-beaf-d5a66a2fa2c0
 title: View Source Disclosure
 domain: agenticdevelopertoolkit://recipes/view-source-disclosure
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -201,12 +201,15 @@ Not applicable: this component does not emit logs.
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The source grounds the passed rows: a native `button` with `aria-expanded` and conditional `aria-controls`, and a source panel rendered as a JSX text-node child of `<pre>` (never `innerHTML`). The `partial` rows rest on things the source does not itself control — the `--color-*` token values, whether `prefers-reduced-motion` is honored, and whether text sizing scales with system font settings are all defined outside this component.
+The source grounds the passed rows: a native `button` with `aria-expanded` and conditional `aria-controls`, and a source panel rendered as a JSX text-node child of `<pre>` (never `innerHTML`). The `partial` rows rest on things the source does not itself control — the `--color-*` token values, whether `prefers-reduced-motion` is honored, and whether text sizing scales with system font settings are all defined outside this component. `separation-of-concerns` passes because the component holds only its own open/closed UI state with no business logic; `unit-test-coverage` passes on `viewSourceDisclosure.test.tsx`'s exercise of its open/close toggle, verbatim source rendering, ARIA state, and class contracts.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; reworded verbatim-rendering to rule out HTML injection and added a script-payload test vector; added a `source-selectable` requirement and vector; fixed the disclosure-005 test-vector text and the disclosure-012 requirement mapping; corrected the `<pre>` role claim; converted Design Decisions to the Decision/Rationale/Approved format and removed source-referential phrasing; expressed Appearance in generic units and moved Tailwind classes to the React/Web platform note; added a keyboard-focus state; corrected the SwiftUI, Compose, WinUI 3, and AppKit/UIKit platform notes and led each with its native disclosure control; added tags and a Compliance table; fixed the lowercase "must" in the very-long-source edge case |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

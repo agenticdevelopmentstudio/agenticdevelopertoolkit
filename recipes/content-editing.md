@@ -3,11 +3,11 @@ id: 72243a76-93f2-412b-985d-719511fcd19c
 title: Content Editing
 domain: agenticdevelopertoolkit://recipes/content-editing
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -804,13 +804,15 @@ docblock; `repair.ts` module docblock).
 **Approved**: pending
 
 **Decision**: the repair prompt's acknowledgement is the one alert in the
-flow that is not dismissible, and routes Escape/backdrop/close to its
-confirm action.
+flow that is not dismissible, so Escape, the backdrop and the close
+control are all ignored instead of being routed to its confirm action.
 **Rationale**: the prompt's confirm performs a real write (the repair
-save); a dismissible one-button alert would let "get this out of my way"
-gestures trigger that write, so the container closes off every dismissal
-path except the button itself (`container.tsx` `repairAlert` "prompt" case
-comment; `host.tsx` `EditingAlertProps.dismissible` docblock).
+save); on a dismissible one-button alert every dismissal gesture routes to
+that confirm, so "get this out of my way" would trigger the write — making
+the prompt non-dismissible is how the container closes off every
+dismissal path except the button itself (`container.tsx` `repairAlert`
+"prompt" case comment; `host.tsx` `EditingAlertProps.dismissible`
+docblock).
 **Approved**: pending
 
 **Decision**: a declined mid-edit refetch is tracked separately from the
@@ -897,4 +899,5 @@ involved, as detailed under Localization above.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.1 | 2026-09-25 | Mike Fullerton | Repair-prompt Design Decision corrected: non-dismissible means Escape/backdrop/close are ignored, not routed to confirm; Change History 1.0.0 row's blank Date/Author filled per K14d (history-table finding, authorized exception). |
+| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

@@ -3,11 +3,11 @@ id: 85ce8c4b-5233-48af-9268-30cddd4747f9
 title: Accordion
 domain: agenticdevelopertoolkit://recipes/accordion
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -42,15 +42,15 @@ An accordion is a container of vertically stacked collapsible sections. Each sec
 
 - **export-four-components**: The accordion MUST export four components as named exports: `Accordion`, `AccordionItem`, `AccordionTrigger`, and `AccordionPanel`.
 - **render-chevron-icon**: The `AccordionTrigger` MUST render a ChevronDown icon immediately after the trigger's child content, positioned to the right of the label.
-- **rotate-chevron-on-open**: The chevron icon MUST rotate 180 degrees when its accordion panel is open (a rotation transform; `transform: rotate(180deg)` on web), and MUST return to 0 degrees when closed. The closed orientation (chevron pointing down, matching the typical placement of `AccordionTrigger` above its `AccordionPanel` within an `AccordionItem`) is a pure rotation transform and is not mirrored by RTL layout, so a right-to-left document uses the same closed/open chevron orientation as a left-to-right one.
+- **rotate-chevron-on-open**: The chevron icon MUST rotate 180 degrees when its accordion panel is open (on web, Tailwind's `rotate-180` utility sets the CSS `rotate` property, not `transform`), and MUST return to its unrotated orientation when closed. The closed orientation (chevron pointing down, matching the typical placement of `AccordionTrigger` above its `AccordionPanel` within an `AccordionItem`) is a pure rotation and is not mirrored by RTL layout, so a right-to-left document uses the same closed/open chevron orientation as a left-to-right one.
 - **apply-item-border**: `AccordionItem` MUST render a single-pixel bottom border between sections, using the design system's border token (`apt-border`).
 - **wrap-panel-with-padding**: `AccordionPanel` MUST apply bottom spacing (12px) after its children to create visual separation from the next item's trigger or border.
 - **delegate-expand-collapse-to-primitive**: All accordion components MUST delegate expand/collapse state, ARIA attribute management, and keyboard handling to the platform's accordion/disclosure primitive rather than reimplementing it.
 - **set-data-slot-attributes**: The accordion MUST set `data-slot` attributes on rendered elements: "accordion" on root, "accordion-item" on items, "accordion-trigger" on triggers, "accordion-panel" on panels.
 - **forward-props-to-primitive**: Each component MUST forward arbitrary props (via spread operator) to its corresponding primitive, allowing consumers to extend behavior and styling.
 - **support-style-override**: Each component MUST provide a way for consumers to extend or override its default styling (a `className` prop merged with defaults on web) without needing to fork the component.
-- **default-multi-open**: The accordion MUST allow multiple panels to be open simultaneously by default (the primitive's `openMultiple` defaults to `true`); consumers MAY restrict the group to single-open behavior by passing `openMultiple={false}` to `Accordion`.
-- **animate-transitions**: The trigger MUST animate its color changes (`transition-colors`), the chevron MUST animate its rotation (`transition-transform`), and the panel MUST animate its size and opacity (`transition-all`); the source applies all three unconditionally and contains no `prefers-reduced-motion` check, so these transitions run the same way whether or not the user has Reduce Motion enabled.
+- **default-single-open**: The accordion MUST allow only one panel to be open at a time by default (the primitive's `multiple` prop defaults to `false`); consumers MAY allow multiple panels open simultaneously by passing `multiple` to `Accordion`.
+- **animate-transitions**: The trigger MUST animate its color changes (`transition-colors`) and the chevron MUST animate its rotation (`transition-transform`); the panel wrapper also carries `transition-all`, but no class or inline style in the source gives it a size or opacity value to transition, so opening or closing a panel produces no observable size or opacity change on it. All of this is unconditional; the source contains no `prefers-reduced-motion` check, so the trigger and chevron transitions run the same way whether or not the user has Reduce Motion enabled.
 
 ## Appearance
 
@@ -87,15 +87,15 @@ An accordion is a container of vertically stacked collapsible sections. Each sec
 |----|-------------|-------|----------|
 | accordion-001 | export-four-components | `import { Accordion, AccordionItem, AccordionTrigger, AccordionPanel } from "..."` | All four components are named exports; no errors on import |
 | accordion-002 | render-chevron-icon | Render `<AccordionTrigger>Section Title</AccordionTrigger>` | A `ChevronDown` icon element renders after the "Section Title" text node, inside the trigger |
-| accordion-003 | rotate-chevron-on-open | Query trigger via `getByRole("button")`, click to open, then click again to close | On open: trigger's `aria-expanded` is `"true"` and the chevron's `getComputedStyle(...).transform` matches a 180-degree rotation matrix; on close: `aria-expanded` is `"false"` and the chevron's computed transform matches 0 degrees |
+| accordion-003 | rotate-chevron-on-open | Query trigger via `getByRole("button")`, click to open, then click again to close | On open: trigger's `aria-expanded` is `"true"` and the chevron's `getComputedStyle(...).rotate` is `"180deg"` (its computed `transform` stays `"none"`); on close: `aria-expanded` is `"false"` and the chevron's computed `rotate` is `"none"` |
 | accordion-004 | apply-item-border | Render `<AccordionItem>...</AccordionItem>`; read `getComputedStyle(item).borderBottomWidth` and `.borderBottomColor` | `borderBottomWidth` is non-zero and `borderBottomColor` resolves to the `apt-border` token's color value |
 | accordion-005 | wrap-panel-with-padding | Render `<AccordionPanel>Content</AccordionPanel>`; query the panel's content wrapper and read `getComputedStyle(...).paddingBottom` | `paddingBottom` resolves to 12px |
 | accordion-006 | delegate-expand-collapse-to-primitive | Query trigger via `getByRole("button")` and panel via `getByRole("region")` | Trigger exposes `aria-expanded` and `aria-controls` referencing the panel's `id`; panel exposes a matching `id` — wiring supplied by the primitive rather than hand-set by the wrapper |
 | accordion-007 | set-data-slot-attributes | Inspect rendered HTML elements | Root has `data-slot="accordion"`; items have `data-slot="accordion-item"`; triggers have `data-slot="accordion-trigger"`; panels have `data-slot="accordion-panel"` |
 | accordion-008 | forward-props-to-primitive | Pass `disabled` and `value` props to `AccordionItem` | Rendered element carries the `disabled` state (e.g., `aria-disabled="true"` or `data-disabled`) and responds to the `value` used by the primitive for open/close targeting |
 | accordion-009 | support-style-override | Render `<AccordionTrigger className="my-custom-class">Label</AccordionTrigger>`; query via `getByRole("button")` | `element.classList.contains("my-custom-class")` is `true` |
-| accordion-010 | default-multi-open | Render two `AccordionItem`s in a default `Accordion` (no `openMultiple` prop); open both triggers in turn | Both triggers report `aria-expanded="true"` at the same time |
-| accordion-011 | animate-transitions | Open a panel | Computed `transition-property` of the trigger includes its color properties, of the chevron includes `transform`, and of the panel includes `all`; the chevron is rotated 180° while the panel is open. |
+| accordion-010 | default-single-open | Render two `AccordionItem`s in a default `Accordion` (no `multiple` prop); open trigger 1, then open trigger 2 | Trigger 1's `aria-expanded` returns to `"false"` once trigger 2 opens; the two triggers never both report `aria-expanded="true"` at the same time |
+| accordion-011 | animate-transitions | Open a panel | Computed `transition-property` of the trigger includes its color properties, of the chevron includes `transform`, and of the panel includes `all`; the chevron's computed `rotate` is `180deg` while the panel is open, and the panel itself shows no observable size or opacity change. |
 
 ## Edge Cases
 
@@ -103,7 +103,7 @@ An accordion is a container of vertically stacked collapsible sections. Each sec
 - **Empty panel content**: If `AccordionPanel` receives no children or null children, wrapper div with pb-3 still renders. Component does not error.
 - **Null or undefined className**: If className prop is null, undefined, or omitted, default classes MUST apply via `cn()` utility. No runtime error occurs.
 - **Conflicting className properties**: If className prop contains a Tailwind class that conflicts with a default class (e.g., py-4 vs. py-3), the merge order in `cn()` determines precedence. Consumers who specify a class take precedence over defaults.
-- **Multiple panels open simultaneously**: MUST be allowed by default — see #requirements/default-multi-open. Passing `openMultiple={false}` to `Accordion` restricts the group so opening one panel closes any other open panel.
+- **Only one panel open by default**: MUST default to single-open — see #requirements/default-single-open. Passing `multiple` to `Accordion` allows multiple panels to be open simultaneously.
 - **Very long trigger text**: No special handling; text wraps naturally. Chevron remains positioned to the right via flex layout (flex flex-1 items-center justify-between).
 - **Very long panel content**: No special handling; panel height is not constrained. Consumers can add max-height and overflow-y: auto via className if needed.
 
@@ -113,7 +113,7 @@ An accordion is a container of vertically stacked collapsible sections. Each sec
 |--------|------|---------|-------------|
 | `className` (all components) | `string` | `undefined` | Additional CSS classes merged with defaults via the `cn()` utility; allows customization of appearance and layout |
 | `children` (all components) | `ReactNode` | `undefined` | Content rendered inside: trigger text for AccordionTrigger, panel content for AccordionPanel |
-| `...props` (`Accordion`) | `React.ComponentProps<typeof AccordionPrimitive.Root>` | — | Root-level props forwarded to the primitive, e.g. `openMultiple`, `value`, `defaultValue`, `onValueChange`, `disabled` |
+| `...props` (`Accordion`) | `React.ComponentProps<typeof AccordionPrimitive.Root>` | — | Root-level props forwarded to the primitive, e.g. `multiple`, `value`, `defaultValue`, `onValueChange`, `disabled` |
 | `...props` (`AccordionItem`) | `React.ComponentProps<typeof AccordionPrimitive.Item>` | — | Item-level props forwarded to the primitive, e.g. `value`, `disabled` |
 | `...props` (`AccordionTrigger`) | `React.ComponentProps<typeof AccordionPrimitive.Trigger>` | — | Trigger-level props forwarded to the primitive |
 | `...props` (`AccordionPanel`) | `React.ComponentProps<typeof AccordionPrimitive.Panel>` | — | Panel-level props forwarded to the primitive |
@@ -152,7 +152,7 @@ Not applicable: Logging is a consumer concern. The underlying @base-ui/react/acc
 
 ## Platform Notes
 
-- **React/Web**: Wraps `@base-ui/react/accordion` (`AccordionPrimitive.Root`, `.Item`, `.Trigger`/`.Header`, `.Panel`), which supplies ARIA attributes, keyboard handling, and the `openMultiple` prop (default `true`; pass `false` for single-open). Styling uses Tailwind classes merged via the `cn()` utility (`className` prop on every component): `border-b border-apt-border` on `AccordionItem`, `pb-3` on the panel's inner wrapper `div`, `py-3 text-sm font-medium text-apt-text` plus `hover:text-apt-text focus-visible:text-apt-text` (currently a no-op — see States) on the trigger, and `size-4 shrink-0 text-apt-text-muted transition-transform group-data-[panel-open]/acc:rotate-180` on the chevron. Exported `"use client"`. The `ChevronDown` icon is from `lucide-react`. Transitions (`transition-colors`, `transition-transform`) are unconditional and do not check `prefers-reduced-motion` (see #requirements/animate-transitions).
+- **React/Web**: Wraps `@base-ui/react/accordion` (`AccordionPrimitive.Root`, `.Item`, `.Trigger`/`.Header`, `.Panel`), which supplies ARIA attributes, keyboard handling, and the `multiple` prop (default `false`; pass `true` for multi-open). Styling uses Tailwind classes merged via the `cn()` utility (`className` prop on every component): `border-b border-apt-border` on `AccordionItem`, `pb-3` on the panel's inner wrapper `div`, `py-3 text-sm font-medium text-apt-text` plus `hover:text-apt-text focus-visible:text-apt-text` (currently a no-op — see States) on the trigger, and `size-4 shrink-0 text-apt-text-muted transition-transform group-data-[panel-open]/acc:rotate-180` on the chevron. Exported `"use client"`. The `ChevronDown` icon is from `lucide-react`. Transitions (`transition-colors`, `transition-transform`) are unconditional and do not check `prefers-reduced-motion` (see #requirements/animate-transitions).
 
 - **SwiftUI**: Start from DisclosureGroup or a custom view with @State for open/closed. Recreate chevron rotation using a rotation effect (.rotationEffect) on Image(systemName: "chevron.down"). Wrap each item in a VStack with dividers between sections. Apply padding using .padding(.vertical, 12) and .padding(.horizontal) modifiers. Text styling via .font(.system(size: 14, weight: .medium)). Respect motion preferences by wrapping rotation animations in `if !accessibilityReduceMotionEnabled { ... }`.
 
@@ -168,7 +168,7 @@ Not applicable: Logging is a consumer concern. The underlying @base-ui/react/acc
    **Rationale**: Follows the composition pattern established by `@base-ui/react/accordion` and gives consumers maximum flexibility to customize each part independently.
    **Approved**: pending
 
-2. **Decision**: Rotate the chevron 180 degrees via a CSS `transform` (`rotate-180`) to indicate open/closed state, rather than swapping icons.
+2. **Decision**: Rotate the chevron 180 degrees via Tailwind's `rotate-180` utility (which sets the CSS `rotate` property, not `transform`) to indicate open/closed state, rather than swapping icons.
    **Rationale**: A recognizable UI pattern that gives clear visual feedback and animates more smoothly than swapping images.
    **Approved**: pending
 
@@ -205,14 +205,17 @@ Not applicable: Logging is a consumer concern. The underlying @base-ui/react/acc
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Accessibility statuses rest on `accordion.tsx`'s delegation of ARIA/keyboard/role semantics to `AccordionPrimitive.*` (passed: keyboard-navigable, semantic-markup), rem-based Tailwind type sizing (passed: dynamic-type-support), the undefined `apt-*` token contrast values and unverified pixel target width (partial: contrast-ratio, touch-target-size), the undecorated chevron icon with no explicit `aria-hidden` (partial: screen-reader-support), the `outline-none` trigger whose focus-visible color matches its default (partial: focus-management), and the unconditional `transition-colors`/`transition-transform` with no `prefers-reduced-motion` check (failed: reduced-motion); Internationalization statuses rest on the component rendering only consumer-supplied `children` with no hardcoded or formatted strings (passed) and the unverified behavior of its `flex`/`gap`/`justify-between` layout under RTL (partial: rtl-layout-support).
+Accessibility statuses rest on `accordion.tsx`'s delegation of ARIA/keyboard/role semantics to `AccordionPrimitive.*` (passed: keyboard-navigable, semantic-markup), rem-based Tailwind type sizing (passed: dynamic-type-support), the undefined `apt-*` token contrast values and unverified pixel target width (partial: contrast-ratio, touch-target-size), the undecorated chevron icon with no explicit `aria-hidden` (partial: screen-reader-support), the `outline-none` trigger whose focus-visible color matches its default (partial: focus-management), and the unconditional `transition-colors`/`transition-transform` with no `prefers-reduced-motion` check (failed: reduced-motion); Internationalization statuses rest on the component rendering only consumer-supplied `children` with no hardcoded or formatted strings (passed) and the unverified behavior of its `flex`/`gap`/`justify-between` layout under RTL (partial: rtl-layout-support). `separation-of-concerns` passes because `accordion.tsx` only forwards props and Tailwind classes onto `AccordionPrimitive.*`, with no business logic entangled in the wrapper. `unit-test-coverage` fails because no test file in the `ui` package exercises `Accordion`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Change History reordered (1.2.1 moved to top) per Altitude_7/K14f; Compliance best-practices rows added. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; restated Tailwind/base-ui-specific requirements as behavior plus tokens and moved the implementation specifics into the React/Web platform note; added default-multi-open and animate-transitions requirements with test vectors; dropped the no-op hover/focus color claims and rewrote the States table to match; resolved the Reduce Motion contradiction between Design Decisions and Accessibility Options and reformatted Design Decisions to the three-line form; rebuilt Compliance as linked catalog checks with evidence; rewrote non-automatable test vectors against the DOM/accessibility tree; corrected the touch-target WCAG citation and level; split Configuration by component; populated references and depends-on |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise: clarify Reduce Motion gap as genuine accessibility concern; update Platform Notes with motion preference checks for all platforms |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

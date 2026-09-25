@@ -3,11 +3,11 @@ id: c97bebaf-9e6d-49a7-a4bb-90e8e0ea0181
 title: Spinner
 domain: agenticdevelopertoolkit://recipes/spinner
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -170,12 +170,15 @@ Not applicable: Component does not perform any logging. Callers may add logging 
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-These statuses rest on the source directly: `role="status"` and a static `aria-label="Loading"` are set on the `Loader2` element itself with no wrapper (syntactically valid ARIA, but the source gives no independent way to verify it's reliably announced, hence `partial` for semantic-markup/screen-reader-support), contrast depends entirely on the caller's background (hence `partial` for contrast-ratio), the plain `animate-spin` class has no `motion-safe:`/`motion-reduce:` handling (hence `failed` for reduced-motion), and the `"Loading"` string is hardcoded with no externalization mechanism (hence `failed` for the two internationalization checks).
+These statuses rest on the source directly: `role="status"` and a static `aria-label="Loading"` are set on the `Loader2` element itself with no wrapper (syntactically valid ARIA, but the source gives no independent way to verify it's reliably announced, hence `partial` for semantic-markup/screen-reader-support), contrast depends entirely on the caller's background (hence `partial` for contrast-ratio), the plain `animate-spin` class has no `motion-safe:`/`motion-reduce:` handling (hence `failed` for reduced-motion), and the `"Loading"` string is hardcoded with no externalization mechanism (hence `failed` for the two internationalization checks). `separation-of-concerns` passes because `spinner.tsx` is a pure presentational wrapper around `Loader2` with no business logic, and `unit-test-coverage` fails because no test file in the repository imports or renders `Spinner`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; separated Lucide/Tailwind specifics out of behavioral requirements into Platform Notes; corrected invented/wrong Platform Notes APIs (Compose, AppKit/UIKit, SwiftUI, cn()); fixed Reduce Motion/Edge Cases contradiction over `prefers-reduced-motion`; reworded untestable test vectors and dropped the unmeasurable specificity edge case; reworded default-size/default-color for override precision; fixed `React.ComponentProps<typeof Loader2>` configuration type; converted Design Decisions to Decision/Rationale/Approved triples; replaced Compliance and Localization "Not applicable" with populated tables; fixed frontmatter `modified` date-format mismatch |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React source |

@@ -3,11 +3,11 @@ id: c130d5d5-2ac4-4a15-a13a-9127ddad6ca1
 title: Popover Anchor
 domain: agenticdevelopertoolkit://recipes/popover-anchor
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,7 +35,7 @@ approved-date: ''
 
 PopoverAnchor is a positioning context wrapper that groups a popover trigger and its associated panel as a single hover target. It establishes `position: relative` as the reference frame for the popover's absolute positioning, and it suppresses `onMouseLeave` when the pointer moves from the trigger to the panel (or back), rather than treating that crossing as leaving the group.
 
-That suppression depends on the panel staying inside the anchor's own DOM boundary with no visual gap outside it. A panel rendered with an offsetting margin or transform, or one rendered through a portal instead of as a normal child, can still leave a dismissal gap the anchor does not close — see **panel-in-anchor-flow** and the Edge Cases below.
+That suppression follows DOM containment, not visual geometry: as long as every point the pointer can cross between the trigger and the panel hit-tests to a DOM descendant of the anchor, `onMouseLeave` never fires along the way — even when the panel is visually offset outside the anchor's own box, provided something hit-testable (for example a bridging element) spans the visual gap. A panel rendered with an offsetting margin or transform and no such bridge, or one rendered through a portal instead of as a normal child, can still leave a dismissal gap the anchor does not close — see **panel-in-anchor-flow** and the Edge Cases below.
 
 ## Behavioral Requirements
 
@@ -44,7 +44,7 @@ That suppression depends on the panel staying inside the anchor's own DOM bounda
 - **class-concatenation**: Component MUST concatenate the string `hover-popover-anchor` with any `className` prop value. If `className` is provided, the final class MUST be `hover-popover-anchor <className>`. If `className` is not provided, the class MUST be exactly `hover-popover-anchor`.
 - **leave-callback**: Component MUST accept an optional `onMouseLeave` callback and invoke it when the pointer leaves the anchor element (exiting both trigger and panel boundary).
 - **preserve-hover-across-elements**: Component MUST ensure that moving the pointer from the trigger to the panel (or vice versa) does NOT trigger the `onMouseLeave` callback, because both elements are contained within the same anchor div.
-- **panel-in-anchor-flow**: The panel rendered as a child of the anchor MUST remain a normal DOM descendant of the anchor (not rendered through a portal) and MUST NOT sit with a visual gap outside the anchor's box. **preserve-hover-across-elements** only holds for pointer movement that never leaves the anchor's own rendered boundary.
+- **panel-in-anchor-flow**: The panel rendered as a child of the anchor MUST remain a normal DOM descendant of the anchor (not rendered through a portal). It MAY be visually offset outside the anchor's own box (for example via absolute positioning), but if so, every point the pointer can cross between the trigger and the panel MUST hit-test to a DOM descendant of the anchor — for example a bridging element spanning the gap — or **preserve-hover-across-elements** does not hold for that crossing.
 
 ## Appearance
 
@@ -72,8 +72,9 @@ Not applicable: PopoverAnchor is a positioning wrapper with no interactive eleme
 | anchor-006 | preserve-hover-across-elements | Pointer on trigger, moves to panel sibling | `onMouseLeave` is NOT invoked (anchor still contains pointer) |
 | anchor-007 | leave-callback | `onMouseLeave` not passed, pointer leaves anchor | No error is thrown; the anchor still renders and functions as a positioning context |
 | anchor-008 | preserve-hover-across-elements | Pointer enters the anchor, leaves, enters again, leaves again (two full enter/leave cycles) | `onMouseLeave` is invoked exactly twice — once per exit, never coalesced |
-| anchor-009 | panel-in-anchor-flow | Panel child rendered with a margin that visually offsets it outside the anchor's box; pointer moves from the trigger across that gap toward the panel | `onMouseLeave` fires when the pointer crosses the gap outside the anchor's DOM boundary |
+| anchor-009 | panel-in-anchor-flow | Panel child rendered with a margin that visually offsets it outside the anchor's box, with no other element spanning the gap; pointer moves from the trigger across that gap toward the panel | `onMouseLeave` fires when the pointer crosses the gap, because that point does not hit-test to a DOM descendant of the anchor |
 | anchor-010 | panel-in-anchor-flow | Panel child rendered via `ReactDOM.createPortal` to `document.body` instead of as a direct child | The panel is not a DOM descendant of the anchor element; pointer movement into the panel is not guaranteed to stay within the anchor's boundary |
+| anchor-011 | panel-in-anchor-flow | Panel child rendered with a margin that visually offsets it outside the anchor's box, plus a bridging element that is itself a DOM descendant of the anchor and spans the gap (for example a pseudo-element on the panel); pointer moves from the trigger across the gap toward the panel | `onMouseLeave` does NOT fire; every point along the crossing hit-tests to a DOM descendant of the anchor (the bridge) |
 
 ## Edge Cases
 
@@ -82,7 +83,7 @@ Not applicable: PopoverAnchor is a positioning wrapper with no interactive eleme
 - **Callback not provided**: If `onMouseLeave` is not passed, no callback is invoked. The anchor still functions as a positioning context. This is the expected behavior for a pure layout component.
 - **Rapid pointer entry/exit**: If the pointer enters and exits the anchor repeatedly within a single event cycle (enter → leave → enter → leave), `onMouseLeave` MUST be invoked once per exit — twice for two full enter/leave cycles — not coalesced into a single call.
 - **Nested interactive elements**: Child elements can be interactive. The `onMouseLeave` handler on the anchor fires only when the pointer leaves the entire anchor boundary, not when interacting with children.
-- **Panel offset outside the anchor's box**: If the panel child is positioned with a margin or transform that visually separates it from the anchor (rather than sitting flush against it), the pointer crossing that gap leaves the anchor's DOM boundary and fires `onMouseLeave`, even though trigger and panel still look contiguous to the user. See **panel-in-anchor-flow**.
+- **Panel offset outside the anchor's box**: If the panel child is positioned with a margin or transform that visually separates it from the anchor (rather than sitting flush against it) and nothing hit-testable spans that gap, the pointer crossing the gap resolves to a non-descendant of the anchor and fires `onMouseLeave`, even though trigger and panel still look contiguous to the user. A bridging element that is itself a DOM descendant of the anchor (rendered so it covers the gap, for example a pseudo-element on the panel) avoids this, because every point along the crossing still hit-tests to a descendant. See **panel-in-anchor-flow**.
 - **Panel rendered in a portal**: If the panel is rendered outside the anchor's DOM subtree (for example via `ReactDOM.createPortal`), it is no longer a descendant of the anchor element, so the anchor's containment guarantee for `onMouseLeave` does not extend to it. See **panel-in-anchor-flow**.
 
 ## Configuration
@@ -152,12 +153,15 @@ Not applicable: PopoverAnchor is an internal layout component with no user-visib
 | Check | Status | Category |
 |-------|--------|----------|
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | failed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The anchor closes only via `onMouseLeave`; nothing in `PopoverAnchor.tsx` offers a keyboard-equivalent way to dismiss the group, so keyboard operability depends entirely on whatever the composed trigger and panel add on top of it (see `agenticdevelopertoolkit://recipes/popover`).
+The anchor closes only via `onMouseLeave`; nothing in `PopoverAnchor.tsx` offers a keyboard-equivalent way to dismiss the group, so keyboard operability depends entirely on whatever the composed trigger and panel add on top of it (see `agenticdevelopertoolkit://recipes/popover`). `PopoverAnchor.tsx` is nothing but a positioning `<div>` with no business logic (separation-of-concerns passed), but no test file exercises it at all (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | panel-in-anchor-flow now keys on DOM-descendant hit-testing (bridging elements allowed) instead of banning any visual gap; added anchor-011 bridge test vector. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename `must-*` requirements to subject-only kebab-case everywhere they're cited; add `panel-in-anchor-flow` requirement plus offset/portal edge cases and test vectors documenting the close-delay technique's limits; add a missing-callback and a repeated-cycle test vector; populate Configuration as a props table; cite `PopoverAnchor.tsx` in the React/Web note and in frontmatter `references`; fix wrong SwiftUI/Compose/UIKit platform APIs; reformat Design Decisions to Decision/Rationale/Approved and ground the `onMouseLeave`-over-`onPointerLeave` choice in `useHoverPopoverGroup`'s contract; populate Compliance as a table (`keyboard-navigable`); add the Popover recipe to `related`; align `created`/`modified` date format; reword `summary` and Overview |
 | 1.0.0 | 2026-09-22 | Claude | Initial creation |

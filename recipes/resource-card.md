@@ -3,11 +3,11 @@ id: d7a2af70-0812-4360-afa7-02be1a44e7b8
 title: Resource Card
 domain: agenticdevelopertoolkit://recipes/resource-card
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -202,8 +202,10 @@ Not applicable: ResourceCard does not emit log messages or perform diagnostic lo
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Accessibility statuses rest on the source's native anchor/`role="button"` roots with keydown-based Enter/Space handling and `tabIndex={0}` (screen-reader-support, keyboard-navigable, semantic-markup), its rem-based Tailwind text sizes (dynamic-type-support), and its padding/full-width layout (touch-target-size); `contrast-ratio` is `partial` because the source references `apt-*` theme tokens rather than literal color values, and `reduced-motion` is `failed` because `transition-colors` has no `motion-reduce:` variant. Internationalization statuses rest on the component taking all user-visible text as props with no hardcoded strings (string-externalization, no-hardcoded-strings, unicode-support), its hardcoded `text-left` alignment (rtl-layout-support, `failed`), and its unclamped title alongside its 3-line-clamped description (text-expansion-tolerance, `partial`).
+Accessibility statuses rest on the source's native anchor/`role="button"` roots with keydown-based Enter/Space handling and `tabIndex={0}` (screen-reader-support, keyboard-navigable, semantic-markup), its rem-based Tailwind text sizes (dynamic-type-support), and its padding/full-width layout (touch-target-size); `contrast-ratio` is `partial` because the source references `apt-*` theme tokens rather than literal color values, and `reduced-motion` is `failed` because `transition-colors` has no `motion-reduce:` variant. Internationalization statuses rest on the component taking all user-visible text as props with no hardcoded strings (string-externalization, no-hardcoded-strings, unicode-support), its hardcoded `text-left` alignment (rtl-layout-support, `failed`), and its unclamped title alongside its 3-line-clamped description (text-expansion-tolerance, `partial`). The three-root branching (`href`/`onClick`/inert) is pure view logic over props with the router itself injected via `LinkComponent` (separation-of-concerns passed); `resourceCard.test.tsx` directly exercises all three roots, the injected `LinkComponent`, the combined href+onClick case, and the `className` override (unit-test-coverage passed).
 
 ## Change History
 
@@ -211,3 +213,4 @@ Accessibility statuses rest on the source's native anchor/`role="button"` roots 
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | (cookbook update) | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated every citation; replaced the "Not applicable" Compliance section with a real table; reformatted Design Decisions to the three-line form; corrected fictitious APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; corrected the reduced-motion and touch-target-size accessibility claims; fixed the onClick/navigation edge case's contradiction with href-precedence; added the button-focusable and meta-no-nested-interactive requirements with test vectors; added semantic token roles to Appearance and States |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

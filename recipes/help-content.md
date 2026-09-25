@@ -3,11 +3,11 @@ id: d6ff2cc3-89c8-4744-b3f4-7262e45a3414
 title: Help Content
 domain: agenticdevelopertoolkit://recipes/help-content
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -170,13 +170,16 @@ The `useHelpEntry` hook does not implement logging or console warnings itself; i
 |-------|--------|----------|
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
 | [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy & Data |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`useHelpEntry`'s `Object.hasOwn` check rejects ids that would otherwise resolve to inherited `Object.prototype` members instead of treating them as valid lookups, and `HelpContentProvider`/`HelpEntry` store only the id-keyed help text a caller supplies, nothing beyond it.
+`useHelpEntry`'s `Object.hasOwn` check rejects ids that would otherwise resolve to inherited `Object.prototype` members instead of treating them as valid lookups, and `HelpContentProvider`/`HelpEntry` store only the id-keyed help text a caller supplies, nothing beyond it. `separation-of-concerns` passes because the module is pure context/data plumbing with no rendering of its own, and `unit-test-coverage` passes on `help-content.test.tsx`'s direct exercise of `useHelpEntry`, including the inherited-`Object.prototype`-id edge cases.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; fix default-flavor-to-info to describe the consumer-applied default with a matching vector; correct Object.hasOwnProperty citation to Object.hasOwn; rewrite AppKit/UIKit and WinUI 3 notes for immutable dependency injection and non-throwing lookup, scope SwiftUI guidance to the SwiftUI bullet, and add SwiftUI/Compose parity notes; generalize unsourced consumer counts in Localization and Design Decisions; reformat Design Decisions to Decision/Rationale/Approved; replace the Compliance placeholder with a checks table; split Configuration into provider props and entry fields; drop the untested null-id edge case and replace the duplicate-entry edge case with a prop-memoization note; split folded flavor/body vectors and add optional-title and empty-dictionary vectors; add tags and a related cross-reference to HelpEnabled |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Fix Logging section to reflect actual source behavior; add Platform Notes translation guidance for SwiftUI, Compose, AppKit/UIKit, WinUI 3 |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

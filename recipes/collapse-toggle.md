@@ -3,11 +3,11 @@ id: f09feb7c-6778-445a-8a68-863c5d60b5cc
 title: CollapseToggle
 domain: agenticdevelopertoolkit://recipes/collapse-toggle
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -219,14 +219,17 @@ Not applicable: The component has no built-in logging or diagnostic output.
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The `passed` rows rest on the source's literal ARIA attributes and native `<button>` semantics, its absence of any `transition-*`/`animate-*` class, and `label`'s untouched pass-through of any Unicode input; the `failed` rows rest on the source's own hardcoded English verbs, its unmirrored `»`/`«` glyphs, and its documented under-44×44pt hit area; the `partial` rows reflect that the source inherits font size and theme color/spacing tokens whose actual scaling, contrast, and overflow behavior the source code cannot itself confirm.
+The `passed` rows rest on the source's literal ARIA attributes and native `<button>` semantics, its absence of any `transition-*`/`animate-*` class, and `label`'s untouched pass-through of any Unicode input; the `failed` rows rest on the source's own hardcoded English verbs, its unmirrored `»`/`«` glyphs, and its documented under-44×44pt hit area; the `partial` rows reflect that the source inherits font size and theme color/spacing tokens whose actual scaling, contrast, and overflow behavior the source code cannot itself confirm. separation-of-concerns passes because `CollapseToggle` is pure presentation over its `collapsed`/`onToggle`/`label` props with no logic beyond a template string, while unit-test-coverage is failed because no test file exercises this component at all.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case with citations updated throughout; corrected glyph terminology (guillemets, not chevrons) and platform API names (Compose semantics, WinUI keyboard-state API, WinUI ExpandCollapse pattern, AppKit/UIKit state exposure); reformatted Design Decisions and Compliance to the standard form and corrected appearance values (corner radius, font, focus-ring color); added keyboard-activation and ⌘-click test vectors, tightened the aria-controls-absent vector, and merged the duplicate empty/missing-label edge cases; recorded platform-glyph-substitution, minimum-hit-area, and RTL-glyph-mirroring as pending Design Decisions |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Replace unresolved review markers with the source's actual behavior for empty label, localization, and accessibility display options; narrow the open tap-target question to the Accessibility section |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source at packages/web/packages/ui/src/components/collapse-toggle.tsx |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

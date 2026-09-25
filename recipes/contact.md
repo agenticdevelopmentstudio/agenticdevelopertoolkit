@@ -3,11 +3,11 @@ id: 8c5e2f9b-7d3a-4a1c-b8e4-9f2d1c5a7b3e
 title: Contact
 domain: agenticdevelopertoolkit://recipes/contact
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -143,12 +143,15 @@ Not applicable: This component does not perform any logging.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `Contact.tsx` rendering a native `<a>` element with no ARIA overrides and no hardcoded user-facing strings (title, children, mail.label, and colophon are all caller-supplied props), which gives it a native accessible name and keyboard behavior once `mail.label` satisfies **link-label**; `contrast-ratio` is `partial` because `css/blocks.css` defines the link and colophon colors through CSS custom properties whose real computed contrast cannot be confirmed from source.
+Statuses rest on `Contact.tsx` rendering a native `<a>` element with no ARIA overrides and no hardcoded user-facing strings (title, children, mail.label, and colophon are all caller-supplied props), which gives it a native accessible name and keyboard behavior once `mail.label` satisfies **link-label**; `contrast-ratio` is `partial` because `css/blocks.css` defines the link and colophon colors through CSS custom properties whose real computed contrast cannot be confirmed from source. separation-of-concerns passes because `Contact.tsx` is pure presentation that composes `Closer` and appends a mailto link and optional colophon over its props with no logic of its own, and unit-test-coverage passes because `blocks-close.test.tsx` renders `Contact` directly and asserts its `.lp-closer.lp-contact` composition and mailto link with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct the States table to the real `.lp-contact a.lp-mail` / `:hover` selectors and drop the unsupported visited/focus/active rows, rename requirements to subject-only kebab-case, state that the mail link and colophon are appended to Closer's children after the caller's `children` in that order and fix contact-004 to match, strengthen colophon rendering to a MUST, require both `lp-closer` and `lp-contact` on the composed element with a compound-selector test vector, add `mail.label` non-empty and `mail.href` mailto-scheme requirements with test vectors, reformat Design Decisions into Decision/Rationale/Approved form and move the compound-selector MUST into Behavioral Requirements, add a Compliance table, rewrite Platform Notes so each platform composes its own Closer port and replace the deprecated Compose `ClickableText`, add `Closer` to `depends-on`, and drop the quoted `modified` date. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

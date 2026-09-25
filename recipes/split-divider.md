@@ -3,11 +3,11 @@ id: 240f8d48-45af-49ea-aebf-95d756d74707
 title: SplitDivider
 domain: agenticdevelopertoolkit://recipes/split-divider
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -256,12 +256,15 @@ Not applicable: The component does not emit log entries, diagnostics, or debuggi
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on `split-divider.tsx`: the `role="separator"` element with `aria-label`, `aria-orientation`, and `aria-valuenow/min/max`, plus native `<button>` elements and the `onKeyDown` handler, support the passed screen-reader and keyboard checks, and the ARIA roles/states are all standard (semantic-markup). The `apt-border`/`apt-gold` design tokens and the fixed 24px grab area cannot be verified against a numeric 3:1 contrast ratio or a 44×44pt/48×48dp native touch-target minimum from the source alone (partial). `transition-colors` runs unconditionally with no `prefers-reduced-motion` guard in the source (failed). The default `label`, `growBottomLabel`, and `growTopLabel` values are hardcoded English literals, though every one is overridable via props (partial).
+These statuses rest on `split-divider.tsx`: the `role="separator"` element with `aria-label`, `aria-orientation`, and `aria-valuenow/min/max`, plus native `<button>` elements and the `onKeyDown` handler, support the passed screen-reader and keyboard checks, and the ARIA roles/states are all standard (semantic-markup). The `apt-border`/`apt-gold` design tokens and the fixed 24px grab area cannot be verified against a numeric 3:1 contrast ratio or a 44×44pt/48×48dp native touch-target minimum from the source alone (partial). `transition-colors` runs unconditionally with no `prefers-reduced-motion` guard in the source (failed). The default `label`, `growBottomLabel`, and `growTopLabel` values are hardcoded English literals, though every one is overridable via props (partial). `separation-of-concerns` passes because the drag/keyboard/clamp logic lives in named callbacks (`commit`, `onPointerMove`, `onKeyDown`, etc.) separate from the JSX they drive, and `unit-test-coverage` passes because `splitDivider.test.tsx` renders it directly and exercises both orientations' drag, keyboard, and step-button behavior.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; reformatted Design Decisions; added the Compliance table; fixed the DRY, citation, correctness, and platform-API findings; added missing requirements, edge-case rules, and test vectors; corrected Platform Notes to keep ratio state caller-owned; rewrote Localization and the step-button-during-drag edge case. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

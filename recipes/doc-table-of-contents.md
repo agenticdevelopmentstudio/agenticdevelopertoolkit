@@ -3,11 +3,11 @@ id: 28436339-4eda-46e9-b45f-f58a26949641
 title: Doc Table of Contents
 domain: agenticdevelopertoolkit://recipes/doc-table-of-contents
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -114,8 +114,8 @@ The Doc Table of Contents is a sticky, scrollable navigation rail positioned to 
 - **Empty headings array**: Component returns null and renders no HTML. This is by design; empty documents have no navigation targets.
 - **All headings excluded**: If `excludeIds` excludes every heading in the array, no headings remain and the component returns null.
 - **Heading with no matching element**: If a heading's id does not correspond to an element in the DOM (e.g., the heading list includes an id that was not rendered), no scroll occurs and no error is thrown.
-- **Very long heading text**: Text overflows the component's fixed width of 14 rem. The component does not truncate or wrap text; the text will overflow horizontally unless the parent's overflow is constrained.
-- **Rapid scroll events**: The active heading is recalculated as the document scrolls, based on which heading's element is closest to the viewport top (see **Scrollspy timing** in Design Decisions). If headings are closely spaced the active marker may flip rapidly; no debounce delays the update.
+- **Very long heading text**: The link renders as a block element with default (`normal`) white-space, inside `<li>`s in the rail's `w-56 overflow-y-auto` aside. The component never truncates the text, and a multi-word heading wraps onto additional lines within the 14 rem width rather than overflowing it. A single unbreakable token long enough to exceed that width still does not spill visibly outside the rail: because the aside already sets `overflow-y: auto`, the browser computes its `overflow-x` as `auto` too, so any such overflow scrolls inside the rail instead.
+- **Rapid scroll events**: The active heading is recalculated as the document scrolls, based on `useScrollSpy`'s intersection band (see the scrollspy Design Decision below) rather than which heading is literally closest to the viewport top. If headings are closely spaced the active marker may flip rapidly; no debounce delays the update.
 - **Click on active heading**: Clicking an already-active heading scrolls to it again. The smooth-scroll behavior is re-triggered.
 - **Custom title is empty or null**: If `title` is an empty string or null, the component still renders the `<h4>` element, but it will be empty.
 - **CSS custom properties not defined**: The component uses fallback values only for `--adh-header-height` (3.5rem); other custom properties have no fallbacks. If the theme does not define `--color-accent`, the browser will use the initial (transparent/black) color.
@@ -168,8 +168,8 @@ Not applicable: The component does not emit logging events. Debugging can be per
 
 ## Design Decisions
 
-- **Decision**: The rail has a fixed width of 14 rem, and long heading text overflows horizontally rather than wrapping or truncating.
-  **Rationale**: A fixed width aligns with the document's grid and keeps the rail's layout predictable; the component neither wraps nor truncates long text, so it overflows instead.
+- **Decision**: The rail has a fixed width of 14 rem, and long heading text wraps onto additional lines rather than being truncated.
+  **Rationale**: A fixed width aligns with the document's grid and keeps the rail's layout predictable; the component neither truncates long text nor lets it escape the rail, so it wraps within that width instead (an unbreakable token long enough to still exceed it scrolls inside the rail, since the aside's `overflow-y: auto` makes its `overflow-x` compute to `auto` as well).
   **Approved**: pending
 
 - **Decision**: The title renders in monospace font.
@@ -184,8 +184,8 @@ Not applicable: The component does not emit logging events. Debugging can be per
   **Rationale**: Omitting deep headings would make the rail an incomplete map of the document.
   **Approved**: pending
 
-- **Decision**: The active heading is whichever heading's element is closest to the viewport top at the moment of scroll; there is no debounce or "sticky" behavior favoring the previous active heading, so the marker can flip rapidly when headings sit close together.
-  **Rationale**: A direct, un-smoothed mapping between scroll position and active heading keeps the "on this page" marker honest about where the reader actually is, at the cost of occasional rapid flips when headings are closely spaced.
+- **Decision**: The active heading is the first heading, in document order, whose element intersects a viewport band tracked via `useScrollSpy`'s `IntersectionObserver` (`rootMargin: "-80px 0px -60% 0px"`) — from 80px below the viewport top down to 60% of the viewport height. There is no debounce, so the marker can flip rapidly when headings sit close together; but when no heading intersects the band (scrolled deep into a long section, or past the last heading), the hook deliberately keeps the last active heading rather than clearing it — a sticky fallback, not the absence of one.
+  **Rationale**: A band rather than a single line tolerates ordinary scroll jitter without flip-flopping between two adjacent headings, and holding the last position when nothing intersects the band avoids blanking the "on this page" marker while the reader is still inside a section.
   **Approved**: pending
 
 - **Decision**: Clicking a heading smooth-scrolls the page instead of jumping instantly, and default link navigation is prevented, so the URL hash does not update.
@@ -212,12 +212,15 @@ Not applicable: The component does not emit logging events. Debugging can be per
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source's plain anchor-link markup (`<aside>`, `<ul>`, `<a href>`) for the passed accessibility checks; its unconditional `transition-colors` and small `py-0.5` row height for the failed accessibility checks; its CSS-custom-property colors and fixed `text-[10px]` title size for the accessibility partials; its physical `pl-`/`border-l`/`pr-` classes and fixed 14 rem width with no text wrapping for the failed internationalization checks; its JSX text rendering (no character filtering) for `unicode-support`; and its hardcoded `"On this page"` default, overridable only via a caller-supplied prop rather than a resource lookup, for `string-externalization` and `no-hardcoded-strings`.
+Statuses rest on the source's plain anchor-link markup (`<aside>`, `<ul>`, `<a href>`) for the passed accessibility checks; its unconditional `transition-colors` and small `py-0.5` row height for the failed accessibility checks; its CSS-custom-property colors and fixed `text-[10px]` title size for the accessibility partials; its physical `pl-`/`border-l`/`pr-` classes and fixed 14 rem width with no text wrapping for the failed internationalization checks; its JSX text rendering (no character filtering) for `unicode-support`; and its hardcoded `"On this page"` default, overridable only via a caller-supplied prop rather than a resource lookup, for `string-externalization` and `no-hardcoded-strings`. `separation-of-concerns` passes because active-heading tracking is delegated to the standalone `useScrollSpy` hook rather than implemented inline in the render body; `unit-test-coverage` passes because `docTableOfContents.test.tsx` imports `DocTableOfContents` directly and exercises its behavior with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed scrollspy Design Decision/edge case to describe useScrollSpy's actual band + first-in-order + sticky-fallback logic instead of closest-to-top with no sticky; fixed long-heading-text edge case/decision to describe wrapping, not horizontal overflow. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; reformatted Design Decisions into Decision/Rationale/Approved triplets; replaced the "Not applicable" Compliance section with a real table; corrected Platform Notes API names (WinUI `ScrollViewer.ViewChanged` and modern theme brushes, SwiftUI safe-area guidance, Compose typography); resolved contradictions between sections (fixed vs. minimum width, ellipsis vs. overflow, indent depth vs. "proportional," scrollspy debounce, the Deep Linking section's claim about URL hash updates); added rem values alongside Tailwind units; fixed an RFC 2119 keyword misuse; removed implementation-detail leaks (variable and hook names, a CSS class constant, "not currently implemented" status prose) in favor of observable behavior; declined findings that would have added behavior the source does not implement |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

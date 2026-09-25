@@ -3,11 +3,11 @@ id: 40a6b717-cbdb-4d49-9f98-b318668b396c
 title: Syntax Quick Reference
 domain: agenticdevelopertoolkit://recipes/quick-reference
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **popover-opens-on-click**: The component MUST open the popover when the trigger button is clicked, or activated via keyboard (the trigger is a native `button`, so Enter/Space also activate it).
 - **popover-title-display**: The popover MUST display the provided title using field-caption typography styling. (Web: `fieldCaptionClass` — see React/Web platform note.)
 - **entries-definition-list**: The component MUST render syntax entries as a definition list (`dl`) in a two-column layout with label (`dt`) and code (`dd`) pairs, the label column narrower than the code column.
-- **entry-label-style**: Entry labels (`dt`) MUST render smaller than the code text and in a muted foreground color, so the code reads as the primary content.
+- **entry-label-style**: Entry labels (`dt`) MUST render at a small font size and in a muted foreground color, distinguishing them from the code values below them.
 - **entry-code-style**: Code values (`dd`) MUST render in a monospace font, smaller than the label text, with whitespace preserved (line breaks and indentation in the source syntax are not collapsed) and normal (non-loose) line spacing.
 - **escape-dismissal**: The popover MUST close when the Escape key is pressed (inherited from Popover primitive; see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes).
 - **outside-click-dismissal**: The popover MUST close when the user clicks outside the popover bounds (inherited from Popover primitive).
@@ -85,7 +85,7 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **Button role**: The trigger is a native `button` element with semantic button role.
 - **Accessible name**: See #requirements (trigger-accessible-name). The trigger's `aria-label` MUST be non-empty and, when `triggerLabel` is present, MUST contain its text (WCAG 2.5.3 Label in Name).
 - **Disclosure state**: See #requirements (trigger-disclosure-state). `aria-expanded` and `aria-haspopup` are set on the trigger by the Popover primitive, not by this component's own code.
-- **Popover accessible name**: The popover panel itself sets no `aria-labelledby` linking it to the title text (the `<p>` element). Popover's own spec only recommends, but does not require, this association (`should-associate-label`; see agenticdevelopertoolkit://recipes/popover#accessibility/should-associate-label), and this component does not add it. Screen readers get the panel's content without an explicit accessible name tied to the title.
+- **Popover accessible name**: The popover panel itself sets no `aria-labelledby` linking it to the title text (the `<p>` element). Popover's own spec only recommends, but does not require, this association (`label-association`; see agenticdevelopertoolkit://recipes/popover#accessibility/label-association), and this component does not add it. Screen readers get the panel's content without an explicit accessible name tied to the title.
 - **Definition list structure**: Entries are marked up as `dl`, `dt`, and `dd` elements, providing semantic structure for assistive technology.
 - **Focus management**: The popover is non-modal and does not contain focus while open; restoring focus to the trigger on dismiss is handled by the Popover primitive (see agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close), not reimplemented here.
 - **Keyboard interaction**: Escape dismisses the popover (inherited from Popover; see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes). Tab and Shift+Tab navigate within the popover while it is open.
@@ -100,7 +100,7 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 | quick-ref-003 | popover-opens-on-click | User clicks trigger button | Popover becomes visible |
 | quick-ref-004 | popover-title-display | title="Markdown Syntax" | Popover displays "Markdown Syntax" in field-caption style |
 | quick-ref-005 | entries-definition-list | entries=[{label: "Bold", syntax: "**text**"}, {label: "Italic", syntax: "*text*"}] | Popover displays two rows in grid: "Bold" / "**text**" and "Italic" / "*text*" |
-| quick-ref-006 | entry-label-style | Entry with label "Bold" | Label rendered smaller than the code text, in muted color |
+| quick-ref-006 | entry-label-style | Entry with label "Bold" | Label rendered at a small font size, in muted color (the code text is smaller still — see quick-ref-007) |
 | quick-ref-007 | entry-code-style | Syntax with newlines: "line1\nline2" | Code block preserves newlines, uses monospace font, smaller than label text, normal line spacing |
 | quick-ref-008 | escape-dismissal | Popover is open; user presses Escape | Popover closes |
 | quick-ref-009 | outside-click-dismissal | Popover is open; user clicks outside popover | Popover closes |
@@ -217,8 +217,10 @@ Not applicable: no logging is implemented in the source code.
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-label` (semantic-markup, keyboard-navigable); Popover's own focus-trap and focus-restore, inherited rather than reimplemented (focus-management); the `sm` button's 28px height meeting WCAG 2.5.8 (touch-target-size); rem-based Tailwind text sizing whose actual scaling behavior isn't verified in source (dynamic-type-support: partial); the absence of runtime `aria-label` validation and of `aria-labelledby` on the popover panel (screen-reader-support: partial); `apt-*` design tokens whose resolved contrast can't be checked from source alone (contrast-ratio: partial); consumer-supplied-only text with no hardcoded strings in the component (string-externalization, no-hardcoded-strings); plain JS string rendering, which is Unicode-transparent (unicode-support); and the missing `dir`/bidi isolation on code cells (rtl-layout-support: failed).
+Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-label` (semantic-markup, keyboard-navigable); Popover's own focus-trap and focus-restore, inherited rather than reimplemented (focus-management); the `sm` button's 28px height meeting WCAG 2.5.8 (touch-target-size); rem-based Tailwind text sizing whose actual scaling behavior isn't verified in source (dynamic-type-support: partial); the absence of runtime `aria-label` validation and of `aria-labelledby` on the popover panel (screen-reader-support: partial); `apt-*` design tokens whose resolved contrast can't be checked from source alone (contrast-ratio: partial); consumer-supplied-only text with no hardcoded strings in the component (string-externalization, no-hardcoded-strings); plain JS string rendering, which is Unicode-transparent (unicode-support); and the missing `dir`/bidi isolation on code cells (rtl-layout-support: failed). `SyntaxQuickReference` is the shell only — entries belong to whoever owns the language, with no business logic in the component (separation-of-concerns passed); it has no test file of its own and is exercised only through its consumer `MarkdownQuickReference` in `markdownQuickReference.test.tsx` (unit-test-coverage partial).
 
 ## Change History
 
@@ -226,3 +228,4 @@ Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; moved web-specific requirement details to Platform Notes; added Popover to depends-on; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with canonical linked checks; fixed the touch-target contradiction and the focus-containment overclaim; corrected align-axis wording; added non-empty-aria-label and WCAG 2.5.3 label-in-name requirements and edge cases; corrected WinUI 3 and SwiftUI platform notes; added missing test vectors; corrected the Localization bidi note |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed entry-label-style/quick-ref-006 to stop contradicting entry-code-style/quick-ref-007 (code is smaller, not the label); renamed stale should-associate-label ref to popover's label-association. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |

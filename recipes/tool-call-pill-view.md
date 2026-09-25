@@ -3,11 +3,11 @@ id: e5165b31-6a06-4d79-8fb8-98ba491623b1
 title: Tool Call Pill View
 domain: agenticdevelopertoolkit://recipes/tool-call-pill-view
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -177,13 +177,16 @@ Not applicable: The component does not emit log messages.
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source's delegation of caption font sizing, status colors, and contrast to `SemanticPalette` (unverifiable from this file, hence partial); the hardcoded `" — "` concatenation in `title(for:)` (ToolCallPillView.swift), which is neither externalized nor RTL-aware; the fixed tail-truncation in `truncate-overflow-text`, which always truncates rather than accommodating expanded text; and full-Unicode text rendering inherited from `NSTextField`.
+Statuses rest on the source's delegation of caption font sizing, status colors, and contrast to `SemanticPalette` (unverifiable from this file, hence partial); the hardcoded `" — "` concatenation in `title(for:)` (ToolCallPillView.swift), which is neither externalized nor RTL-aware; the fixed tail-truncation in `truncate-overflow-text`, which always truncates rather than accommodating expanded text; and full-Unicode text rendering inherited from `NSTextField`; the status-to-role and title-formatting logic lives in private static/computed members (`statusRole`, `title(for:)`) kept apart from the view's paint/layout code, with no data access or business rules tangled into rendering (separation-of-concerns passed), and `ToolCallPillViewTests.swift` directly asserts `titleText`, `titleColor`, and the border color across running/success/failure states plus a live theme change (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.1 | 2026-09-24 | Claude | Added the missing Accessibility section describing role, label/value, VoiceOver status reading, keyboard focus, hit target, and color dependence from source, with one contrast NEEDS REVIEW marker. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; restated AppKit-specific requirements as semantic palette roles and moved API names into Platform Notes; fixed SwiftUI (RoundedRectangle, @Environment) and AppKit/UIKit (palette injection) platform notes; reformatted Design Decisions to Decision/Rationale/Approved; populated Compliance with applicable accessibility and internationalization checks; replaced the Localization "Not applicable" with the hardcoded separator string; made the theme-change test vector and state row observable; clarified the empty-command-name and theme-deallocation edge cases; standardized on `nil` and "space–em dash–space"; added tags and a related cross-reference to Message Bubble. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from ToolCallPillView.swift source |

@@ -3,11 +3,11 @@ id: 5ec45ac4-a02f-4ee7-becb-7894c2893f23
 title: Pane Minimized Strip View
 domain: agenticdevelopertoolkit://recipes/pane-minimized-strip-view
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -211,12 +211,15 @@ Not applicable: This component does not emit diagnostic logs; logging of pane st
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-screen-reader-support and keyboard-navigable pass because `NSButton` carries an accessibility label and ID and is Tab-navigable by default; touch-target-size and contrast-ratio are partial because the 28pt-wide strip cannot fit a 44×44 target in either dimension and colors resolve from whatever the active theme palette supplies with no documented contrast guarantee; no-hardcoded-strings fails because `"Restore Pane"` and `"Minimized Pane"` are literal Swift string constants with no localization API in the source.
+screen-reader-support and keyboard-navigable pass because `NSButton` carries an accessibility label and ID and is Tab-navigable by default; touch-target-size and contrast-ratio are partial because the 28pt-wide strip cannot fit a 44×44 target in either dimension and colors resolve from whatever the active theme palette supplies with no documented contrast guarantee; no-hardcoded-strings fails because `"Restore Pane"` and `"Minimized Pane"` are literal Swift string constants with no localization API in the source; the view is pure presentation of a glyph/restore button over `symbolName`/`tooltip` props, reporting via `onRestore` with no business logic (separation-of-concerns: passed), and `PaneMinimizedStripViewTests.swift` exercises fallback glyph, glyph/tooltip mutation, restore-click reporting, and fixed thickness (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; fixed the 28pt-width padding arithmetic and reformatted Design Decisions into the three-line form; corrected the click-target and Increase Contrast accessibility guidance for a 28pt macOS chrome control instead of the iOS 44×44 minimum; made "Theme not observed" explicit about `observeTheme`'s synchronous apply-then-notify behavior instead of guessing at a failure mode; converted Localization to a keyed table for the VoiceOver-only strings and converted Accessibility Options to the template's table form; replaced the Compliance section with a real linked check table, lowercase statuses, and an added Internationalization check; fixed the Compose and WinUI 3 platform notes and specified hairline thickness and below-glyph fill in Appearance; added test vectors for a nil `onRestore`, an empty tooltip, hairline theme reactivity, and `edge` immutability, and marked `edge` immutable in Configuration; linked `separator` and `pane-title-bar-view` in `related`. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from PaneMinimizedStripView.swift |

@@ -3,11 +3,11 @@ id: 39f26055-c002-40fe-81e2-74c0f9c9311d
 title: Avatar Engine Render
 domain: agenticdevelopertoolkit://recipes/avatar-engine-render
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -519,6 +519,7 @@ behaves than a discrete drag gesture would be.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
 | [animation-frame-rate](agenticdevelopercookbook://compliance/performance#animation-frame-rate) | partial | Performance |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 Neither file swallows an error: `CGColor.avatarInk` returns `nil` and
 `CGPath.avatarItem` throws, both propagated to the caller rather than
@@ -532,11 +533,16 @@ path for a per-frame, `CADisplayLink`/animation-loop-driven `DisplayList`,
 but neither file measures or enforces a per-frame time budget — the
 node-reuse design (one `<path>`/layer per id, rewritten rather than rebuilt)
 supports a 60fps target without proving it from source alone
-(animation-frame-rate: partial).
+(animation-frame-rate: partial). `unit-test-coverage` is passed:
+`RenderTests.swift` exercises `PlatformShims.swift`'s `AvatarLayerView`/
+`CGColor.avatarInk`/`CGPath.avatarItem` machinery directly, and
+`svg.test.ts` exercises `svg.ts`'s `createSvgRenderer`/`renderToString`
+against real engine output, both with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-23 | | Initial creation |
+| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (unit-test-coverage: passed). |

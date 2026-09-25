@@ -3,11 +3,11 @@ id: 89a912f3-f0a0-4896-ba06-a386407ecb15
 title: Divider
 domain: agenticdevelopertoolkit://recipes/divider
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -139,12 +139,15 @@ Not applicable: Divider requires no diagnostic logging.
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The `passed` status rests on the component rendering a bare `<hr>` element with no added ARIA overrides, which the browser maps to the correct implicit `separator` role.
+The `passed` status rests on the component rendering a bare `<hr>` element with no added ARIA overrides, which the browser maps to the correct implicit `separator` role. `separation-of-concerns` passes because `Divider.tsx` renders a bare `<hr>` with no logic of any kind; `unit-test-coverage` fails because the only name-matching test, `splitDivider.test.tsx`, actually exercises a different component (`SplitDivider`), so no test exercises `Divider.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names, templated the hardcoded class prefix, corrected the AppKit/UIKit, Compose, and WinUI 3 platform notes to real native APIs, grounded Appearance in the source CSS, fixed the Accessibility role and Increase Contrast guidance, replaced the duplicate test vector and added a role vector, clarified whitespace handling in Edge Cases, reformatted Design Decisions, and added a Compliance table |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

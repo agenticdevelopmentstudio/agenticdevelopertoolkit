@@ -3,11 +3,11 @@ id: dffc1431-7386-4acf-94bc-6043c5c7eebc
 title: ToggleGroup
 domain: agenticdevelopertoolkit://recipes/toggle-group
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -235,13 +235,16 @@ any telemetry belong to the consumer's `onValueChange` handler, not the control.
 | [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | partial | Platform Compliance |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Passed and partial rest on the source: Base UI's `ToggleGroupPrimitive`/`TogglePrimitive` give real button semantics, pressed state, and roving keyboard focus (screen-reader-support, keyboard-navigable, native-controls-preference); the `apt-*` token classes theme light/dark but carry no `forced-colors` rule or verified contrast ratio (contrast-ratio, platform-theming partial); the item's `h-8 min-w-8` size is below the 44×44 this check names (touch-target-size partial); and the component's own source defines no literal user-facing strings (no-hardcoded-strings).
+Passed and partial rest on the source: Base UI's `ToggleGroupPrimitive`/`TogglePrimitive` give real button semantics, pressed state, and roving keyboard focus (screen-reader-support, keyboard-navigable, native-controls-preference); the `apt-*` token classes theme light/dark but carry no `forced-colors` rule or verified contrast ratio (contrast-ratio, platform-theming partial); the item's `h-8 min-w-8` size is below the 44×44 this check names (touch-target-size partial); and the component's own source defines no literal user-facing strings (no-hardcoded-strings); `ToggleGroup`/`ToggleGroupItem` are thin themed wrappers around Base UI primitives with no logic of their own (separation-of-concerns passed), and there is no test file dedicated to this source — it is exercised only through `splitViewControl.test.tsx`'s parent component, which clicks its rendered buttons but never asserts on its own pressed-state styling (unit-test-coverage partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: point platform notes at native segmented controls and theme tokens instead of hand-rolled widgets and literal colors; correct the accessibility-options contrast claim; rewrite Compliance with real catalog checks; reformat Design Decisions as Decision/Rationale/Approved triplets; add single-select-keeps-selection and extend disabled-item-inert; add a Pressed+hover state and two conformance vectors; clarify Localization for consumer-supplied labels; trim the summary. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Complete recipe with all template sections; add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark non-applicable sections. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the Base UI segmented control and its single-select convention. |

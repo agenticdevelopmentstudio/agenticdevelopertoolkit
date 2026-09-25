@@ -3,11 +3,11 @@ id: 8ce108f2-b64b-4e01-8dbb-94ef3397b46a
 title: Hierarchical Detail View
 domain: agenticdevelopertoolkit://recipes/hierarchical-detail-view
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -79,7 +79,7 @@ Not applicable: Accessibility is the responsibility of the detail view component
 - **No provider mounted**: When `useHierarchicalMenuDetailView()` is called without a `HierarchicalDetailViewProvider` ancestor, the hook MUST return the default context value `false` without error.
 - **Cascading prop without cascading context**: When a consumer passes `disclosureStyle: "cascading"` while context is `false`, the component MUST map it to `disclosureStyle: "covered"` to avoid passing an invalid prop to `HierarchicalTopicDetail`.
 - **autoHideTopics in topic view**: When a consumer passes `autoHideTopics` while context is `false`, the prop passes through unchanged to `HierarchicalTopicDetail` in the rest props; `HierarchicalTopicDetail` ignores it as an unrecognized prop rather than erroring (see **cascade-only-props**).
-- **Superset prop compatibility**: Since `HierarchicalMenuDetail`'s prop interface is a superset of `HierarchicalTopicDetail`'s, all props valid for the topic view MUST also be valid when the menu view is active and MUST be passed through unmodified.
+- **Prop surface tracks HierarchicalMenuDetail, not a true superset**: `HierarchicalDetailView`'s prop type is exactly `ComponentProps<typeof HierarchicalMenuDetail>`, which is not a superset of `HierarchicalTopicDetail`'s props. `HierarchicalTopicDetail`'s `surfaceScope` prop has no counterpart on `HierarchicalMenuDetail`, so passing `surfaceScope` to the router is a type error regardless of context value; every other topic-view prop that `HierarchicalMenuDetail` also declares passes through to whichever view is active, unmodified.
 
 ## Configuration
 
@@ -88,7 +88,7 @@ Not applicable: Accessibility is the responsibility of the detail view component
 | `menuDetail` | `boolean` | `false` | Passed to `HierarchicalDetailViewProvider` to select the cascading menu view (`true`) or classic topic view (`false`) |
 | `children` | `ReactNode` | — | Child components to render within the provider context |
 
-`HierarchicalDetailView` itself takes `ComponentProps<typeof HierarchicalMenuDetail>` — the superset of both views' props, since `HierarchicalMenuDetail`'s interface is a superset of `HierarchicalTopicDetail`'s. Those props are documented once, on `HierarchicalMenuDetail` (`agenticdevelopertoolkit://recipes/hierarchical-menu-detail`), rather than restated here; see **preserve-other-props** and **cascading-to-covered** for how the router narrows that surface under the classic view.
+`HierarchicalDetailView` itself takes `ComponentProps<typeof HierarchicalMenuDetail>`. This is not a full superset of `HierarchicalTopicDetail`'s props: `HierarchicalTopicDetail`'s `surfaceScope` prop is absent from `HierarchicalMenuDetail`, so it cannot be passed to the router at all, in either context. The props `HierarchicalMenuDetail` does declare are documented once, on `HierarchicalMenuDetail` (`agenticdevelopertoolkit://recipes/hierarchical-menu-detail`), rather than restated here; see **preserve-other-props** and **cascading-to-covered** for how the router narrows that surface under the classic view.
 
 ## Deep Linking
 
@@ -164,8 +164,10 @@ Not applicable: Hierarchical Detail View is a routing and context component with
 | [if-test-vectors](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-test-vectors) | passed | Artifact Formatting |
 | [if-design-decisions](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-design-decisions) | passed | Artifact Formatting |
 | [if-change-history](agenticdevelopercookbook://compliance/artifact-formatting/ingredient-formatting#if-change-history) | passed | Artifact Formatting |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on this recipe document itself: all required frontmatter fields are present, the Behavioral Requirements use RFC 2119 keywords with subject-only kebab-case names, the Conformance Test Vectors table maps every requirement to at least one ID, Design Decisions follow the Decision/Rationale/Approved format, and the file ends with a Change History table.
+Statuses rest on this recipe document itself: all required frontmatter fields are present, the Behavioral Requirements use RFC 2119 keywords with subject-only kebab-case names, the Conformance Test Vectors table maps every requirement to at least one ID, Design Decisions follow the Decision/Rationale/Approved format, and the file ends with a Change History table. `separation-of-concerns` passes because `hierarchical-detail-view.tsx` is a thin switch that only picks between `HierarchicalTopicDetail` and `HierarchicalMenuDetail`, with no business logic of its own beyond that dispatch; `unit-test-coverage` fails because no test file imports or renders `HierarchicalDetailView`.
 
 ## Change History
 
@@ -173,3 +175,4 @@ Statuses rest on this recipe document itself: all required frontmatter fields ar
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; resolved the autoHideTopics filter/pass-through contradiction between must-ignore-cascade-only-props and must-preserve-other-props; added a temporary-router design decision; reformatted design decisions to Decision/Rationale/Approved; replaced the compliance table with real Artifact Formatting checks; added depends-on references to the menu-detail and topic-detail ingredients; added two conformance test vectors; templated the feature-flag key; fixed the AppKit/UIKit platform note to avoid hidden global state; unquoted frontmatter dates |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected superset-prop-compatibility edge case and Configuration prop-type paragraph: HMD lacks surfaceScope, is not a true superset of HTDV props (bucket-14_2). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

@@ -3,11 +3,11 @@ id: 1794948f-2bb2-4f25-b9b5-72b1e6306ea1
 title: Inline Chat
 domain: agenticdevelopertoolkit://recipes/inline-chat
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -70,7 +70,7 @@ An inline chat surface that displays a transcript of committed and in-flight mes
 - **start-stop-animated-backdrop**: If a backdrop conforms to `AnimatedBackdrop`, component MUST start its animation when `showsBackdrop` becomes true and stop it when false.
 - **support-surface-transparency**: Component MUST apply `surfaceTransparency` (0–100) as a multiplier on the theme's surface color alpha, thinning the surface fill without affecting text or chrome (Apple).
 - **support-text-scale**: Component MUST respond to ⌘+, ⌘−, and ⌘0 keyboard events (Apple only) and fire `onTextScaleNudge` callback with +1, −1, or 0 (Apple); scaling applies only to the chat's own `themeScope`, not globally.
-- **text-scale-require-focus**: Text scale shortcuts MUST only work when the input field is enabled and has focus.
+- **text-scale-requires-enabled-input**: Text scale shortcuts MUST fire only when the input field is enabled; they do not require the input to have focus. The key equivalent is dispatched down the whole key window's view tree, so the shortcut fires from anywhere in that window as long as the composer accepts typing (input enabled).
 - **render-theme-scope**: Component MUST resolve its color palette through a dedicated `themeScope` instance separate from the window's, allowing independent text-size control per chat instance.
 - **render-command-activity**: Component MUST render command activity (tool invocations) as `ToolCallPillView` rows below the transcript, above the thinking indicator, in invocation order (Apple).
 - **handle-send-errors**: Component SHOULD catch and handle errors from `submitMessage` without crashing or surfacing the error (Apple: silently ignored); web behavior undefined from source.
@@ -156,7 +156,7 @@ An inline chat surface that displays a transcript of committed and in-flight mes
 | inline-chat-030 | start-stop-animated-backdrop | Set backdrop to animated view, toggle showsBackdrop | Animation runs when shown, stops when hidden |
 | inline-chat-031 | support-surface-transparency | Set surfaceTransparency=50 | Surface fill alpha = theme alpha × 0.5 |
 | inline-chat-032 | support-text-scale | Press ⌘+ while input focused (Apple) | onTextScaleNudge fires with +1 |
-| inline-chat-033 | text-scale-require-focus | Press ⌘+ without input focus (Apple) | onTextScaleNudge not fired |
+| inline-chat-033 | text-scale-requires-enabled-input | Press ⌘+ with the input enabled but not focused, e.g. focus elsewhere in the same key window (Apple) | onTextScaleNudge fires with +1 |
 | inline-chat-034 | render-theme-scope | Set chat text scale to 150%, open another chat | Only this chat is 150%; other chat unchanged |
 | inline-chat-035 | render-command-activity | Add tool invocation to commandActivity | ToolCallPillView renders below transcript |
 
@@ -165,7 +165,7 @@ An inline chat surface that displays a transcript of committed and in-flight mes
 - **Empty messages list**: Component renders transcript container with no bubbles; only typing indicator and input visible.
 - **Very long messages**: Bubbles respect max width (75% or 200pt floor) and wrap or truncate per `MessageBubbleView` behavior.
 - **Rapid message arrivals**: Multiple messages added in a single update render in one transcript rebuild rather than one per message, auto-scrolling once to the final bottom (Apple: see Platform Notes).
-- **Concurrent local and remote typing**: Thinking indicator prioritizes remote participant statuses (sorted by ID) over the local typing flag.
+- **Concurrent local and remote typing**: Thinking indicator prioritizes remote participant statuses (sorted by ID); if none has an explicit status, it falls back to whether any remote participant is typing. The local user's own typing never shows the indicator (see the **Status prioritizes remote statuses over typing flag** design decision).
 - **Draft with no text**: Drafts with empty text are filtered out and not rendered (Apple: see Platform Notes for the exact filter).
 - **Window resize during engagement**: A transcript width change triggers a rebuild on the next layout pass; repeated layouts at the same width do not trigger redundant rebuilds (Apple: see Platform Notes).
 - **Click outside while composing**: Escape disengages immediately; a click outside the view disengages only while already engaged and only if the click lands outside the view's bounds (Apple).
@@ -267,7 +267,7 @@ Not applicable: Component does not perform logging; the Swift source includes de
   **Approved**: pending
 
 - **Status prioritizes remote statuses over typing flag**
-  **Decision**: When multiple participants are active, `refreshStatus()` sorts remote participants by ID and uses the first status value; the local participant's `isTyping` flag is used only as a fallback when no remote participant has an explicit status.
+  **Decision**: When multiple participants are active, `refreshStatus()` sorts remote participants by ID and uses the first status value; when no remote participant has an explicit status, it falls back to whether any remote participant is typing. The local participant is filtered out of both checks, so the local user's own `isTyping` flag never drives the indicator.
   **Rationale**: This avoids echoing the user's own activity back at them, matching the equivalent web design pattern.
   **Approved**: pending
 
@@ -318,12 +318,15 @@ Not applicable: Component does not perform logging; the Swift source includes de
 | [content-moderation](agenticdevelopercookbook://compliance/user-safety#content-moderation) | failed | User Safety |
 | [abuse-prevention](agenticdevelopercookbook://compliance/user-safety#abuse-prevention) | failed | User Safety |
 | [harmful-content-filtering](agenticdevelopercookbook://compliance/user-safety#harmful-content-filtering) | failed | User Safety |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on: the Apple send button's measured 18pt/>44×44pt hit area versus the input field's unmeasured ("assumed") height; the delegated, unspecified screen-reader roles and web keyboard navigation; the hardcoded "Send" accessibility string and the fixed (non-mirrored) left/right participant sides; the absence in source of Reduce Motion handling, rate limiting, or content moderation around the composer and transcript; and the whitespace-only trim as the sole input validation shown.
+Statuses rest on: the Apple send button's measured 18pt/>44×44pt hit area versus the input field's unmeasured ("assumed") height; the delegated, unspecified screen-reader roles and web keyboard navigation; the hardcoded "Send" accessibility string and the fixed (non-mirrored) left/right participant sides; the absence in source of Reduce Motion handling, rate limiting, or content moderation around the composer and transcript; and the whitespace-only trim as the sole input validation shown. `separation-of-concerns` is `partial`: the web `InlineChat.tsx` delegates session and sizing logic to `useChatSession`/`useChatSizing` hooks, keeping the component itself presentational, but the Apple `InlineChatView` is a single 815-line `NSView` subclass whose `refreshStatus()` embeds participant-status filtering logic directly in the view rather than a separate coordinator. `unit-test-coverage` passes because both platforms have tests: `__tests__/InlineChat.test.tsx` on the web side and `InlineChatViewTests.swift`/`InlineChatViewSizingTests.swift` on Apple.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Compliance best-practices rows added; noted Apple view mixes status logic vs web's hook split. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and merged duplicate scroll/collapse requirements; moved implementation internals (rebuildTranscript, isAtBottom, lastTranscriptWidth, etc.) to Platform Notes; corrected compliance links, check names and statuses and expanded category coverage; fixed the scroll and Default-state contradictions and the web-parity gaps in status-while-streaming/disable-input; specified whose isTyping drives the thinking indicator; reformatted Design Decisions to the Decision/Rationale/Approved template; added depends-on identifiers, Localization and Accessibility Options content, and the missing commandActivity/bubble-side/default-height configuration entries; deleted scratch arithmetic from Min content width |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web and Apple sources |

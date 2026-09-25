@@ -3,11 +3,11 @@ id: b0ce8cbb-31ac-425a-889c-68e699d24578
 title: Table
 domain: agenticdevelopertoolkit://recipes/table
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -166,12 +166,15 @@ Not applicable: The component does not log anything. A row-width mismatch (**row
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: it uses semantic `<table>`/`<th scope="col">`/`<caption>` markup (semantic-markup) and contains no hardcoded strings, since every string comes from the caller via props (no-hardcoded-strings, string-externalization); font size and color are delegated entirely to the `lp-table`/`lp-sr-only` CSS classes, which the source does not define, so dynamic type and contrast ratio cannot be confirmed from the source alone (dynamic-type-support, contrast-ratio).
+Statuses rest on the source: it uses semantic `<table>`/`<th scope="col">`/`<caption>` markup (semantic-markup) and contains no hardcoded strings, since every string comes from the caller via props (no-hardcoded-strings, string-externalization); font size and color are delegated entirely to the `lp-table`/`lp-sr-only` CSS classes, which the source does not define, so dynamic type and contrast ratio cannot be confirmed from the source alone (dynamic-type-support, contrast-ratio); the row-width validation (`rows.find`/`throw`) runs inline in the render function rather than as a separate helper (separation-of-concerns partial), and `blocks-frame.test.tsx`'s `Table` suite covers the header/row layout, the caption visibility toggle, and the mismatched-row-width throw (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update all citations, reformat Design Decisions into Decision/Rationale/Approved triples and add a decision for the empty-columns edge case, replace Compliance's "Not applicable" with an evaluated check table, add references for the semantic-HTML decision, fix the Logging section's log-vs-throw claim, clarify the showCaption default, rename and clarify the first-mismatched-row edge case, add test vectors table-009 through table-012, loosen the row-width error-message vector to assert index and counts rather than exact text, correct invented/wrong Platform Notes APIs and add caption handling per platform, make Compose/SwiftUI validation synchronous and explicit, add tags and a related link to data-table |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

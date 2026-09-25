@@ -3,11 +3,11 @@ id: f86178c6-4255-4d66-86e7-0b3b5a2e00c0
 title: Source Code Panel
 domain: agenticdevelopertoolkit://recipes/source-code-panel
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -231,12 +231,15 @@ Not applicable: Component performs no logging; errors in Shiki highlighting or c
 | [progress-indication](agenticdevelopercookbook://compliance/performance#progress-indication) | passed | Performance |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `SourceCodePanel.tsx` and `source-code-panel.css`: semantic `<button>`/`<pre>`/`<code>` markup and rem-based text sizing satisfy screen-reader, keyboard, dynamic-type and semantic-markup checks; `.scp-copy`'s `padding: 0.15rem 0.5rem` / `font-size: 0.7rem` plainly fails the 44×44pt touch target; contrast can't be confirmed without the consuming app's resolved `--color-*` token values; Shiki failures reach an explicit `error` state and rendered fallback while clipboard failures are fully swallowed with no state change, so error handling is only partial; the loading fallback shows `aria-busy` for the highlighter's async work; Shiki escapes `code` before its HTML is injected via `dangerouslySetInnerHTML`; and `"Copy"`/`"Copied"` are hardcoded string literals with no localization hook.
+Statuses rest on `SourceCodePanel.tsx` and `source-code-panel.css`: semantic `<button>`/`<pre>`/`<code>` markup and rem-based text sizing satisfy screen-reader, keyboard, dynamic-type and semantic-markup checks; `.scp-copy`'s `padding: 0.15rem 0.5rem` / `font-size: 0.7rem` plainly fails the 44×44pt touch target; contrast can't be confirmed without the consuming app's resolved `--color-*` token values; Shiki failures reach an explicit `error` state and rendered fallback while clipboard failures are fully swallowed with no state change, so error handling is only partial; the loading fallback shows `aria-busy` for the highlighter's async work; Shiki escapes `code` before its HTML is injected via `dangerouslySetInnerHTML`; and `"Copy"`/`"Copied"` are hardcoded string literals with no localization hook. `separation-of-concerns` passes because theme resolution and highlighting are delegated to `readShikiTheme` and the `useSourceCode` hook, separate from the rendering, and `unit-test-coverage` passes because `SourceCodePanel.test.tsx` renders it directly and asserts on the fallback code, filename header, and copy-button chrome.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-* requirements to subject-only names; split the highlight-complete fallback into success (no `<pre>`) and failure (`<pre>` without `aria-busy`) cases; document stale-async-result discarding and Shiki HTML-escaping with new test vectors; correct the theme-mutation trigger and touch-target/error-handling compliance statuses using source and CSS; reformat Design Decisions and Compliance into their canonical forms; resolve the WebView-vs-native-highlighter contradiction between Design Decisions and Platform Notes; document the hardcoded copy-button strings under Localization; add tags and the Shiki reference |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |

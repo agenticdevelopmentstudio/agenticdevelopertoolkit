@@ -3,11 +3,11 @@ id: db6178e1-c613-4358-a0b4-8c6f5bfaaff9
 title: UserCard
 domain: agenticdevelopertoolkit://recipes/user-card
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -332,6 +332,8 @@ import the same map instead of duplicating it.
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 These statuses rest on the source's native `<a>`/`<address>` elements and
 rem-based Tailwind text sizes for the passed accessibility checks, the
@@ -343,7 +345,10 @@ failed internationalization checks, `formatMemberSince`'s use of
 `toLocaleDateString` plus the non-truncating wrapping layout for the passed
 internationalization checks, and the untested RTL flex ordering together
 with `initialsOf`'s single-UTF-16-code-unit character slicing for the
-partial internationalization checks.
+partial internationalization checks. `separation-of-concerns` passes because
+`initialsOf`, `platformLabel`, `formatMemberSince`, and `addressLines` are
+pure helper functions kept apart from the render body; `unit-test-coverage`
+fails because no test exercises `UserCard`.
 
 ## Change History
 
@@ -353,3 +358,4 @@ partial internationalization checks.
 | 1.1.0 | 2026-07-03 | Mike Fullerton | Reattribute the avatar image engine from Radix to Base UI (`@base-ui/react/avatar`), matching `avatar.tsx`; behavior (load/error → initials fallback) unchanged. |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with proper "not applicable" explanations; restructure Platform Notes into five-platform format with concrete implementation guidance for each platform; correct domain URI; set status to review. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case (no `must-` prefix); fix the member-since and initials-count requirement/vector contradictions; formalize `native-contact-links` and add vectors for field-passthrough, per-section suppression, avatar load failure, contact links, and the empty-slug/displayName edge case; correct Platform Notes APIs (WinUI `PersonPicture`, Compose `LinkAnnotation`/`LocalUriHandler`, AppKit/UIKit stack view + `URLSession`, SwiftUI `.dateTime.month(.wide).year()`); mark Localization and Privacy applicable; reformat Design Decisions and rebuild Compliance from the actual catalog; add `depends-on` for the composed avatar/skeleton/separator/badge/external-link/section-label pieces; generalize ADH-specific wording into a Known Consumers note. |
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

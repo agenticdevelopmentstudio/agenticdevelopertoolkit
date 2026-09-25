@@ -26,7 +26,7 @@
 // ─── The selection chain: ONE line ────────────────────────────────────────────────────────────────
 
 /**
- * The selection chain's ONE stroke weight, in CSS px (**must-draw-one-chain-line**).
+ * The selection chain's ONE stroke weight, in CSS px (**draw-one-chain-line**).
  *
  * THREE things draw this line and they must be indistinguishable:
  *   1. a selected row's gold left bar — `border-l-2` in `topic-detail.tsx`;
@@ -49,7 +49,7 @@ export const CHAIN_STROKE_PX = 2
 // ─── Motion: the entrance bounces, the exit does not ──────────────────────────────────────────────
 
 /**
- * The entrance's damped bounce (**must-bounce-the-entrance**).
+ * The entrance's damped bounce (**bounce-the-entrance**).
  *
  * The box grows out of the chosen row and oscillates into place, each swing overshooting less than
  * the last: **+10, −10, +5, −5, 0** percentage points around its resting size. One `scale` track
@@ -93,7 +93,7 @@ export const ENTER_MS = 460
 export const EXIT_MS = 300
 
 /**
- * The exit's curve — **NO WIGGLE ON THE WAY OUT** (**must-not-wiggle-the-exit**).
+ * The exit's curve — **NO WIGGLE ON THE WAY OUT** (**not-wiggle-the-exit**).
  *
  * The exit used to be the entrance's exact mirror, `cubic-bezier(0.75, -0.28, 0.55, 1)`, on the
  * reasoning that closing IS opening run backwards. The mirror of an overshoot is an UNDERSHOOT at
@@ -139,7 +139,7 @@ export function exitKeyframes(): Keyframe[] {
  * — a select advancing the frontier, a new level registering a commit late, width pressure
  * recomputing, the remount a route-param change triggers — can move a menu that is already on
  * screen: the numbers it paints from cannot change, because they are data, not a derivation
- * (**must-hold-the-ground-under-the-pointer**, **must-not-move-the-menus-on-an-intermediate-
+ * (**hold-the-ground-under-the-pointer**, **not-move-the-menus-on-an-intermediate-
  * select**). This single frozen value replaces the ground latch (`mayMoveGround`), the covering
  * pressure/hidden freeze (`heldCover`), and the frozen-frontier ratchet
  * (`ratchetFrozenFrontier`/`coverFrontierWhileChoosing`) of v1.15.x — three interceptors whose
@@ -158,7 +158,7 @@ export type EngagedBase = {
 
 /**
  * The cascade's TWO states, stored per surface (they must survive the remount a selection causes —
- * **must-keep-view-state-across-a-selection**):
+ * **keep-view-state-across-a-selection**):
  *
  *   - `settled` — the resting layout: covering, width pressure, off-screen drilling and the ground
  *     all compute LIVE. This is the only state in which base geometry may move.
@@ -167,7 +167,7 @@ export type EngagedBase = {
  *     the frozen-ground-only state (a stack with nothing covered has nothing to reveal, but its
  *     ground still must not move under the gesture).
  *
- * A CLICK IS NOT A SETTLING EVENT (**must-collapse-from-one-pointer-authority**): the only
+ * A CLICK IS NOT A SETTLING EVENT (**collapse-from-one-pointer-authority**): the only
  * transitions back to `settled` are the three `SettleReason`s — the pointer provably leaving the
  * menus, an explicit `«/»`/auto-hide/immersion toggle, and (auto-collapse mode only) the FINAL
  * CHOICE. A rail click can only `engageOnRailClick`, which never changes `base` and never returns
@@ -181,7 +181,7 @@ export const SETTLED: CascadeMode = { kind: "settled" }
 
 /**
  * The pointer ENTERS an open zone — the disclose trigger's approach lane, or a covered peek
- * (**must-auto-collapse-menus-on-final-choice**'s re-open clause: entering IS how a settled
+ * (**auto-collapse-menus-on-final-choice**'s re-open clause: entering IS how a settled
  * cascade re-opens). Engage and reveal EVERYTHING on screen: the reveal roots at the first
  * on-screen column (`hidden`). Idempotent while already engaged — re-entering keeps the existing
  * base (the menus cannot move, only reveal further leftward).
@@ -192,11 +192,11 @@ export function engageOnEnter(prev: CascadeMode, base: EngagedBase): CascadeMode
 }
 
 /**
- * A RAIL CLICK — select, clear or ✕ — anywhere in the menus (**must-not-move-the-menus-on-an-
+ * A RAIL CLICK — select, clear or ✕ — anywhere in the menus (**not-move-the-menus-on-an-
  * intermediate-select**, T61): engage if not already engaged (capturing the resting layout the
  * click landed on), and root the reveal no deeper than the clicked list. The clicked list and
  * everything the user already walked open stay exactly where they are; parents the user had
- * covered stay covered (**must-not-expand-parents-on-select** — the root only ever RATCHETS
+ * covered stay covered (**not-expand-parents-on-select** — the root only ever RATCHETS
  * shallower, it never springs a covered parent open on a click). An existing base is NEVER
  * replaced and the mode NEVER settles here.
  */
@@ -212,9 +212,9 @@ export function engageOnRailClick(
 
 /**
  * The COMPLETE set of reasons the cascade may settle — the whole point of naming them
- * (**must-collapse-from-one-pointer-authority**). `pointer-exit` is the standing auto-collapse
+ * (**collapse-from-one-pointer-authority**). `pointer-exit` is the standing auto-collapse
  * (the pointer provably left the menu region); `toggle` is an explicit `«/»` / auto-hide /
- * immersion click (settling IS the requested action, must-apply-disclosure-toggles-immediately);
+ * immersion click (settling IS the requested action, apply-disclosure-toggles-immediately);
  * `final-choice` is the ONE click-driven closure (v1.15.0, auto-collapse mode only). There is
  * deliberately no "rail-click" member: an intermediate select cannot close the menus, and a future
  * edit that wants one has to add it HERE, where the test will make that choice loud.
@@ -238,8 +238,8 @@ export type RailSelectPlan = {
 }
 
 /**
- * The one place a rail click is decided (**must-own-unselection**, **must-guard-unsaved-on-exit**,
- * **must-animate-every-menu-closure**).
+ * The one place a rail click is decided (**own-unselection**, **guard-unsaved-on-exit**,
+ * **animate-every-menu-closure**).
  *
  * The third clause is the one that was wrong. Re-clicking the selected row animated the sub-branch
  * closed; clicking a DIFFERENT row — switching workspace, which tears down exactly the same menus —
@@ -313,7 +313,7 @@ export function pointInRegion(r: MenuRect, x: number, y: number): boolean {
 export type LeadsTo = "list" | "detail"
 
 /**
- * Resolve a row's declared leafness (**must-hold-the-detail-until-the-final-choice**): the item's
+ * Resolve a row's declared leafness (**hold-the-detail-until-the-final-choice**): the item's
  * own `leadsTo`, else its level's default, else `"detail"`.
  *
  * Whether a chosen row "leads to another topic list" is a fact of the HOST's data, so the host
@@ -368,7 +368,7 @@ export function planRailHold({
  * (a merged stack may still be un-registering the old branch's deeper lists for a commit).
  * Pre-navigation renders keep whatever the pane is showing; the landing render swaps ONCE and, in
  * auto-collapse mode, settles the menus on that same click
- * (**must-auto-collapse-menus-on-final-choice** — with auto-collapse OFF nothing collapses, T60).
+ * (**auto-collapse-menus-on-final-choice** — with auto-collapse OFF nothing collapses, T60).
  */
 export function planLeafSettle({
   sigChanged,
@@ -388,7 +388,7 @@ export function planLeafSettle({
 
 /**
  * Does a pointer move fire an OPEN ZONE (the disclose trigger's approach lane, or a covered peek)?
- * Entry-only (**must-auto-collapse-menus-on-final-choice**'s re-open clause): after the final
+ * Entry-only (**auto-collapse-menus-on-final-choice**'s re-open clause): after the final
  * choice closes the menus the pointer has not moved, so nothing may re-open them until it next
  * ENTERS a peek or menu — merely BEING inside a zone (which now covers where the click landed)
  * must not re-disclose the cascade on the first stray pixel of movement. Only the outside→inside

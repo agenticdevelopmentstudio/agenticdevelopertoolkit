@@ -3,11 +3,11 @@ id: 8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a
 title: Markdown Viewer
 domain: agenticdevelopertoolkit://recipes/markdown-viewer
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,8 +43,8 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 ## Behavioral Requirements
 
 - **fetch-by-id**: Component MUST fetch markdown content by document `id` via the configured fetcher.
-- **fetch-timeout**: Fetch operation MUST abort if it exceeds the configured `timeoutMs` (default 15000ms).
-- **abort-on-id-change**: If `id` changes while a fetch is in flight, the component MUST abort the previous fetch and ignore any late response for the stale id.
+- **fetch-timeout**: Fetch operation MUST abort its `AbortSignal` if it exceeds the configured `timeoutMs` (default 15000ms). Reaching the error state from this depends on the fetcher honoring that signal (rejecting once aborted, as the default native-fetch fetcher does); a fetcher that ignores `AbortSignal` is not itself interrupted and can still resolve, or keep loading, past the timeout.
+- **abort-on-id-change**: If `id` changes while a fetch is in flight, the component MUST abort the previous fetch's `AbortSignal`. With a fetcher that honors the signal, this makes any late response for the stale id rejected and ignored. Exception: if the stale fetch had already timed out before `id` changed, its signal is already aborted with the timeout reason, and the id-change cleanup's second `abort()` call is a no-op that cannot change that reason — so with a fetcher that does not honor `AbortSignal`, a late success or error for the stale id can still overwrite the newer id's state instead of being ignored (see Edge Cases).
 - **fetch-error-handling**: Component MUST display an error state with the error message if the fetch fails.
 - **sanitized-rendering**: Markdown content MUST be rendered as sanitized HTML using an allowlist: elements limited to prose structure (headings, paragraphs, lists, tables, blockquotes, code, links, images, inline emphasis, `details`/`summary`, and similar), with `<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>`, and `<form>` always stripped. `href`/`cite` accept only the `http`, `https`, `mailto`, and `tel` protocols and `src` accepts only `http`/`https` (no `javascript:` or other schemes). No `on*` event-handler attribute is permitted on any element.
 - **code-syntax-highlighting**: Code blocks in markdown MUST receive syntax highlighting via the configured highlighter.
@@ -93,7 +93,7 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 |----|-------------|-------|----------|
 | mdv-001 | fetch-by-id | `id="abc123"` | Fetcher is called with id `"abc123"`. |
 | mdv-002 | idle-state | `id=undefined` | Component enters idle state; no fetch occurs. |
-| mdv-003 | fetch-timeout | `timeoutMs=5000`, fetch hangs >5s | Fetch is aborted; error state shown. |
+| mdv-003 | fetch-timeout | `timeoutMs=5000`, fetch hangs >5s, using the default native-fetch fetcher | Fetch's `AbortSignal` is aborted; the fetcher rejects on abort, so the error state is shown. A fetcher that does not honor `AbortSignal` is not interrupted and can keep loading, or resolve, past the timeout instead. |
 | mdv-004 | fetch-error-handling | Fetcher returns error with message | Error state displays error message in detail text. |
 | mdv-005 | sanitized-rendering | Markdown with `<script>alert('xss')</script>` | Script tag is removed; no script executes. |
 | mdv-006 | code-syntax-highlighting | Markdown with ` ```js\nvar x=1;\n``` ` (web) | Rendered `<code>` contains `<span>` elements carrying inline `--shiki-light`/`--shiki-dark` custom properties (JavaScript tokens are colorized); no bare color literal appears in the HTML. |
@@ -106,14 +106,14 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 | mdv-013 | empty-state | Content is `""` or whitespace-only | "Empty document" icon and message are shown. |
 | mdv-014 | no-flash-theme | (Web SSR) User has persisted theme "dark" | Dark theme is applied before first paint (no visible theme flash). |
 | mdv-015 | theme-switcher-touch-target | Component renders | Theme switcher control's hit area measures at least 44×44pt (iOS) / 48×48dp (Android). |
-| mdv-016 | abort-on-id-change | `id` changes from `"abc"` to `"xyz"` while `"abc"`'s fetch is pending | `"abc"`'s fetch is aborted; only `"xyz"`'s result (success or error) is reflected in state. |
-| mdv-017 | sanitized-rendering | `[link](javascript:alert(1))` | Rendered `<a>` has no `href` attribute (disallowed protocol dropped by the sanitizer). |
+| mdv-016 | abort-on-id-change | `id` changes from `"abc"` to `"xyz"` while `"abc"`'s fetch is pending, using the default native-fetch fetcher | `"abc"`'s fetch's `AbortSignal` is aborted and the fetcher rejects; only `"xyz"`'s result (success or error) is reflected in state. If `"abc"` had already timed out before `id` changed, and the fetcher ignores `AbortSignal`, `"abc"`'s late result can instead overwrite `"xyz"`'s state — see Edge Cases. |
+| mdv-017 | sanitized-rendering | Markdown link with text `link` and target `javascript:alert(1)` | Rendered `<a>` has no `href` attribute (disallowed protocol dropped by the sanitizer). |
 | mdv-018 | sanitized-rendering | Raw HTML `<img src=x onerror=alert(1)>` | `onerror` attribute is stripped (not in the attribute allowlist); no script executes. |
 
 ## Edge Cases
 
 - **Null/undefined id**: Component enters idle state; no fetch is triggered. MUST not error.
-- **id changes during in-flight fetch**: The previous fetch MUST be aborted and its response (success or error) ignored; only the new `id`'s fetch determines the resulting state (see **abort-on-id-change**).
+- **id changes during in-flight fetch**: The previous fetch's `AbortSignal` MUST be aborted. With the default native-fetch fetcher (which rejects on abort), this means its response is ignored and only the new `id`'s fetch determines the resulting state (see **abort-on-id-change**). Exception: if the stale fetch had already timed out before `id` changed, its signal is already aborted with the timeout reason, and the cleanup's second `abort()` call cannot change that reason — a fetcher that ignores `AbortSignal` can therefore still deliver the stale id's late success or error and overwrite the new id's state instead of being suppressed.
 - **Stale theme ID in storage (web)**: If stored theme ID is no longer in the valid registry, MUST fall back to the default theme without error.
 - **Storage quota exceeded or unavailable (web)**: Theme selection still works live; persistence just fails silently. User's session theme remains active until app restart.
 - **CSP blocks bootstrap script (web)**: No-flash protection is disabled; SSR paint uses default theme, then hydration applies persisted theme (visible flash). Component still functions.
@@ -136,7 +136,7 @@ A read-only markdown document viewer with theme persistence and syntax-highlight
 | `highlighter` | `CodeHighlighter` | `nil` (no highlighting; falls back to monochrome themed monospace) | (Apple only) Optional custom code syntax highlighter; uses default if omitted. |
 
 **Types referenced above:**
-- `MarkdownFetcher`: `(id: string, signal: AbortSignal) => Promise<MarkdownDocument>` — given a document id and an abort signal, resolves the fetched document or rejects with an error.
+- `MarkdownFetcher`: `(id: string, signal: AbortSignal) => Promise<MarkdownDocument>` — given a document id and an abort signal, resolves the fetched document or rejects with an error. **fetch-timeout** and **abort-on-id-change** depend on the fetcher honoring `signal` (rejecting once it is aborted, as the default native-fetch fetcher does); a fetcher that ignores `signal` is not interrupted by an abort and can still resolve, or deliver a stale result, after the component has moved on to a new `id`.
 - Document shape (fields the viewer reads): `{ id: string; title: string; content: string }` — `title` renders in the toolbar; `content` is the raw markdown body.
 - `SemanticPalette` (Apple): the app-wide semantic color-role palette (e.g. `.primaryText`) — the same type used for theming elsewhere in the app.
 - `CodeHighlighter` (Apple): `func highlight(_ code: String, language: String?, palette: SemanticPalette) -> NSAttributedString?`.
@@ -238,8 +238,10 @@ Not applicable: No logging instrumented in source. Host app can log component li
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-`screen-reader-support`/`keyboard-navigable`/`semantic-markup` rest on the `aria-live`/`aria-busy`/`role="alert"` markup and the native `<select>` theme switcher shown in `MarkdownViewer.tsx`; `dynamic-type-support`, `contrast-ratio`, and `touch-target-size` are `partial` because the requirement is stated but not measured or enforced in the given source; `input-sanitization` and `content-security-policy` rest on the `rehype-sanitize` allowlist and the bootstrap script's `nonce` support in `process-markdown.ts`/`MarkdownViewer.tsx`; `secure-transport` is `partial` because the fetcher calls a relative API path with no TLS enforcement visible from this source; `data-minimization` rests on the Privacy section above; the internationalization checks rest on the Localization key table above; and the platform-compliance checks rest on the APT design tokens and the theme registry/palette system.
+`screen-reader-support`/`keyboard-navigable`/`semantic-markup` rest on the `aria-live`/`aria-busy`/`role="alert"` markup and the native `<select>` theme switcher shown in `MarkdownViewer.tsx`; `dynamic-type-support`, `contrast-ratio`, and `touch-target-size` are `partial` because the requirement is stated but not measured or enforced in the given source; `input-sanitization` and `content-security-policy` rest on the `rehype-sanitize` allowlist and the bootstrap script's `nonce` support in `process-markdown.ts`/`MarkdownViewer.tsx`; `secure-transport` is `partial` because the fetcher calls a relative API path with no TLS enforcement visible from this source; `data-minimization` rests on the Privacy section above; the internationalization checks rest on the Localization key table above; and the platform-compliance checks rest on the APT design tokens and the theme registry/palette system. `separation-of-concerns` is passed on both platform sources: the web `MarkdownViewer.tsx` delegates fetching to `useMarkdownDocument`, rendering to `MarkdownRenderer`, and theme data to `themes/registry`+`palettes`, keeping only fetch-state/theme-persistence wiring and chrome layout in the component itself; the Apple `MarkdownViewerController.swift` delegates markdown rendering to `MarkdownDocumentRenderer` and text display to `MarkdownTextPane`, keeping only palette/content wiring in the controller. `unit-test-coverage` is partial across the two platform entries: no test in this repo imports or renders the web `MarkdownViewer.tsx` (`MarkdownViewerControllerTests.swift` is a name-matched false positive — it tests the unrelated Apple controller), while `MarkdownViewerControllerTests.swift` does genuinely exercise `MarkdownViewerController.swift`, asserting rendered text, non-editability, and re-render-on-content-change through a loaded viewer.
 
 ## Change History
 
@@ -247,3 +249,4 @@ Not applicable: No logging instrumented in source. Host app can log component li
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web (React/TypeScript) and Apple (Swift) sources. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; add a types note (fetcher signature, document shape, theme registry) and a concrete sanitization allowlist; split Apple theme ownership from web's (host-injected `palette` vs. component-owned `localStorage`) across Requirements, Privacy, and Platform Notes, and fix "Preferences" to `UserDefaults`; move the mislabeled SwiftUI bullet to AppKit/UIKit and write a real SwiftUI note; rebuild Compliance as itemized per-check rows instead of one unverifiable `wcag-2.1-aa` line; reformat Design Decisions to Decision/Rationale/Approved and resolve the storage-errors logging contradiction in favor of the source (no logging); make Localization concrete with string keys; add `abort-on-id-change` and `theme-switcher-touch-target` requirements with vectors, plus sanitizer vectors for `javascript:` links and `onerror`; fix the Appearance padding contradiction and move Tailwind classes to the React/Web note; fix the States idle/empty contradiction and note the Error state has no retry; mark `id`/`fetcher`/`timeoutMs` Web-only for platform symmetry; name the fetcher's default endpoint; add discoverability tags and `depends-on`/`related` links to the composed markdown ingredients. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | fetch-timeout/abort-on-id-change qualified: depend on fetcher honoring AbortSignal; mdv-003/mdv-016/edge case/fetcher contract corrected. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |

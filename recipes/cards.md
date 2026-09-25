@@ -3,11 +3,11 @@ id: 7e4a2c5b-8f3d-4a7e-b9f2-1c5e8d3b6a2f
 title: "Cards"
 domain: agenticdevelopertoolkit://recipes/cards
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -155,12 +155,15 @@ Not applicable: Cards performs no operations requiring diagnostic logging beyond
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Status rests on the source (`Cards.tsx`), which renders a plain `<div>` with only class-name composition — no ARIA role or attributes are added, which is correct for a non-interactive layout container that delegates all semantics to its children.
+Status rests on the source (`Cards.tsx`), which renders a plain `<div>` with only class-name composition — no ARIA role or attributes are added, which is correct for a non-interactive layout container that delegates all semantics to its children. Best-practices statuses rest on `Cards` being pure presentation over its `pair`/`trio`/`children` props, with only a caller-error guard and no business logic (separation-of-concerns: passed), and on `blocks-frame.test.tsx` directly rendering `Cards` and asserting its modifier-class and caller-error behavior (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected pair (four-item) and trio (nine-item) item counts and documented their breakpoint/fallback behavior, dropped `must-` prefixes from requirement names and their citations, reformatted Design Decisions into Decision/Rationale/Approved entries and added an enum recommendation for native ports, added missing edge-case test vectors and corrected the boolean-prop-identity edge case, rewrote Platform Notes with concrete measurements and a real WinUI 3 API, replaced the Compliance section with a table, and clarified the `lp-` namespace and the TypeScript platform note |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

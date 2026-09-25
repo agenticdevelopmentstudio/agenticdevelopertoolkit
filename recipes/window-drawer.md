@@ -3,11 +3,11 @@ id: 31a21ecf-cf6a-42d8-bae5-3b482f8d554d
 title: Window Drawer
 domain: agenticdevelopertoolkit://recipes/window-drawer
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -238,8 +238,10 @@ Not applicable: Component produces no internal logging. Caller may log visibilit
 | [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
 | [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Source basis: `NSSegmentedControl` labels every segment with its tab title and gives symbol images an `accessibilityDescription` (screen-reader-support, dynamic-type-support — system font, no fixed override); tab selection is keyboard-operable via the control's own arrow-key/Return behavior but open/close is programmatic-or-drag only, and control sizing, contrast, and reduce-motion all come from AppKit's `NSSegmentedControl`/theme system rather than anything `WindowDrawer` verifies itself (keyboard-navigable, contrast-ratio, touch-target-size, reduced-motion — partial); and the component wraps `NSDrawer`/`NSSegmentedControl` per HIG, painting both the container and the AppKit-drawn frame in the theme's `windowBackground` role (platform-design-language, native-controls-preference, platform-theming).
+Source basis: `NSSegmentedControl` labels every segment with its tab title and gives symbol images an `accessibilityDescription` (screen-reader-support, dynamic-type-support — system font, no fixed override); tab selection is keyboard-operable via the control's own arrow-key/Return behavior but open/close is programmatic-or-drag only, and control sizing, contrast, and reduce-motion all come from AppKit's `NSSegmentedControl`/theme system rather than anything `WindowDrawer` verifies itself (keyboard-navigable, contrast-ratio, touch-target-size, reduced-motion — partial); and the component wraps `NSDrawer`/`NSSegmentedControl` per HIG, painting both the container and the AppKit-drawn frame in the theme's `windowBackground` role (platform-design-language, native-controls-preference, platform-theming). `separation-of-concerns` passes because `WindowDrawer` knows neither whether it was open (that is its owner's) nor what a tab contains (a `DrawerTab` is just an id, title, symbol, and view factory), and `MouseTransparentView` is split out so "what colour" and "does it take clicks" stay independent; `unit-test-coverage` passes on `WindowDrawerTests.swift`'s exercise of open/close, tab selection, visibility announcements, width clamping, and delegate teardown.
 
 ## Change History
 
@@ -247,3 +249,4 @@ Source basis: `NSSegmentedControl` labels every segment with its tab title and g
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from WindowDrawer.swift |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; moved NSDrawer/AppKit internals from requirements into Platform Notes; made announce-visibility-changes deterministic and reconciled the tab-selection and single-tab-strip edge cases; reformatted Design Decisions to Decision/Rationale/Approved; added a Compliance table; corrected the SwiftUI, Compose, and WinUI 3 platform notes; rewrote untestable or mismatched conformance vectors and retagged drawer-015; fixed the Opening-state and tap-target descriptions; added missing Configuration entries and API references. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

@@ -3,11 +3,11 @@ id: a8f66760-7db0-4a10-927e-856c2170dd4f
 title: "ListHeader"
 domain: agenticdevelopertoolkit://recipes/list-header
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-07-10
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -66,7 +66,10 @@ region (`role="search"`, `<select>` rows under the field) for full search pages;
 - **optional-parts**: Title, filter, and actions MUST each be independently
   omittable; an absent part reserves no space.
 - **filter-width-cap**: The filter field MUST be capped at `max-w-xs` unless
-  `search.grow` is true, in which case it MUST fill the remaining row width.
+  `search.grow` is true, in which case it MUST flex (`flex-1`) to share the
+  row's free space equally with the always-present trailing flex spacer
+  between the filter and `actions` — the field exceeds `max-w-xs`, but an
+  equally-sized gap remains before `actions`, so it does not reach them.
 - **accessible-names**: The bar MUST take an `ariaLabel`; the filter field's
   accessible name defaults to `"Filter"` and is overridable via `search.label`.
 - **autofocus-remount**: When `search.autoFocus` is true, the filter field MUST
@@ -89,8 +92,11 @@ region (`role="search"`, `<select>` rows under the field) for full search pages;
 - **Title**: mono font, `text-xs`, `text-apt-text-muted`, non-shrinking left section.
 - **Filter field**: shared `Input` component with `type="search"`, leading `Search`
   icon (`text-apt-text-muted` colored), constrained to `max-w-xs` unless `grow` is true
-  (see **filter-width-cap**).
-- **Flexible space**: Flex-fill spacer between filter and actions.
+  (see **filter-width-cap**); when `grow` is true it is also `flex-1`, so it competes
+  for free space equally with the flexible spacer below rather than filling it alone.
+- **Flexible space**: A `flex-1` spacer always renders between the filter and actions,
+  independent of `grow` — when `grow` is true, it and the (also `flex-1`) filter field
+  split the row's free space evenly.
 - **Actions**: Right-aligned content, no size constraint.
 - **No raw hex colors**: All colors use `apt-*` design tokens.
 - **No `!important` declarations**: Specificity is managed via composition.
@@ -103,7 +109,7 @@ region (`role="search"`, `<select>` rows under the field) for full search pages;
 | Filter focused | Shared Input focus ring applied |
 | Filter with value | Text visible in field, `onChange` called per keystroke |
 | No search supplied | Title (if set) and actions render; no search field at all |
-| Search grows | Filter field flexes to fill available width when `grow={true}` |
+| Search grows | Filter field exceeds `max-w-xs` and flexes (`flex-1`), splitting the row's free space evenly with the trailing spacer, when `grow={true}` |
 
 ## Accessibility
 
@@ -128,7 +134,7 @@ region (`role="search"`, `<select>` rows under the field) for full search pages;
 | T1 | one-row-layout, controlled-filter | `{ title: "Sites", search: { value: "", onChange }, actions: <Button> }` | All three parts render, in the order title → filter → spacer → actions; typing in the field fires `onChange` with the new text |
 | T2 | optional-parts | `{ title: "Sites", actions: <Button> }` (no `search`) | Title and actions render; no search field appears; flex space still fills |
 | T3 | optional-parts, filter-width-cap | `{ search: { value: "", onChange } }` (no `title`, no `actions`) | Only the search field renders; it remains capped at `max-w-xs` — the absence of `title`/`actions` does not make it grow |
-| T4 | optional-parts, filter-width-cap | `{ title: "Sites", search: { value: "", onChange, grow: true }, actions: <Button> }` | Filter field grows beyond `max-w-xs` to fill the remaining row width when `grow={true}` |
+| T4 | optional-parts, filter-width-cap | `{ title: "Sites", search: { value: "", onChange, grow: true }, actions: <Button> }` | Filter field grows beyond `max-w-xs`, but the trailing spacer (also `flex-1`) claims an equal share of the free space, so the filter stops short of `actions` with an equally wide empty gap between them |
 | T5 | autofocus-remount | `{ search: { value: "", onChange, autoFocus: true } }` remounted | Input receives focus; re-renders (keystroke) do NOT steal focus again |
 | T6 | accessible-names | Render with `ariaLabel="Filter list"` and `search.label="Search"` | Toolbar reports accessible name "Filter list"; input reports "Search" |
 | T7 | Long title (edge case) | `{ title: "A title long enough to exceed the available row width", search: { value: "", onChange }, actions: <Button> }` | Title renders at full width, never wrapping or truncating (no `truncate`/ellipsis styling); the filter field (`min-w-0 flex-1`, see **filter-width-cap**) shrinks first to make room, then actions |
@@ -161,7 +167,7 @@ region (`role="search"`, `<select>` rows under the field) for full search pages;
 | `search.label` | `string` | `"Filter"` | Accessible name for the input. |
 | `search.placeholder` | `string` | `"Filter…"` | Placeholder text when empty. |
 | `search.autoFocus` | `boolean` | `false` | Focus the field when its `<input>` attaches — re-fires on every remount, unlike the native attribute. Re-renders never steal focus (stable ref identity). |
-| `search.grow` | `boolean` | `false` | Let the field flex to fill remaining row width instead of capping at `max-w-xs` — for headers where filter is the only occupant (actions live elsewhere). See **filter-width-cap**. |
+| `search.grow` | `boolean` | `false` | Let the field flex (`flex-1`) past `max-w-xs` instead of capping there — it shares the row's free space equally with the always-present trailing spacer, so even with no `actions` it fills only about half of the free space, never all of it. See **filter-width-cap**. |
 | `actions` | `React.ReactNode` | — | Right-aligned actions (e.g., `+ New` button, Delete). Optional. |
 | `ariaLabel` | `string` | — | Accessible name for the toolbar (required). |
 | `className` | `string` | — | Extra CSS classes applied to the `ButtonBar` container. |
@@ -321,8 +327,17 @@ stateless and composable.
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`passed` rests on what `list-header.tsx` shows directly: `ButtonBar`'s
+`separation-of-concerns` passes because `list-header.tsx` is a pure layout
+component — title, filter field, and `actions` slot — that owns no state of
+its own; `search.value`/`onChange` and `actions` are supplied entirely by the
+caller. `unit-test-coverage` passes: `listHeader.test.tsx` renders
+`ListHeader` directly and covers the title/filter/actions layout, `autoFocus`,
+and the action-only (no `search`) header.
+
+The remaining `passed` statuses rest on what `list-header.tsx` shows directly: `ButtonBar`'s
 `role="toolbar"`/`ariaLabel`, the input's `aria-label` and the icon's
 `aria-hidden`, tab-key operability, the ref-callback focus mechanic, and
 delegating all text entry to the native `<input>` (Unicode-safe by
@@ -341,6 +356,7 @@ properties, which will misplace the icon under RTL even though the row's own
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | search.grow shares free space 50/50 with trailing spacer; filter-width-cap/T4/config fixed. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: reword autofocus-remount and touch-target as named, behavior-stated requirements; add filter-width-cap requirement; fix T3/T4 test vectors and add T7/T8; specify long-title truncation behavior; correct Platform Notes (native search controls, and the Compose/WinUI/AppKit/SwiftUI-specific errors); reformat Design Decisions to Decision/Rationale/Approved; rewrite Compliance as a table; correct Localization to acknowledge the user-visible defaults; strengthen Reduce Motion guidance; add depends-on for ButtonBar and Input; correct the 1.1.0 row's author. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Expand to full ingredient template (AI-assisted); correct domain to agenticdevelopercookbook; add all five Platform Notes bullets; complete Accessibility, Edge Cases, Conformance Test Vectors; mark not-applicable sections (Deep Linking, Localization, Feature Flags, Analytics, Privacy, Logging); add autofocus-remount requirement; add Configuration section with full prop definitions; set status to review. |
 | 1.0.0 | 2026-07-10 | Mike Fullerton | Initial ingredient — extracted from ListWithDetailsPane's inline toolbar; HierarchicalTopicDetail `headerSlot` integration. |

@@ -3,11 +3,11 @@ id: a7cbe25c-53d1-4aec-b76e-59b1c0876728
 title: CRUD Permissions
 domain: agenticdevelopertoolkit://recipes/crud
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -154,12 +154,15 @@ Not applicable: Crud is a data model with no runtime behavior to log.
 | Check | Status | Category |
 |-------|--------|----------|
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Status rests on `crud.tsx` hardcoding the literal English letters `"C"`, `"R"`, `"U"`, and `"D"` in `CRUD_LETTER` with no localization lookup; the source itself never renders these values, so whether a caller displays them to end users untranslated is outside what this file can confirm.
+Status rests on `crud.tsx` hardcoding the literal English letters `"C"`, `"R"`, `"U"`, and `"D"` in `CRUD_LETTER` with no localization lookup; the source itself never renders these values, so whether a caller displays them to end users untranslated is outside what this file can confirm. `separation-of-concerns` passes because `crud.tsx` is a pure logic module — capability booleans, defaults, and the parent-clamping rule — with no rendering of any kind; `unit-test-coverage` passes because `crud.test.ts` directly exercises `CRUD_KEYS`/`CRUD_LETTER` agreement, `noAccess`, `readOnly`, and `clampToParent` with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added exported-key-type/not-mutate-inputs/fresh-instance-per-call requirements with vectors, made crud-001 a compile-time assertion and added clamping-identity/readOnly-as-input vectors, reformatted Design Decisions into Decision/Rationale/Approved blocks and removed the unsourced memory-footprint and "all web applications" claims, replaced the Compliance row with a sourced Internationalization check, retitled to "CRUD Permissions", clarified the Configuration defaults and Localization framing, gave concrete per-platform types in Platform Notes, and fixed the frontmatter `modified` quoting. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source `packages/web/packages/ui/src/components/crud.tsx`. |

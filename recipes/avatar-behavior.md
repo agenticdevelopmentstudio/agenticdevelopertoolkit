@@ -3,11 +3,11 @@ id: ccfd0128-374c-4cca-a83f-71efd3c02176
 title: Avatar Behavior
 domain: agenticdevelopertoolkit://recipes/avatar-behavior
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -262,13 +262,14 @@ different personas without a fork.
   `±pose.spread` and vertically by `pose.eyeY ?? 0`.
 - **iris-pupil-dilation**: When `rig.iris` is wired, `applyPose` MUST tween
   both irises' radius attribute to `rig.iris.baseR * (pose.pupil ?? 1)`.
-- **antennae-per-pose-and-continuous-sway**: When `rig.antennae` is wired and
-  `eyesShut` is false, `applyPose` MUST tween each antenna to its per-pose
-  `lLeft`/`lRight` rotation/offset (when given) and MUST additionally run a
-  continuous, out-of-phase bend loop whose amplitude is `sway.lively` (default
-  `18`) when `pose.wiggle > 0` and `sway.calm` (default `8`) otherwise; while
-  `eyesShut` is true, both antennae MUST settle to a neutral, still bend
-  instead.
+- **antennae-per-pose-and-continuous-sway**: When `rig.antennae` is wired,
+  `applyPose` MUST tween each antenna to its per-pose `lLeft`/`lRight`
+  rotation/offset (when given) regardless of `eyesShut`. Additionally, when
+  `eyesShut` is false, `applyPose` MUST run a continuous, out-of-phase bend
+  loop whose amplitude is `sway.lively` (default `18`) when `pose.wiggle > 0`
+  and `sway.calm` (default `8`) otherwise; while `eyesShut` is true, both
+  antennae MUST instead settle their bend to a neutral, still value (on top
+  of, not instead of, the per-pose rotation/offset tween).
 - **brows-per-pose**: When `rig.brows` is wired and `pose.browLeft`/
   `pose.browRight` are given, `applyPose` MUST tween each brow's rotation and
   vertical offset, pivoting at that brow's own `svgOrigin`.
@@ -782,3 +783,4 @@ sections above).
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the `@agenticdevelopertoolkit/avatar` web source (engine, arbitration, gaze, idleLife, pose, reflexes, speechBubble, types); flagged three genuine gaps — unvalidated MorphSVG point-count matching, unvalidated Pose/Tuning shape at runtime, and no reduced-motion accommodation for the engine's continuous idle loops — with the open question and evidence needed for each recorded in place. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Antennae per-pose rotation/offset tween now runs regardless of eyesShut; neutral bend applies on top, not instead. |

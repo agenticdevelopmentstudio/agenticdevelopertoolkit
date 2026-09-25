@@ -3,11 +3,11 @@ id: 7f84a93a-013e-452f-a963-7ffb4808dd5c
 title: TextBubble
 domain: agenticdevelopertoolkit://recipes/text-bubble
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -264,13 +264,16 @@ telemetry.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on the source: the off-screen full-text span plus `aria-hidden` on the visible copy and the absence of any fixed font-size override on glyph spans pass outright (semantic-markup, dynamic-type-support); `colorFrom`/`colorTo` defaulting to `currentColor` with no contrast check of its own, and no built-in `prefers-reduced-motion` detection beyond the `active` prop hosts may gate, are partial (contrast-ratio, reduced-motion); and `getComputedStyle(host).direction` driving reading order plus the `\p{Script=…}` cursive-script regex pass outright (rtl-layout-support, unicode-support).
+Statuses rest on the source: the off-screen full-text span plus `aria-hidden` on the visible copy and the absence of any fixed font-size override on glyph spans pass outright (semantic-markup, dynamic-type-support); `colorFrom`/`colorTo` defaulting to `currentColor` with no contrast check of its own, and no built-in `prefers-reduced-motion` detection beyond the `active` prop hosts may gate, are partial (contrast-ratio, reduced-motion); and `getComputedStyle(host).direction` driving reading order plus the `\p{Script=…}` cursive-script regex pass outright (rtl-layout-support, unicode-support). `separation-of-concerns` passes: the sweep, measurement, and DOM-splitting logic lives entirely in the `useTextBubble` hook, separate from the `TextBubble` presentational component, which only renders `text` and attaches the ref. `unit-test-coverage` is failed: no test file exercises `TextBubble` or `useTextBubble`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History wording ("Initial recipe" not "Initial ingredient"); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirement IDs to subject-only kebab-case; narrow render-plain-text to the inactive state; add noop-on-empty-text (remaps T11) and pauseMs/minDuration test vectors (T12/T13); name the exact cursive-script Unicode set; rewrite Platform Notes for SwiftUI/Compose/AppKit-UIKit/WinUI 3 with correct APIs and per-platform cursive-skip/word-wrap/accessible-text coverage; reformat Design Decisions into Decision/Rationale/Approved form and add a reduced-motion opt-out decision; resolve the Accessibility Options contradiction; rewrite Compliance as canonical linked checks; add references; correct Change History wording and authorship. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | AI-assisted (Claude Haiku 4.5): bump version, update modified date, add all template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy marked not applicable; expand Platform Notes with concrete WinUI/AppKit/UIKit/Compose guidance). |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the decorative traveling-lens effect, its sweep params, and the preserved accessible text. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the decorative traveling-lens effect, its sweep params, and the preserved accessible text. |

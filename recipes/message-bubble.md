@@ -3,11 +3,11 @@ id: 46e0a509-8eac-460a-b24a-d39a8b71b02c
 title: Message Bubble
 domain: agenticdevelopertoolkit://recipes/message-bubble
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -236,8 +236,10 @@ Not applicable: This component performs no logging.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on: the Web source's `role="alert"` failure container, `aria-label` detail button, and `aria-hidden` avatar (screen-reader-support, semantic-markup, keyboard-navigable — the only interactive elements, the detail button and container click, are native/keyboard-operable); theme-supplied colors that the source cannot verify for contrast or Dynamic Type scaling, and the component's own lack of a non-color sender cue (contrast-ratio, dynamic-type-support); the detail-arrow button's size being deferred to CSS with no explicit minimum in source (touch-target-size); macOS's locale-derived timestamp pattern versus iOS's hard-coded 24-hour format (locale-aware-formatting); the component rendering arbitrary caller-provided Unicode text (including emoji) without special-casing (unicode-support); the "Show details" aria-label being written directly in `MessageBubble.tsx` rather than sourced from a resource key (string-externalization, no-hardcoded-strings); and macOS's timestamp alignment being hardcoded to `.right`/`.left` rather than a logical leading/trailing direction (rtl-layout-support).
+Statuses rest on: the Web source's `role="alert"` failure container, `aria-label` detail button, and `aria-hidden` avatar (screen-reader-support, semantic-markup, keyboard-navigable — the only interactive elements, the detail button and container click, are native/keyboard-operable); theme-supplied colors that the source cannot verify for contrast or Dynamic Type scaling, and the component's own lack of a non-color sender cue (contrast-ratio, dynamic-type-support); the detail-arrow button's size being deferred to CSS with no explicit minimum in source (touch-target-size); macOS's locale-derived timestamp pattern versus iOS's hard-coded 24-hour format (locale-aware-formatting); the component rendering arbitrary caller-provided Unicode text (including emoji) without special-casing (unicode-support); the "Show details" aria-label being written directly in `MessageBubble.tsx` rather than sourced from a resource key (string-externalization, no-hardcoded-strings); and macOS's timestamp alignment being hardcoded to `.right`/`.left` rather than a logical leading/trailing direction (rtl-layout-support); web delegates image-load state and content rendering to `useAllImagesLoaded`/`RichContent`, but both native views build the full attributed string — including delivery-status text and locale-aware time formatting — directly inline in `applyTheme` rather than a separate formatter (separation-of-concerns: partial), while `MessageBubble.test.tsx`, `MessageBubbleViewTests.swift`, and `MobileMessageBubbleViewTests.swift` each meaningfully exercise this component's theme, markdown, failure, and timestamp behavior (unit-test-coverage: passed).
 
 ## Change History
 
@@ -245,3 +247,4 @@ Statuses rest on: the Web source's `role="alert"` failure container, `aria-label
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web, macOS, and iOS sources |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added requirements and vectors for tool-call pills, avatar slot, connector anchor, selected state, container click, and rich-content load gating; fixed the timestamp zero-padding contradiction and marked iOS non-conforming; corrected unsupported WinUI 3/Compose API citations and the sender-name automation bug; resolved the Web/Apple failure-announcement contradiction; reformatted Design Decisions and localization keys; replaced the Compliance and Configuration placeholders with real tables; added related cross-references |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |

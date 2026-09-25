@@ -3,11 +3,11 @@ id: 9c6338b6-9a7a-4692-8164-a75800875031
 title: Chat Coordinator
 domain: agenticdevelopertoolkit://recipes/chat-coordinator
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -307,7 +307,7 @@ visual component.
 | pcc-003 | no-history-in-request | `send(text: "hello", attachments: [])` | POST body to `/messages` has JSON keys exactly `["message"]`, `message == "hello"` — `test_pcc003_noHistory_requestCarriesOnlyTheNewMessage` |
 | pcc-004 | draft-accumulates-full-text | SSE `token("Hel")`, `token("lo")`, `done` | `draftUpdated.text` sequence is `["Hel", "Hello"]`, not `["Hel", "lo"]` — `test_pcc004_accumulate_draftsCarryTheWholeTextSoFar` |
 | pcc-005 | commit-once, received-message-shape | Same stream as pcc-004 | Exactly one `messageReceived` with `text == "Hello"`, followed by a `draftCleared`; the commit event precedes the clear event — `test_pcc005_commitOnce_oneMessageThenTheDraftClears` |
-| pcc-006 | no-commit-on-abort, transport-error-on-stream-failure | Stream yields `token("par")` then closes without `done` or `error` | No `messageReceived`; a `draftCleared` and a `transportError` are both emitted — `test_pcc006_noCommitOnAbort_truncatedReplyDoesNotCommit` |
+| pcc-006 | no-commit-on-abort, transport-error-on-stream-failure | Stream yields `token("par")` then the body throws mid-turn (a network error) instead of `done` or `error` | No `messageReceived`; a `draftCleared` and a `transportError` are both emitted — `test_pcc006_noCommitOnAbort_truncatedReplyDoesNotCommit` |
 | pcc-007 | heartbeat-dropped | SSE `open`, `token("hi")`, `done` | `draftUpdated.text == ["hi"]`; exactly 3 non-status-changed events total (draft, message, clear) — `test_pcc007_dropOpen_theHeartbeatIsNotATranscriptEvent` |
 | pcc-008 | unknown-events-ignored, malformed-token-fallback | SSE `quux` (unrecognized event), `token("hi")`, `done` | Turn completes normally; committed message text is `"hi"` — `test_pcc008_unknownEvents_areIgnoredAndTheStreamContinues` |
 | pcc-009 | tool-call-opened, tool-call-closed | SSE `tool_call_started(name: "search", arguments: {"q":"x"})`, `tool_call_completed(name: "search", ok: true, result: {"hits":2})`, `done` | `commandInvoked.invocation.commandName == "search"`, `argumentsJSON == {"q":"x"}`; `commandCompleted.result.invocationID == invocation.id`, `ok == true`, `resultJSON == {"hits":2}` — `test_pcc009_toolCalls_completionCorrelatesToItsInvocation` |
@@ -383,8 +383,11 @@ visual component.
   body` loop throws mid-turn, the coordinator catches it in
   `consumeStream`; if not destroyed, it emits `transportError(message:)`
   with the underlying error's description. Either way, no `messageReceived`
-  is emitted for that turn (`pcc-006` models this with a stream that closes
-  early rather than throwing).
+  is emitted for that turn (`pcc-006` models this with a stream that throws
+  mid-turn). If the loop instead ends cleanly — the body closes without
+  `done` or `error` but without throwing — `consumeStream` simply falls out
+  of the loop and returns `false`; `runTurn` emits only `draftCleared`, with
+  no `transportError` for that case.
 - **No client-driven retry (MUST NOT)**: The coordinator itself never
   re-issues the HTTP request after a transport failure or a dropped
   connection. Only a server-declared `status: "retrying"` block is relayed
@@ -649,3 +652,4 @@ conversation id.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | Fixed pcc-006 to match throwing-close test; noted clean-close emits no transportError. |

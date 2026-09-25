@@ -3,11 +3,11 @@ id: 8e7fa376-f174-4a10-b2ef-2a5c10854d4e
 title: Connection Overlay
 domain: agenticdevelopertoolkit://recipes/connection-overlay
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ Connection Overlay is a modal card displayed over the current board or dashboard
 
 - **hidden-when-inactive**: Component MUST NOT be rendered (return null) when the `active` prop is `false`.
 - **show-after-delay**: Component MUST NOT be shown in the DOM until the `active` prop has been `true` for at least 1200ms; if `active` becomes `false` before 1200ms elapses, the component MUST NOT appear.
-- **hide-immediately-on-recovery**: Component MUST be hidden immediately (synchronously) when `active` transitions from `true` to `false`, regardless of elapsed time or remaining countdown.
+- **hide-immediately-on-recovery**: Component MUST hide when `active` transitions from `true` to `false`, regardless of elapsed time or remaining countdown, and MUST NOT wait out the 1200ms show-delay debounce (see show-after-delay) to do so. Source performs the hide from a passive effect that runs after the render in which `active` changes, not synchronously within that render: the render that first sees `active=false` can still return the overlay, and a countdown tick already in flight — including an auto-retry call — can fire before the effect's `clearInterval` cleanup runs.
 - **display-deploying-status-within-grace-period**: Component MUST display the heading "Backend deploying" when the outage duration is less than 90,000ms (90 seconds).
 - **display-unreachable-status-after-grace-period**: Component MUST display the heading "Backend unreachable" when the outage duration is 90,000ms or greater.
 - **display-deploying-subtext-when-deploying**: Component MUST display the subtitle "The backend is restarting — reconnecting automatically. This usually takes a moment." when the heading is "Backend deploying".
@@ -112,7 +112,7 @@ Connection Overlay is a modal card displayed over the current board or dashboard
 | overlay-001 | hidden-when-inactive | active=false | Component returns null; nothing rendered |
 | overlay-002 | show-after-delay | active=true, wait 1200ms | Component renders in DOM after 1200ms delay |
 | overlay-003 | show-after-delay (too early) | active=true, wait 500ms | Component does not render before 1200ms elapsed |
-| overlay-004 | hide-immediately-on-recovery | active=true (shown), then active=false | Component is removed from the DOM immediately — synchronously, within the same effect run, with no 1200ms delay |
+| overlay-004 | hide-immediately-on-recovery | active=true (shown), then active=false | Component is removed from the DOM without waiting out the 1200ms show-delay debounce — but not synchronously within the render that saw `active=false`: the hide runs in the passive effect that commits after that render, so a countdown tick already in flight can still fire once before the overlay disappears |
 | overlay-005 | display-deploying-status-within-grace-period | active=true, elapsedMs < 90000 | Heading text is "Backend deploying" |
 | overlay-006 | display-unreachable-status-after-grace-period | active=true, elapsedMs >= 90000 | Heading text is "Backend unreachable" |
 | overlay-007 | display-deploying-subtext-when-deploying | active=true, elapsedMs < 90000 | Subheading text is "The backend is restarting — reconnecting automatically. This usually takes a moment." |
@@ -135,13 +135,13 @@ Connection Overlay is a modal card displayed over the current board or dashboard
 
 ## Edge Cases
 
-- **Manual retry with one second remaining**: Clicking the button when countdown=1 will set countdown=15, reset the ref, and invoke onRetry. The next tick will fire 1 second later (not immediately).
+- **Manual retry with one second remaining**: Clicking the button when countdown=1 sets `remainingRef`/`countdown` to 15 and invokes `onRetry` immediately, but it does not restart the running `setInterval` — the interval's own 1-second phase, set by whenever it last ticked, is untouched. The next tick therefore lands wherever that phase already was, anywhere from just after the click up to a full second later, not reliably "1 second later" from the click.
 - **Null or undefined detail prop**: If `detail` is `null` or `undefined`, the detail element is not rendered (conditional: `detail && !deploying`). No error is thrown.
 - **Rapid active toggles**: If `active` toggles from true to false to true within the 1200ms delay window, the timer resets and the component waits a full 1200ms from the most recent `true` value before showing. (Confirmed by setTimeout cleanup in useEffect.)
 - **onRetry callback changes between renders**: The component stores `onRetry` in a ref (`onRetryRef`) to prevent re-triggering the interval effect when the callback identity changes. The latest callback is always called, even if it was replaced since the last tick.
 - **Strict Mode double-invoke**: React Strict Mode unmounts and remounts effects during development. The countdown interval is properly cleaned up and re-initialized, preventing double-retry invocations (confirmed by use of ref instead of setState in the interval callback).
 - **Component unmounted while shown**: If the component is unmounted while `shown=true`, the interval is cleaned up (clearInterval in useEffect return).
-- **Recovery while the countdown is ticking**: When `active` becomes `false` while the overlay is shown and ticking, the debounced-show effect sets `shown` to `false` synchronously. Because the tick effect depends on `shown`, React tears that effect down immediately — running its `clearInterval` cleanup — so no further countdown ticks occur after recovery; this is the same immediate-hide guarantee as hide-immediately-on-recovery, seen from the interval's perspective.
+- **Recovery while the countdown is ticking**: When `active` becomes `false` while the overlay is shown and ticking, the debounced-show effect sets `shown` to `false` — but from a passive effect, not synchronously within the render that first saw `active=false`. That render still returns the overlay (`shown` is still `true`), and the tick effect's `clearInterval` cleanup does not run until a later commit flushes with `shown=false`. If the 1-second interval fires at any point in that window, it still calls `onRetryRef.current()` — an auto-retry that fires after the feed has already recovered — before the interval is finally torn down.
 - **Very long outage (elapsed > 90 seconds)**: The grace period is a fixed 90,000ms; outages longer than this display "Backend unreachable" indefinitely and allow detail text to be shown. No special behavior for hours-long outages.
 - **Detail text longer than card width**: The detail div has `word-break: break-word`, causing long strings to wrap within the 46ch max-width container.
 
@@ -205,8 +205,8 @@ Not applicable: the component performs no logging. It declares no subsystem or c
 ## Design Decisions
 
 1. **Show delay (1200ms)**
-   **Decision**: Debounce the overlay's appearance by 1200ms after `active` becomes `true`, and hide it synchronously the instant `active` becomes `false`.
-   **Rationale**: This absorbs brief network hiccups and momentary reconnects without flashing an alarming overlay at the user; hiding is instant on recovery so the overlay never lingers past the outage. 1200ms is a source constant — the code comments describe intent ("don't flash on a momentary blip") but the exact value's derivation is not documented in source and should be treated as unverified rather than tied to any specific deploy-restart measurement.
+   **Decision**: Debounce the overlay's appearance by 1200ms after `active` becomes `true`, and skip that debounce entirely — hiding as soon as the recovery effect runs — the instant `active` becomes `false`.
+   **Rationale**: This absorbs brief network hiccups and momentary reconnects without flashing an alarming overlay at the user; hiding skips the debounce on recovery so the overlay never lingers past the outage, even though the hide itself lands on the next commit (a passive effect), not synchronously within the render that saw `active=false` (see hide-immediately-on-recovery). 1200ms is a source constant — the code comments describe intent ("don't flash on a momentary blip") but the exact value's derivation is not documented in source and should be treated as unverified rather than tied to any specific deploy-restart measurement.
    **Approved**: pending
 
 2. **Grace period (90 seconds)**
@@ -264,14 +264,17 @@ Not applicable: the component performs no logging. It declares no subsystem or c
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`keyboard-navigable`, `focus-management`, `reduced-motion`, and `no-hardcoded-strings` are read directly from source: a native `<button>` in the normal tab order, no focus trap or restore around the modal card, the `animate-spin` class applied unconditionally with no `prefers-reduced-motion` check, and five hard-coded English literals with no key table. `touch-target-size` is `partial` because source sets no explicit hit-area size — closing it needs a decision beyond what the source shows: see the open question on touch-target-size. `contrast-ratio` is `partial` because colors resolve to app-supplied theme tokens whose actual contrast the source itself cannot verify.
+`keyboard-navigable`, `focus-management`, `reduced-motion`, and `no-hardcoded-strings` are read directly from source: a native `<button>` in the normal tab order, no focus trap or restore around the modal card, the `animate-spin` class applied unconditionally with no `prefers-reduced-motion` check, and five hard-coded English literals with no key table. `touch-target-size` is `partial` because source sets no explicit hit-area size — closing it needs a decision beyond what the source shows: see the open question on touch-target-size. `contrast-ratio` is `partial` because colors resolve to app-supplied theme tokens whose actual contrast the source itself cannot verify. separation-of-concerns is partial because the show-delay debounce, 15-second countdown, and auto-retry timers are the component's actual behavior rather than incidental bookkeeping, and none of that state-machine logic is factored out of `connection-overlay.tsx` into a separate hook, while unit-test-coverage is failed because no test file exercises this component at all.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Corrected hide-immediately-on-recovery/overlay-004/two edge cases/Design Decision 1 to reflect the async passive-effect hide, not synchronous. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: failed). |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirement IDs to drop must-/should- prefixes and fix the backwards hidden-when-inactive name; add visible-focus-indicator and respects-reduced-motion requirements; define outage-duration (elapsedMs) measurement in Behavioral Requirements and Configuration; scope prevent-interaction-with-underlying-content to pointer/visual access only; reformat Design Decisions to Decision/Rationale/Approved and mark the show-delay and grace-period rationale as unverified source constants; narrow the color-tokens decision to exclude button text and shadow; link Compliance checks to the catalog, fix their statuses, and drop the non-catalog Offline behavior row; mark Localization's no-hardcoded-strings failed; correct the WCAG SC 2.5.8 level citation and add references; rewrite the overlay-004/018/019 test vectors to assert observable outcomes and add vectors for the focus indicator, reduced motion, countdown persistence, and the rapid-toggle debounce; retitle and clarify two edge cases; remove appearance/state rows that added no guidance; correct the SwiftUI live-region guidance to post an announcement on heading change; and reword full-viewport coverage to containing-block coverage |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Replace unresolved-gap placeholders with source-traced facts; add concrete translation guidance to Platform Notes; reword Compliance statuses |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code (generated by Claude Haiku 4.5) |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

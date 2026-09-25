@@ -3,11 +3,11 @@ id: 1cdd9485-95e5-47dd-9346-224b43ce8ab9
 title: DevBanner
 domain: agenticdevelopertoolkit://recipes/dev-banner
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -161,8 +161,10 @@ Not applicable: The component does not emit log events.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on `DevBanner.tsx` and `dev-banner.css`: font-size is set in `rem` (scales with root size), the default message is a hardcoded string literal with no key/resource lookup, the container renders arbitrary text as a plain JSX text node, and `white-space: nowrap` with no truncation means longer or translated text can overflow rather than wrap; the background is semi-transparent (`rgba(12, 12, 15, 0.4)`), so contrast against arbitrary underlying page content cannot be guaranteed, and `aria-hidden` is applied to a `pointer-events: none` decorative element.
+Statuses rest on `DevBanner.tsx` and `dev-banner.css`: font-size is set in `rem` (scales with root size), the default message is a hardcoded string literal with no key/resource lookup, the container renders arbitrary text as a plain JSX text node, and `white-space: nowrap` with no truncation means longer or translated text can overflow rather than wrap; the background is semi-transparent (`rgba(12, 12, 15, 0.4)`), so contrast against arbitrary underlying page content cannot be guaranteed, and `aria-hidden` is applied to a `pointer-events: none` decorative element. `separation-of-concerns` passes because `DevBanner.tsx` only joins classes and renders a static message with no business logic; `unit-test-coverage` fails because no test file exercises `DevBanner`.
 
 ## Change History
 
@@ -170,3 +172,4 @@ Statuses rest on `DevBanner.tsx` and `dev-banner.css`: font-size is set in `rem`
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added `default-position`/`base-class`; rewrote Compliance as linked catalog checks; reformatted Design Decision to Decision/Rationale/Approved; corrected the null-vs-undefined message and className edge cases with new test vectors; filled Appearance, Platform Notes, Localization, and Accessibility Options with detail grounded in `dev-banner.css`. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

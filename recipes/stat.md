@@ -3,11 +3,11 @@ id: bba42d5f-8a52-487f-88c5-4f988dfa714b
 title: Stat
 domain: agenticdevelopertoolkit://recipes/stat
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -167,6 +167,39 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 Exports from `@agenticdevelopertoolkit/ui/components/stat`: `StatRow`, `Stat`, the `StatTone`
 type, and the `StatProps` interface.
 
+## Deep Linking
+
+None: `Stat`/`StatRow` are pure render functions with no router subscription
+and no URL of their own.
+
+## Localization
+
+None applicable: the component contains no hardcoded user-facing strings.
+`label` and `value` are both `ReactNode`, supplied entirely by the host.
+
+## Accessibility Options
+
+| Option | Behavior |
+|--------|----------|
+| Reduce Motion | Not applicable: the source renders static markup with no transition or animation at all. |
+| Increase Contrast | Depends on the `apt-*` design tokens driving `TONE_TEXT_CLASS`; the component itself does no `prefers-contrast` handling. |
+| Differentiate Without Color | Tone is conveyed by color only, as already noted in Accessibility; there is no non-color indicator, so callers SHOULD keep `label` descriptive rather than relying on the tint. |
+
+## Feature Flags
+
+None: feature-gating a stat display is not a concern of the component; a host
+controls whether it renders at all.
+
+## Analytics
+
+None: the source emits no analytics or telemetry; it is a display primitive
+only.
+
+## Privacy
+
+None: the component collects and transmits nothing; `label`/`value` are
+whatever the host passes in.
+
 ## Logging
 
 No logging. `Stat`/`StatRow` are presentational primitives; the meaning of a figure
@@ -214,18 +247,24 @@ and makes the number the visual anchor.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 `contrast-ratio` is partial because `stat.tsx` colors the value and label only
 through `apt-*` tokens — no raw hex, no `!important` — without itself asserting a
 measured ratio. `semantic-markup` passes because the component renders plain,
 non-interactive `<span>`/`<div>` elements with no ARIA misuse. `platform-theming`
 passes because every color comes from the shared `apt-*` theme tokens, which the
-Appearance section states resolve consistently in light and dark.
+Appearance section states resolve consistently in light and dark. `StatRow`/`Stat`
+are pure presentation over props with no business logic (separation-of-concerns
+passed), and `stat.test.tsx` directly renders both and asserts on tone-class output
+(unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: ground `value-class-overrides-tone` and its Edge Case in `tailwind-merge`, and limit the tone fallback claim to `undefined`; rename the web Platform Notes bullet to `React/Web`, fix inaccurate Compose/AppKit-UIKit/WinUI APIs, add row-form/uppercase-label/tone-color guidance for every native platform, and correct the SwiftUI tracking unit and hardcoded WinUI font; add a SHOULD on grouping value/label for assistive tech; give T6 a concrete input and add a `Stat`+`className` test vector; rewrite Design Decisions in the Decision/Rationale/Approved form; replace the Compliance table's circular/misnamed checks with linked catalog checks. |
 | 1.0.2 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes non-web bullets; sharpen translation guidance. |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Move to review; fix domain URIs and expand Platform Notes to cover all platforms. |

@@ -3,11 +3,11 @@ id: 61f589a9-d32f-4e9b-85db-1f9aa0eee009
 title: Markdown Text Pane
 domain: agenticdevelopertoolkit://recipes/markdown-text-pane
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,7 +45,7 @@ The Markdown Text Pane is a lightweight container that wraps platform-native tex
 - **provide-text-property**: The component MUST provide a `text` property that reads and sets the pane's plain-text content. Reading returns the complete string; empty panes return an empty string (never null).
 - **support-attributed-text**: The component MUST support reading and setting attributed (styled) text via `attributedText` (read-only) and `setAttributedText(_:)` (write).
 - **support-focus**: The component MUST provide a `focus()` method that moves keyboard focus to the underlying text view and returns a boolean indicating success. A pane without focus does not receive keystrokes because the internal text view is private.
-- **support-theme**: The component MUST accept a `SemanticPalette` via `applyTheme(_:)` to customize colors and font. Theme application MUST update: background, text foreground, cursor color, and code font (not body font).
+- **support-theme**: The component MUST accept a `SemanticPalette` via `applyTheme(_:)` to customize colors and font. Theme application MUST update: background, text foreground, cursor color, selection background and selection foreground, and code font (not body font).
 - **disable-smart-substitutions-ios**: On iOS, the component MUST disable `autocorrectionType`, `smartQuotesType`, and `smartDashesType` to prevent automatic text transformations inappropriate for code/markdown content.
 - **disable-smart-substitutions-macos**: On macOS, the component MUST disable automatic quote substitution, dash substitution, spelling correction, and text replacement to prevent automatic text transformations.
 - **allow-undo-macos**: On macOS, the component MUST support the undo system (`allowsUndo = true` on the text view).
@@ -76,7 +76,7 @@ The Markdown Text Pane is a lightweight container that wraps platform-native tex
 | Read-only (not editable) | Cursor hidden; selection still visible; text still scrollable |
 | Focused | Cursor blinks and accepts keyboard input |
 | Unfocused | Cursor hidden; text and selection remain visible |
-| Themed | Background, text color, and cursor color updated per palette |
+| Themed | Background, text color, cursor color, and selection colors updated per palette |
 
 ## Accessibility
 
@@ -102,7 +102,7 @@ The Markdown Text Pane is a lightweight container that wraps platform-native tex
 | mtpane-009 | support-attributed-text | Set `pane.setAttributedText(styled)` where styled includes bold/italic attributes | Read `pane.attributedText` returns the styled text with attributes preserved |
 | mtpane-010 | support-focus | Call `pane.focus()` on an onscreen pane | Returns true; keyboard focus moves to text view; user keystrokes are received |
 | mtpane-011 | support-focus | Call `pane.focus()` on a pane without a window | Returns false; no focus change occurs |
-| mtpane-012 | support-theme | Call `applyTheme(palette)` with a palette defining windowBackground, primaryText, cursor, and code font | Text view background, text color, insertion point color, and font are updated |
+| mtpane-012 | support-theme | Call `applyTheme(palette)` with a palette defining windowBackground, primaryText, cursor, selection, selectionText, and code font | Text view background, text color, insertion point color, selection highlight colors, and font are updated |
 | mtpane-013 | disable-smart-substitutions-ios | On iOS, user types a quote character | No smart quote substitution occurs |
 | mtpane-014 | disable-smart-substitutions-ios | On iOS, user types two hyphens | No smart dash substitution occurs |
 | mtpane-015 | disable-smart-substitutions-macos | On macOS, user types a quote character | No smart quote substitution occurs |
@@ -146,7 +146,7 @@ Not applicable: Markdown Text Pane displays user-supplied text and system UI ele
 
 - **Reduce Motion**: This component performs no animation of its own; text-view caret blinking is native platform behavior outside this component's control and is unrelated to the Reduce Motion setting. No special handling is required.
 - **Increase Contrast**: The parent controller is responsible for choosing a high-contrast palette when applying the theme. The pane respects whatever foreground and background colors are provided.
-- **Differentiate Without Color**: Text selection relies on the system's native selection highlight (`selectedTextAttributes` on macOS; the platform's built-in selection UI on iOS), which the platform — not this component — determines is distinguishable without relying on color alone.
+- **Differentiate Without Color**: Text selection is drawn with `applyTheme`'s own selection colors, not a platform-chosen highlight: on macOS `applyTheme` sets `selectedTextAttributes` from the palette's selection background and selection text roles, and on iOS it tints the built-in selection UI via `tintColor` from the palette's cursor color. Whether the highlight is distinguishable without relying on color alone is therefore the palette's responsibility, not the platform's.
 
 ## Feature Flags
 
@@ -218,8 +218,10 @@ Not applicable: Markdown Text Pane performs no logging of its own. Platform text
 | [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
 | [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
 | [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`keyboard-navigable`, `focus-management`, `platform-design-language`, and `native-controls-preference` rest on the source wrapping the native `NSTextView`/`UITextView` directly, with the explicit, delegate-driven `focus()` path (mtpane-010/011); `unicode-support` and `input-sanitization` rest on the plain-text-only design (**use-plain-text-mode**), which stores and echoes text without parsing or executing it; `dynamic-type-support`, `contrast-ratio`, `touch-target-size`, and `rtl-layout-support` are `partial` because the source delegates font, color, sizing, and bidi behavior to the caller's palette/container and to native `UITextView`/`NSTextView` defaults, which this recipe cannot verify; `data-minimization` rests on the Privacy section's confirmation that the component collects, stores, and transmits nothing beyond the text the caller provides.
+`keyboard-navigable`, `focus-management`, `platform-design-language`, and `native-controls-preference` rest on the source wrapping the native `NSTextView`/`UITextView` directly, with the explicit, delegate-driven `focus()` path (mtpane-010/011); `unicode-support` and `input-sanitization` rest on the plain-text-only design (**use-plain-text-mode**), which stores and echoes text without parsing or executing it; `dynamic-type-support`, `contrast-ratio`, `touch-target-size`, and `rtl-layout-support` are `partial` because the source delegates font, color, sizing, and bidi behavior to the caller's palette/container and to native `UITextView`/`NSTextView` defaults, which this recipe cannot verify; `data-minimization` rests on the Privacy section's confirmation that the component collects, stores, and transmits nothing beyond the text the caller provides. `separation-of-concerns` is passed because both variants are pure presentation over the native text view — no parsing, formatting, or business logic lives in either file, and rendering (Markdown parsing/highlighting) is handled elsewhere by the controllers above this pane; `unit-test-coverage` is passed on the platform-specific `MarkdownTextPaneInputTests` (iOS and macOS), which drive the real `UITextView`/`NSTextView` input path and assert `onTextChange` fires, plus the shared `MarkdownViewerControllerTests`, which exercise `pane.text`, `pane.isEditable`, and `pane.attributedText` through a loaded viewer.
 
 The component provides no accessible name. `textView` is private in both variants, and the public API (`text`, `attributedText`, `isEditable`, `focus()`, `applyTheme(_:)`) exposes no label-setting member, so a caller has no way to give the pane an accessible name — `UITextView`/`NSTextView` still supply their native role (text view/text area) and read their content back as the value, but not a name (see **screen-reader-support** above).
 
@@ -227,7 +229,8 @@ The component provides no accessible name. `textView` is private in both variant
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Selection highlight is palette-driven, not platform-chosen; support-theme, Themed row, mtpane-012, and Differentiate Without Color corrected. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added enable-find-bar-macos and preserve-default-undo-ios with test vectors; completed the macOS substitution test vectors and fixed the insets vector to assert `textContainerInset` instead of "baseline"; corrected the `applyTheme` signature citation and named each platform's cursor-color property; rewrote the Accessibility label bullet, Reduce Motion bullet, and Differentiate Without Color bullet to match the source; gave the iOS focus-off-screen edge case a definite result; corrected the SwiftUI, Compose, and WinUI 3 platform notes; reformatted Design Decisions to the three-field form; replaced the Compliance prose with a checks table while keeping the accessible-name gap as a marker; unquoted `modified`; linked the sibling recipes that host this pane |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Compliance: narrowed the accessibility review marker to the missing fact (no accessible name, `textView` is private with no label-forwarding member) and what would settle it |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

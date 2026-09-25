@@ -3,11 +3,11 @@ id: 4c3c4287-95bd-47f5-9a07-2382e0db523b
 title: PanelStack
 domain: agenticdevelopertoolkit://recipes/panel-stack
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -148,12 +148,15 @@ Not applicable: Component has no lifecycle events, errors, or state transitions 
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The root `div` renders with only a class name and no ARIA role or landmark; the source does not indicate whether a group role would be appropriate for the stack, so `semantic-markup` is scored partial rather than passed or failed.
+The root `div` renders with only a class name and no ARIA role or landmark; the source does not indicate whether a group role would be appropriate for the stack, so `semantic-markup` is scored partial rather than passed or failed; `PanelStack.tsx` only maps `visibleTopicIndexes` to `DetailPane` children with no state or data logic of its own (separation-of-concerns: passed), and `PanelStack.test.tsx` renders the component and asserts the rendered panel order matches `visibleTopicIndexes` (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited, added the DetailPane dependency and linked TopicData to its definition, resolved the duplicate-indexes/use-message-index-as-key conflict and the vertical-layout/no-direct-styles wording, clarified the always-true visible prop, added the negative/non-integer index edge case, rewrote test vector 005 as an observable behavioral check and added one for visible state, corrected the SwiftUI/AppKit-UIKit/WinUI 3 platform notes, reformatted Design Decisions into Decision/Rationale/Approved form, and replaced the placeholder Compliance row with an applicable accessibility check |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source analysis (model: Claude Haiku 4.5) |

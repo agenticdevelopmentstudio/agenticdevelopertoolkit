@@ -3,11 +3,11 @@ id: bd101720-9fd3-4978-a0aa-7671e301e64b
 title: Avatar Engine
 domain: agenticdevelopertoolkit://recipes/avatar-engine
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,16 +46,17 @@ implementations of the same deterministic, frame-clocked state machine, built
 to produce byte-for-byte identical output from the same seed, the same
 `CharacterConfig`, and the same sequence of `tick`/command calls. It is a
 headless **engine** — no visual surface of its own — that composes a
-`CharacterConfig` (documented in `agenticdevelopertoolkit://recipes/
-avatar-engine-config`), a `Prng` (`agenticdevelopertoolkit://recipes/
-avatar-engine-math`), and a `Channels`/`Scheduler`/`Tweens` runtime
+`CharacterConfig` (documented in
+`agenticdevelopertoolkit://recipes/avatar-engine-config`), a `Prng`
+(`agenticdevelopertoolkit://recipes/avatar-engine-math`), and a
+`Channels`/`Scheduler`/`Tweens` runtime
 (`agenticdevelopertoolkit://recipes/avatar-engine-runtime`) with two internal
 collaborators not covered by this recipe or any sibling recipe at the time of
 writing — a mood/timeline arbiter (`Arbiter.swift`/`arbiter.ts`) and an
 ambient-reflex driver (`Reflexes.swift`/`reflexes.ts`) — to turn per-frame
 commands into a `DisplayList` a renderer can paint. This package name is
-deliberately distinct from the older, web-only `@agenticdevelopertoolkit/
-avatar` package (`useAvatarEngine`, documented in
+deliberately distinct from the older, web-only
+`@agenticdevelopertoolkit/avatar` package (`useAvatarEngine`, documented in
 `agenticdevelopertoolkit://recipes/avatar-behavior`): the two share the word
 "avatar" and little else, and this recipe does not treat them as related.
 
@@ -153,19 +154,23 @@ avatar` package (`useAvatarEngine`, documented in
   MUST NOT be re-evaluated per tick (`Engine.swift`'s `init`; `engine.ts`'s
   `createEngine`; demonstrated by
   `EngineTests.testEngineOptionsVariantReachesTheSceneItBuilds`).
-- **reduced-motion-gating**: When the environment's `reducedMotion` predicate
+- **reduced-motion-gating**: The `reducedMotion` predicate is read fresh on
+  every poll, never cached — it is a switch, not a one-way door. Whenever it
   returns `true`, the engine's ambient reflex loops (sway and idle fidget
-  among them) MUST NOT re-arm, holding the affected channels at their rest
-  values for the life of the run instead of animating them
-  (`Reflexes.swift`; `reflexes.ts`; demonstrated by
-  `EngineTests.testReducedMotionStillsTheAmbientLoops`).
+  among them) MUST NOT re-arm and any running mood effect MUST be settled
+  and not restarted, holding the affected channels at their rest values
+  instead of animating them; as soon as a later poll finds it `false`
+  again, the loops MUST re-arm and the mood effect MUST restart from the
+  top (`Reflexes.swift`; `reflexes.ts`; demonstrated by
+  `EngineTests.testReducedMotionStillsTheAmbientLoops` and
+  `ReflexesTests.testSuppressesAMoodEffectUnderReducedMotionAndRestoresItWhenItClears`).
 - **state-and-channels-readout**: The engine MUST expose its current
   `ArbiterState` (`mood`, `source`, `speech`, `idleRung`, `lastInteraction`)
   and its `Channels` store for inspection outside of `tick`'s return value —
   as computed properties on Apple (`engine.state`, `engine.channels`) and as
   zero-argument methods on web (`engine.state()`, `engine.channels()`)
   (`Engine.swift`; `engine.ts`).
-- **config-exposure (platform divergence)**: On Apple, `Engine.config` MUST
+- **config-exposure-divergence**: On Apple, `Engine.config` MUST
   be a public, readable stored property, so a render layer can read `canvas`
   and `strokeStyle` off the same engine instance it ticks, per `Engine.swift`'s
   own comment on the property. The web `Engine` interface exposes no
@@ -180,7 +185,7 @@ avatar` package (`useAvatarEngine`, documented in
   project's `SWIFT_STRICT_CONCURRENCY: complete` build setting enforces at
   compile time (`Engine.swift`, `Environment.swift`: plain classes and a
   struct with mutable, unsynchronized state).
-- **saying-emptiness-divergence (platform divergence)**: `randomSaying`/the
+- **saying-emptiness-divergence**: `randomSaying`/the
   mutter callback rely on `Prng.pick` drawing from a non-empty saying list, an
   invariant the config loader is documented to guarantee. If that invariant
   is broken, Apple's `Prng.pick` MUST fail via `preconditionFailure` — an
@@ -291,7 +296,7 @@ one of the sources given to this recipe.
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | When `AvatarEnvironment.reducedMotion`/`Environment.reducedMotion()` reports `true`, the engine's ambient reflex loops (sway, idle fidget, and related scheduled behaviors) settle to rest and do not re-arm, holding the affected channels still for the life of the run (`Reflexes.swift`; `reflexes.ts`; `EngineTests.testReducedMotionStillsTheAmbientLoops`). |
+| Reduce Motion | Read fresh on every poll: while `AvatarEnvironment.reducedMotion`/`Environment.reducedMotion()` reports `true`, the engine's ambient reflex loops (sway, idle fidget, and related scheduled behaviors) settle to rest and do not re-arm, holding the affected channels still; as soon as it reports `false` again, the loops re-arm and the current mood effect restarts from the top — it is a switch, not a one-way door (`Reflexes.swift`; `reflexes.ts`; `EngineTests.testReducedMotionStillsTheAmbientLoops`). |
 | Increase Contrast | Not applicable: the engine emits raw ink/paint values sourced from `config`; contrast is a concern of whatever renders the `DisplayList`, not of this engine. |
 | Differentiate Without Color | Not applicable: the engine has no rendering surface of its own. |
 
@@ -359,19 +364,20 @@ appears anywhere in `Engine.swift`, `Environment.swift`, `engine.ts`, or
   given to this recipe.
 - **WinUI 3**: this is the platform this recipe exists to prepare a port for,
   and it needs a from-scratch host and engine, since neither given source
-  compiles on .NET. Drive `Tick(double now)` from a `CompositionTarget
-  .Rendering` event or a `DispatcherQueueTimer`, called synchronously on the
-  UI thread — not through `Task.Run`/`async`, since the fixed
-  scheduler-then-arbiter-then-tweens-then-compose order this contract
+  compiles on .NET. Drive `Tick(double now)` from a
+  `CompositionTarget.Rendering` event or a `DispatcherQueueTimer`, called
+  synchronously on the UI thread — not through `Task.Run`/`async`, since the
+  fixed scheduler-then-arbiter-then-tweens-then-compose order this contract
   requires must run on one thread without interleaving. Deserialize
   `CharacterConfig` with `System.Text.Json` (mirroring the config loader's
   contract, not this recipe's). Port the xoshiro128** `Prng` bit-for-bit in
   C# using `uint` arithmetic; .NET's `System.Random` will not reproduce the
   same stream and MUST NOT be substituted. Read the reduced-motion state
   from `Windows.UI.ViewManagement.UISettings` (or the Windows App SDK's
-  accessibility settings API) and wire it the same way `AvatarEnvironment
-  .reducedMotion`/`Environment.reducedMotion()` is wired here — a predicate
-  read fresh on use, not cached. `DisplayList` is a fresh array/list
+  accessibility settings API) and wire it the same way
+  `AvatarEnvironment.reducedMotion`/`Environment.reducedMotion()` is wired
+  here — a predicate read fresh on use, not cached. `DisplayList` is a
+  fresh array/list
   returned whole on every tick, not an incrementally-mutated collection, so
   an `ObservableCollection` is unnecessary for it; wrap `ArbiterState` in an
   `INotifyPropertyChanged`-conforming type only if a XAML view will data-bind
@@ -433,6 +439,7 @@ appears anywhere in `Engine.swift`, `Environment.swift`, `engine.ts`, or
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 
 `reduced-motion` is passed: `Reflexes`/`reflexes.ts` gate ambient loop
 re-arming on the environment's predicate, tested on both platforms.
@@ -447,10 +454,15 @@ catch-up loop, but the saying-list-emptiness path is fatal and uncatchable on
 Apple rather than degrading gracefully (see the corresponding Design
 Decision). `input-sanitization` is passed: `setMood` and `play` both check
 their string argument against the loader-approved mood/timeline sets before
-any state mutation.
+any state mutation. `separation-of-concerns` is passed: `Engine.swift`/
+`engine.ts` hold only the tick/state-machine orchestration and
+`Environment.swift`/`env.ts` hold only the injected clock/reduced-motion
+predicate, with no rendering code in either file — the render path lives
+entirely in the sibling avatar-engine-render recipe.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-09-25 | Mike Fullerton | Un-hard-wrapped four agenticdevelopertoolkit:// recipe URIs split across code-span line breaks; renamed config-exposure/saying-emptiness-divergence requirement names to kebab-case; reduced-motion-gating corrected to describe re-arm/mood-effect-restart when the predicate later returns false. Added best-practices compliance rows (separation-of-concerns: passed). |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

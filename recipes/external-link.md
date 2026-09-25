@@ -3,11 +3,11 @@ id: b329d08b-9812-47d0-8094-516359d82d19
 title: ExternalLink
 domain: agenticdevelopertoolkit://recipes/external-link
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -243,6 +243,8 @@ Not applicable: ExternalLink is a presentational anchor with no lifecycle events
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
 | [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 The source shows a native `<a>` with an `aria-hidden` decorative glyph and an
 accessible name from `children` (screen-reader-support, semantic-markup); a
@@ -253,13 +255,18 @@ the safest-configuration case `safe-defaults` describes; the fixed
 (dynamic-type-support); the `apt-blue`/`apt-gold` token values aren't visible
 from this source so the contrast ratio can't be confirmed (contrast-ratio);
 and nothing in the source mirrors the trailing glyph for RTL layouts
-(rtl-layout-support).
+(rtl-layout-support). `separation-of-concerns` passes: `external-link.tsx`
+does nothing but forward props/classes onto a native `<a>` and enforce the
+safe-new-tab attributes, with no logic of its own to entangle with anything
+else. `unit-test-coverage` fails — no test file in the `ui` package exercises
+`ExternalLink`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix frontmatter summary quoting/length; add safe-attrs-not-overridable requirement and test vector, fix T3/T6 assertions, add focus-ring/default-deep-link-skin coverage vectors; give Localization an RTL glyph-mirroring rule and hint-text ownership, and Accessibility Options a real Dynamic Type/rem note; reformat Design Decisions to the three-line form; rebuild Compliance as catalog-linked checks; correct SwiftUI (openURL, accessibilityHidden, foregroundStyle), Compose (link role, clearAndSetSemantics), AppKit/UIKit (accessibilityLabel), and WinUI 3 (concrete glyph, AccessibilityView="Raw") Platform Notes; reword the 1.0.0 row to match the ingredient type. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise Platform Notes: replace "Not applicable" for non-web platforms with concrete translation guidance (SwiftUI: Link with Text and HStack, Compose: Text with clickable and Intent.ACTION_VIEW, AppKit/UIKit: NSButton or NSTextView with decorative glyph, WinUI 3: HyperlinkButton or inline Hyperlink with LaunchUriAsync). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add non-applicable sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy, Logging) with clear rationales; correct domain to agenticdevelopercookbook://; clarify props-order safety in Edge Cases and Design Decisions; update Platform Notes to five bullets. Set status to review. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the safe-new-tab "{label} ↗" deep link and its glyph={false} mode. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the safe-new-tab "{label} ↗" deep link and its glyph={false} mode. |

@@ -3,11 +3,11 @@ id: 3600088a-a9f6-42ca-81db-43f0eb6ddd79
 title: Markdown Editor Toolbar
 domain: agenticdevelopertoolkit://recipes/markdown-editor-toolbar
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -225,8 +225,10 @@ Not applicable: The toolbar does not emit logging output in its current implemen
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-These statuses rest on: macOS's explicit `setAccessibilityLabel`/`accessibilityID` calls on the mode control and both buttons, against iOS's complete absence of any accessibility-label call, for the partial screen-reader-support; the standard `UIButton`/`NSButton`/`UISegmentedControl`/`NSSegmentedControl` focus and activation behavior for the passed keyboard-navigable; the fixed 44pt/32pt bar height with no content-size-category handling in either source file for the failed dynamic-type-support; the palette-driven `accent`/`elevatedSurface` colors whose literal values live outside this file for the partial contrast-ratio; the 44pt iOS height minus the stack's 4pt top/bottom padding, leaving at most 36pt of usable height, for the failed touch-target-size; the literal `"?"`, `"Open…"`, `"Markdown Syntax Help"`, and `"Open Markdown File"` strings set directly on the controls with no localization lookup for the failed internationalization checks; the intrinsic (non-fixed-width) sizing of the segmented control and buttons for the partial text-expansion-tolerance; and the unmodified default stack-view mirroring behavior, which flips under RTL by system default but is exercised by no test in source, for the partial rtl-layout-support.
+These statuses rest on: macOS's explicit `setAccessibilityLabel`/`accessibilityID` calls on the mode control and both buttons, against iOS's complete absence of any accessibility-label call, for the partial screen-reader-support; the standard `UIButton`/`NSButton`/`UISegmentedControl`/`NSSegmentedControl` focus and activation behavior for the passed keyboard-navigable; the fixed 44pt/32pt bar height with no content-size-category handling in either source file for the failed dynamic-type-support; the palette-driven `accent`/`elevatedSurface` colors whose literal values live outside this file for the partial contrast-ratio; the 44pt iOS height minus the stack's 4pt top/bottom padding, leaving at most 36pt of usable height, for the failed touch-target-size; the literal `"?"`, `"Open…"`, `"Markdown Syntax Help"`, and `"Open Markdown File"` strings set directly on the controls with no localization lookup for the failed internationalization checks; the intrinsic (non-fixed-width) sizing of the segmented control and buttons for the partial text-expansion-tolerance; and the unmodified default stack-view mirroring behavior, which flips under RTL by system default but is exercised by no test in source, for the partial rtl-layout-support. `separation-of-concerns` passes because both platform views hold only layout-mapping methods (`rebuildModeControl`, `syncSelection`) and closure-based callbacks (`onModeChange`, `onImport`, `onSyntaxHelpRequested`), with no business logic or data access of their own; `unit-test-coverage` fails because no test file references `MarkdownEditorToolbar`.
 
 ## Change History
 
@@ -235,3 +237,4 @@ These statuses rest on: macOS's explicit `setAccessibilityLabel`/`accessibilityI
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from macOS and iOS source |
 | 1.1.0 | 2026-09-22 | Claude Sonnet 5 | Settled the three open review points from source: empty availableModes builds a hidden zero-segment control (traced to rebuildModeControl/syncSelection), and mode changes cannot occur during iOS's modal help sheet and only incidentally close macOS's transient popover |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added mode-change-callback-scope settling programmatic vs. repeat-tap firing, corrected test-vector mode cases to the real MarkdownEditorMode set and added vectors for empty/out-of-range modes, visibility toggling, and accessibility/announcement coverage, expanded localization keys per visible string and per mode, split the theme-before-window and help-before-window edge cases, added a Dynamic Type note to Appearance and a derived touch-target note to Accessibility, reformatted Design Decisions to Decision/Rationale/Approved, canonicalized the Compliance table with corrected touch-target and screen-reader statuses, merged the two AppKit/UIKit platform notes, added a React/Web platform note, named a single WinUI 3 control, and listed the parent editor in related |
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

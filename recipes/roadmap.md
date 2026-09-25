@@ -3,11 +3,11 @@ id: e7060a14-3f66-429a-9ea5-288f1fe5a76f
 title: Roadmap
 domain: agenticdevelopertoolkit://recipes/roadmap
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -142,12 +142,15 @@ Not applicable: Component has no internal state, lifecycle events, or error cond
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Font scaling and color contrast are governed by the `.lp-roadmap`/`.lp-eyebrow` stylesheet, which `Roadmap.tsx` does not include, so those two checks cannot be confirmed from the source alone, and semantic-markup is partial because the component renders plain `div`/`span` elements with no incorrect ARIA usage but also no role or label association tying the eyebrow to its children, per the eyebrow's decorative-label design decision.
+Font scaling and color contrast are governed by the `.lp-roadmap`/`.lp-eyebrow` stylesheet, which `Roadmap.tsx` does not include, so those two checks cannot be confirmed from the source alone, and semantic-markup is partial because the component renders plain `div`/`span` elements with no incorrect ARIA usage but also no role or label association tying the eyebrow to its children, per the eyebrow's decorative-label design decision. `Roadmap.tsx` is a trivial pure-presentation wrapper over props with no logic beyond the `eyebrow === undefined` branch (separation-of-concerns passed); `blocks-argument.test.tsx` directly exercises both the eyebrow-present and eyebrow-absent cases (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update all citations, add eyebrow-precedes-children requirement, fix null/empty-string eyebrow contradiction and add their test vectors, correct roadmap-003's assertion to check for the eyebrow class rather than any span, document decorative (non-semantic) eyebrow labeling, reformat Design Decisions into Decision/Rationale/Approved blocks, populate the Compliance table with applicable accessibility checks, document the eyebrow/children props under Configuration, add tags, unquote modified date |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

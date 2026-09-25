@@ -3,11 +3,11 @@ id: 10cd0ad8-b7b7-4674-9f8c-80a071fecb6f
 title: Sheet
 domain: agenticdevelopertoolkit://recipes/sheet
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -38,7 +38,7 @@ Sheet is a compound component that renders a slide-out drawer anchored to one ed
 
 ## Behavioral Requirements
 
-- **render-compound-components**: Component MUST export individual compound parts: Sheet (root), SheetTrigger, SheetClose, SheetPortal, SheetOverlay, SheetContent, SheetHeader, SheetFooter, SheetTitle, and SheetDescription.
+- **render-compound-components**: Component MUST export individual compound parts: Sheet (root), SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, and SheetDescription. `SheetPortal` and `SheetOverlay` are module-local helpers used only inside SheetContent; they are not exported and are not importable by consumers.
 - **position-by-side**: SheetContent MUST position the drawer based on a `side` prop ("top" | "right" | "bottom" | "left"), with default value "right".
 - **render-overlay**: Component MUST render an overlay element with semi-transparent dark background that appears behind the drawer.
 - **backdrop-blur**: Overlay MUST apply a blur effect (backdrop-filter: blur) on supporting browsers.
@@ -50,7 +50,7 @@ Sheet is a compound component that renders a slide-out drawer anchored to one ed
 - **animation-scale**: Animation duration MUST be calculated using the CSS custom property `--apt-anim-scale` (default 1), with specific durations: 150ms for overlay, 200ms for drawer. A scale of 0 or a negative value MUST result in an instant (zero-duration) transition, since a non-positive value multiplied against either base duration computes to zero or less and CSS clamps a negative transition-duration to 0.
 - **close-on-overlay-click**: Clicking the overlay MUST close the drawer by default. Base UI's Dialog root ships pointer dismissal enabled unless a caller passes `disablePointerDismissal`; Sheet does not set that prop, so the inherited default applies. Callers MAY disable it by passing `disablePointerDismissal` to `Sheet`.
 - **width-constrained-on-sides**: When positioned left or right, SheetContent MUST constrain width to 75% of the viewport, capped at 24rem on small+ (`sm`, ≥640px) screens.
-- **content-composition-props**: Sheet, SheetTrigger, SheetClose, SheetPortal, and SheetContent MUST accept and spread component props to their underlying Base UI primitives.
+- **content-composition-props**: Sheet, SheetTrigger, SheetClose, and SheetContent MUST accept and spread component props to their underlying Base UI primitives. Internally, the module-local `SheetPortal` and `SheetOverlay` helpers do the same, but that is unreachable from outside the module since neither is exported (see **render-compound-components**).
 - **header-footer-divs**: SheetHeader and SheetFooter MUST render as `<div>` elements with predefined padding and flex layout.
 - **title-description-typography**: SheetTitle and SheetDescription MUST wrap Base UI primitives with styled typography.
 
@@ -99,7 +99,7 @@ Sheet is a compound component that renders a slide-out drawer anchored to one ed
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| sheet-001 | render-compound-components | Import Sheet and sub-components | All 10 exports (Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription) are available and usable. |
+| sheet-001 | render-compound-components | Import Sheet and sub-components | All 8 exports (Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription) are available and usable; importing `SheetPortal` or `SheetOverlay` fails, since neither is exported. |
 | sheet-002 | position-by-side | Render SheetContent with `side="left"` | Drawer appears on left edge of viewport with `data-side="left"` attribute. |
 | sheet-003 | position-by-side | Render SheetContent without a `side` prop | Drawer appears on right edge (default) with `data-side="right"` attribute. |
 | sheet-004 | render-overlay | Render Sheet with content | Overlay element with `data-slot="sheet-overlay"` appears behind drawer. |
@@ -224,13 +224,16 @@ Not applicable: Sheet has no logging or debugging output in the source.
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`sheet.tsx` grounds these statuses: Base UI's `Dialog` primitive supplies focus trapping/restoration, Escape handling, `role="dialog"`, `aria-modal`, and `aria-labelledby` (the `passed` rows); the close button's `size="icon-sm"` Button variant is 28px square per `button.tsx`, under the 44×44pt minimum (`touch-target-size: failed`); the close label "Close" is a hardcoded, non-externalized string (`string-externalization` and `no-hardcoded-strings: failed`); side positioning uses physical `left-0`/`right-0` rather than logical inline-start/inline-end properties, so it does not flip for RTL locales (`rtl-layout-support: failed`); and `--apt-anim-scale` gives the app a lever for reduced motion, but the component never reads `prefers-reduced-motion` itself (`reduced-motion: partial`). Font sizing in `rem` and unrestricted children content leave `dynamic-type-support`, `contrast-ratio`, `text-expansion-tolerance`, and `unicode-support` as either `partial` (the source can't itself guarantee the outcome) or `passed` (nothing in source restricts it).
+`sheet.tsx` grounds these statuses: Base UI's `Dialog` primitive supplies focus trapping/restoration, Escape handling, `role="dialog"`, `aria-modal`, and `aria-labelledby` (the `passed` rows); the close button's `size="icon-sm"` Button variant is 28px square per `button.tsx`, under the 44×44pt minimum (`touch-target-size: failed`); the close label "Close" is a hardcoded, non-externalized string (`string-externalization` and `no-hardcoded-strings: failed`); side positioning uses physical `left-0`/`right-0` rather than logical inline-start/inline-end properties, so it does not flip for RTL locales (`rtl-layout-support: failed`); and `--apt-anim-scale` gives the app a lever for reduced motion, but the component never reads `prefers-reduced-motion` itself (`reduced-motion: partial`). Font sizing in `rem` and unrestricted children content leave `dynamic-type-support`, `contrast-ratio`, `text-expansion-tolerance`, and `unicode-support` as either `partial` (the source can't itself guarantee the outcome) or `passed` (nothing in source restricts it). `separation-of-concerns` passes because `sheet.tsx` only forwards props onto `@base-ui/react`'s `Dialog` primitive, carrying no business logic of its own. `unit-test-coverage` fails because no test file in the `ui` package exercises `Sheet`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Compliance best-practices rows added (prior fixer already fixed E_2 exports). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; moved web-specific implementation details (lucide `XIcon`, Tailwind utility classes, the `sr-only` span) out of requirements and test vectors into the React/Web Platform Note; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 Platform Notes to real native drawer APIs (`.inspector()`, `ModalNavigationDrawer`, `NSSplitViewController`, `SplitView`/`DisplayMode="Overlay"`); added a close-on-overlay-click requirement and test vector grounded in Base UI's default pointer-dismissal behavior; recorded the close button's actual 28px hit target as a known touch-target-size failure instead of a false 44pt claim; defined scale-0/negative as an instant transition via CSS duration clamping and described CSS transition-interruption on rapid toggling instead of leaving both undefined; corrected the width requirement to "75%, capped at 24rem on sm+" and fixed the sheet-012/sheet-003 test vectors to match; rebuilt Compliance as a canonical linked accessibility/internationalization table; reformatted Design Decisions into Decision/Rationale/Approved blocks; added dialog and popover to related; fixed the circular label requirement, the "visible screen-reader-only" and "semantic divs" wording, the unbounded multiple-sheets edge case, the mischaracterized "Not applicable" Localization section, and the "side drawer" summary; added test vectors for every edge case |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Remove review marker from Compliance section; state Base UI Dialog inheritance as fact and list satisfied WCAG compliance items |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

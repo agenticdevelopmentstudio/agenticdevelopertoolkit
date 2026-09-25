@@ -3,11 +3,11 @@ id: 07c437af-a291-4356-bd83-c896bd4facde
 title: Screen
 domain: agenticdevelopertoolkit://recipes/screen
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -168,12 +168,15 @@ Not applicable: Screen does not implement logging.
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Partial because Screen correctly switches between `<section>` and `<div>` based on the `as` prop (`Screen.tsx`), but exposes no `aria-label`/`aria-labelledby` prop and forwards no other attributes to its root, so a host using `as: 'section'` as a landmark cannot give that element an accessible name through Screen's own API.
+Partial because Screen correctly switches between `<section>` and `<div>` based on the `as` prop (`Screen.tsx`), but exposes no `aria-label`/`aria-labelledby` prop and forwards no other attributes to its root, so a host using `as: 'section'` as a landmark cannot give that element an accessible name through Screen's own API. `separation-of-concerns` passes because `Screen.tsx` is pure presentation over props with no business logic of its own, and `unit-test-coverage` passes because `deck.test.tsx` renders it directly and asserts on its id, class, tag, and glow-ordering behavior.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and elevated render-glow/accept-id to MUST, added glow as a dependency and deck as related, unquoted the modified date, added a snap-point-viewport-height requirement and test vector for the min-height/scroll-snap-align CSS contract, resolved the as-default and null/empty-children contradictions and dropped the untestable invalid-align/invalid-as edge cases, corrected merge-classname to describe concatenation without deduplication and added a class-collision test vector, corrected the section-landmark wording in Accessibility and added a Compliance table, reformatted Design Decisions into decision/rationale/approved triples, and fixed the invalid WinUI 3 APIs, vague SwiftUI/Compose guidance, and AppKit/UIKit subclassing note in Platform Notes |
 | 1.0.0 | 2026-09-22 | — | Initial creation |

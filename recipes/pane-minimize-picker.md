@@ -3,11 +3,11 @@ id: 0c8a7db3-9948-466c-8c97-20de2ae53a17
 title: Pane Minimize Picker
 domain: agenticdevelopertoolkit://recipes/pane-minimize-picker
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -111,7 +111,7 @@ The Pane Minimize Picker is a directional arrow picker presented in a popover. I
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| availableEdges | Set<PaneEdge> | (required) | Set of edges for which arrows should be enabled. |
+| availableEdges | `Set<PaneEdge>` | (required) | Set of edges for which arrows should be enabled. |
 | onPick | (PaneEdge) -> Void | (required) | Callback invoked with the selected edge after the popover closes. |
 
 ## Deep Linking
@@ -187,12 +187,15 @@ Not applicable: The component does not emit log messages in the source code.
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Screen-reader labels, tooltips, and identifiers come directly from `setAccessibilityLabel`, `toolTip`, and `accessibilityID` calls in `PaneMinimizePicker.swift`; keyboard/focus behavior relies on undocumented `NSButton`/`NSPopover` defaults, and the theme palette's actual contrast values aren't specified in this source, hence partial; the accessory-bar button size (well under 44×44pt) and `PaneEdge`'s hardcoded, unmirrored English strings and fixed grid columns are visible directly in `PaneMinimizePicker.swift` and `PaneEdge.swift`, hence failed.
+Screen-reader labels, tooltips, and identifiers come directly from `setAccessibilityLabel`, `toolTip`, and `accessibilityID` calls in `PaneMinimizePicker.swift`; keyboard/focus behavior relies on undocumented `NSButton`/`NSPopover` defaults, and the theme palette's actual contrast values aren't specified in this source, hence partial; the accessory-bar button size (well under 44×44pt) and `PaneEdge`'s hardcoded, unmirrored English strings and fixed grid columns are visible directly in `PaneMinimizePicker.swift` and `PaneEdge.swift`, hence failed. `separation-of-concerns` passes because `PaneMinimizeCrossView` only renders the offered `availableEdges` and reports a pick via `onPick`; per its own doc comment, it never computes which edges are legal, leaving that to the layout tree. `unit-test-coverage` passes because `PaneMinimizePickerTests.swift` covers every edge having a labelled button, the cross layout, offered/unoffered enablement (including re-applying it when the set changes), edge-click reporting, and the popover closing before it reports a pick.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Wrapped Set<PaneEdge> in code span; added best-practices Compliance rows. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, reformatted Design Decisions to Decision/Rationale/Approved, populated the Compliance table, corrected the accessibility tap-target claim and defined the PaneEdge display-name/ID/symbol table, moved AppKit implementation details out of Edge Cases and into the AppKit platform note, fixed inaccurate Compose/SwiftUI/WinUI platform APIs, documented transient-dismissal and RTL-mirroring gaps as edge cases, tightened test vectors 005 and 007, and clarified popover anchor placement |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

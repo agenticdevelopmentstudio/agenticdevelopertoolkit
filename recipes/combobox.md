@@ -3,11 +3,11 @@ id: 43c55f5e-d9b3-430b-9026-d0af510fda15
 title: Combobox
 domain: agenticdevelopertoolkit://recipes/combobox
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -99,7 +99,7 @@ array (an async caller can show its own spinner alongside).
 
 ## Accessibility
 
-- Input: `role="combobox"` with `aria-expanded`, `aria-controls` (the listbox), and `aria-activedescendant` (the active option) — all supplied by Base UI's `Autocomplete.Input`. `ariaLabel` is required unless `id` is paired with an external `<label htmlFor>`; when both are given, the external label wins as the accessible name and `ariaLabel` is unnecessary.
+- Input: `role="combobox"` with `aria-expanded`, `aria-controls` (the listbox), and `aria-activedescendant` (the active option) — all supplied by Base UI's `Autocomplete.Input`. `ariaLabel` is required and always renders as `aria-label` on the input; a non-empty `aria-label` outranks an external `<label htmlFor>` in accessible-name computation, so pairing an `id` with an external label does not make `ariaLabel` optional or change which text wins as the accessible name.
 - Popup list: `role="listbox"`; each suggestion `role="option"` with `data-highlighted` on the active row.
 - Keyboard: ArrowDown / ArrowUp move the active option, Enter picks it, Esc closes — handled by the primitive.
 - Focus stays in the input throughout (the active option is tracked via `aria-activedescendant`, not DOM focus).
@@ -134,7 +134,7 @@ array (an async caller can show its own spinner alongside).
 | `items` | `readonly string[]` | Yes | — | Suggestions, filtered case-insensitively as the user types. |
 | `value` | `string` | Yes | — | Controlled input text. |
 | `onValueChange` | `(value: string) => void` | Yes | — | Fired on every edit and on pick. |
-| `ariaLabel` | `string` | Required unless `id` is paired with an external `<label htmlFor>` | — | Labels the input. |
+| `ariaLabel` | `string` | Yes | — | Required; labels the input. |
 | `placeholder` | `string` | No | — | Input placeholder. |
 | `emptyLabel` | `string` | No | `"No matches"` | Popup text when nothing matches. |
 | `disabled` | `boolean` | No | `false` | Disables the control. |
@@ -218,13 +218,16 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`passed` rows (role/ARIA wiring, roving `aria-activedescendant` focus, Unicode-safe string handling, and text rendered only as JSX text nodes rather than `dangerouslySetInnerHTML`) are shown directly in the source; `partial` rows (dynamic type via Tailwind's rem-based `text-sm`, the `apt-*` token contrast ratios, and the hardcoded `emptyLabel` default) depend on values the source alone can't confirm or leaves as an overridable default; `touch-target-size` is `failed` because the suggestion rows (`px-2 py-1.5` with `text-sm`) render well under the 44×44pt / 48×48dp minimum.
+`passed` rows (role/ARIA wiring, roving `aria-activedescendant` focus, Unicode-safe string handling, and text rendered only as JSX text nodes rather than `dangerouslySetInnerHTML`) are shown directly in the source; `partial` rows (dynamic type via Tailwind's rem-based `text-sm`, the `apt-*` token contrast ratios, and the hardcoded `emptyLabel` default) depend on values the source alone can't confirm or leaves as an overridable default; `touch-target-size` is `failed` because the suggestion rows (`px-2 py-1.5` with `text-sm`) render well under the 44×44pt / 48×48dp minimum. `separation-of-concerns` passes because `combobox.tsx` does nothing but forward props onto `@base-ui/react`'s `Combobox` primitive with Tailwind classes, carrying no business logic of its own. `unit-test-coverage` passes because `src/__tests__/combobox.test.tsx` exercises the component with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | ariaLabel now required/always-wins; restored on-main "recipe" wording; Compliance best-practices added. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: replaced nonexistent WinUI 3 `AutoSuggestBox` members and hand-rolled SwiftUI/AppKit/UIKit notes with real native controls; reformatted Design Decisions into Decision/Rationale/Approved blocks and added one for `<datalist>`'s shortcomings; replaced unsupported verification claims in the Web and AppKit/UIKit notes with grounded statements; added a Required column and rule to Configuration for `ariaLabel`; built a real Compliance table; fixed the active-row `apt-highlight`/`apt-gold` contradiction between Appearance/States and the source; clarified `escape-closes` and `enter-picks-active` wording; required de-duplicated `items` in Edge Cases; added `current-value-marked` requirement and test vector; added `pointer-pick`, `disabled-inert`, and Esc-unchanged test vectors; filled in Localization and Accessibility Options. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) as not applicable; fix domain URI to use agenticdevelopercookbook scheme; expand Platform Notes with cross-platform guidance. |
-| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + ingredient. |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + recipe. |

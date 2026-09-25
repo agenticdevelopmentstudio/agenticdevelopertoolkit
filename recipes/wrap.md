@@ -3,11 +3,11 @@ id: 51d3b1ba-ced7-4c08-8a63-c83094d91299
 title: Wrap
 domain: agenticdevelopertoolkit://recipes/wrap
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,7 +46,7 @@ Wrap is a presentational layout component that renders a `div` element containin
 
 ## Appearance
 
-Wrap itself accepts no appearance-related props, but it is not stylistically inert: it ships the `.lp-wrap` class as part of the landing package's own stylesheet, not the consuming application's. The rule lives at `packages/web/packages/landing/src/css/base.css:271`:
+Wrap itself accepts no appearance-related props, but it is not stylistically inert: it ships the `.lp-wrap` class as part of the landing package's own stylesheet, not the consuming application's. The rule lives in `.lp-wrap`, defined in `packages/web/packages/landing/src/css/base.css`:
 
 ```css
 .lp-wrap {
@@ -55,7 +55,7 @@ Wrap itself accepts no appearance-related props, but it is not stylistically ine
 }
 ```
 
-This caps content at `--lp-measure` (default `70rem`) minus a `2.5rem` gutter, and centers it horizontally with `margin-inline: auto`.
+This caps content width at the smaller of two values — the available width minus a `2.5rem` gutter (`100% - 2.5rem`), or the `--lp-measure` custom property (default `70rem`) at its full value, never `--lp-measure` minus the gutter — and centers it horizontally with `margin-inline: auto`. `margin-inline: auto` splits whatever space is left outside the computed width evenly between the two sides. Only when the gutter branch is binding (the container is narrower than `--lp-measure + 2.5rem`) does that split work out to `1.25rem` per side; when `--lp-measure` is the binding branch instead, the per-side margin is `(available width - --lp-measure) / 2`, unrelated to the `2.5rem` figure.
 
 ## States
 
@@ -81,14 +81,14 @@ Not applicable: Wrap is a transparent layout container that passes all content t
 
 - **Empty children**: Wrap MUST render an empty div when children is undefined, null, or an empty array. The `lp-wrap` class is still applied.
 - **Undefined or empty-string className**: TypeScript's `className?: string` signature restricts the prop to `string | undefined`, so only these two falsy shapes can reach `.filter(Boolean)`; both are dropped, leaving only `lp-wrap` (see **class-composition**).
-- **Direct child of a non-centered Screen**: When Wrap is a direct child of `.lp-screen` (excluding `.lp-screen--center`), it additionally receives `min-height: max(0px, calc(100vh / 3 - var(--lp-screen-pad-top, ...)))` and `align-content: safe center` (`base.css:306`). This is Screen's rule reaching into its Wrap child, not a property of Wrap in isolation. The `safe` keyword falls back to start alignment when the content is taller than that band, so overflow pushes content down into view rather than up and out of reach behind the fixed header.
+- **Direct child of a non-centered Screen**: When Wrap is a direct child of `.lp-screen` (excluding `.lp-screen--center`), it additionally receives `min-height: max(0px, calc(100vh / 3 - var(--lp-screen-pad-top, ...)))` and `align-content: safe center` (the `.lp-screen:not(.lp-screen--center) > .lp-wrap` rule in `base.css`). This is Screen's rule reaching into its Wrap child, not a property of Wrap in isolation. The `safe` keyword falls back to start alignment when the content is taller than that band, so overflow pushes content down into view rather than up and out of reach behind the fixed header.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--lp-measure` | CSS custom property (length) | `70rem` | Maximum content width Wrap caps its children at. |
-| gutter | fixed, not configurable | `2.5rem` | Space reserved on each side before the `--lp-measure` cap applies (`100% - 2.5rem`). |
+| gutter | fixed, not configurable | `2.5rem` | Subtracted once from the available width (`100% - 2.5rem`) — total across both sides, not per side — before comparing that result to `--lp-measure` and taking the smaller. When this branch wins, centering splits it evenly into `1.25rem` per side; when `--lp-measure` wins instead, the gutter plays no role in the actual per-side margin. |
 
 ## Deep Linking
 
@@ -120,11 +120,11 @@ Not applicable: Wrap is a simple presentational component with no noteworthy lif
 
 ## Platform Notes
 
-- **TypeScript / Web**: React functional component in `packages/web/packages/landing/src/deck/Wrap.tsx`. Accepts `children: ReactNode` and `className?: string`, combined via `['lp-wrap', className].filter(Boolean).join(' ')`. Width and centering come from `.lp-wrap` in `packages/web/packages/landing/src/css/base.css:271` (`width: min(100% - 2.5rem, var(--lp-measure, 70rem)); margin-inline: auto`).
-- **SwiftUI**: `.frame(maxWidth: measure).padding(.horizontal)` on the content, inside a container that centers it horizontally, where `measure` mirrors `--lp-measure` (default `70rem`) and the horizontal padding stands in for the `2.5rem` gutter.
-- **Compose**: a horizontally centered `Box` whose child carries `Modifier.widthIn(max = measure).padding(horizontal = gutter)`, capping width at `measure` and insetting it by the gutter before centering.
-- **AppKit / UIKit**: constrain the content to a `layoutMarginsGuide` (or an explicit readable-width constraint) capped at `measure` and centered in its superview, rather than subclassing `NSView` / `UIView`.
-- **WinUI 3**: a `ContentControl` (or a `Border` with a single `Child`) with `MaxWidth` set to `measure`, `HorizontalAlignment="Center"`, and `Padding` for the gutter. Wrap holds one content tree, not a collection, so no `VisualStateManager` or visibility converters are needed.
+- **TypeScript / Web**: React functional component in `packages/web/packages/landing/src/deck/Wrap.tsx`. Accepts `children: ReactNode` and `className?: string`, combined via `['lp-wrap', className].filter(Boolean).join(' ')`. Width and centering come from the `.lp-wrap` rule in `packages/web/packages/landing/src/css/base.css` (`width: min(100% - 2.5rem, var(--lp-measure, 70rem)); margin-inline: auto`).
+- **SwiftUI**: read the available width via `GeometryReader`, compute `min(proposedWidth - 40, measure)` (mirroring the source's `min(100% - 2.5rem, var(--lp-measure))`), and apply that as an explicit `.frame(width:)` centered with `.frame(maxWidth: .infinity, alignment: .center)`. A separate `.frame(maxWidth: measure).padding(.horizontal)` applies the gutter inside the measure cap instead of choosing the smaller of the two, and does not reproduce the source's behavior.
+- **Compose**: compute `min(constraints.maxWidth - gutterPx, measurePx)` in a custom `Layout` (or `Modifier.layout`) and constrain the child to that computed width before centering. `Modifier.widthIn(max = measure).padding(horizontal = gutter)` applies the gutter inside the measure cap rather than choosing between the two alternatives, and does not reproduce the source's behavior.
+- **AppKit / UIKit**: constrain the content to an explicit width constraint computed as `min(superview width - 40, measure)`, centered in its superview, rather than subclassing `NSView` / `UIView`. A fixed readable-width constraint plus separate edge insets has the same mismatch as the SwiftUI/Compose notes above.
+- **WinUI 3**: bind `MaxWidth` to a value computed as `Math.Min(availableWidth - 40, measure)` (mirroring the source's `min()`), `HorizontalAlignment="Center"`. A static `MaxWidth` set to `measure` plus a separate fixed `Padding` for the gutter applies the gutter inside the cap instead of choosing the smaller of the two, and does not reproduce the source's behavior. Wrap holds one content tree, not a collection, so no `VisualStateManager` or visibility converters are needed.
 
 ## Design Decisions
 
@@ -138,12 +138,15 @@ Not applicable: Wrap is a simple presentational component with no noteworthy lif
 |-------|--------|----------|
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Both rest on `base.css:271`: the cap and gutter are expressed in `rem`, so they scale with root font-size / type-size settings, and Wrap renders a plain `div` with no ARIA roles or attributes of its own to misuse.
+The first two rest on the `.lp-wrap` rule in `base.css`: the cap and gutter are expressed in `rem`, so they scale with root font-size / type-size settings, and Wrap renders a plain `div` with no ARIA roles or attributes of its own to misuse. `separation-of-concerns` passes because `Wrap.tsx` itself holds no width/gutter logic at all — it only joins class names — and that logic lives entirely in the `.lp-wrap` CSS rule. `unit-test-coverage` is partial: `deck.test.tsx`'s `Wrap` block only confirms the `lp-wrap` class is applied; the `min()` cap-vs-gutter behavior this revision corrects is expressed in CSS and has no unit test (jsdom does not compute layout), so it can only be verified by reading the stylesheet.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed gutter/measure min() math (total not per-side); dropped source line-number citations. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and merged the className ones into class-composition; added constrains-width and centers-horizontally with vectors; corrected Appearance to cite the package stylesheet; documented --lp-measure and the gutter under Configuration; fixed Platform Notes for SwiftUI, Compose, AppKit/UIKit, and WinUI 3; reformatted Design Decisions and replaced Compliance with a checks table; added tags, related entries, and the Screen band/safe-center edge case |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

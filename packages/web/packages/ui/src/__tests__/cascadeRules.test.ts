@@ -39,7 +39,7 @@ import {
  * it is to check the recipe, because someone has just re-broken a reported bug.
  */
 
-describe("must-draw-one-chain-line", () => {
+describe("draw-one-chain-line", () => {
   it("is 2px — the width of topic-detail's `border-l-2` selected-row bar", () => {
     // The three drawings of the chain (the row's left bar, the submenu rail, the connectors) must be
     // indistinguishable. `border-l-2` is the one that has always shipped, so it is the reference —
@@ -54,7 +54,7 @@ describe("must-draw-one-chain-line", () => {
   })
 })
 
-describe("must-bounce-the-entrance", () => {
+describe("bounce-the-entrance", () => {
   it("overshoots +10, -10, +5, -5 percentage points, then rests", () => {
     expect(BOUNCE_SCALES).toEqual([0, 1.1, 0.9, 1.05, 0.95, 1])
   })
@@ -97,7 +97,7 @@ describe("must-bounce-the-entrance", () => {
   })
 })
 
-describe("must-not-wiggle-the-exit", () => {
+describe("not-wiggle-the-exit", () => {
   it("has no negative control point — a wiggle is an undershoot at the start", () => {
     // The old exit was the entrance's exact mirror, cubic-bezier(0.75, -0.28, 0.55, 1). Mirroring an
     // overshoot produces that -0.28, which IS the wiggle: the box swelled before it shrank.
@@ -147,7 +147,7 @@ describe("the cascade's mode is a STORED machine — a click cannot settle or mo
     })
   })
 
-  it("T61 (must-not-move-the-menus-on-an-intermediate-select): a rail click NEVER replaces an existing base", () => {
+  it("T61 (not-move-the-menus-on-an-intermediate-select): a rail click NEVER replaces an existing base", () => {
     // The failure the stored base forbids: the select advances the frontier and the covering /
     // pressure / ground all recompute, moving the very list being clicked in the moment its child
     // appears. Engaged geometry paints from the captured VALUE, and no click can touch it.
@@ -160,7 +160,7 @@ describe("the cascade's mode is a STORED machine — a click cannot settle or mo
     }
   })
 
-  it("must-not-expand-parents-on-select: the reveal root only ever RATCHETS shallower on a click", () => {
+  it("not-expand-parents-on-select: the reveal root only ever RATCHETS shallower on a click", () => {
     // Clicking deeper keeps the shallower root (everything walked open stays open); it never
     // springs covered parents open (engageOnEnter is the only all-revealer).
     const at1 = engageOnRailClick(SETTLED, baseFixture(), 1)
@@ -184,7 +184,7 @@ describe("the cascade's mode is a STORED machine — a click cannot settle or mo
     }
   })
 
-  it("must-collapse-from-one-pointer-authority: pointer-exit, toggle and the final choice are the ONLY settles", () => {
+  it("collapse-from-one-pointer-authority: pointer-exit, toggle and the final choice are the ONLY settles", () => {
     const reasons: SettleReason[] = ["pointer-exit", "toggle", "final-choice"]
     for (const r of reasons) expect(settleModeOn(r)).toEqual({ kind: "settled" })
     // A rail click is not a settle reason — unrepresentable, and the type rejects it:
@@ -192,7 +192,7 @@ describe("the cascade's mode is a STORED machine — a click cannot settle or mo
     settleModeOn("rail-click")
   })
 
-  it("must-hold-the-ground-under-the-pointer: the ground is DATA in the frozen base", () => {
+  it("hold-the-ground-under-the-pointer: the ground is DATA in the frozen base", () => {
     // The root's width and the detail's position hang off `groundRight`; engaged geometry reads it
     // from the base, so nothing a gesture causes (select, clear, disclose, remount) can move it —
     // it recomputes only at the settle transitions above.
@@ -201,7 +201,7 @@ describe("the cascade's mode is a STORED machine — a click cannot settle or mo
   })
 })
 
-describe("must-animate-every-menu-closure", () => {
+describe("animate-every-menu-closure", () => {
   it("collapses the sub-branch when a DIFFERENT row is chosen (the workspace switch)", () => {
     // The reported bug: clicking "My Workspace" from another workspace made every menu vanish in one
     // frame. It tears the same menus down as a re-click, so it animates the same way.
@@ -226,7 +226,7 @@ describe("must-animate-every-menu-closure", () => {
   })
 })
 
-describe("must-own-unselection", () => {
+describe("own-unselection", () => {
   it("clears on the already-selected row and selects on any other", () => {
     expect(planRailSelect("a", "a").action).toBe("clear")
     expect(planRailSelect("a", "b").action).toBe("select")
@@ -234,7 +234,7 @@ describe("must-own-unselection", () => {
   })
 })
 
-describe("must-guard-unsaved-on-exit", () => {
+describe("guard-unsaved-on-exit", () => {
   it("guards exactly the clicks that replace or clear an open detail", () => {
     // Equivalently: guard whenever the level already has a selection.
     expect(planRailSelect("a", "a").guarded).toBe(true) // clear
@@ -243,7 +243,7 @@ describe("must-guard-unsaved-on-exit", () => {
   })
 })
 
-describe("must-draw-every-detection-frame", () => {
+describe("draw-every-detection-frame", () => {
   it("arms the disclose region only when something is covered to disclose", () => {
     const state = { engaged: false, immersed: false, anyCovered: true }
     expect(triggerRectArmed(state)).toBe(true)
@@ -288,7 +288,7 @@ describe("menu region — the ONE authority for pointer-in-menus", () => {
   })
 })
 
-describe("must-hold-the-detail-until-the-final-choice — DECLARED leafness (v1.16.0)", () => {
+describe("hold-the-detail-until-the-final-choice — DECLARED leafness (v1.16.0)", () => {
   it("resolves a row's leafness: item over level over the fail-safe `detail` default", () => {
     expect(itemLeadsTo(undefined, undefined)).toBe("detail")
     expect(itemLeadsTo("list", undefined)).toBe("list")
@@ -342,7 +342,7 @@ describe("must-hold-the-detail-until-the-final-choice — DECLARED leafness (v1.
   })
 })
 
-describe("must-auto-collapse-menus-on-final-choice", () => {
+describe("auto-collapse-menus-on-final-choice", () => {
   it("T59: in auto-collapse mode the final choice's landing closes the menus on the click itself", () => {
     // Without waiting for the pointer to leave: settling IS the requested action.
     expect(planLeafSettle({ sigChanged: true, pathComplete: true, autoHide: true })).toEqual({

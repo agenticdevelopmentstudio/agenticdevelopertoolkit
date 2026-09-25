@@ -3,11 +3,11 @@ id: 6f5f455d-b744-425d-a21e-494fc18caaf2
 title: Flow
 domain: agenticdevelopertoolkit://recipes/flow
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -147,8 +147,10 @@ Not applicable: Flow MUST NOT emit log statements.
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Both statuses rest on the source rendering a semantic `<main>` element and setting `tabIndex={-1}` on it to keep it out of the tab order while still allowing programmatic focus (`packages/web/packages/landing/src/flow/Flow.tsx`).
+Both statuses rest on the source rendering a semantic `<main>` element and setting `tabIndex={-1}` on it to keep it out of the tab order while still allowing programmatic focus (`packages/web/packages/landing/src/flow/Flow.tsx`). `separation-of-concerns` is `passed` because the component is pure layout over `children` with no business logic; `unit-test-coverage` is `passed` because `flow.test.tsx` renders `Flow` directly and asserts its `<main>`/`tabIndex` behavior.
 
 ## Change History
 
@@ -156,3 +158,4 @@ Both statuses rest on the source rendering a semantic `<main>` element and setti
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the unverified click-focus rationale, phrased not-applicable sections as requirements, added a single-main-landmark requirement and vector, renamed requirements to subject-only kebab-case, added tags and related links, reformatted Design Decisions as Decision/Rationale/Approved, added a Compliance table, fixed RFC 2119 casing, corrected the WinUI 3/AppKit-UIKit/SwiftUI/Compose platform notes, tightened and extended Conformance Test Vectors, and defined "bands" |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

@@ -3,11 +3,11 @@ id: e16d896e-9318-48ac-bf1e-b48ef648d73c
 title: DeckScript
 domain: agenticdevelopertoolkit://recipes/deck-script
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -76,7 +76,7 @@ DeckScript operates at the initialization layer and does not itself call any acc
 | deck-script-010 | independent-disabling | `deckScript({ openAtTop: true, armSnapping: false, armSmooth: true, restoreZoomOffIos: true })` | Returned string contains only the three enabled segments; total length is shorter than all-enabled |
 | deck-script-011 | passive-listeners | `deckScript({ armSnapping: true })` | Returned string contains `{once:true,passive:true}` for the snapping listeners |
 | deck-script-012 | passive-listeners | `deckScript({ armSmooth: true })` | Returned string contains `{passive:true}` for the smooth listeners, without `once` |
-| deck-script-013 | target-root-element | `deckScript({ armSnapping: true, armSmooth: true })` | Returned string calls `setAttribute`/`removeAttribute` only on `document.documentElement` (or a variable referencing it) |
+| deck-script-013 | target-root-element | `deckScript({ armSnapping: true, armSmooth: true, restoreZoomOffIos: false })` | Returned string calls `setAttribute`/`removeAttribute` only on `document.documentElement` (or a variable referencing it) |
 | deck-script-014 | execute-before-hydration | `<DeckScript />` rendered server-side and the HTML inspected before the client bundle runs | The `<script>` tag and its inline body are present in the server-rendered HTML, not injected later by an effect |
 | deck-script-015 | compose-into-single-string | `deckScript({ openAtTop: true, armSnapping: true, armSmooth: true, restoreZoomOffIos: true })` | Returned string equals the concatenation of the four segments in `openAtTop`, `armSnapping`, `armSmooth`, `restoreZoomOffIos` order, with no separators between them |
 | deck-script-016 | restore-zoom-off-ios | Runtime execution (jsdom/Playwright) of the returned script with an iOS Safari user agent | `maximum-scale` is NOT removed from the viewport meta tag |
@@ -88,7 +88,7 @@ DeckScript operates at the initialization layer and does not itself call any acc
 | deck-script-022 | edge case: input before listeners attach | Runtime execution where a `wheel` event is dispatched before the script's listener-attachment line runs, then again after | The first event has no observable effect; the second sets `data-snap` |
 | deck-script-023 | edge case: multiple instances | Two `<DeckScript />` components rendered in the same tree | Two separate `<script>` elements appear, each independently correct; effects are redundant but harmless (idempotent attribute sets, duplicate listeners) |
 | deck-script-024 | edge case: rendered in `<head>` | `<DeckScript />` rendered inside `<head>`, before the viewport meta tag | `restoreZoomOffIos` succeeds only via the `load` fallback, leaving pinch-zoom disabled until `load`; `openAtTop`, `armSnapping`, and `armSmooth` are unaffected by placement |
-| deck-script-025 | css-contract | `deckScript({ armSnapping: true, armSmooth: true })` | Returned string's only attribute names are `data-snap` and `data-smooth`, matching the `html[data-snap]` / `html[data-smooth]` selectors the host stylesheet must define |
+| deck-script-025 | css-contract | `deckScript({ armSnapping: true, armSmooth: true, restoreZoomOffIos: false })` | Returned string's only attribute names are `data-snap` and `data-smooth`, matching the `html[data-snap]` / `html[data-smooth]` selectors the host stylesheet must define |
 
 ## Edge Cases
 
@@ -97,7 +97,7 @@ DeckScript operates at the initialization layer and does not itself call any acc
 - **Disabled all behaviors**: When `deckScript({ openAtTop: false, armSnapping: false, armSmooth: false, restoreZoomOffIos: false })` is called, the function MUST return an empty string.
 - **Viewport meta tag missing**: When `restoreZoomOffIos` runs and no viewport meta tag exists yet, the code does not throw — the `if(m)` check short-circuits — and it awaits the `load` event to retry the query.
 - **Multiple DeckScript renders**: Only one `<DeckScript />` instance SHOULD be rendered per page. Rendering more than one injects a separate script block per instance; the effects layer harmlessly (idempotent attribute sets, duplicate listeners) but wastes bytes and events.
-- **DeckScript rendered in <head>**: The component SHOULD be placed first in `<body>` as documented; if placed in `<head>`, the viewport meta tag may not yet be parsed and `restoreZoomOffIos` behavior is degraded to only the `load` event fallback.
+- **DeckScript rendered in `<head>`**: The component SHOULD be placed first in `<body>` as documented; if placed in `<head>`, the viewport meta tag may not yet be parsed and `restoreZoomOffIos` behavior is degraded to only the `load` event fallback.
 - **Input firing before arm-snapping's listeners attach**: A user CAN scroll, click, or press a key before this script reaches its listener-attachment lines — for example during a slow fetch of the surrounding HTML. That input is simply missed, since no listener exists yet to see it, and `data-snap` stays unset. The next `pointerdown`, `wheel`, or `keydown` after the script runs arms snapping normally.
 
 ## Configuration
@@ -180,12 +180,15 @@ Not applicable: DeckScript does not emit log messages. It performs silent initia
 | Check | Status | Category |
 |-------|--------|----------|
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`armSmooth` only toggles the `data-smooth` attribute; whether `scroll-behavior: smooth` is actually cancelled under `@media (prefers-reduced-motion: reduce)` depends on the `base.css` rule this source file does not contain, so the status is `partial` rather than `passed` (see **css-contract**).
+`armSmooth` only toggles the `data-smooth` attribute; whether `scroll-behavior: smooth` is actually cancelled under `@media (prefers-reduced-motion: reduce)` depends on the `base.css` rule this source file does not contain, so the status is `partial` rather than `passed` (see **css-contract**). `separation-of-concerns` is passed because all four behaviors are built as plain strings by the pure `deckScript()` function, with `DeckScript` itself only a thin wrapper that injects that string into a literal `<script>` tag; `unit-test-coverage` is passed on `deck.test.tsx`, which calls `deckScript()` directly and asserts each of the four options' markers (`scrollRestoration`, `data-snap`, `data-smooth`/`popstate`, `maximum-scale`) both present and absent.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | deck-script-013/025 vectors add restoreZoomOffIos:false so exclusivity claims hold; wrapped bare <head> in a code span. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited, added the css-contract requirement and its compliance/accessibility row, corrected arm-snapping/restore-zoom/design-decision/logging accuracy, reformatted Design Decisions into Decision/Rationale/Approved triples, unified RFC 2119 keyword usage, expanded Platform Notes (fixed Compose and SwiftUI API names) and Conformance Test Vectors (platform-independent 008, hydration/composition/UA-branch/edge-case coverage), unquoted frontmatter dates |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

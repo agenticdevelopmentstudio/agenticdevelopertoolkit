@@ -3,11 +3,11 @@ id: 86aedf2f-b353-4770-a6dd-9e29b3d9b76a
 title: Selection Actions
 domain: agenticdevelopertoolkit://recipes/selection-actions
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,6 +44,7 @@ The component renders no container of its own — it is designed to be placed in
 ## Behavioral Requirements
 
 - **render-action-buttons**: The component MUST render each provided action as a `Button` element.
+- **duplicate-action-ids**: The component uses each action's `id` as the React list key for its wrapping `Fragment`. A duplicate `id` across actions MUST NOT prevent either action from rendering or from invoking its own `onClick` — React's key collision affects reconciliation identity only, not render count or event wiring. Callers MUST still treat `id` as unique; the component does not deduplicate or otherwise correct a collision.
 - **pass-selected-ids-on-action**: When an action button is clicked, the component MUST call the action's `onClick` callback with the array of currently selected IDs.
 - **disable-selection-required-actions**: Actions with `requiresSelection: true` MUST be disabled when the `selectedIds` array is empty.
 - **keep-standalone-actions-enabled**: Actions without `requiresSelection` or with `requiresSelection: false` MUST remain enabled regardless of selection state.
@@ -221,8 +222,10 @@ Not applicable: Selection Actions does not emit logs. Logging of action invocati
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The `passed` accessibility statuses rest on the standard `<button>` elements, the `role="separator"`/`aria-orientation="vertical"` divider markup in `selection-actions.tsx`, and the delegation of modal focus handling to AlertModal (its own recipe); `touch-target-size` and `no-hardcoded-strings` are `failed` because the source renders `sm`-sized buttons without opting into Button's `--adh-button-min-height`/`--adh-button-min-width` floor, and hardcodes "Delete", "Cancel", and "Delete selected?" with no override besides `deleteConfirm.title`/`description`.
+The `passed` accessibility statuses rest on the standard `<button>` elements, the `role="separator"`/`aria-orientation="vertical"` divider markup in `selection-actions.tsx`, and the delegation of modal focus handling to AlertModal (its own recipe); `touch-target-size` and `no-hardcoded-strings` are `failed` because the source renders `sm`-sized buttons without opting into Button's `--adh-button-min-height`/`--adh-button-min-width` floor, and hardcodes "Delete", "Cancel", and "Delete selected?" with no override besides `deleteConfirm.title`/`description`. `separation-of-concerns` passes: the component owns only action rendering and the confirm/cancel flow's open state, delegating the modal itself to `AlertModal`. `unit-test-coverage` passes: `selectionActions.test.tsx` renders `SelectionActions` directly and covers action enablement, the selected-ids argument, dividers, and the confirm/cancel delete flow.
 
 ## Change History
 
@@ -230,3 +233,4 @@ The `passed` accessibility statuses rest on the standard `<button>` elements, th
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added requirements for the confirm modal's destructive styling, confirm/cancel button labels, closing on confirm, and the onDelete selection argument; replaced the impossible "modal already visible" edge case with a duplicate-action-id edge case and vector; populated depends-on, related, and references; moved web-only Appearance details into the React/Web platform note; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes to real APIs; rewrote Localization to list the component's unoverridable hardcoded strings instead of "Not applicable"; dropped the "stateless" claim from Feature Flags; reformatted Design Decisions into Decision/Rationale/Approved form; and rebuilt Compliance as a linked table reflecting that touch-target-size and no-hardcoded-strings fail. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added missing duplicate-action-ids requirement; K20c dangling ref now resolves. |

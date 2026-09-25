@@ -3,11 +3,11 @@ id: f8e3d2a1-4c9b-4d7e-8f2b-a5c3e7b1d4f6
 title: Registry Mark
 domain: agenticdevelopertoolkit://recipes/registry-mark
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -205,12 +205,15 @@ Not applicable: the component does not emit debug or error logs.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The `passed` statuses rest on the native `<a>`/`aria-hidden`/`aria-label` markup in `RegistryMark.tsx` and on it defining no strings of its own; the `failed` and `partial` statuses rest on the companion `registry-mark.css`, whose hover/focus bloom and popover transitions are not gated behind `prefers-reduced-motion`, whose `.pc-rm-tip` text is fixed at `11px` (not scalable), and whose tip/star colors depend on the host-supplied `currentColor`, so contrast cannot be verified in isolation.
+The `passed` statuses rest on the native `<a>`/`aria-hidden`/`aria-label` markup in `RegistryMark.tsx` and on it defining no strings of its own; the `failed` and `partial` statuses rest on the companion `registry-mark.css`, whose hover/focus bloom and popover transitions are not gated behind `prefers-reduced-motion`, whose `.pc-rm-tip` text is fixed at `11px` (not scalable), and whose tip/star colors depend on the host-supplied `currentColor`, so contrast cannot be verified in isolation. `RegistryMark.tsx` renders SVG geometry over props with no business logic or data access (separation-of-concerns passed); `RegistryMark.test.tsx` directly exercises the link/label, the tip popover content, the no-tip case, and the className/custom-property merge (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; promoted the stable-tip, clip-safe-placement, and popover-focus obligations out of Edge Cases into named Behavioral Requirements; reworked Design Decisions into Decision/Rationale/Approved form and added a single-sourced-path-data decision with a grounded rationale for not using `@agenticdevelopertoolkit/popover`; fixed Platform Notes so every port draws from the same path data instead of a system font; corrected States and Accessibility Options to match the companion CSS's actual hover/focus/motion behavior; rebuilt Compliance with real catalog checks; inlined exact path data in the glyph/star vectors and reworded the anchor and memoization vectors to assert observable outcomes; added `depends-on`/`related` cross-references; defined ADH gold and AI star on first use; unquoted `modified`. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source analysis |

@@ -3,11 +3,11 @@ id: 9191eade-c18a-4899-b802-f000a1905c80
 title: RemovableChip
 domain: agenticdevelopertoolkit://recipes/removable-chip
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -213,6 +213,8 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 The source names the remove button with `aria-label={removeLabel}` and renders it as a
 native `<button>`, so screen-reader-support and keyboard-navigable pass; both `children`
@@ -220,12 +222,13 @@ and `removeLabel` are caller-supplied props rather than literals, so no-hardcode
 passes. `contrast-ratio` and `dynamic-type-support` are `partial` because the source
 sets only design-token classes (e.g. `text-apt-text-muted`, the badge tone tokens) —
 whether those tokens resolve to WCAG AA contrast or scale with system font size is
-determined outside this file.
+determined outside this file. `RemovableChip` is a `Badge` composed with a remove button, entirely presentation over props with no business logic (separation-of-concerns passed); no test file exercises it (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: reword disabled-blocks-remove around the native disabled button and move the CSS detail to Platform Notes; add keyboard-operable requirement and a focus-after-removal edge case; correct the SwiftUI, Compose, and AppKit/UIKit platform APIs and drop invented pressed/cursor states; reorder and relabel Platform Notes; move Badge to depends-on and drop named consumers from Overview and Design Decisions; reformat Design Decisions as Decision/Rationale/Approved; rewrite Compliance with canonical catalog checks; fix the empty-removeLabel edge case and the Localization contradiction; sharpen T5 and T8 test vectors; note badge-body appearance under Disabled. |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise Platform Notes: replace "Not applicable" bullets with concrete translation guidance for SwiftUI, Kotlin, AppKit/UIKit, and WinUI 3. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, and Privacy sections as "Not applicable"; fix domain to agenticdevelopercookbook; update status to review. |

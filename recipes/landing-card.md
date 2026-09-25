@@ -3,11 +3,11 @@ id: 01947259-4883-44e1-a047-6b4e463cb422
 title: Landing Card
 domain: agenticdevelopertoolkit://recipes/landing-card
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -165,12 +165,15 @@ Not applicable: Component performs no operations that warrant logging.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Card.tsx renders semantic HTML (`<h3>`, `<span>`, `<div>`) with no ARIA misuse; text scaling and color contrast are delegated entirely to the `lp-card` and `lp-card__kicker` CSS classes, which this source file does not define, so those two statuses cannot be verified from the component itself.
+Card.tsx renders semantic HTML (`<h3>`, `<span>`, `<div>`) with no ARIA misuse; text scaling and color contrast are delegated entirely to the `lp-card` and `lp-card__kicker` CSS classes, which this source file does not define, so those two statuses cannot be verified from the component itself. `separation-of-concerns` passes because the component is pure presentation over its `kicker`/`title`/`children` props with no business logic; `unit-test-coverage` passes on `blocks-frame.test.tsx`'s `Cards` suite, which exercises the title/kicker rendering directly, including the kicker-omitted case.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, promoted nullish title/children handling to named requirements with test vectors, reworded the heading-level MUST so it no longer asks the consumer for behavior the component doesn't expose, reformatted Design Decisions to Decision/Rationale/Approved, replaced Compliance with an accessibility checks table, fixed WinUI 3's hardcoded font styles and added native heading traits across platforms, corrected the AppKit label API and two inaccurate edge-case descriptions, and added tags |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from Card.tsx source |

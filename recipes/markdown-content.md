@@ -3,11 +3,11 @@ id: 2d18fdbd-b2c5-46c0-8e6f-ceb7467fafa6
 title: Markdown Content
 domain: agenticdevelopertoolkit://recipes/markdown-content
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ A React Server Component that processes raw markdown content into sanitized, syn
 - **apply-prose-class**: The component MUST always apply the `adh-mv-prose` CSS class to the root container.
 - **accept-optional-class**: The component MUST accept an optional `className` prop and append it to the root class list when provided.
 - **server-component-only**: The component MUST be an async React Server Component (RSC) — no `"use client"` directive.
-- **strip-frontmatter**: The component MUST strip a leading YAML frontmatter block — one starting with `---` at position 0 of the raw content, through its matching closing `---` — before processing. A `---` occurring anywhere else in the document is ordinary markdown and MUST render as a thematic break (`<hr>`), not be treated as frontmatter.
+- **strip-frontmatter**: The component MUST strip a leading YAML frontmatter block — one starting with `---` at position 0 of the raw content, through its matching closing `---` — before processing. A `---` occurring anywhere else in the document, on its own line preceded by a blank line, is ordinary markdown and MUST render as a thematic break (`<hr>`), not be treated as frontmatter; a `---` line directly under a preceding text line with no blank line between them is a setext heading marker instead and renders as `<h2>` (standard markdown block parsing, not a frontmatter rule). When a leading `---` at position 0 has no matching closing `---`, the frontmatter parser treats the rest of the document as the frontmatter block: the component renders an empty `<div class="adh-mv-prose"></div>` if that remainder happens to parse as YAML, and otherwise the parse failure MUST propagate per **propagate-render-errors**.
 - **output-root-div**: The component MUST render output in a root `<div>` element with the combined classes.
 - **propagate-render-errors**: If the markdown pipeline throws (malformed input the parser cannot recover from, or a highlighter/grammar failure), the component MUST let the error propagate to the nearest error boundary. It MUST NOT catch the error itself, render partial output, or fall back to unsanitized HTML.
 
@@ -76,7 +76,7 @@ The component delegates accessibility to the semantic HTML the pipeline produces
 | markdown-007 | output-root-div, apply-prose-class | `{ content: "   \n\n  " }` | `<div class="adh-mv-prose"></div>` — an empty root, no error thrown |
 | markdown-008 | output-root-div, apply-prose-class | `{ content: "" }` | `<div class="adh-mv-prose"></div>` — an empty root, no error thrown |
 | markdown-009 | accept-optional-class | `{ content: "text" }` (no `className`) | Root `<div>` class attribute is exactly `"adh-mv-prose"` — no trailing space, no literal `undefined`/`null` |
-| markdown-010 | render-markdown, highlight-code | `{ content: "- a\n  - b\n\n\| A \| B \|\n\|---\|---\|\n\| 1 \| 2 \|\n\n```js\nconst y = 2\n```\n\n[link](https://example.com)" }` | Renders without throwing: a nested `<ul>`, a `<table>`, a shiki-highlighted `<pre class="shiki …">`, and an `<a href="https://example.com">` |
+| markdown-010 | render-markdown, highlight-code | `{ content: "- a\n  - b\n\n\| A \| B \|\n\|---\|---\|\n\| 1 \| 2 \|\n\n` `` ```js\nconst y = 2\n``` `` `\n\n[link]` `(https://example.com)" }` | Renders without throwing: a nested `<ul>`, a `<table>`, a shiki-highlighted `<pre class="shiki …">`, and an `<a href="https://example.com">` |
 
 ## Edge Cases
 
@@ -84,12 +84,13 @@ The component delegates accessibility to the semantic HTML the pipeline produces
 - **Whitespace-only content**: When `content` contains only whitespace, the component MUST render the same empty `<div class="adh-mv-prose"></div>`, with no error thrown (markdown-007).
 - **Complex markdown**: Nested lists, tables, code blocks, inline code, and links MUST all be processed and rendered without error (markdown-010).
 - **Missing className prop**: When `className` is not provided or undefined, the component MUST render with only the `adh-mv-prose` class (no undefined or null appended) (markdown-009).
+- **Unclosed leading `---`**: A document that opens with `---` at position 0 but has no later line starting with `---` (for example `"---\n\nIntro paragraph.\n\nMore text"`) is NOT a thematic break followed by paragraphs — the frontmatter parser consumes the whole remainder as the frontmatter block. If that remainder parses as YAML, the component renders an empty `<div class="adh-mv-prose"></div>` and the document body is silently dropped; if it does not parse as YAML (for example the remainder starts with `*emphasis*`, or uses Pandoc-style metadata closed by `...`), the parse failure MUST propagate per **propagate-render-errors** instead of rendering partial output.
 
 ## Configuration
 
 | Option | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
-| `content` | string | Yes | — | Raw markdown string. A leading YAML frontmatter block (`---` at the very start of the string through the matching closing `---`) is stripped before processing; a `---` appearing later in the document is an ordinary thematic break and renders as `<hr>` (see **strip-frontmatter**). |
+| `content` | string | Yes | — | Raw markdown string. A leading YAML frontmatter block (`---` at the very start of the string through the matching closing `---`) is stripped before processing; a `---` appearing later, after a blank line, is an ordinary thematic break and renders as `<hr>`. A leading `---` with no matching closing `---` is instead treated as an unterminated frontmatter block that consumes the rest of the document (see **strip-frontmatter**, Edge Cases). |
 | `className` | string | No | undefined | Additional CSS class(es) appended to the root `<div>` class list (see **accept-optional-class**). |
 
 ## Deep Linking
@@ -158,12 +159,15 @@ Not applicable: the component does not emit diagnostic logs.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best-practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best-practices |
 
-`input-sanitization`, `semantic-markup`, `dynamic-type-support`, and `unicode-support` rest on `process-markdown.ts` (a custom rehype-sanitize allowlist run after shiki, remark-rehype's semantic element output, `rem`-based prose CSS, and native JS string handling throughout); `screen-reader-support` and `contrast-ratio` are `partial` because accessible names for links/images and the full prose color palette depend on the markdown author and on `themes/palettes.ts`, neither of which this component controls.
+`input-sanitization`, `semantic-markup`, `dynamic-type-support`, and `unicode-support` rest on `process-markdown.ts` (a custom rehype-sanitize allowlist run after shiki, remark-rehype's semantic element output, `rem`-based prose CSS, and native JS string handling throughout); `screen-reader-support` and `contrast-ratio` are `partial` because accessible names for links/images and the full prose color palette depend on the markdown author and on `themes/palettes.ts`, neither of which this component controls. `separation-of-concerns` passes: `MarkdownContent.tsx` is a thin async wrapper that only marshals `content`/`className` into a root `<div>`; parsing, sanitizing, and highlighting all live in the independently testable `process-markdown.ts` pipeline it calls. `unit-test-coverage` passes: `process-markdown.test.ts` exercises the shared pipeline this component delegates to (frontmatter stripping, GFM, alerts, sanitization, highlighting) directly.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed strip-frontmatter/Configuration: unclosed leading --- consumes to EOF (empty div or error), not hr+paragraphs; setext --- distinguished. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; correct the SwiftUI/Compose/WinUI platform APIs; add highlight-code and propagate-render-errors requirements; add exact/deterministic test vectors for frontmatter-vs-thematic-break, whitespace-only, and code highlighting; reformat Design Decisions into Decision/Rationale/Approved entries; add the Compliance table; populate related and references |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

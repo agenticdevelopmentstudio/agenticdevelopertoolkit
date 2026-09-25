@@ -53,7 +53,7 @@ const workspaces = (selectedId: string | null, over: Partial<TopicLevel> = {}) =
 let seq = 0
 const freshRootId = () => `workspaces-${++seq}`
 
-describe("must-animate-every-menu-closure (wiring)", () => {
+describe("animate-every-menu-closure (wiring)", () => {
   it("selecting a DIFFERENT row still reaches onSelect", async () => {
     const onSelect = vi.fn()
     const root = freshRootId()
@@ -109,7 +109,7 @@ describe("must-animate-every-menu-closure (wiring)", () => {
   })
 })
 
-describe("must-draw-one-chain-line (drawing)", () => {
+describe("draw-one-chain-line (drawing)", () => {
   it("draws the submenu's gold rail at exactly the connector's stroke width", async () => {
     const root = freshRootId()
     const { container } = render(
@@ -246,7 +246,7 @@ const displayHidden = (el: HTMLElement | null): boolean => {
   return false
 }
 
-describe("must-hold-the-detail-until-the-final-choice (wiring)", () => {
+describe("hold-the-detail-until-the-final-choice (wiring)", () => {
   it("T57/T58: the detail rides through an intermediate select and swaps ONCE at the final choice", async () => {
     const root = freshRootId()
     const { container } = render(<Walk rootId={root} />)
@@ -276,7 +276,7 @@ describe("must-hold-the-detail-until-the-final-choice (wiring)", () => {
   })
 
   it("T61: an intermediate select does not move the menus — the submenu discloses BESIDE the clicked list", async () => {
-    // must-not-move-the-menus-on-an-intermediate-select. The regression this pins: the select
+    // not-move-the-menus-on-an-intermediate-select. The regression this pins: the select
     // advances the frontier, auto-hide covering computed against the new frontier covered the very
     // list being clicked in (its child slid over it at the CASCADE_INDENT), and only the pointer
     // reveal — dead here, as in any remount it loses the race to — held it open. The rail click now
@@ -298,7 +298,7 @@ describe("must-hold-the-detail-until-the-final-choice (wiring)", () => {
   })
 
   it("T62: a CLEAR releases the hold with the navigation — no stale pane haunts the walk", async () => {
-    // must-release-the-hold-when-the-gesture-ends: the live regression this pins is the v1.15.x
+    // release-the-hold-when-the-gesture-ends: the live regression this pins is the v1.15.x
     // hold arming on clears but releasing only on a COMPLETE path — an unselect made the path
     // incomplete forever, so the captured pane showed indefinitely ("unselect doesn't work") and
     // followed the user across surfaces (read as phantom auto-selection).

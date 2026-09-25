@@ -3,11 +3,11 @@ id: c2f89e6b-6e86-449b-9955-5bb0da929de3
 title: Header
 domain: agenticdevelopertoolkit://recipes/header
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -153,12 +153,15 @@ Not applicable: The Header component does not perform logging or diagnostic oper
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`semantic-markup` passes because the source renders the native `<h2>` element directly, giving it a correct implicit heading role. `dynamic-type-support` is partial because the source applies no font-size styling of its own — it defers text scaling entirely to consumer-supplied CSS classes, which the source cannot verify.
+`semantic-markup` passes because the source renders the native `<h2>` element directly, giving it a correct implicit heading role. `dynamic-type-support` is partial because the source applies no font-size styling of its own — it defers text scaling entirely to consumer-supplied CSS classes, which the source cannot verify. `separation-of-concerns` is `passed` because the component is pure presentation over `children` with no business logic; `unit-test-coverage` is `failed` because no test exercises `user-settings/components/Header.tsx` — the candidate tests found by name test unrelated Swift/hub-client and other web code, not this component.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and promoted className acceptance to a MUST; rewrote Compliance as a table; corrected the SwiftUI, Compose, AppKit, and WinUI 3 platform notes to real APIs; reformatted Design Decisions to Decision/Rationale/Approved and retitled the ReactNode decision; fixed test-vector fragment refs and RFC 2119 casing; added a related link to the settings-panel recipe and a decision recording the fixed heading depth. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

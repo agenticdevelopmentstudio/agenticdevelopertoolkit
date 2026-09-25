@@ -3,11 +3,11 @@ id: c9c48e65-6905-4035-b8e1-e053219599f1
 title: DocBreadcrumbs
 domain: agenticdevelopertoolkit://recipes/doc-breadcrumbs
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -180,13 +180,16 @@ Not applicable: DocBreadcrumbs does not emit any log messages. Debug output is d
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Semantic structure and the landmark label come directly from the rendered `<nav aria-label="Breadcrumb">`, `<ol>`, and `<li>` markup. Keyboard operability is `partial`: the default `LinkComponent` renders a plain `<a href>`, which is natively keyboard-operable, but the component hands rendering to whichever `LinkComponent` the host injects and cannot guarantee that a custom one preserves the same behavior.
+Semantic structure and the landmark label come directly from the rendered `<nav aria-label="Breadcrumb">`, `<ol>`, and `<li>` markup. Keyboard operability is `partial`: the default `LinkComponent` renders a plain `<a href>`, which is natively keyboard-operable, but the component hands rendering to whichever `LinkComponent` the host injects and cannot guarantee that a custom one preserves the same behavior. `separation-of-concerns` passes because `DocBreadcrumbs` renders the caller-supplied `crumbs` array with no derivation logic of its own; `unit-test-coverage` passes because `docBreadcrumbs.test.tsx` imports `DocBreadcrumbs` directly and exercises its behavior with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case, correct the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes to real native APIs, define the `DocLinkComponent` contract and default `<a>` rendering, unify the crumb `label` type as `ReactNode` everywhere, resolve the separator and hover-state contradictions, add the missing `crumbs` prop to two test vectors, mark keyboard-navigable compliance `partial` and downgrade the two color-dependent accessibility options, reformat Design Decisions into Decision/Rationale/Approved rows, link Compliance rows to canonical check IDs, drop source-file citations from Edge Cases, and unquote frontmatter dates |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | State the crumb shape the props type requires, and the empty-array fallback, as Edge Cases requirements |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Refine open questions on crumb property and type validation |

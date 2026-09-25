@@ -3,11 +3,11 @@ id: 42e7a2ea-f138-4edb-899f-43c1946e4ef8
 title: FAQ
 domain: agenticdevelopertoolkit://recipes/faq
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -168,7 +168,7 @@ Not applicable. The component does not emit any log messages.
   **Rationale**: Eliminates the need for stateful JavaScript logic, reduces bundle size, ensures the component works without client-side rendering, and leverages the browser's built-in accessibility and print handling. Trade-off: the animation and visual styling are browser-default and less customizable than a fully scripted accordion; customization is achieved through CSS.
   **Approved**: pending
 
-- **Decision** (index-based-keying): Key each rendered entry by its array index (`key={i}`) rather than by a caller-supplied identifier.
+- **Decision**: Key each rendered entry by its array index (`key={i}`) rather than by a caller-supplied identifier (index-based-keying).
   **Rationale**: Acceptable for a static or rarely-reordered list. If the `entries` array is mutated (items added, removed, or reordered), React reuses DOM nodes by index, which can cause open/closed state to attach to the wrong entry. The source does not validate or guard against this, and defines no `id` field — keeping the array stable is the caller's responsibility.
   **Approved**: pending
 
@@ -195,8 +195,10 @@ Not applicable. The component does not emit any log messages.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The passed accessibility rows rest on the source using native `<details>`/`<summary>` elements, which carry built-in disclosure semantics and full keyboard support (click, Enter, Space) with no custom ARIA or event handlers. The partial rows rest on the source rendering no inline styles, colors, or sizing at all — text scaling, contrast, and touch target size are fully determined by the `lp-faq` stylesheet, which is not part of this source file. The internationalization row rests on the source containing zero user-facing string literals; all text is supplied by the caller through the `entries` prop.
+The passed accessibility rows rest on the source using native `<details>`/`<summary>` elements, which carry built-in disclosure semantics and full keyboard support (click, Enter, Space) with no custom ARIA or event handlers. The partial rows rest on the source rendering no inline styles, colors, or sizing at all — text scaling, contrast, and touch target size are fully determined by the `lp-faq` stylesheet, which is not part of this source file. The internationalization row rests on the source containing zero user-facing string literals; all text is supplied by the caller through the `entries` prop. `separation-of-concerns` is `passed` because the component is pure presentation over the `entries` prop with no logic beyond mapping; `unit-test-coverage` is `passed` because `blocks-close.test.tsx` renders `Faq` directly and asserts its `<details>` markup.
 
 ## Change History
 
@@ -204,3 +206,4 @@ The passed accessibility rows rest on the source using native `<details>`/`<summ
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; narrowed findable-text to question text plus open-entry content and noted the Chromium-only closed-details Find behavior; clarified initial-open-state as re-asserted on every prop change rather than initial-only, with two new test vectors; rewrote the browser-behavior test vectors as Playwright assertions; corrected the touch-target citation to WCAG 2.2 SC 2.5.8 (AA) with 2.5.5 (AAA) as the stricter option; reformatted Design Decisions into Decision/Rationale/Approved form; added a Compliance table; renamed the component a disclosure list rather than an accordion and added the accordion and disclosure recipes to related; trimmed SwiftUI/Compose/WinUI 3 platform notes to drop unbuilt persistence and print/export behavior; replaced the Compose and AppKit/UIKit platform notes with fitting controls; stated Deep Linking is unsupported explicitly; scoped Reduce Motion to consumer CSS animation |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Reshaped the index-based-keying Design Decision into a `**Decision**`/`**Rationale**`/`**Approved**` line triple. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

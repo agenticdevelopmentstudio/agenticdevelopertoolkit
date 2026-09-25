@@ -3,15 +3,15 @@ id: 6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73
 title: "ListWithDetailsPane"
 domain: agenticdevelopertoolkit://recipes/list-with-details-pane
 type: recipe
-version: 2.2.0
+version: 2.2.1
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A master/detail block: a shared ListHeader (filter + actions) over a multi-select DataTable over a details pane whose divider is its always-visible header bar; list and details are peers."
+summary: "A master/detail block: ListHeader over a multi-select DataTable and details pane, divided by an always-visible header-bar splitter; list and details are peers."
 platforms:
   - typescript
   - web
@@ -121,9 +121,12 @@ directly, so its Ingredients table names the recipes it wires together.
   id that no longer exists in `rows` (deleted/renamed), the component MUST clear
   that id from both state and the URL, so a stale link fails safe to "nothing
   open" rather than blank screen. This pruning MUST NOT run while `loading` is
-  true: an asynchronous row load's first render has an empty `rows` before the
-  data arrives, and running the check then would clear a valid
-  `?<paramKey>=` before it gets a chance to match.
+  true, and it MUST NOT run whenever `rows` is empty — whether that emptiness is
+  a load still in flight or a genuinely empty list — since an asynchronous row
+  load's first render also has an empty `rows` before the data arrives, and
+  running the check then would clear a valid `?<paramKey>=` before it gets a
+  chance to match. `loading` is an optional prop, so a caller that never
+  supplies it relies entirely on the empty-`rows` guard.
 - **auto-size-columns**: When `autoSizeColumns` is provided, the component
   MUST forward it to `DataTable` so each column sizes to its widest cell
   content, while the user can still drag a column's trailing border to
@@ -185,7 +188,7 @@ directly, so its Ingredients table names the recipes it wires together.
 | T9 | clear-stale-deep-link | URL has `?id=deleted-id`, rows load without that id | URL parameter is cleared, selection is empty |
 | T10 | persist-column-widths | Provide `columnWidthsKey`, drag a column wider, reload | Column width persists across reload |
 | T11 | support-column-reordering | Provide `reorder` config, filter is empty | Rows are draggable to reorder; the component forwards `reorder` unconditionally, so a caller must itself omit `reorder` while its filter is active |
-| T12 | clear-stale-deep-link | URL has `?id=some-id`, `rows` is still `[]` and `loading` is `true` | The id is NOT cleared from state or the URL; pruning is deferred until `loading` becomes `false` |
+| T12 | clear-stale-deep-link | URL has `?id=some-id`, `rows` is still `[]` and `loading` is `true` | The id is NOT cleared from state or the URL; pruning is deferred until `rows` is non-empty and `loading` is `false` |
 | T13 | use-list-header | Render the component | Toolbar renders as the shared `ListHeader`: filter field left, actions right |
 | T14 | render-details-header-bar | Render the component | The divider between `DataTable` and the details pane renders as `ResizableSplit`'s always-visible header bar, titled by `detailsLabel` (default `"Details"`) |
 | T15 | move-selection-by-keyboard | Table focused, press ↓ then ↑ | Selection moves to the next row, then back to the previous row |
@@ -193,6 +196,7 @@ directly, so its Ingredients table names the recipes it wires together.
 | T17 | omit-delete-without-handler | Render without `onDelete` | No Delete button appears in the toolbar |
 | T18 | forward-loading-state | `loading: true`, `rows: []` | `DataTable` shows its own loading state, not `emptyLabel` |
 | T19 | support-url-driven-selection, own-selection | Provide `paramKey="id"` and a controlled `filterText` together; URL has `?id=<rowId>` for a row the initial `filterText` excludes from view | Selection is seeded from the URL on mount regardless of `filterText`; the row's absence from the filtered table does not clear its selection (selection is never filtered) |
+| T20 | clear-stale-deep-link | URL has `?id=gone`, `rows` is `[]` and `loading` is `false` (a genuinely empty list, or a caller that never supplies `loading`) | The id is NOT cleared from state or the URL; pruning does not run while `rows` is empty, regardless of `loading` |
 
 ## Edge Cases
 
@@ -213,8 +217,9 @@ directly, so its Ingredients table names the recipes it wires together.
 - When `paramKey` is provided but the URL parameter points to a row no longer in
   `rows`, the parameter is cleared and selection is empty (fail-safe to
   "nothing open") — see **clear-stale-deep-link**, which withholds this while
-  `loading` is `true` so an async row load never clears a valid link before its
-  data arrives.
+  `loading` is `true`, and also withholds it whenever `rows` is empty (even with
+  `loading` false, or never supplied), so an async row load never clears a valid
+  link before its data arrives.
 - When both `paramKey` and a controlled `filterText` are provided, the initial
   URL-seeded selection is restored on mount regardless of `filterText`: the
   filter only narrows what `DataTable` renders, never the selection itself, so
@@ -279,25 +284,6 @@ labels and their `disabled` reflects the selection (see
 **disable-selection-actions**). The delete `AlertModal` traps focus and is
 keyboard-dismissable (its own contract).
 
-## Localization
-
-| String Key | Default (en) | Context |
-|---|---|---|
-| `list-with-details-pane.empty-detail` | Select a row to see details. | Details pane when 0 rows are selected (`emptyDetail`'s default) |
-| `list-with-details-pane.multi-select-hint` | Select a single row to see details. | Details pane when more than 1 row is selected; hard-coded in this source with no override prop |
-| `list-with-details-pane.details-label` | Details | Default title on the details pane's header-bar divider (`detailsLabel`'s default) |
-| `list-with-details-pane.filter-placeholder` | Filter… | Default placeholder in the filter `Input` (`filterPlaceholder`'s default) |
-
-`emptyDetail`, `detailsLabel`, and `filterPlaceholder` are all
-prop-overridable, so a caller can already pass localized text through them;
-only the multi-select hint has no such override and is hard-coded in the
-source. None of the four go through a formal localization-key lookup inside
-the component itself. Separately, the default `filterRow`'s case-insensitive
-match (see **filter-rows**) uses `.toLowerCase()`, which is locale-sensitive
-(e.g. Turkish `İ`/`i`); a caller matching locale-specific text should supply
-its own `filterRow` using a locale-aware comparison rather than assume
-invariant casing.
-
 ## Design Decisions
 
 **Decision**: The block owns selection as a `Set<string>` rather than the table
@@ -344,6 +330,8 @@ split position.
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 `screen-reader-support`, `keyboard-navigable`, and `semantic-markup` rest on
 the source's `role="toolbar"` + `aria-label` toolbar and `DataTable`'s ↑/↓
@@ -353,11 +341,39 @@ and the internationalization checks are `partial` because `emptyDetail`,
 `filterPlaceholder`, and `detailsLabel` are prop-overridable while the
 multi-select hint string is hard-coded with no override, and none of the four
 go through a formal localization-key lookup in the source.
+`separation-of-concerns` is partial: rendering is delegated to `DataTable`,
+`ResizableSplit`, `ListHeader`, and `SelectionActions`, but
+`list-with-details-pane.tsx` itself owns non-trivial business rules —
+`writeParam`/`updateSelection`'s URL-param sync, the stale-id pruning
+effects, and `defaultFilterRow`'s matching — inline in the block rather than
+in an extracted hook. `unit-test-coverage` fails — no test file in the `ui`
+package exercises `ListWithDetailsPane`, so none of that URL-sync, pruning,
+or filtering logic is asserted.
+
+## Localization
+
+| String Key | Default (en) | Context |
+|---|---|---|
+| `list-with-details-pane.empty-detail` | Select a row to see details. | Details pane when 0 rows are selected (`emptyDetail`'s default) |
+| `list-with-details-pane.multi-select-hint` | Select a single row to see details. | Details pane when more than 1 row is selected; hard-coded in this source with no override prop |
+| `list-with-details-pane.details-label` | Details | Default title on the details pane's header-bar divider (`detailsLabel`'s default) |
+| `list-with-details-pane.filter-placeholder` | Filter… | Default placeholder in the filter `Input` (`filterPlaceholder`'s default) |
+
+`emptyDetail`, `detailsLabel`, and `filterPlaceholder` are all
+prop-overridable, so a caller can already pass localized text through them;
+only the multi-select hint has no such override and is hard-coded in the
+source. None of the four go through a formal localization-key lookup inside
+the component itself. Separately, the default `filterRow`'s case-insensitive
+match (see **filter-rows**) uses `.toLowerCase()`, which is locale-sensitive
+(e.g. Turkish `İ`/`i`); a caller matching locale-specific text should supply
+its own `filterRow` using a locale-aware comparison rather than assume
+invariant casing.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 2.2.1 | 2026-09-25 | Mike Fullerton | Fixed clear-stale-deep-link to also withhold pruning while rows is empty (not just while loading); added T20 covering a genuinely-empty rows case; shortened summary to fit 160 chars. |
 | 2.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: strip the `must-` prefix from every requirement name and rename `keyboard-moves-selection`/`must-restore-stale-deep-link` for accuracy; add `auto-size-columns`, `omit-delete-without-handler`, and `forward-loading-state` requirements with test vectors; resolve the delete-confirm-vs-passive-pruning contradiction in **confirm-delete**/**own-selection**; gate **clear-stale-deep-link** on `loading` and add its test vector; unify the default-filter definition in **filter-rows**; give **support-column-reordering** an RFC 2119 keyword and correct its attribution (the component forwards `reorder` unconditionally; withholding it during a filter is on the caller, not the component); add `**Approved**: pending` to every Design Decision; replace the Compliance table with real linked accessibility and internationalization checks; fix Shared State ownership/direction for split position and column widths; correct the WinUI 3, Compose, and SwiftUI/AppKit Platform Notes; move the API and Accessibility content into their own Platform Notes subsections and fix the `Button` variant type; add a Localization section; remove app-specific facts from Platform Notes and Design Decisions; and note that the `ingredients` field intentionally lists composed recipes here. |
 | 2.1.0 | 2026-09-22 | Mike Fullerton | Add URL-driven selection (`paramKey`), column width persistence (`columnWidthsKey`), row reordering (`reorder`), and auto-sizing (`autoSizeColumns`); expand Platform Notes to cover all five platforms with implementation guidance; document responsive layout floor (`min-h-[16rem]`); add new integration requirements and test vectors. |
 | 2.0.0 | 2026-07-10 | Mike Fullerton | Toolbar extracted into the shared ListHeader; divider renders as the details pane's always-visible header bar (`detailsLabel`); list/details peer layout + keyboard selection made explicit. |

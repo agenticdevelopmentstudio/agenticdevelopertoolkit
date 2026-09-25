@@ -3,11 +3,11 @@ id: 169da1b6-2a22-4fec-9f01-8118e5242bd5
 title: ReactionBar
 domain: agenticdevelopertoolkit://recipes/reaction-bar
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-08-08'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -289,17 +289,24 @@ result.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 Statuses rest on the source: it styles every element through `apt-*` tokens with no raw hex and
 composes only the shared `Button`/`Popover` primitives (no bespoke controls); it sets
 `aria-pressed`, `aria-hidden`, and a subject-naming `aria-label` correctly on every control; and
 it builds its accessible-name and count text as hardcoded English template literals with no
-`Intl.NumberFormat` call, which is what fails the three internationalization checks.
+`Intl.NumberFormat` call, which is what fails the three internationalization checks. The component
+is explicitly presentational — the caller fetches tallies and performs the toggle, never the bar
+itself (separation-of-concerns passed); `reactionBar.test.tsx` directly exercises chip labeling,
+pressed state, toggle/take-back, the palette, busy inertness, and the disabled/empty-reactions
+cases (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix Compliance table statuses/links and add the Internationalization checks the Localization gap fails; reformat Design Decisions to the Decision/Rationale/Approved triple; correct WinUI 3, Compose, SwiftUI and AppKit/UIKit platform-note API errors; drive the SwiftUI pressed state from `mine` instead of local state; require chips to be disabled under `disabled`; list the exact `DEFAULT_REACTIONS` array in Configuration; rewrite Localization to describe the component's hardcoded English strings and unformatted counts. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark inapplicable sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy). |
 | 1.0.0 | 2026-08-08 | Mike Fullerton | Initial recipe; documents the toggle chips, the palette, and the presentational contract. |

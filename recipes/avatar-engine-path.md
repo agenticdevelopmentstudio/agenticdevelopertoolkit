@@ -3,11 +3,11 @@ id: 81f8c0bd-ce00-43b3-816e-b63e96baeacc
 title: Avatar Engine Path
 domain: agenticdevelopertoolkit://recipes/avatar-engine-path
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -90,14 +90,25 @@ path-data output byte-for-byte across platforms.
   arguments a pending command's arity specifies (2 for `M`/`L`, 6 for `C`, 0
   for `Z`) before it accepts the next command letter.
 - **truncated-command-rejected**: `parsePath` MUST fail with a "truncated"
-  error naming the pending command when a new command letter appears, or the
-  input ends, while that command still needs arguments.
+  error when a new command letter appears, or the input ends, while a
+  pending command still needs arguments. Web's message names the pending
+  command letter (`` `truncated ${pending} in path: ${d}` ``); Apple's
+  message uses the literal word `command` and does not name which one
+  (`"truncated command in path: \(s)"`) — the message text differs between
+  platforms (see Design Decisions).
 - **stray-number-rejected**: `parsePath` MUST fail with a "stray number" error
   when a numeric token appears with no command pending to receive it.
 - **empty-input-parses-empty**: `parsePath` given an empty string MUST return
   a `ParsedPath` with `kind` `""` and `points` `[]` rather than throwing.
-- **round-trip**: For any `ParsedPath` `p` that `emitPath` can serialize,
-  `parsePath(emitPath(p))` MUST yield `points` equal to `p.points`.
+- **round-trip**: For any `ParsedPath` `p` whose `points` are already
+  quantized to the 1/1,000,000 grid `fmt` rounds to (see
+  fmt-rounds-half-away-from-zero), `parsePath(emitPath(p))` MUST yield
+  `points` equal to `p.points`. For an off-grid `p` (a coordinate not
+  already a multiple of 1e-6, such as a value with more than six decimal
+  digits), `emitPath` quantizes every coordinate through `fmt`, so
+  `parsePath(emitPath(p))`'s `points` MUST instead equal `p.points` rounded
+  coordinate-by-coordinate the same way (round-half-away-from-zero to
+  1/1,000,000) — not `p.points` itself.
 
 **Number formatting — `fmt` / `emitPath`**
 
@@ -123,10 +134,10 @@ path-data output byte-for-byte across platforms.
 - **quarter-circle-constant**: The cubic circle approximation MUST use the
   constant `0.5523` as the control-point scalar for a quarter circle, not a
   higher-precision value.
-- **cubicO-shape**: `cubicO(cx, cy, rx, ry)` MUST return a single closed path
+- **cubic-o-shape**: `cubicO(cx, cy, rx, ry)` MUST return a single closed path
   of kind `"MCCCCZ"` starting at `(cx, cy − ry)`, with each control point
   offset from its anchor by `rx * 0.5523` or `ry * 0.5523`.
-- **disc-is-cubicO**: `disc(cx, cy, r)` MUST return the same path as
+- **disc-is-cubic-o**: `disc(cx, cy, r)` MUST return the same path as
   `cubicO(cx, cy, r, r)`.
 - **ring-is-outer-then-reversed-inner**: `ring(cx, cy, r, band)` MUST return
   the outer circle of radius `r` followed by the inner circle of radius
@@ -222,7 +233,7 @@ technology to reach (the same source files as Appearance).
 | path-009 | fmt-rounds-half-away-from-zero | `fmt(-1.5e-6)`, `fmt(-187.0000005)` | `"-0.000002"`, `"-187.000001"` — `PathTests.swift`'s `testRoundsNegativeHalfStepsAwayFromZero`, `parse.test.ts`'s "rounds negative half-steps the way Swift does" |
 | path-010 | fmt-zero-has-no-sign | `fmt(-0.0000004)` and `fmt(-0)` | Both `"0"` — same tests as path-009 |
 | path-011 | emit-path-format, fmt-rounds-half-away-from-zero | `emitPath({kind: "ML", points: [-0.0000005, 0, 1, -1.5e-6]})` | `"M-0.000001,0L1,-0.000002"` — `PathTests.swift`'s `testEmitsANegativeCoordinateTheSameWayTheWebDoes`, `parse.test.ts`'s "emits a negative coordinate the same way Swift does" |
-| path-012 | cubicO-shape, disc-is-cubicO | `Build.disc(cx: 152, cy: 200, r: 9)` | Exact string `"M152,191C156.9707,191 161,195.0293 161,200C161,204.9707 156.9707,209 152,209C147.0293,209 143,204.9707 143,200C143,195.0293 147.0293,191 152,191Z"` — `PathTests.swift`'s `testMatchesTheWebsTextByteForByte` |
+| path-012 | cubic-o-shape, disc-is-cubic-o | `Build.disc(cx: 152, cy: 200, r: 9)` | Exact string `"M152,191C156.9707,191 161,195.0293 161,200C161,204.9707 156.9707,209 152,209C147.0293,209 143,204.9707 143,200C143,195.0293 147.0293,191 152,191Z"` — `PathTests.swift`'s `testMatchesTheWebsTextByteForByte` |
 | path-013 | ring-is-outer-then-reversed-inner | `parsePath(Build.ring(cx: 152, cy: 200, r: 35, band: 8)).kind` | `"MCCCCZMCCCCZ"` — `PathTests.swift`'s `testBuildsARingAsTwoConcentricCirclesOuterThenInnerReversed`, `build.test.ts`'s "builds a ring as two concentric circles" |
 | path-014 | arc-emits-only-cubics, arc-segment-count | `parsePath(Build.arc(cx: 152, cy: 200, r: 45, from: 233.1301, to: 306.8699))` | Kind starts with `M` then only `C`s; first point within `1e-3` of `(125, 164)`, last point within `1e-3` of `(179, 164)` — `PathTests.swift`'s `testEmitsAnArcAsCubicsWithNoACommand` / `testPlacesTheBrowEndpointsAtCxPlusMinus27AtY164`, `build.test.ts`'s "places the brow endpoints at cx +/- 27, y 164" |
 | path-015 | polyline-minimum-points | `Build.polyline([[187, 233]])` (1 point) | Throws with message `"polyline needs at least 2 points"` — traced to `Build.swift`'s `PathError.badPointCount` guard and the identical `build.ts` throw text |
@@ -411,14 +422,18 @@ Not applicable: none of `Build.swift`, `Morph.swift`, `ParsedPath.swift`,
 - **Decision**: Apple types its path errors (`PathError: Error,
   CustomStringConvertible`, with distinct `unsupported`/`truncated`/`stray`/
   `badPointCount`/`shapeMismatch` cases); the web throws untyped `Error`
-  objects with matching message text instead.
+  objects instead.
   **Rationale**: This is an observed platform divergence, not a design
   recommendation: `ParsedPath.swift` declares a closed enum with a computed
   `description`, while `parse.ts`/`build.ts`/`morph.ts`/`promote.ts` all throw
-  a plain `new Error(message)`. Both platforms' tests assert on the message
-  text (a `contains`/regex check on the substrings this recipe's requirements
-  quote), so a port MUST preserve that exact text for cross-platform test
-  parity even if it chooses a typed error representation like Apple's.
+  a plain `new Error(message)`. The `unsupported`/`stray` message text does
+  match across platforms, but the `truncated` text does not (see
+  truncated-command-rejected): Apple's version never names the pending
+  command. No test on either platform asserts this text — both are bare
+  `.toThrow()`/`XCTAssertThrowsError` checks — so a port cannot preserve one
+  exact truncated-message text for both platforms at once; it must pick
+  one, and the `unsupported`/`stray` text is the only text a port can match
+  on both.
   **Approved**: pending
 
 ## Compliance
@@ -442,5 +457,6 @@ explicit, handled error conditions.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-23 | | Initial extraction from `Build.swift`, `Morph.swift`, `ParsedPath.swift`, `build.ts`, `morph.ts`, `parse.ts`, and `promote.ts`. |
+| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial extraction from `Build.swift`, `Morph.swift`, `ParsedPath.swift`, `build.ts`, `morph.ts`, `parse.ts`, and `promote.ts`. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | round-trip now scoped to already-grid-quantized points, with the off-grid case spelled out; truncated-command-rejected and the error-representation Decision corrected for the Swift/web message-text divergence; renamed cubicO-shape/disc-is-cubicO to kebab-case. |

@@ -3,11 +3,11 @@ id: 31198bb7-2270-449e-94c1-026b68d2bc81
 title: Head
 domain: agenticdevelopertoolkit://recipes/head
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -145,12 +145,15 @@ Not applicable: This component does not emit diagnostic logs.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The title renders as a native `h2` (semantic-markup), and `blocks.css` sizes the eyebrow and title with `rem`/`vw` units that scale with the root font size (dynamic-type-support). Neither the component nor `.lp-head h2` sets the heading's foreground color — it inherits from the surrounding page — so contrast cannot be confirmed from the source alone (contrast-ratio: partial).
+The title renders as a native `h2` (semantic-markup), and `blocks.css` sizes the eyebrow and title with `rem`/`vw` units that scale with the root font size (dynamic-type-support). Neither the component nor `.lp-head h2` sets the heading's foreground color — it inherits from the surrounding page — so contrast cannot be confirmed from the source alone (contrast-ratio: partial). `separation-of-concerns` is `passed` because the component is pure presentation over `eyebrow`/`title`/`children` props with no business logic; `unit-test-coverage` is `passed` because `blocks-frame.test.tsx` renders `Head` directly and asserts its eyebrow/title rendering.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, reformatted Design Decisions to three-field form and recorded two new decisions (fixed h2 level, null/empty heading behavior), added a Compliance table, replaced duplicate test vectors with null/empty-string/zero vectors, added platform heading-semantics hooks and tightened Platform Notes precision, pointed Appearance at the exact CSS file, specified the eyebrow-heading ARIA pattern, added tags and a related link to Lede, and normalized frontmatter dates |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source |

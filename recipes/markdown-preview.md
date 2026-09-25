@@ -3,11 +3,11 @@ id: 6ea605aa-9248-46d4-9532-82185388749b
 title: Markdown Preview
 domain: agenticdevelopertoolkit://recipes/markdown-preview
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,7 +41,7 @@ Markdown Preview is a presentational component that fetches full markdown conten
 
 ## Behavioral Requirements
 
-- **content-url**: Component MUST construct a full-content URL from the injected `SearchSource` configuration and the provided `PaperSearchHit`, following the template pattern `endpoints.content` (defaulting to `/:slug/:route`) with URL-encoded slug and route placeholders.
+- **content-url**: Component MUST construct a full-content URL from the injected `SearchSource` configuration and the provided `PaperSearchHit`, following the template pattern `endpoints.content` (defaulting to `DEFAULT_CONTENT_ENDPOINT`, `/public/users/:slug/papers/:route`, when `endpoints.content` is not supplied) with URL-encoded slug and route placeholders.
 - **render-markdown-content**: Component MUST render fetched markdown content using `MarkdownRenderer` from `@agenticdevelopertoolkit/markdown` — the same GitHub-flavored, Shiki-highlighted, rehype-sanitized pipeline documented at agenticdevelopertoolkit://recipes/markdown-renderer.
 - **apply-reading-theme**: Component MUST apply the reading theme palette to the rendered content by setting `data-mdv-theme`, `data-mdv-shiki-variant`, and CSS custom properties on the root container.
 - **show-loading-state**: Component MUST display a loading state with the text "Loading paper…" and MUST mark the state container with `aria-live="polite"` and `aria-busy="true"`.
@@ -111,14 +111,14 @@ Markdown Preview is a presentational component that fetches full markdown conten
 - **Very short timeout renders "0s"**: The timeout message rounds `timeoutMs / 1000` with no minimum clamp, so a `timeoutMs` under 500 renders "Timed out loading paper after 0s." — an accurate but rough message the component does not correct.
 - **Null or missing hit properties**: Component assumes `hit.author.slug` and `hit.publicRoute` exist and are strings; no null checks are present in source; passing undefined/null will result in invalid URLs or fetch failure.
 - **Very large content**: MarkdownRenderer and rehype-sanitize process the full content; no streaming or chunking is performed.
-- **Custom endpoint template**: If `source.endpoints.content` is provided, it overrides the default; template must include `:slug` and `:route` placeholders or they will not be replaced.
+- **Custom endpoint template**: If `source.endpoints.content` is provided, it overrides the default (`DEFAULT_CONTENT_ENDPOINT`, `/public/users/:slug/papers/:route`); template must include `:slug` and `:route` placeholders or they will not be replaced.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `hit` | `PaperSearchHit` | — | Required. The selected document metadata including `author.slug` and `publicRoute`. |
-| `source` | `SearchSource` | — | Required. Injected scope configuration with `baseUrl`, `endpoints.content`, and `fetchInit`. |
+| `source` | `SearchSource` | — | Required. Injected scope configuration with `baseUrl`, `endpoints.content` (defaults to `DEFAULT_CONTENT_ENDPOINT`, `/public/users/:slug/papers/:route`, when omitted), and `fetchInit`. |
 | `timeoutMs` | `number` | `DEFAULT_TIMEOUT_MS` (15000) | Fetch timeout in milliseconds. Passed to `AbortSignal.timeout()`. |
 
 ## Deep Linking
@@ -206,12 +206,15 @@ Not applicable: No logging or console output is performed by this component. Deb
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best-practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best-practices |
 
-Statuses rest on the source as documented above: the theme palette is applied as CSS custom properties whose actual color values live in `markdown-reading-palette` (agenticdevelopertoolkit://recipes/markdown-reading-palette), outside this component, grounding `contrast-ratio` as partial; the Accessibility section's aria-live/aria-busy loading announcement and role="alert" error announcement ground `screen-reader-support` as partial, since the empty-state transition has no live-region marking; the Retry button's delegation to `Button`'s own recipe (agenticdevelopertoolkit://recipes/button) grounds `keyboard-navigable` as passed and `touch-target-size` as failed (size="sm" with no `--adh-button-min-height` override, per that recipe's own default); `MarkdownRenderer`'s semantic HTML output and this component's own `role="alert"`/`aria-live`/`aria-busy` attributes ground `semantic-markup` as passed; and the Localization section's six hardcoded strings with no i18n framework integrated ground both internationalization checks as failed. Security, Privacy and Data, and User Safety are omitted: the component collects no user data, performs no logging, and does not itself render links (see Privacy and Logging above).
+Statuses rest on the source as documented above: the theme palette is applied as CSS custom properties whose actual color values live in `markdown-reading-palette` (agenticdevelopertoolkit://recipes/markdown-reading-palette), outside this component, grounding `contrast-ratio` as partial; the Accessibility section's aria-live/aria-busy loading announcement and role="alert" error announcement ground `screen-reader-support` as partial, since the empty-state transition has no live-region marking; the Retry button's delegation to `Button`'s own recipe (agenticdevelopertoolkit://recipes/button) grounds `keyboard-navigable` as passed and `touch-target-size` as failed (size="sm" with no `--adh-button-min-height` override, per that recipe's own default); `MarkdownRenderer`'s semantic HTML output and this component's own `role="alert"`/`aria-live`/`aria-busy` attributes ground `semantic-markup` as passed; and the Localization section's six hardcoded strings with no i18n framework integrated ground both internationalization checks as failed. `separation-of-concerns` passes: this component owns only fetch/state-machine logic, delegating URL construction inputs to the injected `SearchSource`, content rendering to `MarkdownRenderer`, and error/retry chrome to `Button`, each an independent module. `unit-test-coverage` fails: no test file anywhere in the repository references `MarkdownPreview` (the fetch/state-machine logic has no dedicated suite). Security, Privacy and Data, and User Safety are omitted: the component collects no user data, performs no logging, and does not itself render links (see Privacy and Logging above).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed content-url default: endpoints.content defaults to DEFAULT_CONTENT_ENDPOINT (/public/users/:slug/papers/:route), not /:slug/:route; updated Configuration and edge case. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, restated React-internal mechanics as observable behavior and moved them into the TypeScript Platform Note, corrected wrong SwiftUI/AppKit-UIKit/WinUI 3 API names, fixed the States/Accessibility role and tap-target claims, deduplicated the timeout test vectors, made the non-JSON edge case deterministic, cited markdown-renderer and markdown-viewer for the previously unsourced claims, reformatted Design Decisions to the three-line form, rebuilt Compliance as a linked table with partial/failed statuses backed by evidence, added tags/depends-on/related, and assigned Localization string keys |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

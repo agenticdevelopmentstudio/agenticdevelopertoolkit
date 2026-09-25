@@ -3,11 +3,11 @@ id: 93e8b186-b7a6-41c5-90a8-21b67a47ef72
 title: Site Header
 domain: agenticdevelopertoolkit://recipes/site-header
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -55,8 +55,8 @@ A header component for flow pages that displays a wordmark, optional inline navi
 - **Breakpoint**: 62rem — referred to below as *the breakpoint*.
 - **Header layout**: Horizontal flexbox row containing brand, navigation, and action.
 - **Bar height**: Determined by child component heights (brand, nav links, action).
-- **Navigation alignment**: Brand on the left, navigation links in center, action on the right.
-- **Link styling**: Inherits from NavChrome or parent styling; no additional styling applied by SiteHeader.
+- **Navigation alignment**: At or above the breakpoint with `bar='nav'`, the brand sits at the left end while the navigation links and the action bunch together at the right end — `flow.css` pushes the nav flush against the action with `margin-left: auto`, not to the bar's center. Below the breakpoint (where the inline nav and action are hidden) and at every width when `bar='drawer'`, the brand is centered in the bar instead.
+- **Link styling**: The inline navigation links are `SiteHeader`'s own `<a>` elements (a sibling of the `NavChrome` wrapper, not rendered through it), so they cannot inherit `NavChrome`'s styling. `flow.css` gives them their own styling directly: `color: var(--lp-ink-dim, #a0a0a0)` at `0.88rem`, no underline, brightening to `var(--lp-ink, #ededed)` on hover with a `0.18s` color transition.
 - **Drawer styling**: Inherits from NavChrome.
 - **Scrolling**: Header scrolls away with page content (not fixed).
 - **Responsive layout**: At the breakpoint, the inline navigation becomes visible via a CSS media query; below it, the `<nav>` stays in the DOM but is hidden by that same query (not removed) under `bar='nav'`.
@@ -129,7 +129,7 @@ Not applicable: SiteHeader does not render any text content of its own. All text
 ## Accessibility Options
 
 - **Reduce Motion**: Not applicable; SiteHeader does not animate. Scrolling behavior is provided by the browser. NavChrome handles Reduce Motion for its drawer animations.
-- **Increase Contrast**: Not applicable; SiteHeader applies no colors or contrast-dependent styling.
+- **Increase Contrast**: SiteHeader has no Increase-Contrast-specific behavior, but it is not colorless: `flow.css` sets the inline nav links' own text color and hover color directly (see **Link styling**), rather than inheriting from `NavChrome` or the parent.
 - **Differentiate Without Color**: Not applicable; SiteHeader does not use color as a sole means of conveying information.
 
 ## Feature Flags
@@ -189,8 +189,10 @@ Not applicable: SiteHeader does not emit logs.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `SiteHeader.tsx` rendering a semantic `<header>` element, a `<nav>` element with an `aria-label` (defaulting to `'Site'`), and real `<a>` anchors for every navigation link — native landmarks and native anchors are screen-reader-discoverable and keyboard-focusable without additional ARIA.
+Statuses rest on `SiteHeader.tsx` rendering a semantic `<header>` element, a `<nav>` element with an `aria-label` (defaulting to `'Site'`), and real `<a>` anchors for every navigation link — native landmarks and native anchors are screen-reader-discoverable and keyboard-focusable without additional ARIA. `separation-of-concerns` passes because `SiteHeader` composes the existing `NavChrome` for the drawer/burger behavior and only adds its own bar/wordmark/action layout, rather than reimplementing navigation chrome. `unit-test-coverage` passes because `site-header.test.tsx` imports `SiteHeader` directly and asserts on brand/nav/action rendering, the `bar='nav'`/`'drawer'` variants, and the breakpoint-driven centering and scroll behavior.
 
 ## Change History
 
@@ -198,3 +200,4 @@ Statuses rest on `SiteHeader.tsx` rendering a semantic `<header>` element, a `<n
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from SiteHeader.tsx web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; merged the two drawer-mounting requirements and split bar-links rendering from visibility; fixed the remount-direction contradiction and vector 007 to match; reworded real-anchors and Design Decision 5 to match the CSS-hiding behavior; defined the breakpoint once and referenced it by name elsewhere; dropped source-code citations from Edge Cases; split test vector 009 and added missing `links` inputs and breakpoint coverage; replaced Compliance with an accessibility table; converted Design Decisions to Decision/Rationale/Approved form and genericized Design Decision 1; corrected the Compose, AppKit/UIKit, WinUI, and SwiftUI platform notes and removed the web-embedding options; added `tags` and a `depends-on` entry for NavChrome; fixed `hide-bar-nav`'s RFC 2119 casing. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected nav alignment/link-styling/Increase-Contrast per flow.css (right-packed, colored links). |

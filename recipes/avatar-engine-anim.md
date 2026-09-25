@@ -3,11 +3,11 @@ id: a7c91832-4059-4e06-b8c6-e8c727567c66
 title: Avatar Engine Anim
 domain: agenticdevelopertoolkit://recipes/avatar-engine-anim
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -16,6 +16,8 @@ summary: 'Mood arbitration, procedural reflexes, mood effects, and declarative t
   avatar engines.'
 platforms:
 - swift
+- macos
+- ios
 - typescript
 - web
 tags:
@@ -118,10 +120,11 @@ side.
   key of the loaded pose table, and MUST leave the previously-forced mood
   (if any) unchanged when it throws. `setMood(nil, now)` MUST clear the
   app-forced mood instead of throwing, unconditionally.
-- **unknown-timeline-rejected**: `play(name, now)` MUST throw an error
-  whose message is `"unknown timeline: <name>"` when `name` is not a key of
-  the loaded timeline table, before cancelling whatever the arbiter's
-  timeline slot currently holds.
+- **unknown-timeline-rejected**: `play(name, now)` MUST first cancel and
+  clear whatever the arbiter's timeline slot currently holds (restoring any
+  channel family that timeline had promoted), unconditionally, and MUST
+  then throw an error whose message is `"unknown timeline: <name>"` when
+  `name` is not a key of the loaded timeline table.
 - **applied-mood-drives-pose-or-choreography**: on a mood change (including
   the first resolution `start` performs), the arbiter MUST cancel whatever
   timeline currently occupies its single choreography/hand-play slot, then
@@ -242,11 +245,12 @@ side.
   effect, and MUST bump the effect generation counter so any pending `stir`
   chain from the previous effect becomes a no-op.
 - **stir-branch-selection**: `stir` MUST choose between a `then`/`else`
-  step list by evaluating the effect's configured `branch` predicate when
-  one is present, and MUST default to the `"twitch"` step list when no
-  branch is configured; if the chosen key names a step list the effect does
-  not define, `stir` MUST end that chain silently (no error, no re-arm)
-  rather than treating the missing list as empty steps to play.
+  step list by drawing a seeded Bernoulli value against the effect's
+  configured `branch.probability` when a `branch` is present, and MUST
+  default to the `"twitch"` step list when no branch is configured; if the
+  chosen key names a step list the effect does not define, `stir` MUST end
+  that chain silently (no error, no re-arm) rather than treating the
+  missing list as empty steps to play.
 - **effect-steps-play-in-sequence**: `playSteps` MUST play an effect's
   steps one after another — the next step's channels MUST NOT be written
   until the previous step's full duration has elapsed — and, within one
@@ -371,54 +375,18 @@ Traced to `ArbiterTests.swift`'s shared `Harness` fixture, which loads the
 checked-in `dot` config, seeds `Channels`, ticks `scheduler → arbiter →
 tweens` at 60 fps, and asserts against the resulting channel/state values.
 
-1. **Input**: construct the harness and call `arbiter.start(0)` with no
-   prior interaction.
-   **Expected**: `arbiter.state.idleRung == 0` and the active mood's pose is
-   already applied to the rig (`testStartsOnRungZeroAndActuallyAppliesTheActivePose`).
-2. **Input**: run the harness forward with no `notice`/`poke`/`say` calls
-   past the ladder's bored threshold, then past its asleep threshold.
-   **Expected**: `arbiter.state.idleRung` climbs from 0 to the bored rung
-   and then to the asleep rung, each transition landing on that rung's
-   configured mood with no explicit caller action beyond the elapsed clock
-   (`testClimbsToBoredAndThenAsleepWithNoInteraction`).
-3. **Input**: while at the bored or asleep rung, call `notice(now)`.
-   **Expected**: `arbiter.state.idleRung` resets to 0 and `lastInteraction`
-   updates to `now` (`testResetsTheLadderOnNotice`).
-4. **Input**: call `setMood("<validAppMood>", now)`, then later
-   `setMood(nil, now)`.
-   **Expected**: the app-forced mood outranks the idle ladder while set,
-   and the ladder resumes governing the resolved mood immediately after it
-   is cleared (`testLetsAnAppMoodOutrankTheLadderAndReleasesItOnNil`).
-5. **Input**: call `setMood("<nameNotInTheLoadedPoseTable>", now)`.
-   **Expected**: the call throws (`"unknown mood: <name>"`) and the
-   previously-forced mood, if any, is left unchanged
-   (`testRefusesAnAppMoodNoPoseDefines`).
-6. **Input**: call `poke(now)` while the resolved mood is one with a
-   configured poke rule whose `from` matches it.
-   **Expected**: the poke-forced mood is exactly that rule's reaction mood,
-   not a generic default (`testPicksThePokeReactionFromTheMoodItInterrupts`).
-7. **Input**: call `poke(now)`, then advance the clock past that poke
-   rule's configured hold window without any further call.
-   **Expected**: the poke-forced mood is in force for the whole window and
-   the arbiter falls back to the next-highest source (app mood, waking, or
-   the ladder) exactly once the window elapses
-   (`testHoldsThePokeForItsRulesWindowThenFallsBack`).
-8. **Input**: from the waking transition's configured starting mood, call
-   `notice(now)`.
-   **Expected**: the arbiter plays the waking transition as a mood (a
-   timeline/choreography), and only lands on the waking transition's
-   configured destination pose after that play completes — it does not
-   jump straight to the destination pose
-   (`testWakesIntoWakingPlayAsAMoodAndOnlyThenLandsOnWakingTo`).
-9. **Input**: resolve into a mood that has a configured choreography entry.
-   **Expected**: the arbiter plays that mood's timeline instead of applying
-   its static pose (`testPlaysAChoreographedMoodsTimelineInsteadOfItsPose`).
-10. **Input**: while a choreographed mood's timeline is mid-playback, force
-    a mood change out from under it (via `setMood`, `poke`, or the ladder
-    advancing).
-    **Expected**: the outstanding timeline is canceled, and any family/shape
-    it had promoted is restored before the new mood's pose or timeline is
-    applied (`testCancelsAChoreographedTimelineWhenTheMoodChangesOutFromUnderIt`).
+| ID | Requirements | Input | Expected |
+|----|---|---|---|
+| avatar-engine-anim-001 | idle-ladder-rung-selection, applied-mood-drives-pose-or-choreography | Construct the harness and call `arbiter.start(0)` with no prior interaction. | `arbiter.state.idleRung == 0` and the active mood's pose is already applied to the rig (`testStartsOnRungZeroAndActuallyAppliesTheActivePose`). |
+| avatar-engine-anim-002 | idle-ladder-rung-selection | Run the harness forward with no `notice`/`poke`/`say` calls past the ladder's bored threshold, then past its asleep threshold. | `arbiter.state.idleRung` climbs from 0 to the bored rung and then to the asleep rung, each transition landing on that rung's configured mood with no explicit caller action beyond the elapsed clock (`testClimbsToBoredAndThenAsleepWithNoInteraction`). |
+| avatar-engine-anim-003 | notice-resets-the-idle-clock | While at the bored or asleep rung, call `notice(now)`. | `arbiter.state.idleRung` resets to 0 and `lastInteraction` updates to `now` (`testResetsTheLadderOnNotice`). |
+| avatar-engine-anim-004 | mood-source-priority | Call `setMood("<validAppMood>", now)`, then later `setMood(nil, now)`. | The app-forced mood outranks the idle ladder while set, and the ladder resumes governing the resolved mood immediately after it is cleared (`testLetsAnAppMoodOutrankTheLadderAndReleasesItOnNil`). |
+| avatar-engine-anim-005 | unknown-mood-rejected | Call `setMood("<nameNotInTheLoadedPoseTable>", now)`. | The call throws (`"unknown mood: <name>"`) and the previously-forced mood, if any, is left unchanged (`testRefusesAnAppMoodNoPoseDefines`). |
+| avatar-engine-anim-006 | poke-rule-matching | Call `poke(now)` while the resolved mood is one with a configured poke rule whose `from` matches it. | The poke-forced mood is exactly that rule's reaction mood, not a generic default (`testPicksThePokeReactionFromTheMoodItInterrupts`). |
+| avatar-engine-anim-007 | poke-expiry-falls-back | Call `poke(now)`, then advance the clock past that poke rule's configured hold window without any further call. | The poke-forced mood is in force for the whole window and the arbiter falls back to the next-highest source (app mood, waking, or the ladder) exactly once the window elapses (`testHoldsThePokeForItsRulesWindowThenFallsBack`). |
+| avatar-engine-anim-008 | mood-source-priority, notice-resets-the-idle-clock | From the waking transition's configured starting mood, call `notice(now)`, then advance the clock past the waking transition's configured `ms` window. | While the window is open the arbiter plays the waking transition as a mood (a timeline/choreography); once the window elapses, mood-source-priority hands control to the idle ladder, which resolves its own rung from time-since-interaction — the arbiter does not land on the waking transition's configured `to` destination pose merely because the window ended; it lands there only when the ladder's resolved rung happens to be that same mood (`testWakesIntoWakingPlayAsAMoodAndOnlyThenLandsOnWakingTo`). |
+| avatar-engine-anim-009 | applied-mood-drives-pose-or-choreography | Resolve into a mood that has a configured choreography entry. | The arbiter plays that mood's timeline instead of applying its static pose (`testPlaysAChoreographedMoodsTimelineInsteadOfItsPose`). |
+| avatar-engine-anim-010 | hand-play-shares-the-timeline-slot | While a choreographed mood's timeline is mid-playback, force a mood change out from under it (via `setMood`, `poke`, or the ladder advancing). | The outstanding timeline is canceled, and any family/shape it had promoted is restored before the new mood's pose or timeline is applied (`testCancelsAChoreographedTimelineWhenTheMoodChangesOutFromUnderIt`). |
 
 ## Edge Cases
 
@@ -630,9 +598,8 @@ identically only on the web side; on Apple they end the process instead.
 
 ## Change History
 
-- 1.0.0 (this recipe): initial ingredient recipe covering `Arbiter.swift`/
-  `arbiter.ts`, `Params.swift`/`params.ts`, `Poses.swift`/`pose.ts`,
-  `Reflexes.swift`/`reflexes.ts`, and `Timelines.swift`/`timeline.ts`, with
-  the open question about unvalidated non-finite gaze input carried as the
-  one open item for a future revision to resolve.
+| Version | Date | Author | Summary |
+|---|---|---|---|
+| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial ingredient recipe covering `Arbiter.swift`/`arbiter.ts`, `Params.swift`/`params.ts`, `Poses.swift`/`pose.ts`, `Reflexes.swift`/`reflexes.ts`, and `Timelines.swift`/`timeline.ts`, with the open question about unvalidated non-finite gaze input carried as the one open item for a future revision to resolve. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | unknown-timeline-rejected now cancels the running timeline before throwing; stir-branch-selection uses a seeded Bernoulli draw on branch.probability, not a predicate; vector 8 corrected to reflect the idle ladder taking over after the waking window, not waking.to. Converted the Conformance Test Vectors section from a numbered list into a pipe table, mapping each of the 10 existing vectors to its Behavioral Requirement name(s), and added `macos`/`ios` to the frontmatter `platforms` list. |

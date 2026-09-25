@@ -438,7 +438,7 @@ function freeSlugAmong(
  * downward — `resolveCategoryChain` walks children, and the moved category is no longer a
  * child of the parent the URL walked in through. Left alone, the user re-files a category
  * and is dropped to "All" on a URL that resolves to nothing, exactly the defect
- * `must-follow-a-rename-to-the-new-slug` was written against.
+ * {@link chainAfterRename} exists to prevent for a rename.
  *
  * The destination is the new parent's OWN chain, then the moved category, then whatever of
  * the old chain hung BELOW it — those descendants are untouched by the move, so they still

@@ -3,11 +3,11 @@ id: e5b8e26f-2869-4a09-8d8e-0bb68ece805d
 title: Connector Registry
 domain: agenticdevelopertoolkit://recipes/connector-registry
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -148,9 +148,20 @@ Not applicable: The source code contains no logging statements or diagnostic out
 **Rationale**: `useSyncExternalStore` is the API React provides for subscribing to state that lives outside React, and it guarantees hydration safety and tearing-free reads under concurrent rendering.
 **Approved**: pending
 
+## Compliance
+
+| Check | Status | Category |
+|-------|--------|----------|
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+
+`separation-of-concerns` passes: `ConnectorRegistry.tsx` cleanly layers its concerns — the `RegistrySnapshot`/`RegistryHandle` types, the `ConnectorRegistryProvider` (owning the `Map`/listener `Set`/snapshot refs and the `register`/`snapshot`/`subscribe` methods), and three hooks that each add one thing on top (`useConnectorRegistry` requires a provider, `useConnectorRegistryOptional` tolerates its absence, and `useRegistrySnapshot` composes the required hook with `useSyncExternalStore`) — with no component doing double duty. `explicit-error-handling` passes: the one error path in the module, a missing provider, is handled deliberately rather than left to throw an unhelpful `null`-access error — `useConnectorRegistry` throws a descriptive `Error` naming `ConnectorRegistryProvider`, and `useConnectorRegistryOptional` exists specifically so call sites that cannot guarantee a provider get `null` instead of a thrown exception. `unit-test-coverage` fails: `ConnectorRegistry.test.tsx` contains exactly one test, and despite being named "registers and unregisters anchors by id" it never calls an unregister function — it only renders a provider with two anchors and asserts `snapshot().has(id)` for both. None of `idempotent-reregister`, `replace-on-conflict`, `update-registry-on-change`'s notification count, `stable-snapshot-identity`, `throw-without-provider`, `provide-optional-hook`, `provide-snapshot-hook`, or any Edge Case is exercised by an automated test — of the fourteen Conformance Test Vectors above, only a fragment of registry-001 is actually automated.
+
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added stable-snapshot-identity and replace-on-conflict requirements with test vectors, corrected the snapshot-immutability and subscribe-on-add claims, made requirements platform-neutral and moved hook names into Platform Notes, corrected the SwiftUI/Compose/AppKit/WinUI notes to match per-subtree scoping, reformatted Design Decisions, dropped the inapplicable Compliance section, tightened test-vector precision and added edge-case vectors, and expanded the Overview |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Restored a genuine Compliance section (separation-of-concerns/explicit-error-handling passed, unit-test-coverage failed: only one shallow test exists). |

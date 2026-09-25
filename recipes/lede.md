@@ -3,11 +3,11 @@ id: 811cc18f-e33a-42bb-bd2d-dfc3dc21bc77
 title: Lede
 domain: agenticdevelopertoolkit://recipes/lede
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -151,12 +151,15 @@ Not applicable: Lede is a presentational component with no operational state or 
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-`semantic-markup` and `text-expansion-tolerance` pass because the source renders a plain `<p>` with no fixed width or overflow rule that would truncate wrapped or RTL text; `dynamic-type-support`, `contrast-ratio`, and `rtl-layout-support` are partial because the `lp-lede` CSS uses relative `rem`/`ch` units and `--lp-ink-dim`/`--lp-accent-bright` custom properties whose resolved values and RTL behavior this source cannot fully confirm.
+`semantic-markup` and `text-expansion-tolerance` pass because the source renders a plain `<p>` with no fixed width or overflow rule that would truncate wrapped or RTL text; `dynamic-type-support`, `contrast-ratio`, and `rtl-layout-support` are partial because the `lp-lede` CSS uses relative `rem`/`ch` units and `--lp-ink-dim`/`--lp-accent-bright` custom properties whose resolved values and RTL behavior this source cannot fully confirm. `separation-of-concerns` passes because the component is a plain `<p>` wrapper over `children`/`className` with no logic of its own; `unit-test-coverage` is partial because `Lede` is exercised only through `blocks-frame.test.tsx`'s `Head` test, which asserts its className but not `Lede` on its own.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case, promote accept-additional-class to MUST, restate class filtering as observable clean-class-attribute with new edge-case vectors, add constrain-paragraph-measure with concrete lp-lede appearance values, reformat design decision, replace Compliance with an applicable-checks table, correct Platform Notes APIs and add wrapping guidance, add accessibility-options text-scaling guidance, unquote frontmatter dates, add tags |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

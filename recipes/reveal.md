@@ -3,11 +3,11 @@ id: b5b27bc2-99b2-469e-9dd4-e446b0157444
 title: Reveal
 domain: agenticdevelopertoolkit://recipes/reveal
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ Reveal is a wrapper component that fades and lifts its children into place as th
 - **visible-by-default**: The initial render MUST be the resting (visible) state. Arming only happens after mount, so a reader with JavaScript disabled never sees a hidden state.
 - **viewport-entry-detection**: The component MUST use the Intersection Observer API to detect when the wrapped element enters the viewport.
 - **arm-below-fold**: On mount, the component MUST check whether the element's top offset is already less than `window.innerHeight`. If so, the component MUST NOT create an Intersection Observer and MUST NOT apply the armed indicator — the element is treated as already revealed. Otherwise the component arms and creates the observer.
-- **early-reveal-margin**: The Intersection Observer MUST be configured with a root margin that fires 12% before the element's bottom edge would otherwise cross into the viewport (`rootMargin: '0px 0px -12% 0px'`).
+- **delayed-reveal-margin**: The Intersection Observer MUST be configured with a bottom root margin that delays the reveal until the element's top edge is 12% of the viewport height above the bottom (`rootMargin: '0px 0px -12% 0px'`). A negative bottom margin shrinks the observer's root rect, so this fires later than an unmodified (0-margin) observer would — not earlier.
 - **one-way-reveal**: The component MUST disconnect the Intersection Observer immediately after the first intersection is detected; the element MUST NOT re-arm or re-hide when scrolled past.
 - **armed-state-indicator**: While armed (observing but not yet shown), the wrapper MUST carry an observable marker distinguishing it from the resting state (see Platform Notes for the web implementation).
 - **base-state-indicator**: The wrapper MUST always carry an observable base-state marker, independent of armed/revealed state (see Platform Notes for the web implementation).
@@ -94,12 +94,12 @@ Reveal is a wrapper component that fades and lifts its children into place as th
 | reveal-007 | classname-prop | Component below viewport at mount, with a custom class supplied | Custom class is included in the wrapper's class list alongside the base indicator and, while armed, the armed indicator |
 | reveal-008 | children-forwarding | Component with children `<img src="..." />`, `<p>Text</p>` | Children are rendered as-is within the wrapper |
 | reveal-009 | arm-below-fold | Component already on screen at mount (top offset less than `window.innerHeight`) | No Intersection Observer is created; no armed indicator is applied; children remain visible throughout the session |
-| reveal-010 | early-reveal-margin | Component armed, user scrolls until the element is 12% of the viewport height above the bottom edge | Intersection Observer fires at that point rather than waiting for the element to fully enter the unmodified viewport bounds |
+| reveal-010 | delayed-reveal-margin | Component armed, user scrolls until the element's top edge is 12% of the viewport height above the bottom edge | Intersection Observer fires at that point; an unmodified (0-margin) observer would already have fired earlier, at the element's first visible pixel |
 
 ## Edge Cases
 
 - **Already on screen at mount**: see **arm-below-fold**. This prevents the blank-out flicker that would occur if the element were armed and then immediately intersected.
-- **Root margin offset**: see **early-reveal-margin**.
+- **Root margin offset**: see **delayed-reveal-margin**.
 - **Null ref**: If the ref is null when the effect runs (component was unmounted before effect execution), the effect returns early and does not proceed with observation.
 - **Multiple child updates**: The component re-renders if children change. The ref to the wrapper element is stable; the observer (if created) remains active unless already disconnected by intersection.
 - **Window resize**: The Intersection Observer automatically adapts to viewport changes; no resize listener is needed.
@@ -167,7 +167,7 @@ Not applicable: Reveal does not emit diagnostic events or logs.
 **Approved**: pending
 
 **Decision**: Configure the Intersection Observer with a bottom root margin of -12% of the viewport height.
-**Rationale**: This triggers intersection when the element is 12% above the bottom of the viewport, providing a smooth reveal as the reader scrolls toward it rather than waiting for it to fully enter the viewport. See **early-reveal-margin**.
+**Rationale**: This delays the reveal until the element's top edge is 12% of the viewport height above the bottom — later than an unmodified (0-margin) observer, which would already fire at the element's first visible pixel — so the fade-in reads as a deliberate reveal rather than firing the instant the element's edge appears. See **delayed-reveal-margin**.
 **Approved**: pending
 
 ## Compliance
@@ -176,12 +176,15 @@ Not applicable: Reveal does not emit diagnostic events or logs.
 |-------|--------|----------|
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
 | [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | partial | Reliability |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-`reduced-motion` is grounded in the `prefers-reduced-motion` media query in `flow.css`, which neutralizes both the opacity and the transform of the armed state; `graceful-degradation` is partial because `Reveal.tsx` always renders the resting state when JavaScript never runs, but constructs a new `IntersectionObserver` unconditionally once armed, with no guard for an environment where the API is undefined.
+`reduced-motion` is grounded in the `prefers-reduced-motion` media query in `flow.css`, which neutralizes both the opacity and the transform of the armed state; `graceful-degradation` is partial because `Reveal.tsx` always renders the resting state when JavaScript never runs, but constructs a new `IntersectionObserver` unconditionally once armed, with no guard for an environment where the API is undefined. separation-of-concerns passes because `Reveal.tsx` owns only observation and armed/revealed class-toggling, leaving the fade-and-lift animation and the reduced-motion override to `flow.css` and rendering children as-is. unit-test-coverage is partial: `flow.test.tsx`'s `Reveal` block covers only the resting-visible render and the armed-class toggle; no test drives the `IntersectionObserver` itself, so `arm-below-fold`, `delayed-reveal-margin`, and `one-way-reveal` are untested.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed early-reveal-margin to delayed-reveal-margin and corrected direction: -12% bottom margin fires later, not earlier. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and fixed RFC-2119 casing, promoted edge-case details (arm-below-fold, early-reveal-margin) into named requirements with test vectors and corrected two test-vector mappings, added concrete Appearance values from `flow.css`, made requirements platform-neutral and moved web class names into the React/Web platform note, aligned native platform notes to real viewport APIs and a consistent fade-plus-translate animation, reformatted Design Decisions and dropped the implementation-detail entry, replaced the Compliance section with a real table, filled `related` with sibling landing/flow recipes and switched frontmatter dates to bare ISO values, corrected the summary's unsupported performance claim, and corrected an Accessibility claim that contradicted the source's lack of an IntersectionObserver-availability guard |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

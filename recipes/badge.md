@@ -3,11 +3,11 @@ id: 245c45fe-4724-4a8c-bfef-0049e09c18e1
 title: Badge
 domain: agenticdevelopertoolkit://recipes/badge
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -63,9 +63,11 @@ provides for it (see Design Decisions and Accessibility Options).
   transparent background.
 - **render-bordered**: Badge MUST render with a visible border on all
   sides.
-- **share-tone-color-between-border-and-text**: For a given variant,
-  Badge MUST render its border color and its text color using the same
-  tone color.
+- **share-tone-color-between-border-and-text**: For the `accent`,
+  `orange`, `blue`, `success`, and `error` variants, Badge MUST render its
+  border color and its text color using the same tone color. The default
+  `neutral` variant is an exception in the source: its border and text
+  colors resolve from two different tokens (see Appearance and Edge Cases).
 - **uppercase-text**: Badge MUST render its text content transformed to
   uppercase.
 - **prevent-text-wrapping**: Badge MUST prevent its content from
@@ -92,7 +94,10 @@ provides for it (see Design Decisions and Accessibility Options).
 - **Background**: Transparent.
 - **Foreground/Text**: Variant tone color (see table below).
 - **Border**: 1px (default border width), color equal to the variant's tone
-  color.
+  color for `accent`, `orange`, `blue`, `success`, and `error`. For the
+  default `neutral` variant the border color (`apt-border`) differs from the
+  text color (`apt-text-dim`) — see the tone-color table below and Edge
+  Cases.
 - **Shadow**: None. No shadow classes are applied by the source.
 - **Min/Max size**: None specified. The component is `inline-flex` with no
   explicit width or height constraints; it sizes to its content.
@@ -133,13 +138,13 @@ tone variants themselves are covered under Accessibility Options below.
 |----|-------------|-------|----------|
 | badge-001 | render-as-span | `<Badge>Text</Badge>` | Rendered root DOM node's tag name is `span`. |
 | badge-002 | set-data-slot-attribute | `<Badge>Text</Badge>` | Rendered root node has attribute `data-slot="badge"`. |
-| badge-003 | support-six-variants | `<Badge variant="neutral">Text</Badge>` | Computed border color and computed text color are equal and match the `neutral` tone token. Web implementation note: classes `border-apt-border text-apt-text-dim`. |
+| badge-003 | support-six-variants | `<Badge variant="neutral">Text</Badge>` | Computed border color and computed text color are DIFFERENT: border matches `apt-border`, text matches `apt-text-dim` (the `neutral` variant does not share a tone color between them; see Edge Cases). Web implementation note: classes `border-apt-border text-apt-text-dim`. |
 | badge-004 | support-six-variants | `<Badge variant="accent">Text</Badge>` | Computed border color and computed text color are equal and match the `accent` tone token. Web implementation note: classes `border-apt-gold text-apt-gold`. |
 | badge-005 | support-six-variants | `<Badge variant="orange">Text</Badge>` | Computed border color and computed text color are equal and match the `orange` tone token. Web implementation note: classes `border-apt-orange text-apt-orange`. |
 | badge-006 | support-six-variants | `<Badge variant="blue">Text</Badge>` | Computed border color and computed text color are equal and match the `blue` tone token. Web implementation note: classes `border-apt-blue text-apt-blue`. |
 | badge-007 | support-six-variants | `<Badge variant="success">Text</Badge>` | Computed border color and computed text color are equal and match the `success` tone token. Web implementation note: classes `border-apt-green text-apt-green`. |
 | badge-008 | support-six-variants, share-tone-color-between-border-and-text | `<Badge variant="error">Text</Badge>` | Computed border color and computed text color are equal and match the `error` tone token. Web implementation note: classes `border-apt-red text-apt-red`. |
-| badge-009 | default-neutral-variant | `<Badge>Text</Badge>` (no `variant` prop) | Computed border color and computed text color match the `neutral` tone token, identical to explicitly passing `variant="neutral"`. Web implementation note: classes `border-apt-border text-apt-text-dim`. |
+| badge-009 | default-neutral-variant | `<Badge>Text</Badge>` (no `variant` prop) | Computed border color matches `apt-border` and computed text color matches `apt-text-dim`, identical to explicitly passing `variant="neutral"` (badge-003); border and text do NOT match each other here. Web implementation note: classes `border-apt-border text-apt-text-dim`. |
 | badge-010 | apply-no-tone-classes-on-unrecognized-variant | `<Badge variant={"bogus" as any}>Text</Badge>` | Rendered root node has no computed border or text tone color applied beyond the browser/user-agent default (no tone classes or styles are present). |
 | badge-011 | render-pill-shape | `<Badge>Text</Badge>` | Computed `border-radius` is at least half the rendered element's height (fully rounded). Web implementation note: class `rounded-full`. |
 | badge-012 | render-transparent-background | `<Badge>Text</Badge>` | Computed `background-color` is transparent (`transparent` or `rgba(0,0,0,0)`). Web implementation note: class `bg-transparent`. |
@@ -175,6 +180,14 @@ tone variants themselves are covered under Accessibility Options below.
   React rendering error, not Badge-specific behavior.
 - **Offline or disconnected state**: Not applicable. Badge performs no
   network communication.
+- **`neutral` variant's border/text token mismatch**: For five of the six
+  variants (`accent`, `orange`, `blue`, `success`, `error`), the source's
+  `cva` variant table pairs the border and text class with the same tone
+  token (e.g. `border-apt-gold text-apt-gold`). The default `neutral`
+  variant does not: it pairs `border-apt-border` with `text-apt-text-dim`,
+  two different design tokens that resolve to different computed colors in
+  every shipped theme (see badge-003/badge-009). This is logged as a
+  source inconsistency, not a documented design choice.
 
 ## Configuration
 
@@ -259,8 +272,10 @@ logging or diagnostic instrumentation.
   web component's inline-flex and gap properties.
 
 - **React/Web**: The contract above — pill shape, transparent background,
-  1px border sharing its color with the text, uppercase mono type, no-wrap
-  inline-flex layout, and fixed icon sizing — is satisfied by a `<span>`
+  1px border sharing its color with the text for five of the six variants
+  (the default `neutral` variant is the exception; see Edge Cases),
+  uppercase mono type, no-wrap inline-flex layout, and fixed icon sizing —
+  is satisfied by a `<span>`
   styled with Tailwind utility classes composed via `class-variance-authority`
   (`cva`), with `variant` selecting one of six predefined class sets and
   `neutral` as the `cva` `defaultVariants` value. The root element is
@@ -272,14 +287,16 @@ logging or diagnostic instrumentation.
 - **AppKit / UIKit**: Use an `NSStackView` (macOS) or `UIStackView` (iOS) in
   horizontal axis, with `alignment = .center` and `spacing = 4pt` (equivalent
   to the web component's `gap-1`). Set `layer.cornerRadius` to half the frame
-  height for the pill shape, `layer.borderColor` to the tone color, and
-  `layer.borderWidth = 1`. Nest an `NSTextField` or `UILabel` for the text,
-  setting `font = .monospacedSystemFont(ofSize: 9.6, weight: .medium)`,
-  `textColor = toneColor`, and applying a locale-aware uppercase transform
-  (`.uppercased(with: Locale.current)`) rather than the bare, locale-blind
-  form. Variant selection is a switch on a variant property that binds the
-  six tone colors (`neutral`/`accent`/`orange`/`blue`/`success`/`error`) to
-  the view's border and text colors.
+  height for the pill shape and `layer.borderWidth = 1`. Nest an
+  `NSTextField` or `UILabel` for the text, setting `font =
+  .monospacedSystemFont(ofSize: 9.6, weight: .medium)`, and applying a
+  locale-aware uppercase transform (`.uppercased(with: Locale.current)`)
+  rather than the bare, locale-blind form. Variant selection is a switch on
+  a variant property that binds `layer.borderColor` and `textColor`
+  separately per variant — the same tone color for `accent`, `orange`,
+  `blue`, `success`, and `error`, but two different colors for `neutral`
+  (`apt-border` for the border, `apt-text-dim` for the text; see Edge
+  Cases) — rather than a single shared `toneColor` for all six.
 
 - **WinUI 3**: No conformant `Badge` control ships in WinUI 3. The closest
   starting point is a `Border` (for the pill shape via `CornerRadius`, 1px
@@ -307,12 +324,19 @@ logging or diagnostic instrumentation.
   convention, not a guarantee of this component.
   **Approved**: pending
 
-- **Decision**: Border color and text color are deliberately identical per
-  variant (see **share-tone-color-between-border-and-text**); this is a
-  direct, unconditional mapping in the source's `cva` variant table, not a
-  configurable option.
-  **Rationale**: Makes the badge read as a single-tone outline chip rather
-  than a filled badge.
+- **Decision**: Border color and text color use the same tone token for
+  `accent`, `orange`, `blue`, `success`, and `error` (see
+  **share-tone-color-between-border-and-text**) — a direct, unconditional
+  mapping in the source's `cva` variant table for those five entries, not a
+  configurable option. The default `neutral` variant is the exception: its
+  `cva` entry pairs `border-apt-border` with `text-apt-text-dim`, two
+  different tokens that resolve to different colors in every shipped theme,
+  despite the source's own header comment describing "border + text sharing
+  the tone colour" for every variant (see Edge Cases; logged as a source
+  inconsistency, not treated as a MUST here).
+  **Rationale**: Makes five of the six variants read as a single-tone outline
+  chip rather than a filled badge; the `neutral` mismatch appears to be an
+  authoring oversight rather than an intentional exception.
   **Approved**: pending
 
 - **Decision**: Variant identity is communicated solely through the
@@ -344,6 +368,8 @@ logging or diagnostic instrumentation.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 `semantic-markup` and `unicode-support` pass because the source renders a
 plain `<span>` with no ARIA misuse and passes `children` through unprocessed
@@ -354,12 +380,17 @@ the computed contrast ratio against an arbitrary background or confirm
 system font-scaling behavior. `text-expansion-tolerance` is partial because
 `whitespace-nowrap` with no max-width means long translated text is never
 truncated, but the source also cannot show whether it overflows a
-caller-constrained layout.
+caller-constrained layout. Best-practices statuses rest on `Badge` being
+pure presentation over `cva` variants with no embedded logic
+(separation-of-concerns: passed), and on no test in the suite exercising
+`Badge` directly — the candidate tests exercise unrelated components
+(unit-test-coverage: failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | share-tone-color-between-border-and-text, badge-003/badge-009, and the tone Design Decision now scope the MUST to 5 variants; neutral's border/text token mismatch documented as a source bug. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and updated every citation; added an unrecognized-variant requirement and test vector; replaced the Compliance placeholder with an accessibility/internationalization checks table; split test vectors to assert computed properties (with class names kept as web implementation notes) and added vectors for the two MAY requirements and the unrecognized-variant edge case; corrected the Compose/SwiftUI Platform Notes to real APIs and reformatted Design Decisions into the three-line convention, adding one for the 0.6rem type size; resolved the Accessibility Options contradiction with Design Decisions on color-only differentiation; added a locale-aware casing note to Localization and replaced invariant-culture casing calls in WinUI 3 and AppKit/UIKit guidance; corrected the domain to the ingredients/ui/components path; reworded the React/Web Platform Note as a contract citing the source as reference implementation |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Apply completeness rules; replace over-used review markers with "Not applicable" statements and provide platform translation guidance |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -3,11 +3,11 @@ id: f1c3b5e7-9d2a-4f8c-a3c1-7e2f5b9c6d4a
 title: Tree Rows
 domain: agenticdevelopertoolkit://recipes/tree-rows
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -288,14 +288,17 @@ Each bullet below assumes this recipe's flatten-plus-label approach: hierarchy l
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `tree-rows.tsx` itself: the native `<button>` with `aria-label`/`aria-expanded`/`title` and its default keyboard behavior support the passed screen-reader, keyboard, and semantic-markup checks; the 14px icon plus `0.125rem` padding falls short of standard touch-target minimums and the chevron's `transition-transform` runs unconditionally regardless of `prefers-reduced-motion` (both also tracked under Accessibility Options above); contrast for the `apt-gold`/`apt-text` tokens can't be verified from this file (see the open question on contrast); and the hardcoded `Expand`/`Collapse` English strings fail string-externalization and no-hardcoded-strings, while the logical `paddingInlineStart` property and the unfiltered pass-through of the caller's `label` string pass rtl-layout-support and unicode-support.
+Statuses rest on `tree-rows.tsx` itself: the native `<button>` with `aria-label`/`aria-expanded`/`title` and its default keyboard behavior support the passed screen-reader, keyboard, and semantic-markup checks; the 14px icon plus `0.125rem` padding falls short of standard touch-target minimums and the chevron's `transition-transform` runs unconditionally regardless of `prefers-reduced-motion` (both also tracked under Accessibility Options above); contrast for the `apt-gold`/`apt-text` tokens can't be verified from this file (see the open question on contrast); and the hardcoded `Expand`/`Collapse` English strings fail string-externalization and no-hardcoded-strings, while the logical `paddingInlineStart` property and the unfiltered pass-through of the caller's `label` string pass rtl-layout-support and unicode-support. `separation-of-concerns` passes because the file is deliberately split between the pure, React-free `flattenTree`/`ancestorIds` and the presentational `TreeRowLabel`, and `unit-test-coverage` passes on `treeRows.test.tsx`'s direct exercise of both.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; fix an RFC 2119 inversion and add duplicate-id/negative-depth preconditions; add an omit-collapsed-descendants requirement and test vectors; reformat Design Decisions and add two new entries; rewrite Compliance as a table; correct Appearance/Platform Notes values and move Tailwind specifics off Requirements/Appearance; split Configuration per export; fix the tree-003 and tree-010 vectors and add missing coverage; link the Disclosure recipe in related. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Reduce Motion and Increase Contrast markers; clarify token requirements and motion animation behavior. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from tree-rows.tsx source. |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

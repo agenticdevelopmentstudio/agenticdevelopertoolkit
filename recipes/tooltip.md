@@ -3,24 +3,19 @@ id: a17a8253-0be8-4646-a76a-6941b1af3528
 title: Tooltip
 domain: agenticdevelopertoolkit://recipes/tooltip
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
 summary: Contextual label that appears on hover or focus, positioned relative to its
   trigger element with configurable placement and optional pointer.
 platforms:
-- swift
-- kotlin
 - typescript
 - web
-- macos
-- ios
-- windows
 tags:
 - ui
 - primitives
@@ -198,13 +193,16 @@ Not applicable: The component does not emit any structured logs; debugging relie
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Screen-reader, keyboard, and semantic-markup statuses rest on Base UI's built-in `role="tooltip"`/`aria-describedby` wiring and this wrapper's hover/focus triggers documented above; contrast and RTL are marked partial because the source confirms the design tokens and the Positioner's logical placement but not the rendered contrast values or `dir="rtl"` behavior directly; text-expansion is passed on the wrapping behavior confirmed in **very-long-text-wraps**.
+Screen-reader, keyboard, and semantic-markup statuses rest on Base UI's built-in `role="tooltip"`/`aria-describedby` wiring and this wrapper's hover/focus triggers documented above; contrast and RTL are marked partial because the source confirms the design tokens and the Positioner's logical placement but not the rendered contrast values or `dir="rtl"` behavior directly; text-expansion is passed on the wrapping behavior confirmed in **very-long-text-wraps**; the four exports are themed pass-throughs of base-ui's `Tooltip` primitives with no logic of their own (separation-of-concerns passed), and no test in the web workspace imports this source — the candidate tests matched by name are unrelated macOS `Chrome`-pane Swift files (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Narrowed frontmatter platforms to typescript/web, matching the component's single web source. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; restate must-use-portal/must-support-custom-className as outcomes and move their React specifics into the React/Web platform note; rewrite non-web Platform Notes around each platform's native tooltip API and correct unsupported/inaccurate claims (SwiftUI, Compose, WinUI 3, 200ms default); add dismiss/hover-persist requirements and test vectors plus an RTL test vector; rewrite edge cases as RFC 2119 requirements with vectors; resolve the z-index and arrow-size contradictions; reformat Design Decisions to the three-line form; normalize the Compliance table and fix frontmatter platforms/related drift |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Remove review marker from Accessibility section; state that wrapper inherits Base UI Tooltip's role and aria-describedby wiring for screen reader announcement |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from Base UI tooltip source |

@@ -3,11 +3,11 @@ id: 74ba9dde-4963-42cb-aa03-bf1ee4dcc794
 title: Avatar Engine Runtime
 domain: agenticdevelopertoolkit://recipes/avatar-engine-runtime
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -15,6 +15,8 @@ summary: 'Channels, Scheduler, and Tweens: the frame-timing and interpolation co
   shared by the Swift and TypeScript avatar engines.'
 platforms:
 - swift
+- macos
+- ios
 - typescript
 - web
 tags:
@@ -584,4 +586,5 @@ and the higher-level `EngineTests.swift`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-09-25 | Mike Fullerton | Added `macos`/`ios` to the frontmatter `platforms` list. |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

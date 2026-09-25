@@ -3,11 +3,11 @@ id: fb3a0db4-691e-4025-a391-2853908248b5
 title: Tabs
 domain: agenticdevelopertoolkit://recipes/tabs
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 - **default-value**: Component MUST accept a `defaultValue` prop to specify which tab is active on initial render (uncontrolled mode).
 - **controlled-value**: Component MUST also support controlled selection via a `value` prop paired with `onValueChange`, both passed through to Base UI's `Tabs.Root`.
 - **active-indicator**: Component MUST render a 2px accent-colored border at the bottom of the active tab to indicate selection state.
-- **disabled-tabs**: Component MUST respect a `disabled` attribute on individual tabs to prevent interaction and reduce visual prominence.
+- **disabled-tabs**: Component MUST respect a `disabled` attribute on individual tabs to block click-activation; the tab remains keyboard-focusable and visually unchanged (no opacity or cursor change — see **Appearance**).
 - **click-selection**: Component MUST change the active tab when a user clicks any non-disabled tab button.
 - **keyboard-tab-navigation**: Component MUST support Left/Right arrow-key and Home/End navigation among tabs, and roving-tabindex Tab-key entry/exit into the tablist, per Base UI's implementation of the WAI-ARIA APG Tabs pattern.
 - **aria-tab-roles**: Component MUST expose `role="tablist"` on the tab container, `role="tab"` with `aria-selected` on each tab, and `role="tabpanel"` on each panel.
@@ -62,7 +62,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 - **Foreground—inactive**: muted gray text (`apt-text-muted`)
 - **Foreground—active**: full contrast text (`apt-text`), gold underline (`apt-gold`)
 - **Foreground—hover**: full contrast text (`apt-text`)
-- **Foreground—disabled**: 50% opacity (`opacity-50`); `pointer-events-none` removes all interaction (click, hover, focus), and no separate disabled cursor styling is applied
+- **Foreground—disabled**: none — the `disabled:pointer-events-none disabled:opacity-50` classes are Tailwind `:disabled`-pseudo-class selectors, and Base UI's `TabsTab` sets `aria-disabled`/`data-disabled` rather than the native `disabled` attribute (it remains `focusableWhenDisabled`), so neither class ever matches; a disabled tab keeps full opacity, still responds to hover, and remains keyboard-focusable — only click-activation is blocked
 - **Border—TabsList**: 1px bottom border in neutral border color (`apt-border`)
 - **Border—active tab**: 2px bottom border in gold (`apt-gold`), positioned at bottom of tab (negative margin `-mb-px` to overlap list border)
 - **Shadow**: none
@@ -76,15 +76,15 @@ Tabs component provides a tabbed interface for organizing related content into l
 | Active | Text full contrast, gold 2px bottom border, border overrides list border |
 | Hover | Text full contrast, no change to border (border state unchanged) |
 | Focused | Text full contrast (via `focus-visible`), no distinct focus ring — visually identical to hover; see **focus-visible-state** |
-| Disabled | Text full contrast but opacity 50%, `pointer-events-none` disables all interaction |
+| Disabled | No visual change (full opacity, still hovers); click-activation blocked, keyboard focus still lands on the tab |
 
 ## Accessibility
 
 - **Role**: Component uses Base UI which applies `role="tablist"` to `TabsList`, `role="tab"` to each `TabsTab`, and `role="tabpanel"` to each `TabsPanel`.
 - **Labels**: Tab buttons MUST contain visible text that describes the panel content (no aria-label unless text is insufficient).
-- **Focus management**: Tab moves focus into the tablist as a single stop (landing on the active or last-focused tab, per the roving-tabindex pattern); Left/Right arrow keys then move focus between tabs, and Home/End move focus to the first/last enabled tab. This is Base UI's implementation of the WAI-ARIA APG Tabs pattern's roving-tabindex model, not standard sequential tab order. See **keyboard-tab-navigation**; RTL arrow-key reversal is documented under Localization.
+- **Focus management**: Tab moves focus into the tablist as a single stop (landing on the active or last-focused tab, per the roving-tabindex pattern); Left/Right arrow keys then move focus between tabs, and Home/End move focus to the first/last tab — disabled tabs remain part of this focus order (`focusableWhenDisabled`) and are not skipped. This is Base UI's implementation of the WAI-ARIA APG Tabs pattern's roving-tabindex model, not standard sequential tab order. See **keyboard-tab-navigation**; RTL arrow-key reversal is documented under Localization.
 - **State announcement**: Base UI applies `aria-selected="true"` to the active tab and `aria-selected="false"` to inactive tabs; screen readers announce selection state.
-- **Disabled state**: Disabled tabs MUST have `disabled` attribute set; Base UI applies `aria-disabled="true"`.
+- **Disabled state**: Base UI applies `aria-disabled="true"` and a `data-disabled` attribute to a disabled `TabsTab`; it does not set the native `disabled` HTML attribute, so the tab stays in the keyboard focus order and only click-activation is blocked.
 - **Minimum touch target**: Tab buttons MUST have a minimum height of 44px on touch platforms; current padding (`py-2`, 8px vertical) yields approximately 33px height; implementations on touch platforms SHOULD increase vertical padding or add touch-specific sizing.
 
 ## Conformance Test Vectors
@@ -96,14 +96,14 @@ Tabs component provides a tabbed interface for organizing related content into l
 | tabs-003 | render-panels | Render `<TabsPanel value="a">Content</TabsPanel>` | Panel renders with content visible when tab "a" active |
 | tabs-004 | default-value | Render `<Tabs defaultValue="b">` with two tabs | Tab "b" is active on initial render, not tab "a" |
 | tabs-005 | active-indicator | Activate a tab by click or prop | Active tab shows gold 2px bottom border, inactive tabs show transparent border |
-| tabs-006 | disabled-tabs | Render `<TabsTab value="x" disabled>` and click it | Tab does not change active state; `pointer-events-none` prevents hover/focus/click interaction entirely (no cursor change) |
+| tabs-006 | disabled-tabs | Render `<TabsTab value="x" disabled>` and click it | Tab does not change active state; the tab still shows full opacity, still responds to hover, and can still receive keyboard focus — only the click-activation is blocked |
 | tabs-007 | click-selection | Click a non-disabled tab | Active state changes to that tab; associated panel content displays |
 | tabs-008 | aria-tab-roles | Inspect rendered DOM | `role="tablist"` on `TabsList`; `role="tab"` with `aria-selected` on each `TabsTab`; `role="tabpanel"` on each `TabsPanel` |
 | tabs-009 | hover-emphasis | Hover over an inactive tab | Text color changes from `apt-text-muted` to `apt-text`; border unchanged |
 | tabs-010 | focus-visible-state | Tab to a tab via keyboard | Tab receives focus; text color changes via `focus-visible` (no ring, `outline-none`); visually identical to the hover state |
 | tabs-011 | class-name | Pass `className="custom-class"` to Tabs/TabsList/TabsTab/TabsPanel | Custom class appended to element via `cn()` utility (Tailwind class merging) |
-| tabs-012 | keyboard-tab-navigation | Focus a tab, press Right arrow | Focus (and, under the default `automatic` activation mode, selection) moves to the next enabled tab |
-| tabs-013 | keyboard-tab-navigation | Focus any tab, press End | Focus moves to the last enabled tab |
+| tabs-012 | keyboard-tab-navigation | Focus a tab, press Right arrow | Focus moves to the next tab (including a disabled one); selection does not change, since `TabsList`'s `activateOnFocus` defaults to `false` |
+| tabs-013 | keyboard-tab-navigation | Focus any tab, press End | Focus moves to the last tab, whether or not it is disabled |
 | tabs-014 | controlled-value | Render with `value` and `onValueChange`, click a different tab | `onValueChange` is called with the new tab's value; the active tab only changes once the parent updates `value` in response |
 | tabs-015 | default-value | Render `<Tabs>` with no `defaultValue`/`value` and tabs "a", "b" | The tab at index `0` ("a") is active, regardless of tab `value` strings |
 
@@ -112,7 +112,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 - **Empty tabs**: If no `TabsTab` children are provided, `TabsList` MUST still render, empty. With no tab present, no panel is selectable.
 - **Single tab**: A single tab with no alternative choice may be confusing to users. Component MUST still render and function correctly; design SHOULD consider whether a single tab adds value.
 - **No defaultValue**: If both `defaultValue` and `value` are omitted, Base UI selects the tab at index `0` — not the first tab by string `value`. See **default-value**.
-- **All tabs disabled**: If every `TabsTab` is disabled, the tab identified by `defaultValue`/`value` MUST remain selected and its panel MUST still display — `disabled` blocks interaction on that tab, it does not clear the Root's selection state. No tab can be changed by click or keyboard while all are disabled.
+- **All tabs disabled**: If every `TabsTab` is disabled, the tab identified by `defaultValue`/`value` MUST remain selected and its panel MUST still display — `disabled` blocks interaction on that tab, it does not clear the Root's selection state. No tab's selection can be changed by click or keyboard while all are disabled, though keyboard focus can still move among the disabled tabs (`focusableWhenDisabled`).
 - **Very long tab labels**: Tab text that exceeds container width may wrap or truncate depending on parent width. Component has no word-wrap or text-overflow rule; it MUST render the label as-is. Implementor SHOULD manage parent width constraints or truncate long labels.
 - **Rapid tab switching**: Clicking multiple tabs in quick succession MUST result in the most recently clicked non-disabled tab being active; each click is a synchronous state update, and no debouncing is performed.
 - **Null or undefined panel content**: If a `TabsPanel` has no children, it MUST render as an empty container without error.
@@ -124,11 +124,11 @@ Tabs component provides a tabbed interface for organizing related content into l
 | `Tabs.defaultValue` | `string \| number` | `0` | Uncontrolled: which tab is active on initial render. Base UI defaults to index `0`, not a specific tab's `value` |
 | `Tabs.value` | `string \| number` | — | Controlled: the active tab's value; pairs with `onValueChange` |
 | `Tabs.onValueChange` | `(value: string \| number) => void` | — | Called when the user selects a different tab, so a controlled `value` can be updated |
-| `Tabs.activationMode` | `"automatic" \| "manual"` | `"automatic"` | Whether moving focus with arrow keys also changes the selected tab (`automatic`) or requires an explicit activation (`manual`) |
+| `TabsList.activateOnFocus` | `boolean` | `false` | Whether moving focus with arrow keys also changes the selected tab (`true`); by default, arrow keys move focus only and selection requires a separate click/activation |
 | `Tabs.className` | `string` | `undefined` | Additional CSS classes merged into the root `Tabs` element via `cn()` |
 | `TabsList.className` | `string` | `undefined` | Additional CSS classes merged into the `TabsList` element via `cn()` |
 | `TabsTab.value` | `string \| number` | required | Identifies this tab; matched against `TabsPanel.value` to associate content |
-| `TabsTab.disabled` | `boolean` | `false` | Prevents interaction and reduces visual prominence (50% opacity) for this tab |
+| `TabsTab.disabled` | `boolean` | `false` | Blocks click-activation for this tab; no visual change is applied (see **disabled-tabs**) and the tab remains keyboard-focusable |
 | `TabsTab.className` | `string` | `undefined` | Additional CSS classes merged into this tab's classes via `cn()` |
 | `TabsPanel.value` | `string \| number` | required | Identifies which tab's content this panel renders |
 | `TabsPanel.className` | `string` | `undefined` | Additional CSS classes merged into this panel's classes via `cn()` |
@@ -196,8 +196,8 @@ Not applicable: Component performs no internal logging.
   **Rationale**: Creates a seamless transition from list border to tab underline instead of a visible seam between the two borders.
   **Approved**: pending
 
-- **Decision**: Use 50% opacity (`opacity-50`) rather than a strikethrough or separate disabled color to indicate the disabled state.
-  **Rationale**: Preserves the visual structure of the tab while still communicating that it is disabled.
+- **Decision**: Ship `disabled:opacity-50`/`disabled:pointer-events-none` classes that key off the native `:disabled` pseudo-class, even though Base UI's `TabsTab` never sets the native `disabled` attribute (it uses `aria-disabled`/`data-disabled` instead), so the classes never take effect and a disabled tab shows no visual change.
+  **Rationale**: Source bug, not a deliberate design choice — the intended dimmed treatment does not render; see `SP/fix/source-bugs.txt`.
   **Approved**: pending
 
 - **Decision**: Build on Base UI's `Tabs` primitive rather than rolling custom tab logic.
@@ -220,12 +220,15 @@ Not applicable: Component performs no internal logging.
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on: the source's delegation to Base UI for ARIA roles, keyboard handling, and focus order (screen-reader-support, keyboard-navigable, semantic-markup, focus-management — all passed); the fixed `text-[0.8rem]` sizing and the `apt-*` color tokens whose actual values aren't visible in this source file (dynamic-type-support, contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); and the absence of any word-wrap/truncation handling for user-provided tab-label text plus the unverified RTL mirroring of the plain flex layout (text-expansion-tolerance — failed, rtl-layout-support — partial).
+Statuses rest on: the source's delegation to Base UI for ARIA roles, keyboard handling, and focus order (screen-reader-support, keyboard-navigable, semantic-markup, focus-management — all passed); the fixed `text-[0.8rem]` sizing and the `apt-*` color tokens whose actual values aren't visible in this source file (dynamic-type-support, contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); and the absence of any word-wrap/truncation handling for user-provided tab-label text plus the unverified RTL mirroring of the plain flex layout (text-expansion-tolerance — failed, rtl-layout-support — partial); the four exports are thin themed wrappers around Base UI's `Tabs` primitives with no logic of their own (separation-of-concerns passed), and no test file in the web workspace imports `Tabs`/`TabsList`/`TabsTab`/`TabsPanel` from this source — the candidate tests matched by name test unrelated markdown/window-drawer/split-view surfaces (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed disabled-tab styling claims (no opacity/pointer-events change; stays focusable) and replaced invented Tabs.activationMode with real TabsList.activateOnFocus (default false). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case names and updated every citation; replaced the Base-UI-specific requirement with a platform-neutral ARIA-roles requirement and moved the Base UI dependency into Platform Notes and Design Decisions; added keyboard arrow/Home/End navigation, activation-mode, and controlled value/onValueChange requirements, configuration rows, and test vectors; corrected the padding/gap/height math in Appearance and the touch-target number; fixed the self-contradictory disabled-state description and the unsupported reduced-motion and defaultValue-default claims; corrected the roving-tabindex focus-management text and added an RTL arrow-key note under Localization; replaced gold/`apt-*` token references in normative requirements with semantic role wording (accent indicator, muted/full-contrast text); fixed the SwiftUI, Compose, and WinUI 3 platform-note API names; rewrote Edge Cases as testable MUST/SHOULD statements; reformatted Design Decisions to the three-line Decision/Rationale/Approved form; built out the Compliance table with applicable Accessibility and Internationalization checks; and added Base UI and WAI-ARIA APG references |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

@@ -3,11 +3,11 @@ id: 0eaf03a3-c00b-4f3a-81d7-5bd0560a5274
 title: Stepper
 domain: agenticdevelopertoolkit://recipes/stepper
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -222,12 +222,15 @@ Not applicable: The source contains no logging calls. Any logging of value chang
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The source uses a native `<button type="button">` and `<input type="number">` with correct `aria-label`/`disabled` attributes, so screen-reader-support, keyboard-navigable, and semantic-markup pass; it hardcodes the "Decrement"/"Increment" strings directly in JSX rather than resolving them through the localization keys in this recipe's Localization section, so string-externalization and no-hardcoded-strings fail; and it defines colors, font size, and control dimensions only through CSS classes not shown in the source file, so contrast, type scaling, and tap-target size cannot be confirmed and are marked partial.
+The source uses a native `<button type="button">` and `<input type="number">` with correct `aria-label`/`disabled` attributes, so screen-reader-support, keyboard-navigable, and semantic-markup pass; it hardcodes the "Decrement"/"Increment" strings directly in JSX rather than resolving them through the localization keys in this recipe's Localization section, so string-externalization and no-hardcoded-strings fail; and it defines colors, font size, and control dimensions only through CSS classes not shown in the source file, so contrast, type scaling, and tap-target size cannot be confirmed and are marked partial; the only logic is the trivial pure `clamp` helper, kept apart from the render function (separation-of-concerns passed), and `components.test.tsx` exercises increment/decrement and the disabled-at-min bound directly (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; removed unverified Analytics/Logging content (marked Not applicable) and documented that instrumentation is the consumer's responsibility; replaced AWS-specific class names and hex colors with `{{app_prefix}}`/theme-token guidance; reformatted Design Decisions to the Decision/Rationale/Approved form; rebuilt Compliance as a table of cookbook compliance-catalog checks with accurate passed/partial/failed statuses; corrected the button role and Differentiate Without Color claims; cited the reference implementation by path in place of an unidentified source reference; clarified the out-of-range test vectors as typed input rather than an onChange input; and documented native ArrowUp/Down stepping, fractional-step floating-point drift, empty-input-as-zero, per-keystroke clamping, and invalid-configuration (`min > max`, `step <= 0`, NaN) behavior as built. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React/Web source |

@@ -3,11 +3,11 @@ id: 26df832c-a7f7-4cf6-b3f5-240c61e8bd68
 title: InlineCommitControl
 domain: agenticdevelopertoolkit://recipes/inline-commit-control
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-07'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -376,6 +376,7 @@ mutation layer.
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 
 Statuses rest on `inline-commit-control.tsx`: Button-only composition and
 `apt-*`/token-only classNames (native-controls-preference, platform-theming);
@@ -387,12 +388,16 @@ resource-file indirection and no `dir`-aware positioning (no-hardcoded-strings,
 string-externalization, rtl-layout-support); `InlineEditableText`'s passthrough
 of the raw input value with no validation of its own (input-sanitization); and
 the vector-to-test mapping across the three `__tests__` files cited above
-(unit-test-coverage, vectors T1–T13).
+(unit-test-coverage, vectors T1–T13); and the source's own note that "the
+consumer owns all state — draft values, dirty computation, the armed set … —
+the control just renders it," with no data access or business rule of its own
+beyond the focus-management effect (separation-of-concerns).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; correct Platform Notes to real native APIs; fix Overview export count and trailing-alignment phrasing; reformat Design Decisions and Compliance to convention; fill Localization and Accessibility Options with real content; fix `related` and `tags`; fix `onDelete` type; split/add Conformance Test Vectors for hover/focus reveal, disarm-via-✕, focus preservation, and armed-delete content styling. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Promote to review; add missing sections and cross-platform Platform Notes |
 | 1.0.0 | 2026-07-07 | Mike Fullerton | Initial draft |

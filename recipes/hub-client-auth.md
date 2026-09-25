@@ -3,11 +3,11 @@ id: 8b79c521-04f3-4a43-90db-ae6e0bba9f84
 title: Hub Client Auth
 domain: agenticdevelopertoolkit://recipes/hub-client-auth
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,9 +29,9 @@ approved-date: ''
 
 ## Overview
 
-`hub-client-auth` is the authentication subsystem of `AgenticDeveloperHubClient`
-(`packages/apple/AgenticDeveloperHubClient/Sources/Auth/`), a Swift framework
-target supporting macOS 14.0+ and iOS 17.0+ (`project.yml`). It has no visual
+`hub-client-auth` is the authentication subsystem of the hub client's Swift
+framework target (`Sources/Auth/`), supporting macOS 14.0+ and iOS 17.0+
+(`project.yml`). It has no visual
 surface: it is a set of value types (`Credentials`, `Session`), storage
 protocols and concrete stores (Keychain-backed and in-memory), and two
 `ClientMiddleware` implementations — `AuthenticationMiddleware` (bearer-only)
@@ -78,14 +78,14 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 
 ### `KeychainHelper`
 
-- **keychain-helper-service-default**: `KeychainHelper.service` MUST default to `Bundle.main.bundleIdentifier`, falling back to the literal `"com.mikefullerton.AgenticDeveloperHubClient"` when the bundle identifier is `nil`. It is declared `nonisolated(unsafe) public static var`: the type does not synchronize reads or writes of this global, so a caller that reassigns `service` MUST do so before any concurrent Keychain access begins, per Swift's declaration-level isolation for a `nonisolated(unsafe)` value.
+- **keychain-helper-service-default**: `KeychainHelper.service` MUST default to `Bundle.main.bundleIdentifier`, falling back to a hardcoded literal reverse-DNS bundle-identifier string naming the hub client itself when the bundle identifier is `nil`. It is declared `nonisolated(unsafe) public static var`: the type does not synchronize reads or writes of this global, so a caller that reassigns `service` MUST do so before any concurrent Keychain access begins, per Swift's declaration-level isolation for a `nonisolated(unsafe)` value.
 - **keychain-helper-set-overwrite**: `KeychainHelper.set(_:forKey:)` MUST delete any existing item for the key and then `SecItemAdd` the new value — an overwrite, never an update-in-place.
 - **keychain-helper-ios-accessibility**: On iOS, `set(_:forKey:)` MUST set `kSecAttrAccessible` to `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` so a background refresh can read the token after the device's first unlock, and the item never leaves the device via backup or Keychain sync.
 - **keychain-helper-macos-accessibility**: On macOS, `set(_:forKey:)` MUST leave `kSecAttrAccessible` unset (the implicit default) because the file-based legacy Keychain rejects or ignores an explicit accessibility class unless the item also opts into the data-protection Keychain, and that migration is out of this component's scope.
 - **keychain-helper-get**: `get(forKey:)` MUST return the UTF-8-decoded string for the key, or `nil` when the item is absent or the query otherwise fails.
 - **keychain-helper-delete-idempotent**: `delete(forKey:)` MUST return `true` for both `errSecSuccess` and `errSecItemNotFound` — deleting an absent item is not an error.
 - **keychain-helper-exists**: `exists(forKey:)` MUST return whether `SecItemCopyMatching` succeeds for the key, without decoding the stored value.
-- **keychain-helper-error-logging**: A failed `set` or a `get` failure other than `errSecItemNotFound` MUST log the key name and the `OSStatus` at `.error` level via the `com.mikefullerton.AgenticDeveloperHubClient` / `Keychain` `os.Logger`, and MUST NOT log the stored value.
+- **keychain-helper-error-logging**: A failed `set` or a `get` failure other than `errSecItemNotFound` MUST log the key name and the `OSStatus` at `.error` level via an `os.Logger` scoped to the hub client's own reverse-DNS subsystem identifier and the `Keychain` category, and MUST NOT log the stored value.
 
 ### `AuthenticationMiddleware`
 
@@ -122,7 +122,7 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 
 ### `ADHClient+Session` wrappers (sign-in family, passkeys, OAuth exchange, sign-out, current user)
 
-- **session-wrappers-require-session-store**: Every session wrapper except `signOut()` MUST call a private `sessionStore()` that throws `SessionError.notASessionClient` when the client was built via `init(transport:credentials:)` (no `SessionStore`) rather than `init(transport:session:onSessionExpired:)`.
+- **session-wrappers-require-session-store**: Every session wrapper except `signOut()` and `currentUser()` MUST call a private `sessionStore()` that throws `SessionError.notASessionClient` when the client was built via `init(transport:credentials:)` (no `SessionStore`) rather than `init(transport:session:onSessionExpired:)`.
 - **sign-in-outcome-signed-in**: `signIn(email:password:)` MUST `POST /auth/login`; an `.ok` response MUST store `Session(credentials: Credentials(token:, kind: .jwt), refreshToken:)` and return `.signedIn(user)`.
 - **sign-in-outcome-mfa-required**: An `.accepted` response from `signIn` MUST return `.mfaRequired(challenge)` and MUST NOT store any session.
 - **sign-in-invalid-credentials**: A `.unauthorized` response from `signIn` MUST throw `SessionError.invalidCredentials`.
@@ -143,8 +143,8 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 - **sign-out-revoke-body-workaround**: The revoke call MUST go through `rawJSON` rather than the generated `postAuthRevoke` operation, because the committed `openapi.json` describes `POST /auth/revoke` as a bodiless 204 while the backend actually requires the refresh token in the request body; the generated operation cannot express this request, so the raw path is what makes revocation work at all.
 - **sign-out-revoke-exempt-from-refresh**: The revoke request MUST be exempt from refresh-and-retry (`ADHClient.revokeRawOperationID` is a member of `SessionRefreshMiddleware.exemptOperationIDs`) — signing out with an already-expired access token 401s, and refreshing mid-revoke would rotate the single-use refresh token and resend the now-stale one, which the server can no longer match.
 - **sign-out-always-clears**: `signOut()` MUST call `session.clear()` unconditionally after the best-effort revoke attempt (or immediately, when there is no `refreshToken` to revoke), and MUST return without throwing regardless of the revoke's outcome.
-- **sign-out-silent-when-not-a-session-client**: Unlike every other session wrapper, `signOut()` MUST NOT throw `SessionError.notASessionClient` when the client has no `SessionStore` (`session == nil`) — it MUST simply return, making it safe to call on any `ADHClient` regardless of how it was built.
-- **current-user-fetch**: `currentUser()` MUST `GET /auth/me` and return the decoded `User` on `.ok`, mapping `.unauthorized` to `SessionError.invalidCredentials` and `.undocumented(status, _)` to `.unexpectedResponse("HTTP <status>")`.
+- **sign-out-silent-when-not-a-session-client**: Unlike every other session wrapper except `currentUser()`, `signOut()` MUST NOT throw `SessionError.notASessionClient` when the client has no `SessionStore` (`session == nil`) — it MUST simply return, making it safe to call on any `ADHClient` regardless of how it was built.
+- **current-user-fetch**: `currentUser()` MUST `GET /auth/me` and return the decoded `User` on `.ok`, mapping `.unauthorized` to `SessionError.invalidCredentials` and `.undocumented(status, _)` to `.unexpectedResponse("HTTP <status>")`; unlike the other session wrappers, it MUST NOT call `sessionStore()` first, so it also works on a client built via `init(transport:credentials:)` with no `SessionStore` — the bearer credential alone authenticates the request.
 
 ## Appearance
 
@@ -218,7 +218,8 @@ Not applicable — this is a non-UI authentication and session-management compon
 - **Refresh token rejected (rotated or revoked elsewhere)**: `.rejected` clears the local session and fires `onSessionExpired` even though the failing request's own response is still the original 401 (`hub-client-auth-022`).
 - **Sign-out with an already-expired access token**: the revoke call itself may 401; this is exempt from refresh-and-retry so it is never retried with a rotated refresh token that the revoke body no longer carries, and the session is cleared locally regardless (`hub-client-auth-015`).
 - **Sign-out with no refresh token**: `signOut()` skips the revoke network call entirely (the `if let refreshToken = ...` guard) and clears the session immediately.
-- **Sign-out on a client that has no `SessionStore`**: unlike every other session wrapper, `signOut()` returns silently instead of throwing `SessionError.notASessionClient` (`sign-out-silent-when-not-a-session-client`).
+- **Sign-out on a client that has no `SessionStore`**: unlike every other session wrapper except `currentUser()`, `signOut()` returns silently instead of throwing `SessionError.notASessionClient` (`sign-out-silent-when-not-a-session-client`).
+- **`currentUser()` on a client that has no `SessionStore`** (built via `init(transport:credentials:)`): it never calls `sessionStore()`, so it does not throw `SessionError.notASessionClient` either — it sends `GET /auth/me` authenticated by the stored credential and returns the `User` normally (`current-user-fetch`).
 - **Missing Keychain item**: `KeychainHelper.get(forKey:)` and `exists(forKey:)` both treat `errSecItemNotFound` as an unlogged, ordinary "absent" result, not an error.
 - **Adopting an API token over an existing JWT session**: `KeychainSessionStore.save` and the `SessionStore` default `save(_ credentials:)` both drop the previous refresh token so it cannot be replayed against a session that no longer matches it (`hub-client-auth-034`, `hub-client-auth-037`).
 - **`_Error` payload with neither `message` nor `code`**: `message(_:)` falls back to the literal string `"unknown error"` rather than throwing or returning an empty string.
@@ -233,7 +234,7 @@ Not applicable — this is a non-UI authentication and session-management compon
 |--------|------|---------|-------------|
 | `KeychainCredentialStore.keyPrefix` | `String` | `"adh.api"` | Namespaces the two Keychain account keys (`.token`, `.token.kind`); lets multiple independent stores share one Keychain service. |
 | `KeychainSessionStore.keyPrefix` | `String` | `"adh.api"` | Namespaces the three Keychain account keys (`.token`, `.token.kind`, `.refresh`); shares its first two keys with `KeychainCredentialStore` under the same prefix. |
-| `KeychainHelper.service` | `String` (`nonisolated(unsafe) static var`) | `Bundle.main.bundleIdentifier`, else `"com.mikefullerton.AgenticDeveloperHubClient"` | The Keychain `kSecAttrService` every key is scoped under. |
+| `KeychainHelper.service` | `String` (`nonisolated(unsafe) static var`) | `Bundle.main.bundleIdentifier`, else a hardcoded reverse-DNS identifier naming the hub client | The Keychain `kSecAttrService` every key is scoped under. |
 | `InMemoryCredentialStore.init(_:)` | `Credentials?` | `nil` | Seeds the in-memory credential for tests or ephemeral, non-persisted sessions. |
 | `InMemorySessionStore.init(_:)` | `Session?` | `nil` | Seeds the in-memory session for tests or ephemeral, non-persisted sessions. |
 | `AuthenticationMiddleware.credentials` | `any CredentialProvider` | — (required) | Injected dependency the middleware reads at send time. |
@@ -276,7 +277,7 @@ Not applicable: none of the nine Auth source files emit an analytics event; the 
 
 ## Logging
 
-Subsystem: `com.mikefullerton.AgenticDeveloperHubClient` | Category: `Keychain`
+Subsystem: the hub client's own reverse-DNS identifier (`KeychainHelper.service`'s fallback literal) | Category: `Keychain`
 
 | Event | Level | Message |
 |-------|-------|---------|
@@ -350,3 +351,4 @@ No other file under `Sources/Auth/` logs anything; `errSecItemNotFound` is treat
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | session-wrappers-require-session-store, sign-out-silent-when-not-a-session-client and current-user-fetch corrected: currentUser() never calls sessionStore() and works with no SessionStore; also removed 6 agenticdeveloperhub product-name mentions (private-scope leak) by rephrasing to code-identifier descriptions. |

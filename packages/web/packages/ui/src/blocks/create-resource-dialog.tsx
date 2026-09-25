@@ -35,7 +35,7 @@ export interface CreateResourceDialogProps<TInput, TResult> {
 
 /**
  * The shared "New …" modal behind a topic level's `+` create affordance (the HTD
- * recipe's `must-create-in-modal`): the resource form (no top button bar) with
+ * recipe's `create-in-modal`): the resource form (no top button bar) with
  * Cancel / Save at the lower right, plus a close (×) button that mirrors Cancel.
  * The dialog only dismisses through Save, Cancel, or × — clicking the backdrop
  * is inert and Esc routes through the same guarded close — so a stray click

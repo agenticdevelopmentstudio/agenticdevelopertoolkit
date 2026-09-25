@@ -3,11 +3,11 @@ id: 60a907a2-2cc8-4c0c-bb54-3b0516d280b6
 title: Facet Menu
 domain: agenticdevelopertoolkit://recipes/facet-menu
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -51,7 +51,7 @@ A facet menu is a multi-select filter control presented as a button with a popov
 - **handle-overflow**: The component MUST allow the option list to scroll vertically when the number of options exceeds available space (max-height 16rem, vertical scrolling enabled).
 - **preserve-selection-state**: The component MUST NOT alter the selection when the popover is opened or closed.
 - **empty-selection-semantics**: The component MUST NOT assign any filtering meaning to the selection itself — it only tracks which values are checked. Whether an empty selection means "no filter is applied" is the host application's decision, not the component's.
-- **stale-selection-values**: If `selected` contains a value not present in `options`, that value remains selected and continues to count toward the trigger's badge, but is not rendered as a checkbox. Clicking "All" MUST replace the selection with exactly the current `options` (dropping the stale value); clicking "None" MUST replace the selection with an empty set (also dropping the stale value). Because the component is fully controlled, the host MAY clear a stale value directly by calling `onChange` itself, even while the trigger is disabled for having zero options.
+- **stale-selection-values**: If `selected` contains a value not present in `options`, that value remains selected and continues to count toward the trigger's badge, but is not rendered as a checkbox. When "All" is enabled (see **disable-all-button** — some current option is not yet selected), clicking it MUST replace the selection with exactly the current `options` (dropping the stale value); clicking "None" MUST always replace the selection with an empty set (also dropping the stale value), since **disable-none-button** only disables "None" when the selection — stale values included — is already empty. If every current option is already selected alongside a stale value, **disable-all-button** disables "All", so "All" cannot drop the stale value in that state; only "None", or the host clearing it directly, can. Because the component is fully controlled, the host MAY clear a stale value directly by calling `onChange` itself, even while the trigger is disabled for having zero options.
 
 ## Appearance
 
@@ -138,14 +138,14 @@ A facet menu is a multi-select filter control presented as a button with a popov
 | facet-020 | toggle-on-checkbox-click | options: ["A"], selected: empty, checkbox "A" focused via keyboard, press Space | onChange called with {"A"} |
 | facet-021 | preserve-selection-state | options: ["A", "B"], selected: {"A"}, popover open, press Escape | Popover closes; selection remains {"A"} |
 | facet-022 | stale-selection-values | options: ["B"], selected: {"A", "B"} (A stale), popover opened | Only checkbox "B" is rendered; trigger displays "Label (2)" |
-| facet-023 | stale-selection-values | options: ["B"], selected: {"A", "B"}, click "All" | onChange called with {"B"} (stale "A" dropped) |
+| facet-023 | stale-selection-values, disable-all-button | options: ["B", "C"], selected: {"A", "B"} ("A" stale, "C" unselected), click "All" | "All" is enabled (not every current option is selected); onChange called with {"B", "C"} (stale "A" dropped) |
 | facet-024 | stale-selection-values | options: ["B"], selected: {"A", "B"}, click "None" | onChange called with an empty Set (stale "A" dropped) |
 | facet-025 | synchronous-selection-update | options: ["A", "B"], selected: {"A"}, checkbox "B" clicked twice in immediate succession with no intervening prop update | onChange is invoked twice, each call computed from selected={"A"} (both calls yield {"A", "B"}); the component does not accumulate a running selection internally |
 
 ## Edge Cases
 
 - **Empty options array**: When `options.length === 0`, the trigger MUST be disabled and the popover MUST NOT open. The selection is unchanged (even if it was previously populated).
-- **Selected items not in options**: If the `selected` set contains a value not present in the current `options` array, that value MUST remain in the selection and continue to count toward the trigger's badge, but MUST NOT be rendered as a checkbox in the popover. (This can occur if options are dynamically filtered and a selected value is removed from the list.) See **stale-selection-values** for how "All" and "None" resolve this: both replace the selection outright, so a stale value is dropped by either action. Because the component is controlled, a host can also clear a stale value directly through `onChange` without going through the UI — which matters because the trigger (and therefore the popover) is disabled whenever `options` is empty.
+- **Selected items not in options**: If the `selected` set contains a value not present in the current `options` array, that value MUST remain in the selection and continue to count toward the trigger's badge, but MUST NOT be rendered as a checkbox in the popover. (This can occur if options are dynamically filtered and a selected value is removed from the list.) See **stale-selection-values** for how "All" and "None" resolve this: "None" always replaces the selection outright, dropping the stale value; "All" does the same, but only while it is enabled — if every current option is already selected alongside the stale value, **disable-all-button** disables "All", and only "None" (or a host-driven `onChange`) can drop the stale value. Because the component is controlled, a host can also clear a stale value directly through `onChange` without going through the UI — which matters because the trigger (and therefore the popover) is disabled whenever `options` is empty.
 - **All selected after filtering**: If options are filtered and all remaining options become selected, the "All" button MUST be disabled.
 - **Rapid onChange calls**: Multiple rapid checkbox clicks MUST result in multiple separate `onChange` calls; no debouncing or coalescing is performed by the component. See **synchronous-selection-update**: each call is computed from whatever `selected` prop the component currently has, so clicks made before the host re-renders with the previous call's result will each compute from the same starting selection rather than building on each other.
 - **LabelOf function returns empty string**: If `labelOf(option)` returns an empty string, the checkbox is rendered with no visible label text (the label container is still present for accessibility but empty).
@@ -253,12 +253,15 @@ Not applicable: FacetMenu is a UI component and does not perform logging. Errors
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The trigger, checkboxes, and quick-select buttons are built on ARIA-pattern primitives (base-ui `Popover`, `Checkbox`) that supply keyboard support, so `keyboard-navigable` passes; contrast, touch-target sizing on non-web platforms, `aria-expanded`/`aria-haspopup` exposure, and dynamic type scaling are inherited from those shared components and platform theming rather than demonstrated in this source, so they read as `partial`; the "All"/"None" strings are already keyed (`facet.all`, `facet.none`) while the trigger's "(N)" count is a fixed, non-plural-aware template baked into the component (`facet.trigger_count`), so `string-externalization`/`no-hardcoded-strings` are `partial` and `locale-aware-formatting` `failed`.
+The trigger, checkboxes, and quick-select buttons are built on ARIA-pattern primitives (base-ui `Popover`, `Checkbox`) that supply keyboard support, so `keyboard-navigable` passes; contrast, touch-target sizing on non-web platforms, `aria-expanded`/`aria-haspopup` exposure, and dynamic type scaling are inherited from those shared components and platform theming rather than demonstrated in this source, so they read as `partial`; the "All"/"None" strings are already keyed (`facet.all`, `facet.none`) while the trigger's "(N)" count is a fixed, non-plural-aware template baked into the component (`facet.trigger_count`), so `string-externalization`/`no-hardcoded-strings` are `partial` and `locale-aware-formatting` `failed`. `separation-of-concerns` passes because `facet-menu.tsx` delegates all keyboard/focus/dismissal behavior to base-ui's `Popover`/`Checkbox` primitives and owns only the selection-set logic (All/None, disabled state) a filter widget needs. `unit-test-coverage` passes: `facetMenu.test.tsx` renders `FacetMenu` directly and exercises ticking, All/None, and the disabled-trigger state.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | All-button disables when every option selected; stale-selection, facet-023, edge case fixed. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; rewrote Overview, Popover Accessibility, and Platform Notes to describe a non-dismissing popover instead of a native menu; added trigger-expanded-state, empty-selection-semantics, stale-selection-values, and synchronous-selection-update requirements grounded in the source's controlled-Set behavior; filled Configuration with the prop types; reformatted Design Decisions into Decision/Rationale/Approved form and added two new decisions; replaced the "Not applicable" Compliance section with a check table and supporting sentence; fixed the Tailwind-class and self-contradictory padding value in Appearance; added a localization key and casing-transform note for the trigger count; added conformance vectors for All/None payloads, unchecking, the disabled-menu case, keyboard toggling, Escape, and stale selections; replaced facet-003's nondeterministic assertion with a `disabled`-attribute check |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

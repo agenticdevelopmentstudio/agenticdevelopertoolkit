@@ -3,11 +3,11 @@ id: abd8ebe3-468d-4dda-8da2-cb00a97ae84c
 title: Markdown Result Row
 domain: agenticdevelopertoolkit://recipes/markdown-result-row
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -248,12 +248,15 @@ Not applicable: Component does not emit log messages. Logging of search result i
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on the source: roving tabindex is fully implemented and exercised by test vectors (keyboard-navigable: passed); the button's accessible name is verbose because an `<h3>`, badge, and tags sit inside it, the 24px touch-target overlay is smaller than platform touch minimums (44×44pt/48×48dp), the focus ring's opacity-based color hasn't been verified against a 3:1 non-text contrast requirement, and Tailwind's rem-based text sizing only partially matches OS-level Dynamic Type behavior (all: partial); `formatDate` hardcodes the `'en-US'` locale and the labels ("Untitled", "by", "Updated", "View paper") are hardcoded English strings rather than externalized resources (both: failed).
+Statuses rest on the source: roving tabindex is fully implemented and exercised by test vectors (keyboard-navigable: passed); the button's accessible name is verbose because an `<h3>`, badge, and tags sit inside it, the 24px touch-target overlay is smaller than platform touch minimums (44×44pt/48×48dp), the focus ring's opacity-based color hasn't been verified against a 3:1 non-text contrast requirement, and Tailwind's rem-based text sizing only partially matches OS-level Dynamic Type behavior (all: partial); `formatDate` hardcodes the `'en-US'` locale and the labels ("Untitled", "by", "Updated", "View paper") are hardcoded English strings rather than externalized resources (both: failed); date formatting, highlighting, and per-kind rendering live in separate `lib`/`registry` modules rather than inline in the component (separation-of-concerns: passed), while no test file exercises `MarkdownResultRow` itself (unit-test-coverage: failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and split snippet highlighting into its own requirement; tightened tag/author/date/touch-target/corner-radius wording to observable, testable outcomes; replaced Compliance with a real check table; reformatted Design Decisions and added one for the aria-pressed choice; corrected accessibility-role, WCAG-reference, and platform-notes inaccuracies; resolved the title/snippet overflow and roving-tabindex edge-case contradictions; fixed Localization keys; documented component inputs; linked the Badge recipe. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

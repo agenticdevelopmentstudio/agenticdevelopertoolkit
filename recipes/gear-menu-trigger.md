@@ -3,11 +3,11 @@ id: cebee4d7-3d01-440d-a35e-6220957c1603
 title: Gear Menu Trigger
 domain: agenticdevelopertoolkit://recipes/gear-menu-trigger
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -174,12 +174,15 @@ Not applicable. The component has no logging requirements.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`screen-reader-support`, `keyboard-navigable`, and `semantic-markup` pass on the `aria-label`, `aria-hidden`, and native `DropdownMenuTrigger` semantics visible in the source. `contrast-ratio` is partial because the dimmed foreground and `gold/40` focus ring resolve through theme tokens whose values the source does not fix. `touch-target-size` is partial because the 24×24 CSS-pixel trigger meets the web source's minimum, but iOS and Compose ports need the platform-minimum hit area called out in Platform Notes.
+`screen-reader-support`, `keyboard-navigable`, and `semantic-markup` pass on the `aria-label`, `aria-hidden`, and native `DropdownMenuTrigger` semantics visible in the source. `contrast-ratio` is partial because the dimmed foreground and `gold/40` focus ring resolve through theme tokens whose values the source does not fix. `touch-target-size` is partial because the 24×24 CSS-pixel trigger meets the web source's minimum, but iOS and Compose ports need the platform-minimum hit area called out in Platform Notes. `separation-of-concerns` is `passed` because the component is pure presentation over `DropdownMenuTrigger` with no business logic; `unit-test-coverage` is `failed` because no test exercises `gear-menu-trigger.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, merged outline-none into a focus-indicator requirement and added a hover-color requirement, rephrased the trigger requirement as host-composed within a DropdownMenu, reformatted Design Decisions into Decision/Rationale/Approved blocks, replaced the "Not applicable" Compliance section with an accessibility checks table, added dropdown-menu to depends-on, corrected Platform Notes APIs, and noted the native-disabled tab-order tradeoff |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

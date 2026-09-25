@@ -3,11 +3,11 @@ id: e6c9f895-888f-4984-8fe1-ba86cc855613
 title: Rich Content
 domain: agenticdevelopertoolkit://recipes/rich-content
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,8 +41,8 @@ The Rich Content component renders a sequence of content items — hyperlinks an
 ## Behavioral Requirements
 
 - **render-items-in-order**: The component MUST render content items in the order they appear in the input array.
-- **link-protocol-allowlist**: The component MUST accept only hyperlinks whose resolved protocol is `http:`, `https:`, `mailto:`, or `tel:`. The scheme is parsed case-insensitively and normalized to lowercase before the check (`JaVaScRiPt:` becomes `javascript:`), and leading whitespace/control characters are stripped during parsing, per the URL standard. Links with any other protocol (including `javascript:`, `data:`, `vbscript:`) MUST render as inert text, not as clickable links. A scheme-less URL (e.g., `/page`) resolves against the current page's own origin and is therefore treated as `https:` and accepted — see **Relative URLs** in Edge Cases. This is the single URL-safety contract for the component; every other section that talks about validating a link URL refers back to this one allowlist rather than defining its own rule.
-- **malformed-url-handling**: The component MUST treat malformed or unparseable URLs as unsafe and render them as inert text, not as clickable links.
+- **link-protocol-allowlist**: The component MUST accept only hyperlinks whose resolved protocol is `http:`, `https:`, `mailto:`, or `tel:`. The scheme is parsed case-insensitively and normalized to lowercase before the check (`JaVaScRiPt:` becomes `javascript:`), and leading whitespace/control characters are stripped during parsing, per the URL standard. Links with any other protocol (including `javascript:`, `data:`, `vbscript:`) MUST render as inert text, not as clickable links. The protocol is determined by resolving the URL against a fixed internal base (`https://x.invalid`), not against the page's own origin, so a scheme-less URL (e.g., `/page`) is always resolved as `https:` and accepted regardless of the current page's actual scheme — see **Relative URLs** in Edge Cases. This is the single URL-safety contract for the component; every other section that talks about validating a link URL refers back to this one allowlist rather than defining its own rule.
+- **malformed-url-handling**: The component MUST treat a URL as unsafe and render it as inert text when resolving it against the fixed internal base throws — that is, when the URL is unparseable even as a relative path (for example `http://[bad`). A URL string that merely contains an illegal scheme character (for example `ht!tp://invalid`) does not throw: the parser instead restarts in relative mode and resolves it as a path against the base, so it is NOT caught by this check and passes the protocol allowlist as `https:` — see **Malformed-but-parseable URL passes through** in Edge Cases.
 - **safe-link-text**: The component MUST display either the link's label or, if no label is provided, the URL itself as the visible text. Links MUST NOT render blank.
 - **open-links-in-new-context**: The component MUST open all hyperlinks in a new tab or window (platform-appropriate) with cross-origin isolation (`noopener noreferrer` on web). On native platforms, "new context" means the system browser or the OS's registered handler for the URL's scheme — never in-app or inline navigation.
 - **hide-until-loaded**: The component MUST NOT display an image until it has successfully loaded. Images MUST remain hidden until the image load event fires or an error occurs. This hides the visual result of loading, not the network request itself — the image is still fetched immediately regardless of visibility, so hiding it provides no protection against a malicious or oversized response.
@@ -88,7 +88,7 @@ The Rich Content component renders a sequence of content items — hyperlinks an
 | rich-content-003 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: 'data:text/html,<script>alert(1)</script>'}] | No href is set; link renders as inert text "Click" |
 | rich-content-004 | link-protocol-allowlist | items = [{type: 'link', label: 'Email', url: 'mailto:user@example.com'}] | Link has href="mailto:user@example.com"; user can click to open mail client |
 | rich-content-005 | link-protocol-allowlist | items = [{type: 'link', label: 'Phone', url: 'tel:+1-555-1234'}] | Link has href="tel:+1-555-1234"; user can click to initiate call |
-| rich-content-006 | malformed-url-handling | items = [{type: 'link', label: 'Bad', url: 'ht!tp://invalid'}] | No href is set; link renders as inert text "Bad" |
+| rich-content-006 | malformed-url-handling | items = [{type: 'link', label: 'Bad', url: 'http://[bad'}] | Resolving the URL throws; no href is set; link renders as inert text "Bad" |
 | rich-content-007 | safe-link-text | items = [{type: 'link', label: 'Visit Site', url: 'https://example.com'}] | Link text displays as "Visit Site" |
 | rich-content-008 | safe-link-text | items = [{type: 'link', url: 'https://example.com'}] | Link text displays as "https://example.com" |
 | rich-content-009 | open-links-in-new-context | items = [{type: 'link', label: 'Link', url: 'https://example.com'}] | Link has target="_blank" with rel="noopener noreferrer" (web); native platforms open in the system browser/handler, never in-app |
@@ -98,17 +98,19 @@ The Rich Content component renders a sequence of content items — hyperlinks an
 | rich-content-013 | image-alt-text | items = [{type: 'image', src: 'https://example.com/photo.png', alt: 'Portrait'}] | Image has alt="Portrait" |
 | rich-content-014 | image-alt-text | items = [{type: 'image', src: 'https://example.com/photo.png'}] | Image has alt="" (empty string, decorative) |
 | rich-content-015 | unknown-item-skip | items = [{type: 'link', label: 'Link', url: 'https://example.com'}, {type: 'unknown'}, {type: 'link', label: 'Link2', url: 'https://example.com'}] | Two links render; unknown item is skipped silently |
-| rich-content-016 | link-protocol-allowlist | items = [{type: 'link', label: 'Rel', url: '/page'}] | URL has no scheme, so it resolves against the page's own origin as `https:`; href is set to "/page" and the link is clickable |
+| rich-content-016 | link-protocol-allowlist | items = [{type: 'link', label: 'Rel', url: '/page'}] | URL has no scheme, so resolving it against the internal base yields `https:` regardless of the page's own scheme; href is set to "/page" and the link is clickable |
 | rich-content-017 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: 'vbscript:msgbox(1)'}] | No href is set; link renders as inert text "Click" |
 | rich-content-018 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: 'JaVaScRiPt:alert(1)'}] | Scheme normalizes to lowercase `javascript:` before the allowlist check; no href is set; link renders as inert text "Click" |
 | rich-content-019 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: '  javascript:alert(1)'}] | Leading whitespace is stripped during URL parsing; scheme resolves to `javascript:`; no href is set; link renders as inert text "Click" |
 | rich-content-020 | render-items-in-order | items = [] | Container renders with no child elements; no error or console warning |
 | rich-content-021 | image-error-handling | items = [{type: 'image', src: 'https://example.com/image.png'}]; the load event then the error event fire in quick succession | Reveal happens once and stays revealed; no duplicate render, no thrown error |
+| rich-content-022 | link-protocol-allowlist | items = [{type: 'link', label: 'Bad', url: 'ht!tp://invalid'}] | The `!` is not a legal scheme character, so resolving against the internal base restarts in relative mode and yields protocol `https:`; href is set to "ht!tp://invalid" and the link is clickable (see **Malformed-but-parseable URL passes through** in Edge Cases) |
 
 ## Edge Cases
 
 - **Empty items array**: If the component receives an empty array, it MUST render nothing and not produce an error or console warning (rich-content-020).
-- **Relative URLs**: URLs without an explicit scheme (e.g., `/page`, `../sibling`) resolve against the component's own page origin, the same as any relative link on that page, and are therefore treated as `https:` and accepted (see **link-protocol-allowlist**, rich-content-016). This is a deliberate consequence of resolving the URL against a same-origin base before checking its protocol, not an oversight.
+- **Relative URLs**: URLs without an explicit scheme (e.g., `/page`, `../sibling`) resolve against a fixed internal base (`https://x.invalid`), not the component's actual page origin, and are therefore always treated as `https:` and accepted (see **link-protocol-allowlist**, rich-content-016). This is a deliberate consequence of resolving the URL against a fixed base before checking its protocol, not an oversight.
+- **Malformed-but-parseable URL passes through**: A URL string that looks malformed can still pass **link-protocol-allowlist** if the WHATWG URL parser can resolve it as a relative path against the internal base rather than throwing. For example `ht!tp://invalid` contains `!`, which is not a legal scheme character, so the parser restarts in relative mode instead of throwing; it resolves to protocol `https:` against the base and is accepted unchanged as the href (rich-content-022) — a live link the browser then resolves against the current page when clicked. Only a URL that fails to resolve at all (see **malformed-url-handling**, rich-content-006) is treated as unsafe; this is a source quirk, not a MUST, and is not caught by the malformed-URL check.
 - **Null or missing fields**: If a link item has no `url` field or a null URL, the component MUST treat it as unsafe and render the label (or empty text) as inert. If an image item has no `src` field, the `<img>` element is still rendered (with no `src` attribute set); the browser fails to load it, which the component handles the same as any other load failure (see **image-error-handling**).
 - **Very long URLs**: Long URLs displayed as link text MUST not cause layout breaking; the component SHOULD allow normal text wrapping and overflow behavior.
 - **Concurrent load/error events**: If an image fires both a load and an error event in quick succession (e.g., due to network retry), the component MUST handle this gracefully without double-rendering or throwing (rich-content-021).
@@ -117,12 +119,6 @@ The Rich Content component renders a sequence of content items — hyperlinks an
 ## Configuration
 
 Not applicable: This component has no configurable options. It is a stateless presentational component that renders an immutable array of content items.
-
-## Data Model
-
-- **ContentItem**: `LinkContent | ImageContent` — the discriminated union that `items` is built from; `type` is the discriminator.
-- **LinkContent**: `{ type: 'link'; url: string; label?: string }`. `url` is required; `label` is optional and falls back to `url` as the visible text (per **safe-link-text**).
-- **ImageContent**: `{ type: 'image'; src: string; alt?: string }`. `src` is required; `alt` is optional and falls back to an empty string (per **image-alt-text**).
 
 ## Deep Linking
 
@@ -156,7 +152,7 @@ Not applicable: This component does not emit log messages. Errors in URL parsing
 
 ## Platform Notes
 
-- **Web (React)**: Render as a `<div>` container with `<a>` elements for links and `<img>` elements for images. Use the `safeHref()` function — a case-insensitive scheme check against the `http:`/`https:`/`mailto:`/`tel:` allowlist, resolved against the page's own origin so scheme-less URLs are accepted — to validate link protocols before setting the `href` attribute. Gate images with `display: none` until the `onLoad` event fires, then remove the style to reveal; handle `onError` the same way (fail-open). Use `target="_blank" rel="noopener noreferrer"` on all links to prevent window-opener attacks.
+- **Web (React)**: Render as a `<div>` container with `<a>` elements for links and `<img>` elements for images. Use the `safeHref()` function — a case-insensitive scheme check against the `http:`/`https:`/`mailto:`/`tel:` allowlist, resolved against a fixed internal base (`https://x.invalid`) so scheme-less URLs are accepted regardless of the page's actual origin — to validate link protocols before setting the `href` attribute. Gate images with `display: none` until the `onLoad` event fires, then remove the style to reveal; handle `onError` the same way (fail-open). Use `target="_blank" rel="noopener noreferrer"` on all links to prevent window-opener attacks.
 - **SwiftUI**: Use `Link(destination:)` (or `openURL` from the environment) for every link, including `mailto:` and `tel:`, after validating the URL's scheme against the same allowlist; `Link` opens the system browser or handler, which satisfies **open-links-in-new-context** on this platform. `NavigationLink` is for in-app navigation and MUST NOT be used for these external destinations. Render images with `AsyncImage`; use its phase-based API to hide the view until `.success`, then display the image, and reveal the same way on `.failure` (fail-open, per **image-error-handling**).
 - **Compose**: Use `Text` composables wrapped in a `clickable()` modifier for link labels; validate the URL's scheme before constructing the `Intent`/system action. Use `Intent.ACTION_SENDTO` for `mailto:` and `Intent.ACTION_DIAL` for `tel:`. Render images with Coil's or Glide's `AsyncImage`, driving visibility from the loading state with `Modifier.alpha(0f)` (which keeps the layout slot reserved) rather than `Modifier.size(0)` (which collapses it and reintroduces the layout shift **hide-until-loaded** exists to avoid); set alpha back to `1f` on both success and error (fail-open).
 - **AppKit / UIKit**: On macOS, render a link as an attributed string carrying a link attribute inside an `NSTextView`, or as a borderless, link-styled `NSButton` — not an `NSTextField` nested inside an `NSButton`, which is not a supported view hierarchy. On iOS, use a `UILabel` with an attributed string plus a tap gesture, or a borderless `UIButton` with an attributed title. Validate the URL's scheme before opening it via `NSWorkspace.shared.open(_:)` (macOS) or `UIApplication.shared.open(_:)` (iOS); `mailto:`/`tel:` URLs are constructed and opened the same way once validated. Render images with `NSImageView`/`UIImageView`: start with the image unset/hidden, load via `URLSession` (or an image-loading library), and reveal the view the same way on success or failure (fail-open).
@@ -197,8 +193,16 @@ Not applicable: This component does not emit log messages. Errors in URL parsing
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [third-party-disclosure](agenticdevelopercookbook://compliance/privacy-and-data#third-party-disclosure) | partial | Privacy & Data |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The Security and Accessibility statuses rest on `safeHref()`'s protocol allowlist and the native `<a>`/`<img>` elements shown in `RichContent.tsx`, which need no extra ARIA or keyboard wiring. The Privacy & Data status is partial because loading an image from an arbitrary `src` is standard, undisclosed browser behavior the component does not gate (see **Image-fetch exposure** under Privacy).
+The Security and Accessibility statuses rest on `safeHref()`'s protocol allowlist and the native `<a>`/`<img>` elements shown in `RichContent.tsx`, which need no extra ARIA or keyboard wiring. The Privacy & Data status is partial because loading an image from an arbitrary `src` is standard, undisclosed browser behavior the component does not gate (see **Image-fetch exposure** under Privacy). The security-critical `safeHref()` scheme allowlist is a standalone, independently testable function rather than logic tangled into the JSX (separation-of-concerns passed); `RichContent.test.tsx` directly exercises both the image-gating behavior and the `safeHref` protocol allowlist, including the `javascript:` rejection (unit-test-coverage passed).
+
+## Data Model
+
+- **ContentItem**: `LinkContent | ImageContent` — the discriminated union that `items` is built from; `type` is the discriminator.
+- **LinkContent**: `{ type: 'link'; url: string; label?: string }`. `url` is required; `label` is optional and falls back to `url` as the visible text (per **safe-link-text**).
+- **ImageContent**: `{ type: 'image'; src: string; alt?: string }`. `src` is required; `alt` is optional and falls back to an empty string (per **image-alt-text**).
 
 ## Change History
 
@@ -206,3 +210,4 @@ The Security and Accessibility statuses rest on `safeHref()`'s protocol allowlis
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added a Data Model section; corrected the prompt-injection and lazy-load overview claims; resolved the image-error layout-shift contradiction and standardized on `display: none`; fixed the relative-URL and alt-text-trust edge cases and the unlabeled-unsafe-link accessibility claim; rescoped the touch-target and focus-indicator accessibility bullets; corrected the SwiftUI, AppKit/UIKit, Compose, and WinUI 3 platform notes; reformatted Design Decisions into the Decision/Rationale/Approved form; replaced the Compliance table with real catalog checks; added test vectors for relative, vbscript, mixed-case, and whitespace-prefixed URLs, an empty array, and concurrent load/error events; added external references and a related cross-reference to message-bubble |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed TV-006/malformed-url-handling to match safeHref(); moved Data Model after Compliance. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

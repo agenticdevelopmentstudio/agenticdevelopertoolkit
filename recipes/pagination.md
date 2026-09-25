@@ -3,11 +3,11 @@ id: ca0fb28f-7f22-4fde-a291-ecfde846f5c3
 title: Pagination
 domain: agenticdevelopertoolkit://recipes/pagination
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -240,6 +240,8 @@ No logging. `Pagination` is a presentational control; paging semantics and any e
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 Statuses rest on: the source's native `nav`/`button` elements and visible-text button
 labels (`screen-reader-support`, `keyboard-navigable`, `semantic-markup`); its
@@ -252,12 +254,18 @@ tokens, unverifiable from this source alone); the CSS flex-row layout's un-audit
 behavior under `dir="rtl"` for `rtl-layout-support`; and the hard-coded `"Prev"`,
 `"Next"`, and `"Page {page} of {totalPages}"` strings, interpolated with no
 `Intl`/formatter call, for `string-externalization`, `no-hardcoded-strings`, and
-`locale-aware-formatting`.
+`locale-aware-formatting`. `separation-of-concerns` passes because `Pagination`
+does one thing — render Prev/label/Next for a controlled `page`/`totalPages` —
+composing the shared `Button` rather than duplicating its styling.
+`unit-test-coverage` passes because `stat.test.tsx`'s `Pagination` suite covers
+rendering nothing for a single page, disabling Prev/Next at the boundaries, and
+paging both directions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 row (recipe); added best-practices Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct the Localization and caption-announcement claims to match the source; reformat Design Decisions and the Compliance table (add Internationalization and Platform Compliance checks); make platform-native controls the default in Platform Notes and align accessible names/collapse behavior across platforms; fix incorrect platform APIs; add edge case and T9–T12 test vectors for invalid/out-of-range input; shorten summary and generalize the Overview's app reference. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add all required template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); expand Platform Notes to provide translation guidance for all five platforms (SwiftUI, Compose, React/Web, AppKit/UIKit, WinUI 3); update to review status. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the controlled Prev/Next Pagination pager on shared Button. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the controlled Prev/Next Pagination pager on shared Button. |

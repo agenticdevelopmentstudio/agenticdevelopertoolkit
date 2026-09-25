@@ -3,11 +3,11 @@ id: a05c5131-d626-4e2a-9832-9ba517535971
 title: Settings Button
 domain: agenticdevelopertoolkit://recipes/settings-button
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -88,7 +88,7 @@ The Settings Button is a React button component in the `user-settings` control f
 | settings-button-009 | accept-html-attributes | onClick handler, disabled={true} | onClick handler is attached and disabled attribute is applied |
 | settings-button-010 | accept-html-attributes | aria-label="Settings" | aria-label attribute is applied to button element |
 | settings-button-011 | merge-classname | No className, variant="primary" | Rendered button has classes `aws-button aws-button--primary` (no extra spaces) |
-| settings-button-012 | closed-variant-set | `variant={'invalid' as SettingsButtonVariant}` (type-level) | TypeScript compilation fails; `'invalid'` is not assignable to `SettingsButtonVariant` |
+| settings-button-012 | closed-variant-set | `variant="invalid"` (type-level, uncast) | TypeScript compilation fails; `'invalid'` is not assignable to type `SettingsButtonVariant \| undefined` (a cast — `variant={'invalid' as SettingsButtonVariant}` — compiles instead, since the literal widens to `string` before the assertion and an assertion only requires comparability, so a cast must not be used as this negative check) |
 | settings-button-013 | default-type | type="submit" | Rendered button has `type="submit"` (default overridden) |
 | settings-button-014 | merge-classname | className="", variant="primary" | Rendered button has classes `aws-button aws-button--primary` (empty string filtered out, no extra spaces) |
 
@@ -169,12 +169,15 @@ Not applicable: the component does not produce diagnostic logs.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The native `<button>` element with full ARIA/rest-prop passthrough satisfies screen-reader-support, keyboard-navigable, and semantic-markup; touch-target-size and contrast-ratio are partial because sizing and color are delegated entirely to the `aws-button`/`aws-button--{variant}` CSS classes, which are outside this source file.
+The native `<button>` element with full ARIA/rest-prop passthrough satisfies screen-reader-support, keyboard-navigable, and semantic-markup; touch-target-size and contrast-ratio are partial because sizing and color are delegated entirely to the `aws-button`/`aws-button--{variant}` CSS classes, which are outside this source file. `separation-of-concerns` passes because `SettingsButton.tsx` is pure presentation over props with no business logic, and `unit-test-coverage` passes because `components.test.tsx` renders it directly and asserts on its variant class.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed settings-button-012 to use the uncast variant="invalid" form; the cast form compiles and was a false negative-check example. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added closed-variant-set as a requirement (variant is already a closed union in source), moved must-omit-children-prop into Design Decisions as a type-level concern, reformatted Design Decisions into Decision/Rationale/Approved entries, replaced the Compliance section with an Accessibility checks table, fixed Platform Notes API accuracy for AppKit/UIKit and WinUI 3, defined the aws- CSS namespace in Overview, added test vectors for type override and empty-string className, dropped the variant-case-sensitivity edge case, rewrote the summary for the user-settings context, and unquoted the created/modified dates |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

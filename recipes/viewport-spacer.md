@@ -3,11 +3,11 @@ id: 556f7dbf-2a14-4e97-aaa2-0954c7488e6f
 title: ViewportSpacer
 domain: agenticdevelopertoolkit://recipes/viewport-spacer
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -135,12 +135,15 @@ Not applicable: ViewportSpacer contains no logging or diagnostic output in the s
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-This rests on the source rendering a plain `div` with no role, label, or tabindex attributes — correct, minimal markup for a purely structural element.
+This rests on the source rendering a plain `div` with no role, label, or tabindex attributes — correct, minimal markup for a purely structural element. `separation-of-concerns` passes because the component is pure presentation over `children`/`className` with no business logic; `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: add fills-remaining-space, root-element and assistive-tech-invisible requirements grounded in the source CSS and markup; merge the duplicate custom-class requirements into class-composition and remap their vectors; move Edge Case MUST rules into named requirements; populate tags, depends-on and related; unquote the modified date; rewrite Design Decisions in Decision/Rationale/Approved form; replace fabricated Compliance checks with a real accessibility check; correct the SwiftUI, AppKit/UIKit and WinUI 3 platform notes; state real accessibility guidance in place of "Not applicable" |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |

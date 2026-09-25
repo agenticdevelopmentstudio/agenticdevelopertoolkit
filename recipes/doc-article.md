@@ -3,11 +3,11 @@ id: eb0b16a5-f27e-4b28-9517-12bedc892b7f
 title: Doc Article
 domain: agenticdevelopertoolkit://recipes/doc-article
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ DocArticle is a container component for rendering pre-rendered, trusted document
 - **class-name-override**: Component MUST accept a `className` prop and merge it with its own typography classes rather than replacing them.
 - **code-pseudo-content-removal**: Component MUST render code blocks without generated quote glyphs before or after their content.
 - **heading-scroll-offset**: Component MUST give headings a scroll margin so that jumping to an anchor does not hide the heading under fixed UI above the content.
-- **children-prop-ignored**: The `children` prop MUST NOT be part of the component's public API; HTML content MUST be supplied exclusively via the `html` prop.
+- **children-prop-ignored**: The `children` prop MUST NOT be part of the component's public API; HTML content MUST be supplied exclusively via the `html` prop. This is a compile-time exclusion only (`Omit<..., "children">` on the props type) — the destructured `...rest` still carries a forced-through `children` value at runtime, and spreading it onto the element alongside `dangerouslySetInnerHTML` throws (React allows only one of the two); `children` is not silently dropped.
 
 ## Appearance
 
@@ -85,12 +85,12 @@ DocArticle is a container component for rendering pre-rendered, trusted document
 | doc-article-008 | class-name-override | `className="custom-class"` with `html="<p>Test</p>"` | Component has both prose class and custom class applied |
 | doc-article-009 | heading-scroll-offset | `html="<h2>Section</h2>"` | Heading has a scroll margin applied |
 | doc-article-010 | code-pseudo-content-removal | `html="<code>const x = 1;</code>"` | Code block has no `::before` or `::after` pseudo-elements |
-| doc-article-011 | children-prop-ignored | `children="Ignored"` with `html="<p>From HTML</p>"` | The `children` prop is excluded from the type; only the HTML prop content is rendered |
+| doc-article-011 | children-prop-ignored | `children="Ignored"` with `html="<p>From HTML</p>"` | `children` is excluded from the props type at compile time, so this requires a type-system bypass to construct at all. Forced through at runtime, `children` lands in `...rest` and is spread onto the element alongside `dangerouslySetInnerHTML`; React throws "Can only set one of `children` or `props.dangerouslySetInnerHTML`." and nothing renders — the component does not silently ignore `children` |
 | doc-article-012 | html-prop | `html=""` | Component renders the element with no content and no error |
 | doc-article-013 | semantic-element-selection | `as="span"` (an unsupported value) | TypeScript rejects the value at compile time; if forced past the type system, the component renders using the given tag name |
 | doc-article-014 | unescaped-html-rendering | `html='<img src="x" onerror="handler()">'` | The `onerror` handler fires: inline event-handler attributes execute when the browser parses HTML inserted this way, unlike `<script>` content. Hosts MUST NOT pass untrusted HTML to this component without sanitizing it first |
 
-Vectors doc-article-009 and doc-article-010 assert computed style only in a test environment where the compiled Tailwind CSS is loaded; without that stylesheet, assert the presence of the prose typography classes on the element instead of the computed style. Vector doc-article-011 needs a `@ts-expect-error` (or equivalent) comment to pass a `children` prop past the type system, since `Omit` excludes it at compile time. Vector doc-article-013 likewise needs a type-system bypass (e.g., a cast) to pass an unsupported `as` value.
+Vectors doc-article-009 and doc-article-010 assert computed style only in a test environment where the compiled Tailwind CSS is loaded; without that stylesheet, assert the presence of the prose typography classes on the element instead of the computed style. Vector doc-article-011 needs a `@ts-expect-error` (or equivalent) comment to pass a `children` prop past the type system, since `Omit` excludes it at compile time; expect the render itself (`renderToString` or `createRoot().render`) to throw rather than to succeed with `children` dropped. Vector doc-article-013 likewise needs a type-system bypass (e.g., a cast) to pass an unsupported `as` value.
 
 ## Edge Cases
 
@@ -179,12 +179,15 @@ Not applicable: DocArticle does not produce debug or error logs.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | failed | Security |
 | [content-security-policy](agenticdevelopercookbook://compliance/security#content-security-policy) | partial | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`semantic-markup` passes because the `as` prop lets the host choose the correct landmark element for the rendered content. `dynamic-type-support` is partial because text sizing is inherited from the host's prose theme, which the source neither controls nor can vouch for. `input-sanitization` fails because the component explicitly performs no sanitization on the `html` prop by design (see **No direct support for HTML sanitization**). `content-security-policy` is partial because DocArticle renders raw HTML without enforcing a policy itself, leaving CSP enforcement to the host page.
+`semantic-markup` passes because the `as` prop lets the host choose the correct landmark element for the rendered content. `dynamic-type-support` is partial because text sizing is inherited from the host's prose theme, which the source neither controls nor can vouch for. `input-sanitization` fails because the component explicitly performs no sanitization on the `html` prop by design (see **No direct support for HTML sanitization**). `content-security-policy` is partial because DocArticle renders raw HTML without enforcing a policy itself, leaving CSP enforcement to the host page. `separation-of-concerns` passes because `DocArticle` only forwards the `html` and `as` props with no business logic; `unit-test-coverage` passes because `docArticle.test.tsx` imports `DocArticle` directly and exercises its behavior with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed children/dangerouslySetInnerHTML doc: Omit is compile-time only; forced-through children causes a React throw. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; restated requirements as platform-neutral behavior and moved the Tailwind class string to Platform Notes; corrected inline-event-handler security guidance, the summary/overview wording, and the code-pseudo-content rationale; fixed the SwiftUI and WinUI 3 platform notes; added a compliance table, new test vectors, and assertion guidance for existing vectors; reformatted Design Decisions to the Decision/Rationale/Approved form; reworded accessibility bullets that are really host obligations |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

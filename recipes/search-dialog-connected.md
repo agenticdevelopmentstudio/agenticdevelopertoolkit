@@ -3,11 +3,11 @@ id: e626a6fc-0d60-4ba5-a42a-d1849d7e1506
 title: Search Dialog Connected
 domain: agenticdevelopertoolkit://recipes/search-dialog-connected
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -130,8 +130,10 @@ Not applicable: The source code contains no logging or debug output.
 | Check | Status | Category |
 |-------|--------|----------|
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Keyboard handling, focus management, and ARIA structure live entirely in SearchDialog and useSearchState; this wrapper forwards `open`, `onClose`, and the rest of SearchDialogProps unmodified (see **forwarded-props**), so the source shows it does not break that behavior but, as a pass-through layer, cannot itself demonstrate full conformance.
+Keyboard handling, focus management, and ARIA structure live entirely in SearchDialog and useSearchState; this wrapper forwards `open`, `onClose`, and the rest of SearchDialogProps unmodified (see **forwarded-props**), so the source shows it does not break that behavior but, as a pass-through layer, cannot itself demonstrate full conformance. `separation-of-concerns` passes because this component only wires data hooks (`useContent`, `useSiteConfig`, `useCurrentRoute`, `useSearchState`) and delegates all rendering to `SearchDialog`, and `unit-test-coverage` passes because `SearchDialogConnected.test.tsx` renders it with real providers and asserts on the resulting navigate/close calls.
 
 ## Change History
 
@@ -139,3 +141,4 @@ Keyboard handling, focus management, and ARIA structure live entirely in SearchD
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; corrected Platform Notes native APIs and rewrote them as thin wrappers around a presentational SearchDialog per platform; fixed the searchIndex and entry.slug edge cases to match their type guarantees; added test vectors for renders-dialog and the empty-sections case; clarified States and the onClose requirement; split Design Decisions into Decision/Rationale/Approved entries; added a Compliance table; added a depends-on link to search-dialog.
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

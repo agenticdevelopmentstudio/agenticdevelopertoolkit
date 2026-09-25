@@ -3,11 +3,11 @@ id: 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
 title: Persona Chat
 domain: agenticdevelopertoolkit://recipes/persona-chat
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -166,8 +166,10 @@ Not applicable: The source code contains no logging; debugging and diagnostic ou
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-The `passed` status rests on the `switch` returning the selected child component (`InlineChat`, `ThreePaneChat`, or `MobileChat`) directly with no wrapper element, so whatever ARIA roles and semantic structure the chosen child renders pass through unchanged.
+The `passed` status rests on the `switch` returning the selected child component (`InlineChat`, `ThreePaneChat`, or `MobileChat`) directly with no wrapper element, so whatever ARIA roles and semantic structure the chosen child renders pass through unchanged; `PersonaChat.tsx` is a pure mode-keyed dispatch switch with no business logic (separation-of-concerns: passed), while `personaChatRecipe.test.ts`, `personaChatConformance.test.ts`, and `PersonaChatCoordinatorTests.swift` extensively exercise the underlying session/backend/coordinator behavior the recipe composes but no test renders `PersonaChat` itself to verify the mode-based dispatch (unit-test-coverage: partial).
 
 ## Change History
 
@@ -175,3 +177,4 @@ The `passed` status rests on the `switch` returning the selected child component
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; scope className/sizing/open/onClose forwarding rules to the modes that actually accept them and add the missing conformance vectors (mobile className, mobile sizing, non-mobile open/onClose, invalid mode); reword the invalid-mode edge case and Design Decision to state what the type system already enforces instead of an unverified "signals a configuration error" claim; replace the Compliance table's non-catalog rows with a real accessibility check; reformat Design Decisions into the three-line Decision/Rationale/Approved form; correct the SwiftUI, WinUI 3, and AppKit/UIKit platform notes; populate depends-on/related with the three composed layout recipes and the persona-chat coordinator ingredient; and align modified-date quoting with the other recipes |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |

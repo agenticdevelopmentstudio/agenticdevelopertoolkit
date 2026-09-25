@@ -3,11 +3,11 @@ id: 9e36a0ef-67ef-485d-8ace-68886add841c
 title: Unsaved Changes Alert
 domain: agenticdevelopertoolkit://recipes/unsaved-changes-alert
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -63,7 +63,7 @@ Not applicable: The component is a wrapper around AlertModal and does not define
 
 ## Accessibility
 
-- **role**: Role is `alertdialog` (inherited from AlertModal).
+- **role**: Role is `dialog` (inherited from AlertModal's underlying `Dialog` wrapper over base-ui's plain, non-alert `Dialog` primitive — not `alertdialog`; the package's own tests query this prompt by role `dialog`).
 - **label-requirement**: The modal's accessible name is its title, "Discard unsaved changes?".
 - **description-requirement**: The description prop provides the accessible description of what will be lost. Implementations MUST associate the description text with the modal using `aria-describedby` or equivalent, even when the description is the empty string (see render-description).
 - **keyboard-navigation**: Focus MUST be trapped inside the modal while it is open. Neither Enter nor Escape MUST invoke `onDiscard` (discard-requires-explicit-action); every dismissal path's outcome is defined in dismissal-outcomes.
@@ -198,12 +198,15 @@ Not applicable: The component does not perform logging; parent error handling or
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The accessibility statuses rest on the source's use of Base-UI's Title/Description/Popup primitives, native `<button>` elements, and the explicit initial-focus effect in `dialog-actions.tsx` (focus-management, screen-reader-support, semantic-markup, keyboard-navigable pass), weighed against the `sm` button size (`h-7`, 28px, in `button.tsx`) falling short of the 44×44/48×48 minimum (touch-target-size fails) and the theme-token-dependent colors this repo cannot resolve statically (contrast-ratio partial); the internationalization statuses rest on the literal inline strings in `unsaved-changes-alert.tsx` (`title="Discard unsaved changes?"`, `confirmLabel="Discard"`, `cancelLabel="Stay"`) with no localization-resource lookup.
+The accessibility statuses rest on the source's use of Base-UI's Title/Description/Popup primitives, native `<button>` elements, and the explicit initial-focus effect in `dialog-actions.tsx` (focus-management, screen-reader-support, semantic-markup, keyboard-navigable pass), weighed against the `sm` button size (`h-7`, 28px, in `button.tsx`) falling short of the 44×44/48×48 minimum (touch-target-size fails) and the theme-token-dependent colors this repo cannot resolve statically (contrast-ratio partial); the internationalization statuses rest on the literal inline strings in `unsaved-changes-alert.tsx` (`title="Discard unsaved changes?"`, `confirmLabel="Discard"`, `cancelLabel="Stay"`) with no localization-resource lookup. `separation-of-concerns` passes because the component is pure presentation delegating to `AlertModal` with no business logic, and `unit-test-coverage` passes on `unsavedChangesAlert.test.tsx`'s exercise of its buttons, callbacks, description override, focus, and Escape handling.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Accessibility role corrected from alertdialog to dialog, matching AlertModal's base-ui Dialog primitive and the package's own tests. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; restated discard-requires-explicit-action and dismissal-outcomes as observable behavior and moved AlertModal wiring into React/Web Platform Notes; added controlled-visibility requirement and a props Configuration table; reformatted Design Decisions to Decision/Rationale/Approved; added a Compliance table; corrected SwiftUI/Compose/WinUI 3 platform notes; expanded Edge Cases and Conformance Test Vectors; delegated Accessibility Options to AlertModal; cited specific touch-target guidance and added a web target; added depends-on and fixed frontmatter date formatting |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

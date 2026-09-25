@@ -3,11 +3,11 @@ id: fe09968a-6575-40d0-b0b8-af6ce52d8efd
 title: Service List
 domain: agenticdevelopertoolkit://recipes/service-list
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -200,8 +200,10 @@ Not applicable: Component contains no logging statements.
 | [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | partial | Internationalization |
 | [content-moderation](agenticdevelopercookbook://compliance/user-safety#content-moderation) | partial | User Safety |
 | [reporting-mechanism](agenticdevelopercookbook://compliance/user-safety#reporting-mechanism) | partial | User Safety |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on `ServiceList.tsx`: it renders only semantic HTML tags with no inline color or font-size overrides (semantic-markup passes; dynamic-type-support and contrast-ratio are partial because actual scaling and contrast depend on the CSS classes it references, not shown here); it hardcodes the "Services" heading and every pricing suffix as literal English strings and hardcodes the `en-US` locale inside `Intl.NumberFormat` (string-externalization fails; locale-aware-formatting is partial since it uses a locale-aware API but with a fixed locale); and it renders whatever `title`/`description` text it is given, submitted by registry members, with no moderation step or reporting affordance of its own (content-moderation and reporting-mechanism are partial, since either could be handled upstream of this component).
+Statuses rest on `ServiceList.tsx`: it renders only semantic HTML tags with no inline color or font-size overrides (semantic-markup passes; dynamic-type-support and contrast-ratio are partial because actual scaling and contrast depend on the CSS classes it references, not shown here); it hardcodes the "Services" heading and every pricing suffix as literal English strings and hardcodes the `en-US` locale inside `Intl.NumberFormat` (string-externalization fails; locale-aware-formatting is partial since it uses a locale-aware API but with a fixed locale); and it renders whatever `title`/`description` text it is given, submitted by registry members, with no moderation step or reporting affordance of its own (content-moderation and reporting-mechanism are partial, since either could be handled upstream of this component). `separation-of-concerns` passes because the `priceText` formatting logic is factored into its own pure function, separate from the rendering, and `unit-test-coverage` is partial because `ServiceList` has no test of its own — it is exercised only indirectly, through its parent `RegistryProfile`, in `RegistryProfile.test.tsx`'s empty-services and priced-service cases.
 
 ## Change History
 
@@ -209,3 +211,4 @@ Statuses rest on `ServiceList.tsx`: it renders only semantic HTML tags with no i
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from ServiceList.tsx source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added named pricing/unique-title requirements, replaced line-number citations with symbol references, reformatted Design Decisions, added a Compliance table, added coverage/locale test vectors, fixed the UIKit/WinUI native-controls notes, and added related links to the registry-profile family |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |

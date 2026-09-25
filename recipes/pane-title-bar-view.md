@@ -3,11 +3,11 @@ id: 9c5e7d75-e253-4dce-b12c-7eaede9ee405
 title: Pane Title Bar View
 domain: agenticdevelopertoolkit://recipes/pane-title-bar-view
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,9 +22,6 @@ tags:
 - title-bar
 depends-on:
 - agenticdevelopertoolkit://recipes/pane-control-cluster
-- agenticdevelopertoolkit://recipes/themed-background-view
-- agenticdevelopertoolkit://recipes/themed-separator-view
-- agenticdevelopertoolkit://recipes/themed-label
 related: []
 references: []
 approved-by: ''
@@ -194,12 +191,15 @@ Not applicable: No logging is defined in the source code.
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The accessibility statuses are partial because the source sets only an accessibility identifier (`pane.title`) and leaves label, dynamic type, and contrast behavior to AppKit defaults and the themed dependencies (`ThemedLabel`, `ThemedBackgroundView`) rather than defining them itself; the internationalization statuses are passed because the source has no hardcoded user-facing strings, displays title text through `NSTextField`'s native Unicode handling, and lays out using leading/trailing (not left/right) anchors that flip automatically for RTL.
+The accessibility statuses are partial because the source sets only an accessibility identifier (`pane.title`) and leaves label, dynamic type, and contrast behavior to AppKit defaults and the themed dependencies (`ThemedLabel`, `ThemedBackgroundView`) rather than defining them itself; the internationalization statuses are passed because the source has no hardcoded user-facing strings, displays title text through `NSTextField`'s native Unicode handling, and lays out using leading/trailing (not left/right) anchors that flip automatically for RTL; the file is pure layout/composition of `controls`, `titleLabel`, `accessoryViews`, and `gearView` with no business logic (separation-of-concerns: passed), and `PaneTitleBarViewTests.swift` exercises title truncation/round-trip, accessory replacement, and gear-slot swap (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Removed dangling depends-on entries (themed-background-view/separator-view/label) with no matching recipe. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added leading-controls-cluster and bottom-separator requirements with matching configuration and test-vector coverage; corrected the middle-truncation rationale and the width-below-minimum edge case; reformatted Design Decisions; replaced the Compliance prose with a check table; fixed the SwiftUI, Compose, and WinUI 3 platform notes and folded the AppKit source notes into the AppKit / UIKit bullet; corrected the accessibility label description; populated depends-on; replaced the macos tag |
 | 1.0.0 | 2026-09-22 | Claude | Initial creation from source code |

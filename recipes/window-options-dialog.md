@@ -3,11 +3,11 @@ id: 9c1e6915-44ec-435e-a159-57b80b455698
 title: Window Options Dialog
 domain: agenticdevelopertoolkit://recipes/window-options-dialog
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -75,7 +75,7 @@ The component comprises four related pieces: the dialog manager (`WindowOptionsD
 - **reset-button-centered**: The reset button MUST be centered horizontally under the rows, not stretched to the full dialog width.
 - **reset-button-rounded**: The reset button MUST use `bezelStyle = .rounded`.
 - **reset-button-calls-onreset**: When the reset button is clicked, it MUST call the host-supplied `onReset` closure.
-- **single-dialog-instance**: Calling `present()` (or `toggle()`) while the dialog is already open MUST be a no-op — no second dialog is created and the existing session is left undisturbed.
+- **single-dialog-instance**: Calling `present()` while the dialog is already open MUST be a no-op — no second dialog is created and the existing session is left undisturbed. `toggle()` does not share this behavior: while the dialog is open, `toggle()` MUST close it instead (see **support-toggle**).
 - **end-modal-session-on-close**: When `close()` is called while the dialog is open, the active modal session MUST end, but only when the dialog's own window is the one currently running the modal loop — an unrelated modal session MUST NOT be ended. Calling `close()` when the dialog is not open MUST be a no-op.
 
 ## Appearance
@@ -175,10 +175,10 @@ The component comprises four related pieces: the dialog manager (`WindowOptionsD
 | dialog-003 | host-level-sync | Host window at `.normal`, dialog open; change host to `.floating` | Dialog level changes to `.floating` while open |
 | dialog-004 | build-controls-at-open-time | Create dialog with `makeControls` closure that reads current time; open, note time; close; reopen | Reopened dialog shows current time, not cached time from construction |
 | dialog-005 | rebuild-on-title-change | Dialog open; change `title` property | Window title updates; `rebuildControls()` is called; controls are rebuilt from `makeControls()` |
-| dialog-006 | support-toggle | Dialog closed; call `toggle()` | Dialog opens; `isShown == true` |
+| dialog-006 | support-toggle | Dialog closed; call `beginDialog()` directly — `toggle()`'s open branch calls `present()`, which calls `beginDialog()` and then blocks in `NSApp.runModal` until the session ends, so a test cannot call `toggle()`/`present()` themselves and observe the open state afterward (see dialog-008, dialog-009) | Returns a non-nil window; `isShown == true` |
 | dialog-007 | support-toggle | Dialog open; call `toggle()` | Dialog closes; `isShown == false` |
 | dialog-008 | support-present-close | Dialog closed; call `beginDialog()` directly (not `present()`); assert the returned window and `isShown`; then call `endDialog(window)` directly (not `close()`) | `beginDialog()` returns a non-nil window and `isShown` becomes `true` without entering a modal run loop; `endDialog(window)` then sets `isShown` back to `false` and orders the window out — the same open/close transition `present()`/`close()` drive, exercised without `NSApp.runModal` |
-| dialog-009 | track-shown-state | Check `isShown` before/after `present()` | `isShown == false` before, `isShown == true` after present, `isShown == false` after close |
+| dialog-009 | track-shown-state | Check `isShown` before/after `beginDialog()`/`endDialog(window)` — not `present()`, which blocks in `NSApp.runModal` until the session ends and only calls `endDialog(window)` (clearing `dialogWindow`) once it returns, so `isShown` is always `false` by the time a caller sees `present()` return (see dialog-008) | `isShown == false` before, `isShown == true` after `beginDialog()`, `isShown == false` after `endDialog(window)` |
 | gear-010 | gear-button-borderless | Call `makeGearButton()`; inspect `isBordered` and `bezelStyle` | `isBordered == false`, `bezelStyle == .accessoryBarAction` |
 | gear-011 | gear-button-gearshape-symbol | Call `makeGearButton()`; inspect image | Image symbol name is "gearshape", `imagePosition == .imageOnly` |
 | gear-012 | gear-button-secondary-text-tint | Call `makeGearButton()` in light and dark themes | Content tint color matches the theme's secondary text color in each theme |
@@ -207,7 +207,7 @@ The component comprises four related pieces: the dialog manager (`WindowOptionsD
 
 ## Edge Cases
 
-- **Dialog already open**: Calling `present()` (or `toggle()`) when `isShown == true` is a no-op — see **single-dialog-instance**. Calling `toggle()` when open closes the dialog instead.
+- **Dialog already open**: Calling `present()` when `isShown == true` is a no-op — see **single-dialog-instance**. Calling `toggle()` when open does NOT share this no-op behavior: it closes the dialog instead (see **support-toggle**).
 
 - **Close called when dialog is not open**: A no-op; no exception thrown — see **end-modal-session-on-close**.
 
@@ -275,7 +275,7 @@ Not applicable: The component does not perform its own logging. A host may add i
 
 ## Platform Notes
 
-- **Source Platform (Apple)**: Implemented in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowOptionsDialog.swift`. The component is AppKit-only (`@MainActor`, `NSObject`, `NSWindow`, `NSButton`, etc.) and targets macOS. `WindowOptionsSlider`, `WindowOptionsToggle`, and `WindowOptionsResetButton` are companion views for composing common dialog rows. The source relies on `OptionsDialogViewController` for the dialog body layout and `ThemePaletteObserver` for theme-aware colors (`palette.nsColor(.secondaryText)` for the gear button tint, `palette.windowBackgroundColor` for the dialog background). The default `width` falls back to `OptionsDialogViewController.defaultWidth`. Internally, `present()` delegates to a `beginDialog()`/`endDialog(_:)` seam so the open and close halves can be asserted without entering `NSApp.runModal`; `close()` calls `NSApp.stopModal()` only when `NSApp.modalWindow` is this dialog's own window; the host level is tracked live via `NSWindow.didUpdateNotification` observed on the host window.
+- **Source Platform (Apple)**: Implemented in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowOptionsDialog.swift`. The component is AppKit-only (`@MainActor`, `NSObject`, `NSWindow`, `NSButton`, etc.) and targets macOS. `WindowOptionsSlider`, `WindowOptionsToggle`, and `WindowOptionsResetButton` are companion views for composing common dialog rows. The source relies on `OptionsDialogViewController` for the dialog body layout and `ThemePaletteObserver` for theme-aware colors (`palette.nsColor(.secondaryText)` for the gear button tint, `palette.windowBackgroundColor` for the dialog background). The default `width` falls back to `OptionsDialogViewController.defaultWidth`. Internally, `present()` delegates to a `beginDialog()`/`endDialog(_:)` seam so the open and close halves can be asserted without entering `NSApp.runModal`; `close()` calls `NSApp.stopModal()` only when `NSApp.modalWindow` is this dialog's own window; the host level is tracked live via `NSWindow.didUpdateNotification` observed on the dialog's own window (not the host window) — AppKit posts it on every pass of the event loop that touches that window, which during the modal session is every event, so the dialog catches the host's level change on the very next one.
 
 - **SwiftUI**: `WindowOptionsDialog` is an `NSObject`, not a view or view controller, so wrapping it in `NSViewControllerRepresentable` is not applicable — there is no view controller to represent. Instead, hold a `WindowOptionsDialog` instance in a coordinator or `@State`-held object owned by the SwiftUI scene, and call `present()` / `close()` / `toggle()` from a `Button`'s action in response to SwiftUI state (e.g., a toolbar gear `Button` with system image `"gearshape"` calling `dialog.toggle()`). For the rows passed to `makeControls`, build `NSHostingView`-wrapped `SwiftUI.Slider`, `SwiftUI.Toggle`, and a plain `Button` for reset, binding them to the host's own state and driving the same `onChange`/`onReset` closures the AppKit rows use.
 
@@ -330,12 +330,15 @@ Not applicable: The component does not perform its own logging. A host may add i
 | [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
 | [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Accessibility statuses rest on the gear button's `accessibilityDescription`, standard AppKit keyboard/Tab handling, and the app-modal run loop blocking host interaction (source: `WindowOptionsDialog.swift`); `touch-target-size` is `partial` because the checkbox, slider, and reset button use standard 16–20pt AppKit control sizes rather than a 44×44pt minimum; `string-externalization` is `failed` because `WindowOptionsResetButton.title` and the default tooltip are Swift string literals with no resource-file lookup.
+Accessibility statuses rest on the gear button's `accessibilityDescription`, standard AppKit keyboard/Tab handling, and the app-modal run loop blocking host interaction (source: `WindowOptionsDialog.swift`); `touch-target-size` is `partial` because the checkbox, slider, and reset button use standard 16–20pt AppKit control sizes rather than a 44×44pt minimum; `string-externalization` is `failed` because `WindowOptionsResetButton.title` and the default tooltip are Swift string literals with no resource-file lookup. `separation-of-concerns` passes because the dialog knows nothing of what settings it holds — a host supplies `makeControls` as a closure, and the dialog itself owns only presentation, positioning, and modal-session bookkeeping; `unit-test-coverage` passes on `WindowOptionsDialogTests.swift`'s exercise of the gear, the titlebar accessory, dialog identity/level, open/close bookkeeping, positioning, and its controls.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | single-dialog-instance corrected to exempt toggle() (which closes an open dialog, per support-toggle); dialog-006/dialog-009 vectors corrected to use beginDialog()/endDialog() since present() blocks in NSApp.runModal; Platform Note corrected: didUpdateNotification observed on dialog's own window, not host window. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; resolved the app-modal interaction contradiction between Overview, present-modal, and dialog-001; corrected screen-positioning claims (position is sampled once at open, not live-tracked) and dropped the false must-reposition-on-screen-change requirement; replaced the inaccurate 44pt touch-target claim with real macOS guidance and marked touch-target-size partial; added gear-button-accessible-label, rebuild-controls-public, and dialog-window-keyboard-dismissal requirements with new test vectors, plus vectors for close()-when-not-open, reset-button-centered, reset-button-rounded, dialog-window-undecorated-except-title, and leading-view spacing, and made dialog-008 concrete; moved AppKit internals (palette APIs, beginDialog/endDialog, NSApp.stopModal, NSWindow.didUpdateNotification, default width symbol) out of requirements into the Apple platform note; corrected the SwiftUI, WinUI 3, and Compose platform notes; reformatted Design Decisions into Decision/Rationale/Approved form; fixed Compliance check links/categories and added applicable checks; dropped the unused Logging table; added stable localization keys; filled in depends-on and related. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from WindowOptionsDialog.swift source |

@@ -3,11 +3,11 @@ id: 1675b18e-34d5-4d8e-987f-92697539a5e6
 title: Btn
 domain: agenticdevelopertoolkit://recipes/btn
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,12 +159,15 @@ Not applicable: The component does not emit logs or diagnostic messages.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on the source rendering a plain, unmodified `<a>` element whose only attributes are `href` and `className`, with link text supplied verbatim from `children` (never a hardcoded string); color, contrast, and type sizing are delegated entirely to the external `lp-btn`/`lp-btn--{variant}` stylesheet (see Appearance and States), which is outside this recipe's source and cannot be verified here.
+These statuses rest on the source rendering a plain, unmodified `<a>` element whose only attributes are `href` and `className`, with link text supplied verbatim from `children` (never a hardcoded string); color, contrast, and type sizing are delegated entirely to the external `lp-btn`/`lp-btn--{variant}` stylesheet (see Appearance and States), which is outside this recipe's source and cannot be verified here. Best-practices statuses rest on `Btn` being pure presentation over its `href`/`variant`/`children` props with no embedded logic (separation-of-concerns: passed), and on `blocks-close.test.tsx` directly rendering `Btn` and asserting its variant class output (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added a no-extra-props requirement with vector and design decision; corrected Platform Notes APIs for SwiftUI, Compose, UIKit/AppKit, and WinUI 3; made test vectors assert exact className strings and added explicit-primary, invalid-variant, empty-children, and missing-href vectors; reformatted Design Decisions into Decision/Rationale/Approved form and weakened the required-props claim to match Edge Cases; replaced the prose Compliance section with a checks table; added tags. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

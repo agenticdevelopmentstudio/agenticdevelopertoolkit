@@ -3,11 +3,11 @@ id: bf49f12b-61cd-4e34-b395-0b6e5fe715a2
 title: Popup Menu
 domain: agenticdevelopertoolkit://recipes/popup-menu
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -231,13 +231,16 @@ Subsystem: implicit (browser console); no explicit logger configured in componen
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on: the source's `aria-label`/`aria-hidden` usage and the underlying `dropdown-menu` primitive's `menu`/`menuitemradio` ARIA roles (screen-reader-support, keyboard-navigable, semantic-markup); the 25.6px trigger height meeting WCAG 2.5.8's 24×24px web minimum (touch-target-size); reliance on the `apt-*` design tokens and the `dropdown-menu` primitive for actual contrast values and focus-trap behavior, which this source cannot itself confirm (contrast-ratio, focus-management); the hardcoded English `allLabel`/`newLabel` defaults (string-externalization); the intentional `truncate` overflow/ellipsis behavior, which contradicts expansion tolerance by design (text-expansion-tolerance); ordinary JS string handling with no Unicode restrictions (unicode-support); and the static, data-free warning message with no interpolated user data (secure-log-output).
+Statuses rest on: the source's `aria-label`/`aria-hidden` usage and the underlying `dropdown-menu` primitive's `menu`/`menuitemradio` ARIA roles (screen-reader-support, keyboard-navigable, semantic-markup); the 25.6px trigger height meeting WCAG 2.5.8's 24×24px web minimum (touch-target-size); reliance on the `apt-*` design tokens and the `dropdown-menu` primitive for actual contrast values and focus-trap behavior, which this source cannot itself confirm (contrast-ratio, focus-management); the hardcoded English `allLabel`/`newLabel` defaults (string-externalization); the intentional `truncate` overflow/ellipsis behavior, which contradicts expansion tolerance by design (text-expansion-tolerance); ordinary JS string handling with no Unicode restrictions (unicode-support); and the static, data-free warning message with no interpolated user data (secure-log-output). `popup-menu.tsx` is decoupled from routing — selection is a callback the host wires up, with only view-level derivation (the "All" sentinel and active-label lookup) inline (separation-of-concerns passed); `popupMenu.test.tsx` covers only the trigger's icon and className customization, not `onSelect`, `onNew`, or the sentinel-collision warning (unit-test-coverage partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and propagated renames through test vectors and edge cases; merged the duplicate radio-group requirement into single-select-item-group; moved web-specific implementation details (DropdownMenuRadioGroup, cn(), ChevronsUpDown sizing, the "__all__" sentinel) out of Behavioral Requirements and into Platform Notes; added the focus-indicator-contrast requirement and a matching test vector; added edge cases and test vectors for an unmatched selectedId and duplicate item ids; corrected the Accessibility Role to the ARIA menu/menuitemradio pattern; corrected touch-target guidance to WCAG 2.5.8 for web with a native-port minimum; gave exact Appearance pixel values; rewrote Design Decisions in the Decision/Rationale/Approved format and resolved the fail-fast and routing contradictions; replaced non-existent or misused Platform Notes APIs (MaterialDropdownMenu, NSMenuSeparator, .accessibilityElement(), .focusEffectDisabled(), MenuBar) with real native-control APIs; removed the named-app reference from the React/Web note; added dropdown-menu to depends-on; rebuilt the Compliance table with real compliance-catalog checks and links; renamed an Edge Cases heading for clarity. |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Resolve review markers: confirm ariaLabel enforcement and document actual trigger dimensions |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |

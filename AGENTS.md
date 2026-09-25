@@ -55,7 +55,7 @@ The web platform is a pnpm workspace; its libraries live under
   [`docs/planning/planning.md`](docs/planning/planning.md)
 - Repo conventions, build commands, ground rules →
   [`.claude/CLAUDE.md`](.claude/CLAUDE.md)
-- Cookbook recipes referenced by the project → [`cookbook/`](cookbook/)
+- Cookbook recipes referenced by the project → [`recipes/`](recipes/)
 
 ## Build entry points
 

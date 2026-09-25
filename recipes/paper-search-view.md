@@ -3,11 +3,11 @@ id: 968f66df-4c2d-47ba-92cf-ff1e34f5deb2
 title: Paper Search View
 domain: agenticdevelopertoolkit://recipes/paper-search-view
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -161,12 +161,15 @@ Not applicable: Paper Search View does not implement logging. Any debug or error
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-`screen-reader-support` rests on the component always supplying `searchLabel`/`searchLandmarkLabel` values (defaulted or host-provided) to the wrapped SearchView on every render. The two internationalization checks are `partial` because `PaperSearchView.tsx` sets the English strings as literal default parameter values rather than resource-file entries — the props exist precisely so a host can override them per locale, but the source cannot show that any host does.
+`screen-reader-support` rests on the component always supplying `searchLabel`/`searchLandmarkLabel` values (defaulted or host-provided) to the wrapped SearchView on every render. The two internationalization checks are `partial` because `PaperSearchView.tsx` sets the English strings as literal default parameter values rather than resource-file entries — the props exist precisely so a host can override them per locale, but the source cannot show that any host does; `PaperSearchView.tsx` is a thin wrapper delegating to `SearchView`, with the search-source/slug-normalization logic living in the separately exported `paperSearchSource` function (separation-of-concerns: passed), while `buildSearchUrl.test.ts` and `paperSearchSource.test.ts` thoroughly exercise that helper logic but no test renders `PaperSearchView` itself (unit-test-coverage: partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added author-slug-normalization and paper-search-source-factory requirements with vectors; reworded search-view-props to list exact props with a vector; reworded the missing-documentHref edge case as a type-level constraint; filled in Accessibility and Compliance sections; reformatted Design Decisions into Decision/Rationale/Approved blocks; defined the LINK seam by its source in types.ts; corrected the SwiftUI and WinUI 3 platform notes and added a native absolute-baseUrl note to all native platforms; added depends-on for search-view |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

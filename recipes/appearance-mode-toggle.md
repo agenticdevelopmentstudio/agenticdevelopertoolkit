@@ -3,11 +3,11 @@ id: 46e077a8-1171-4564-9781-7997ff76813a
 title: Appearance Mode Toggle
 domain: agenticdevelopertoolkit://recipes/appearance-mode-toggle
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,18 +46,39 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 - **set-aria-label**: Component MUST set `aria-label` to one of three templates, chosen by mode and resolved appearance: when mode is 'auto', `"Appearance: Auto (currently {resolved}). Click to switch to dark."`; when mode is 'dark', `"Dark mode — click for light"`; when mode is 'light', `"Light mode — click for auto"`.
 - **set-title-attribute**: Component MUST set the `title` attribute to the same value as `aria-label`.
 - **accept-classname-prop**: Component MUST accept an optional `className` prop and merge it with the component's base class name 'awt-appearance-mode-toggle'.
-- **render-hydration-safe**: Component MUST render safely during server-side rendering by reading from `document` only after mount, defaulting to 'auto' mode and 'light' resolved appearance before hydration is complete.
+- **render-hydration-safe**: Component MUST render without throwing when `document` is unavailable (server-side rendering), defaulting to 'auto' mode and 'light' resolved appearance in that case. The read happens via a `useState` lazy initializer that runs synchronously during render — including the client's first (hydrating) render — so it is not deferred until after mount; the client's hydrating render re-reads the live `document.documentElement` immediately, which can differ from the server's deterministic auto/light output (see Design Decisions: Hydration safety).
 
 ## Appearance
 
-- **Corner radius**: Not specified by component; inherited from button styling.
-- **Padding**: Not specified by component; inherited from button styling.
-- **Font**: Not specified by component; inherited from button styling.
-- **Background**: Not specified by component; inherited from button styling.
-- **Foreground/Text**: Icon rendered inline, uses `currentColor` for stroke, inheriting text color from button.
-- **Border**: Not specified by component; inherited from button styling.
-- **Shadow**: Not specified by component; inherited from button styling.
-- **Min/Max size**: Not specified by component; inherited from button styling. Icon has `viewBox="0 0 24 24"`. Badge size depends on parent button dimensions.
+The component renders a plain native `<button>` (it does not wrap a shared button
+component). It sets no inline styles itself; all of the below come from its own
+optional, separately-published stylesheet (`appearance-mode-toggle.css`, keyed to the
+`awt-appearance-mode-toggle*` classes the component emits) — a consumer that does not
+import it gets an unstyled native button instead.
+
+- **Corner radius**: `0.375rem`, via the optional stylesheet's `border-radius`; native
+  browser button default if the stylesheet is not imported.
+- **Padding**: `0.5rem`, via the optional stylesheet; native default otherwise.
+- **Font**: Not set by the component or its stylesheet; inherits the ambient/browser
+  default button font.
+- **Background**: `transparent`, via the optional stylesheet (unchanged on hover and
+  focus); native button chrome otherwise.
+- **Foreground/Text**: Icon rendered inline, uses `currentColor` for stroke. The
+  optional stylesheet sets the button's `color` to `var(--color-text-dim)` by default
+  and `var(--color-text-primary)` on `:hover`, so the icon's inherited color changes
+  with hover; without the stylesheet, `currentColor` resolves to the native button
+  text color instead.
+- **Border**: `border: 0`, via the optional stylesheet; native default otherwise.
+- **Shadow**: Not specified by the component or its optional stylesheet.
+- **Focus ring**: A `2px solid var(--color-accent)` outline with `2px` offset on
+  `:focus-visible`, via the optional stylesheet — added on top of (not replacing) the
+  native button's default focus handling; see States (Focused).
+- **Transition**: `color` only, `150ms ease` (`var(--awt-transition, 150ms ease)`), via
+  the optional stylesheet; no other property transitions.
+- **Min/Max size**: Not specified by the component. Icon has `viewBox="0 0 24 24"` and
+  is sized `1.25rem × 1.25rem` (20×20px) by the optional stylesheet's `__icon` class;
+  the badge icon is `0.625rem × 0.625rem` (10×10px) via `__badge-icon`. Overall button
+  size is not fixed — it follows content plus padding (and any host CSS).
 
 ## States
 
@@ -66,8 +87,9 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 | Default (light mode) | Sun icon visible; no badge. |
 | Default (dark mode) | Moon icon visible; no badge. |
 | Default (auto mode) | Sun or moon icon depending on resolved appearance; auto badge visible. |
-| Pressed | No appearance change specified by component; inherited from button styling. |
-| Focused | No appearance change specified by component; inherited from button styling. |
+| Hovered | Color transitions from `var(--color-text-dim)` to `var(--color-text-primary)` over `150ms`, via the optional stylesheet's `:hover` rule; no change if that stylesheet is not imported. |
+| Pressed | No appearance change specified by the component or its optional stylesheet. |
+| Focused (`:focus-visible`) | A `2px solid var(--color-accent)` outline appears, offset `2px`, via the optional stylesheet; native browser focus styling otherwise. |
 
 ## Accessibility
 
@@ -98,6 +120,7 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 | toggle-014 | set-aria-label, set-title-attribute | Mode is 'light' | aria-label and title both equal "Light mode — click for auto" |
 | toggle-015 | accept-classname-prop | `className="custom"` prop | Button element has class names including both 'awt-appearance-mode-toggle' and 'custom' |
 | toggle-016 | render-hydration-safe | SSR/hydration scenario before event listener attached | No access to `document` or `window` during server render; initial output is auto/light |
+| toggle-017 | render-hydration-safe | Server render with no `document` (auto/light); client's hydrating render runs against a live `document.documentElement` already carrying `data-appearance-mode="auto"` and class `dark` | The hydrating render reads mode 'auto'/resolved 'dark' immediately (not deferred until after mount), differing from the server's auto/light markup — moon icon and "(currently dark)" label, not the sun icon/"(currently light)" the server emitted |
 
 ## Edge Cases
 
@@ -106,6 +129,7 @@ The Appearance Mode Toggle is a button component that allows users to cycle thro
 - **Multiple instances**: Multiple AppearanceModeToggle components on the same page MUST all listen to the same 'awt:appearance-changed' event and update independently. Each component maintains its own React state.
 - **Event listener lifecycle**: The event listener attached in `useEffect` MUST be cleaned up (removed) when the component unmounts. This prevents memory leaks in single-page applications.
 - **Server-side rendering**: When rendering server-side, `typeof document === 'undefined'` returns true and the component MUST default to 'auto' mode with 'light' resolved appearance. No error is thrown.
+- **Hydration mismatch from a pre-hydration script**: The client's first (hydrating) render is not exempt from the `useState` lazy initializer — it reads the live `document.documentElement` immediately. If a pre-hydration script has already set `data-appearance-mode`/the `dark` class to something other than `auto`/light before React hydrates, the hydrating render's icon, `aria-label`, and `title` reflect that live state rather than the server's `auto`/light markup. React does not patch attribute-only hydration mismatches, so the rendered button keeps whichever version painted first until an `awt:appearance-changed` event triggers a re-render (see **render-hydration-safe**, Design Decisions: Hydration safety).
 - **Missing window object**: If `typeof window === 'undefined'` during click handling, the `handleClick` function returns early without dispatching the event. No error is thrown.
 
 ## Configuration
@@ -124,7 +148,7 @@ Component generates all user-facing strings (`aria-label`, `title`) from three h
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Not implemented: Component has no animation or transition behavior specified. The badge and icon change are instant. |
+| Reduce Motion | Not implemented: the optional stylesheet's `150ms` `color` transition on hover (see Appearance) has no `prefers-reduced-motion` or reduce-motion-setting guard in `appearance-mode-toggle.css`. The badge and icon swap themselves are instant either way — only the hover color change animates, and it does so unconditionally. |
 | Increase Contrast | Not implemented: Component uses `currentColor` for icons and relies on parent button styling for contrast. Icon contrast depends on parent button's text color. |
 | Differentiate Without Color | Satisfied: Component conveys mode state via icon shape (sun vs. moon) and badge presence, not color alone. No additional implementation needed. |
 
@@ -149,7 +173,7 @@ Not applicable: Component does not emit log messages.
 
 ## Platform Notes
 
-- **React/Web**: Source files: `packages/web/packages/controls/src/appearance-mode-toggle/AppearanceModeToggle.tsx`. Component exports `AppearanceModeToggle` function and `AppearanceModeToggleProps` type. Uses React hooks (`useState`, `useEffect`) for state management and event listening. Icons and badge are inline SVG elements. No external icon library dependency. Hydration-safe: reads from `document` only after mount.
+- **React/Web**: Source files: `packages/web/packages/controls/src/appearance-mode-toggle/AppearanceModeToggle.tsx`. Component exports `AppearanceModeToggle` function and `AppearanceModeToggleProps` type. Uses React hooks (`useState`, `useEffect`) for state management and event listening. Icons and badge are inline SVG elements. No external icon library dependency. Reads `document` synchronously via a `useState` lazy initializer during render (guarded by `typeof document === 'undefined'`), including the client's first (hydration) render — not only after mount; see **render-hydration-safe**.
 - **SwiftUI**: Read the system's resolved appearance via `@Environment(\.colorScheme)`, and persist the user's chosen mode with `@AppStorage`, backed by the toolkit's existing `UserDefaultsThemeStorage` (`packages/apple/AgenticDeveloperToolkit/Sources/Theme/UserDefaultsThemeStorage.swift`) rather than a fresh UserDefaults key. Display conditional SF Symbols: `Image(systemName: resolved == .dark ? "moon.fill" : "sun.max.fill")`. Badge overlay in auto mode using `.overlay(alignment:)`. Button action hands the cycle to whatever object owns mode state, per **External appearance controller** in Design Decisions.
 - **Compose**: Read the system value with `isSystemInDarkTheme()`, not `getResources().configuration`. Persist the user's chosen mode in a `DataStore<Preferences>`, not `Settings.Secure`. Use `mutableStateOf` for the in-memory appearance state, observed via `LaunchedEffect` against the DataStore flow. Display conditional icons using `painterResource()` and a conditional modifier for the badge. Button click hands the cycle to whatever object owns mode state, per **External appearance controller** in Design Decisions.
 - **AppKit / UIKit**: `UIAppearance` does not report dark mode, and `NSAppearanceNameDidChangeNotification` does not exist. Read system appearance changes via `traitCollection.userInterfaceStyle` or `registerForTraitChanges` (UIKit), and via KVO on `NSApp.effectiveAppearance` (AppKit). Persist the user's chosen mode with the toolkit's existing `UserDefaultsThemeStorage` (`Sources/Theme/UserDefaultsThemeStorage.swift`) rather than a fresh preference key — `AppKitAppearanceDriver` / `UIKitAppearanceDriver` (`SourcesUI/macOS/Theme/`, `SourcesUI/iOS/Theme/`) already apply light/dark/auto app-wide once the mode changes. Display conditional `UIImage`/`NSImage` (SF Symbols). Badge as a small badge view overlaid on the button.
@@ -183,14 +207,14 @@ Not applicable: Component does not emit log messages.
 
 **No built-in styling**
 
-**Decision**: Component does not specify padding, corner radius, or colors; it accepts `className` to integrate with any CSS framework.
-**Rationale**: Button size is delegated to parent or CSS, ensuring flexibility across consuming applications.
+**Decision**: The component itself (`AppearanceModeToggle.tsx`) sets no inline styling and specifies no padding, corner radius, or colors in code; instead it ships an optional, separately-published stylesheet (`appearance-mode-toggle.css`) keyed to its class names, and accepts `className` to integrate with any CSS framework.
+**Rationale**: A consumer can import the default stylesheet for padding, radius, colors, a hover transition, and a focus ring out of the box, or skip it and style the native button entirely from their own CSS — either way, button size and appearance are delegated to CSS, not hardcoded in the component.
 **Approved**: pending
 
 **Hydration safety**
 
 **Decision**: Component defaults to `auto` mode and `light` resolved appearance during server-side rendering.
-**Rationale**: The server has no access to `document`, so it cannot know the real mode or resolved appearance; rendering any other combination risks a mismatch between server-rendered and client-rendered markup on first paint. `auto`/`light` is simply the fixed, deterministic fallback the source uses before mount, not a claim about which state is most common among users.
+**Rationale**: The server has no access to `document`, so it cannot know the real mode or resolved appearance; `auto`/`light` is the fixed, deterministic fallback the source returns only in that no-`document` case, not a claim about which state is most common among users. This does not defer the real read until after the client mounts: the client's first (hydrating) render runs the same `useState` lazy initializer against the live `document`, so if a pre-hydration script has already changed the appearance, that render's output can differ from the server's `auto`/`light` markup — an attribute-only mismatch (icon path, `aria-label`, `title`) that React does not patch during hydration, and that persists until the next `awt:appearance-changed` event.
 **Approved**: pending
 
 ## Compliance
@@ -204,14 +228,17 @@ Not applicable: Component does not emit log messages.
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The passed and partial statuses rest on the `<button type="button">` element, the always-present `aria-label`/`title`, the `aria-hidden="true"` icons, and the `currentColor`-based, parent-delegated styling in `AppearanceModeToggle.tsx`; the two failed internationalization checks rest on that same file's three hardcoded English label templates, which the source has no mechanism to override.
+The passed and partial statuses rest on the `<button type="button">` element, the always-present `aria-label`/`title`, the `aria-hidden="true"` icons, and the `currentColor`-based, parent-delegated styling in `AppearanceModeToggle.tsx`; the two failed internationalization checks rest on that same file's three hardcoded English label templates, which the source has no mechanism to override. `separation-of-concerns` passes: the component only reads the externally-owned `documentElement` appearance contract and dispatches a cycle-request event — the actual mode-cycling and persistence logic lives outside this file, in whatever listens for `awt:appearance-cycle`. `unit-test-coverage` passes: `AppearanceModeToggle.test.tsx` renders the component directly and asserts its class and aria-label behavior.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Hydration reads run on first client render too; documented real built-in stylesheet. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and folded the label templates into set-aria-label; documented the external appearance-controller event contract (payload, target); resolved the cycle-order and hydration-rationale contradictions in Design Decisions; corrected Localization from a false not-applicable to a described gap; replaced invented/external Compliance links with real catalog checks; marked Analytics not-applicable; fixed toggle-016's document/window assertion; resolved the Differentiate-Without-Color contradiction; removed the unsupported Disabled state; corrected the Compose, AppKit/UIKit, SwiftUI, and WinUI 3 platform notes |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Remove the review marker from Localization (not applicable); retain tap target marker as genuine gap |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

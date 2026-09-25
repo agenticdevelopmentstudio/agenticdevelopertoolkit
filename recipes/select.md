@@ -3,11 +3,11 @@ id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: Select
 domain: agenticdevelopertoolkit://recipes/select
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,7 +50,7 @@ The Select component is a form control that renders a native HTML `<select>` ele
 - **generated-id**: When no `id` prop is provided, the component MUST generate a stable ID using React's `useId` hook.
 - **provided-id**: When an `id` prop is provided, the component MUST use that ID instead of generating one.
 - **label-association**: When a `label` is provided, the component MUST render an HTML `<label>` element with `htmlFor` set to the select's ID, associating the label to the control.
-- **wrapper-classname**: The component MUST apply the `className` prop to the wrapper element when provided.
+- **wrapper-classname**: In the `aws-field` implementation, the component MUST apply the `className` prop to the wrapper `<div>` when provided. The apt-token implementation instead applies `className` to the `<select>` element itself; its wrapper `<div>` class is a fixed `"relative"` that never receives caller classes (see Platform Notes).
 - **hint-display**: When a `hint` prop is provided, the component MUST render it as text content below the select element.
 - **chevron-indicator**: The component SHOULD display a visual indicator (such as a chevron icon) to signify that the element is a dropdown control.
 - **focus-style**: The component SHOULD apply visual styling to indicate focus when the select has keyboard focus.
@@ -104,7 +104,7 @@ Two implementations exist in source: the generic (`aws-field`) implementation de
 | select-008 | generated-id | Render without an `id` prop | A stable ID is generated via `useId`; label's `htmlFor` matches the generated ID |
 | select-009 | provided-id | Render with `id="my-select"` | The rendered select has `id="my-select"`; label's `htmlFor` is `"my-select"` |
 | select-010 | label-association | Render with `label="Choose an option"` | A `<label>` element is rendered with `htmlFor` matching the select's ID |
-| select-011 | wrapper-classname | Render with `className="custom-class"` | The wrapper div includes the class `custom-class` |
+| select-011 | wrapper-classname | Render the `aws-field` implementation with `className="custom-class"` | The wrapper div includes the class `custom-class` (the apt-token implementation instead applies `custom-class` to the `<select>` element; its wrapper div stays `class="relative"`) |
 | select-012 | hint-display | Render with `hint="Select one item"` | A `<p>` element is rendered below the select displaying the hint text |
 | select-013 | chevron-indicator | Render component | A chevron-down icon is displayed to the right of the select |
 | select-014 | focus-style | Focus the select element via keyboard | Border changes to the accent color role, ring is visible, focus-visible styles are applied |
@@ -133,7 +133,7 @@ Two implementations exist in source: the generic (`aws-field`) implementation de
 | `onChange` | `(value: T) => void` | Required | Callback invoked when the user changes the selection |
 | `choices` | `Choice<T>[]` | Required | Array of options; each choice has `value`, `label`, and optional `disabled` |
 | `disabled` | `boolean` | `false` | Disables the select element and prevents user interaction |
-| `className` | `string` | `undefined` | Optional CSS class name applied to the wrapper div |
+| `className` | `string` | `undefined` | Optional CSS class name; applied to the wrapper div in the `aws-field` implementation, and to the `<select>` element itself in the apt-token implementation |
 | `id` | `string` | Generated via `useId()` | Optional HTML id; if not provided, one is automatically generated |
 
 ## Deep Linking
@@ -170,7 +170,7 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 
 ## Platform Notes
 
-- **React/Web**: Two implementations are provided in the source: one using the `aws-field` classes from the `aws-*` namespace (the AgenticWebStack design system) and one using `apt-*` design-system tokens with a custom chevron icon. Both render a native `<select>` element with optional label, hint, and styling. The component is generic and can be adapted to any design system by replacing the class names and icon component.
+- **React/Web**: Two implementations exist in source, and they diverge in more than styling. `packages/web/packages/controls/src/user-settings/components/Select.tsx` (the `aws-field` implementation, from the AgenticWebStack design system) implements the full API this recipe describes: `label`, `hint`, a `choices` array rendered as `<option>`s, `useId`-generated fallback `id`, a wrapped `onChange` that hands the caller the new value directly, and a wrapper `<div>` that receives `className`. `packages/web/packages/ui/src/components/select.tsx` (the apt-token implementation) is a thinner styling wrapper: its props are `React.ComponentProps<"select">`, so callers supply native `<option>` children and their own `onChange` (receiving the raw `ChangeEvent`, not an extracted value), `id`, and accessible name directly — see `search-filter-bar.tsx`'s `<Select aria-label={f.label} value={f.value} onChange={(e) => f.onChange(e.target.value)}>` for a caller doing exactly that. It has no `label`, `hint`, or `choices` prop at all; it always renders a fixed `<div className="relative">` around the `<select>` and always shows a chevron icon regardless of any prop. Only the `label`/`hint`/`choices`/id-generation/wrapped-`onChange` behavior in Behavioral Requirements above is specific to the `aws-field` implementation — the apt-token implementation supplies the Appearance section's styling and nothing else.
 - **SwiftUI**: Use `Picker` with `.pickerStyle(.menu)` for a dropdown-style control matching the native `<select>`'s single-value, collapsed-until-tapped behavior. Provide a label via the `label` parameter. Bind the selection via `@State`. Provide hint or descriptive text via a secondary `Text` view positioned below the Picker.
 - **Compose**: Use `ExposedDropdownMenuBox` from Material 3, with a read-only `OutlinedTextField` (`readOnly = true`) as the anchor via `.menuAnchor()`. Provide a label via the `OutlinedTextField`'s `label` parameter. Use `DropdownMenuItem` to render each choice inside the box's menu. Bind selection via `mutableStateOf()`. Associate hint text via the `supportingText` parameter on the `OutlinedTextField` for screen reader announcement.
 - **AppKit / UIKit**: On macOS, use `NSPopUpButton` with a label via `NSTextField`. On iOS, use a `UIButton` configured with a `menu` and `showsMenuAsPrimaryAction = true`, populating `UIAction` items for each choice. For hint text, add an `NSTextField` or `UILabel` below the control with `lineBreakMode = .byWordWrapping`. Set `accessibilityHint` on the control to associate the hint; VoiceOver custom actions are not the right mechanism for this.
@@ -207,16 +207,19 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on the native `<select>`/`<option>` markup and native `disabled` semantics in both source files, the `htmlFor`/`id` label association with no `aria-label` fallback, the `h-9` (36px) control height against the 44px minimum, the `apt-text`/`apt-gold` design tokens used without stated contrast values, the rem-based `text-sm` utility whose scaling depends on a Tailwind config not visible in this source, the fully caller-supplied `label`/`hint`/`choice.label` strings, and the physical `right-3`/`pr-9` positioning of the chevron and padding that does not flip for right-to-left locales.
+Statuses rest on the native `<select>`/`<option>` markup and native `disabled` semantics in both source files, the `htmlFor`/`id` label association with no `aria-label` fallback, the `h-9` (36px) control height against the 44px minimum, the `apt-text`/`apt-gold` design tokens used without stated contrast values, the rem-based `text-sm` utility whose scaling depends on a Tailwind config not visible in this source, the fully caller-supplied `label`/`hint`/`choice.label` strings, and the physical `right-3`/`pr-9` positioning of the chevron and padding that does not flip for right-to-left locales. `separation-of-concerns` passes because both `Select.tsx` files are pure presentation over props with no business logic. `unit-test-coverage` is partial: `user-settings/components/Select.tsx` is exercised directly and meaningfully in `components.test.tsx`, but `ui/components/select.tsx` has no test of its own — it is only exercised indirectly through `SearchFilterBar`'s combobox assertions in `searchFilterBar.test.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.2 | 2026-09-25 | Mike Fullerton | Scoped wrapper-classname/select-011/Configuration className row and Platform Notes to the aws-field vs apt-token divergence. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and update every citation; add hint-described-by requirement and remove the deferred Design Decision it replaced; reformat Design Decisions to the Decision/Rationale/Approved form; rebuild Compliance as a catalog-linked table with lowercase statuses and merge the label/accessible-name contradiction into one partial row; correct AppKit/UIKit, Compose, and WinUI 3 Platform Notes to real APIs and drop the irrelevant SwiftUI multiselect aside; rewrite Appearance in px sizes and color roles instead of raw Tailwind classes and tokens; state the 36px touch target falls short instead of claiming it meets the minimum; align the label-optional contract across Accessibility, Configuration, and Edge Cases; correct `value`/`onChange` typing to match the source's generic `T`; sharpen the value-mismatch edge case with the concrete browser fallback; replace the invented Localization table with "not applicable"; correct the Role bullet to name `combobox` directly; add missing conformance test vectors for a missing label, empty choices, the hint/aria-describedby gap, and disabled-option unselectability; cite specific WCAG success criteria and the WHATWG select-element anchor in place of the whole WCAG21 document and the obsolete HTML 5.2 spec; correct the disabled-while-focused edge case to blur-to-body instead of an unverified "next focusable element"; note that the focus ring/border differentiation still relies partly on hue pending measured contrast; drop the SwiftUI segmented-style aside since it doesn't match a collapsed dropdown; name the `aws-*` namespace as the AgenticWebStack design system; and make test vectors select-001, select-002, and select-008 concrete instead of vague or mismatched with their requirement's wording |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace aria-label fallback question with concrete fact; keep hint aria-describedby gap as genuine issue; enhance Platform Notes with concrete translation guidance for all platforms |
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Fold in ui-blocks source; confirm all requirements traceable to both web implementations |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise markers: replace reviewer questions with concrete facts; keep accessible name and hint association as genuine gaps |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web (React) source |
-| 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

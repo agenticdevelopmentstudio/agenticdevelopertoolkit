@@ -3,11 +3,11 @@ id: 3ec6618a-03a4-4740-9655-e6e47c05cf2b
 title: WindowFooterBar
 domain: agenticdevelopertoolkit://recipes/window-footer-bar
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -186,12 +186,15 @@ Not applicable: No logging instrumentation defined in component source.
 |-------|--------|----------|
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | failed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: `dynamic-type-support` fails because `WindowFooterBar.height` is a hardcoded 22pt constant with no logic that grows the bar or the label for larger text (see the **Large system text size** edge case); `contrast-ratio` is partial because the source applies theme-role colors (elevated surface, border, secondary text) but the actual color values behind those roles are defined outside this file, so the resulting contrast cannot be confirmed here.
+Statuses rest on the source: `dynamic-type-support` fails because `WindowFooterBar.height` is a hardcoded 22pt constant with no logic that grows the bar or the label for larger text (see the **Large system text size** edge case); `contrast-ratio` is partial because the source applies theme-role colors (elevated surface, border, secondary text) but the actual color values behind those roles are defined outside this file, so the resulting contrast cannot be confirmed here. `separation-of-concerns` passes because the bar takes only a status string and knows nothing of what a pane or a path is — the window formats that and hands over the result; `unit-test-coverage` passes on `WindowFooterBarTests.swift`'s exercise of the status round-trip, its tooltip, its identifier, and the trailing accessory slot.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added full-text-accessible-label requirement, accessibility text, and test vector so screen-reader/keyboard/touch users get the untruncated string without relying on hover; reworded platform-tied requirement text to be platform-neutral; added a Dynamic Type edge case; fixed test vector 011 and added vectors for edge-margins, minimum-gap, theme-support, and accessibility-prefix; corrected the WinUI and Compose platform notes' truncation/spacing claims and tightened the SwiftUI note; reformatted Design Decisions into the Decision/Rationale/Approved form and removed unsourced platform-convention citations; filled in the Compliance table |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from WindowFooterBar.swift source |

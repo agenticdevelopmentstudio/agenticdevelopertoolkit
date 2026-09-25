@@ -3,11 +3,11 @@ id: 76d3e5ac-b014-4ba1-a8a4-7bf61f38529b
 title: Theme Engine
 domain: agenticdevelopertoolkit://recipes/theme-engine
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -342,9 +342,16 @@ central fact this recipe records.
   `"always"` when `true` and remove it when `false`.
 - **appearance-prepaint-script**: `APPEARANCE_PREPAINT_SCRIPT` MUST be
   generated from the same `ENUM_PREF_DEFAULTS`/`BOOL_PREFS` tables
-  `applyAppearance` iterates, MUST run inside a `try/catch`, and MUST
-  resolve an absent or unparseable stored value to `colorMode: "auto"`
-  (falling through to `matchMedia("(prefers-color-scheme: dark)")`).
+  `applyAppearance` iterates and MUST run inside a `try/catch`. An absent
+  stored value, or one that parses to a non-object, resolves to
+  `colorMode: "auto"` (falling through to
+  `matchMedia("(prefers-color-scheme: dark)")`); its `JSON.parse` call has
+  no fallback, though, so a stored value that is present but fails to parse
+  — or one that parses to the JSON literal `null`, which passes the
+  script's `typeof === "object"` guard and then throws when it reads
+  `p.colorMode` — throws inside the `try` and is swallowed by the empty
+  `catch`, leaving `<html>` with neither the `dark` class nor
+  `data-color-mode` set at all (see Edge Cases).
 - **appearance-external-store**: `useAppearancePreferences` MUST be backed
   by a single module-level store consumed through `useSyncExternalStore`
   (not React Context); `commit(next, cache)` MUST update the module-level
@@ -537,6 +544,16 @@ engine stores and applies, not a UI surface of its own.
   silently swallow any thrown error (JSON parse failure, private-mode
   storage denial, quota exceeded) and behave as if storage were empty/absent
   (falling back to `APPEARANCE_DEFAULTS` on read; no-op on write/clear).
+- **Malformed stored value read by the prepaint script (Web)**: Unlike
+  `readStoredAppearance`, `APPEARANCE_PREPAINT_SCRIPT`'s inline `JSON.parse`
+  has no fallback. A stored value that is present but fails to parse (e.g. a
+  truncated write such as `"{"`), or one that parses to the literal `null`,
+  throws inside the script's `try` and is swallowed by its empty `catch`, so
+  neither the `dark` class nor `data-color-mode` is set on `<html>` on that
+  first paint. Only once React mounts and `readStoredAppearance` runs its own
+  fallback does the page settle on `APPEARANCE_DEFAULTS` (`colorMode: "auto"`),
+  so a corrupt or `null` stored value produces a flash between the
+  script's did-nothing first paint and the React store's corrected one.
 - **Environment without `matchMedia` (Web)**: `appearance-store.tsx`'s
   module-scope probe of `window.matchMedia` and `addEventListener` MUST NOT
   throw on import in such an environment (e.g. a stripped-down test
@@ -794,5 +811,6 @@ write failure edge case).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | | | Initial creation |
+| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance rewritten against catalog checks; two absent-feature edge cases restated as facts rather than open questions |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | appearance-prepaint-script now describes JSON.parse's missing fallback (unparseable/null throws, caught silently); added matching Edge Case. |

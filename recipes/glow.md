@@ -3,11 +3,11 @@ id: b341dd02-fbcb-4da8-b2b6-897807b4ebbc
 title: Glow
 domain: agenticdevelopertoolkit://recipes/glow
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -146,12 +146,15 @@ Not applicable: The component does not emit diagnostic logs.
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Passed because the source (`Glow.tsx`) sets `aria-hidden` directly on the rendered `<div>`, correctly using ARIA to hide this purely decorative element from the accessibility tree.
+Passed because the source (`Glow.tsx`) sets `aria-hidden` directly on the rendered `<div>`, correctly using ARIA to hide this purely decorative element from the accessibility tree. `separation-of-concerns` is `passed` because the component is pure presentation with no children and no logic beyond a class-name join; `unit-test-coverage` is `partial` because no test renders `Glow` directly — `deck.test.tsx` and `blocks-close.test.tsx` only assert its `.lp-glow`/`aria-hidden` output through the `Screen` and `Hero` parents that compose it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, named the exact hero padding custom properties and added the hero ingredient as a dependency, linked hero and deck as related, filled in concrete CSS values in Appearance, split Design Decisions into decision/rationale/approved triples, added a Compliance table, corrected the whitespace-only edge case and added multi-token/whitespace-only test vectors, rephrased combine-classnames as an observable outcome, and fixed unsupported/nonexistent APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

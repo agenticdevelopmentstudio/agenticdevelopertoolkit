@@ -3,11 +3,11 @@ id: a56695f3-0205-4c9b-b724-53be608de2f0
 title: Alert
 domain: agenticdevelopertoolkit://recipes/alert
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -330,8 +330,10 @@ non-modal callout from `alert.tsx`; the two are unrelated implementations
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-These statuses rest on `alert.tsx`'s explicit `role="alert"`/`data-slot="alert"` markup and its complete absence of any hardcoded, non-caller-supplied user-facing string (grounds for the `passed` marks); the resolved contrast and rem-scaling values depend on the `apt-*` design tokens and Tailwind theme, which are not defined in this source file (grounds for the `partial` marks).
+These statuses rest on `alert.tsx`'s explicit `role="alert"`/`data-slot="alert"` markup and its complete absence of any hardcoded, non-caller-supplied user-facing string (grounds for the `passed` marks); the resolved contrast and rem-scaling values depend on the `apt-*` design tokens and Tailwind theme, which are not defined in this source file (grounds for the `partial` marks). Best-practices statuses rest on `alert.tsx` being pure presentation over `cva` variants with no embedded logic (separation-of-concerns: passed), and on no test in the suite exercising `Alert`/`AlertTitle`/`AlertDescription` directly — the candidate tests exercise unrelated components (unit-test-coverage: failed).
 
 ## Change History
 
@@ -339,3 +341,4 @@ These statuses rest on `alert.tsx`'s explicit `role="alert"`/`data-slot="alert"`
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped RFC-2119 prefixes from requirement names; rewrote test-vector assertions as platform-neutral observable behavior/tokens and moved literal Tailwind classes into the React/Web platform note; reworded the forward-div-props-* requirements to reflect that className is merged rather than dropped; added boundary-value, attribute-override-quirk, and no-icon-baseline test vectors; corrected the boundary-value edge case to state cva's single actual outcome; fixed the alert-018 gap-y-0.5 assertion to target the root node; corrected the SwiftUI/Compose/AppKit-UIKit platform notes' accessibility API citations; collapsed duplicate icon-detection prose into cross-references to Design Decisions; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; replaced the empty Localization table with its sentence; added the alert-and-dialog domain to related; replaced "This recipe" with "ingredient"; and replaced the Compliance section's "Not applicable" with an evaluated checks table |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

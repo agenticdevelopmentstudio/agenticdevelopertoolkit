@@ -3,11 +3,11 @@ id: ea565474-df7a-42bd-9613-5dd0cd861911
 title: Card
 domain: agenticdevelopertoolkit://recipes/card
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -198,15 +198,18 @@ Not applicable: Card does not perform logging; it is a presentational component 
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The source sets no explicit ARIA role or heading semantics for the UI Card family's `CardTitle`, leaving any heading role or accessible name to the caller to add (semantic-markup: partial), and expresses color and type only as unresolved `apt-*` tokens or Tailwind classes whose rendered contrast and text scaling cannot be confirmed from source alone (contrast-ratio, dynamic-type-support: partial); the source file defines no single string literal, so all visible text passes through as caller-supplied props/children (no-hardcoded-strings: passed).
+The source sets no explicit ARIA role or heading semantics for the UI Card family's `CardTitle`, leaving any heading role or accessible name to the caller to add (semantic-markup: partial), and expresses color and type only as unresolved `apt-*` tokens or Tailwind classes whose rendered contrast and text scaling cannot be confirmed from source alone (contrast-ratio, dynamic-type-support: partial); the source file defines no single string literal, so all visible text passes through as caller-supplied props/children (no-hardcoded-strings: passed). Best-practices statuses rest on the UI `Card` family being pure presentation over `className`/props with no embedded logic (separation-of-concerns: passed), and on no test exercising this `card.tsx` directly — the candidate tests exercise the unrelated landing `Card`/`ResourceCard` components (unit-test-coverage: failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.3 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.1 | 2026-09-22 | Mike Fullerton | Narrowed to the UI Card family; Landing Card has its own recipe |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirement names to subject-only kebab-case and promote Appearance and the two load-bearing Edge Case MUSTs to named requirements with matching conformance vectors; add per-class-token Appearance vectors and a kicker `null`/`""` vector; link Test Vector requirements to their `#requirements/<name>` fragments; convert Compliance to a check table; move the misplaced cross-repo reference from `references` to `related`; quote the source comments cited in Design Decisions with file:line citations and reformat every decision into the three-line Decision/Rationale/Approved form; drop the vacuous States table and say "ingredient" instead of "recipe" throughout; tighten `children-after-title` to "immediately after" to match its test vector. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | State the Tailwind utilities, `apt-*` tokens and `lp-card`/`lp-card__kicker` class names as the appearance contract in place of unresolved-value placeholders; answer the sizing, kicker-guard and accessibility-option questions directly from source; fill the Accessibility Options table; add automation, semantics and layout detail to every platform note. One open accessibility question about the family's non-heading title is left for the reviewer. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from `packages/web/packages/landing/src/blocks/Card.tsx` and `packages/web/packages/ui/src/components/card.tsx`. |
-| 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

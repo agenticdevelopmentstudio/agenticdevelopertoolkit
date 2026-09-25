@@ -3,11 +3,11 @@ id: 40827b84-406e-4091-951b-9498b2f78253
 title: ListChooser
 domain: agenticdevelopertoolkit://recipes/list-chooser
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -161,7 +161,7 @@ Fixture `items` used by every vector below:
 | T18 | (see edge case: Disabling the component) | `disabled=true`, attempt to click/activate the trigger | popover does not open; `aria-expanded` stays `false` |
 | T19 | escape-cancels, cancel-mirrors-escape | `keepOpenOnCommit=true`, open, Esc (and, separately, click Cancel) | popover closes without firing `onChange`, same as when `keepOpenOnCommit` is false |
 | T20 | arrow-roves-highlight | open (no filter, `navCount=5`), ArrowUp ×1 (from no highlight) | highlight jumps to index 4 (`SolidJS`, the last row); a further ArrowDown ×1 holds at index 4 (no wrap to index 0 or to no-highlight) |
-| T21 | highlight-syncs-into-field, type-narrows-list | open, ArrowDown ×1 (highlights `SvelteKit`, field previews "SvelteKit"), then type "x" | highlight clears to no-highlight; field shows the typed text "x"; list re-filters by "x" |
+| T21 | highlight-syncs-into-field, type-narrows-list | open, ArrowDown ×1 (highlights `SvelteKit`, field previews "SvelteKit"), then type "x" — the previewed text is not selected, so the keystroke appends to it | highlight clears to no-highlight; field shows "SvelteKitx"; list re-filters by "sveltekitx" (no items match; create row shows) |
 | T22 | pointer-click-commits | open (no filter), click the `React` row | `onChange("react", { isNew:false })` fired; popover closes |
 
 ## Edge Cases
@@ -169,7 +169,7 @@ Fixture `items` used by every vector below:
 - **Highlight preview vs. filter**: Filtering uses the typed text, not the previewed highlight, so arrow-navigating a single match does not collapse the list; typing again replaces the preview and re-filters. Changing the query resets highlight to -1.
 - **Value resolution on the trigger**: If `value` equals an `items[i].value`, the trigger shows that item's label. Else if `allowCreate` is true and `value` is not `null`, the trigger shows `value` verbatim as free text — this includes an empty string or a whitespace-only string, since `value` is never trimmed for this comparison. Otherwise (`value` is `null`, or `allowCreate` is false with no item match) the trigger shows `triggerPlaceholder`. Only `null` counts as "nothing chosen"; an empty string is treated as a committed (if unusual) free-text value whenever `allowCreate` is true.
 - **Whitespace handling**: The typed text is trimmed before matching (`text.trim().toLowerCase()`) and before being accepted as a new entry. Whitespace-only text (e.g., "   ") is not acceptable for new entries.
-- **Empty `items` array**: With no items and an empty filter, the empty message shows (if `allowCreate` is false) or only the create row shows (if `allowCreate` is true). Typing surfaces the create row when `allowCreate` and text is non-empty after trim.
+- **Empty `items` array**: With no items, an empty filter shows the empty message regardless of `allowCreate` — creation requires non-empty trimmed text, so an empty filter never surfaces the create row. Typing surfaces the create row once `allowCreate` is true and the trimmed text is non-empty.
 - **Clamping at list boundaries**: exact transitions, given `navCount` rows (items + create row when shown): from no highlight (`highlight = -1`), ArrowDown moves to index 0 (first row) and ArrowUp moves to index `navCount - 1` (last row) — entering from either direction lands at that direction's natural end. Once a row is highlighted, ArrowUp at index 0 holds at index 0 (no wrap to -1 or to `navCount - 1`), and ArrowDown at index `navCount - 1` holds at `navCount - 1` (no wrap to 0 or to -1). No wrapping occurs once a row is highlighted.
 - **Case-insensitive substring matching**: The filter compares `query.trim().toLowerCase()` against `item.label.toLowerCase().includes(...)`. For example, against the fixture in Conformance Test Vectors, a query "e" matches `SvelteKit`, `React`, and `Vue.js` (all contain "e" case-insensitively).
 - **Exact-match resolution**: When the user types text that exactly matches (case-insensitive) an item's label, pressing Enter accepts that item with `isNew:false`, not a new entry. Matching is done on the trimmed, lowercased text.
@@ -193,7 +193,7 @@ Fixture `items` used by every vector below:
 | `triggerPlaceholder` | `string` | `"Select…"` | Text shown on the trigger when `value` is null (nothing committed). |
 | `okLabel` | `string` | `"OK"` | Accept button label. |
 | `cancelLabel` | `string` | `"Cancel"` | Cancel / dismiss button label. |
-| `createLabel` | `(text: string) => string` | `` `Add "${text}"` `` | Function that builds the create-row label from the typed text. Example: `(text) => `Add "${text}"` becomes "Add "React"" when text is "React". |
+| `createLabel` | `(text: string) => string` | `` `Add “${text}”` `` | Function that builds the create-row label from the typed text. Example: `(text) => `Add “${text}”`` becomes "Add “React”" when text is "React" |
 | `emptyLabel` | `string` | `"No matches"` | Message shown when no item matches the filter and creation is unavailable. |
 | `keepOpenOnCommit` | `boolean` | `false` | When true, accepting a selection keeps the popover open for adding multiple entries; Shift+Enter or Esc/Cancel closes. When false, any accept closes the popover. |
 | `disabled` | `boolean` | `false` | When true, the trigger is non-interactive and the component cannot be opened. |
@@ -205,7 +205,7 @@ Not applicable: ListChooser is a form control component without inherent URL sem
 
 ## Localization
 
-All labels, placeholders, and messages (`placeholder`, `triggerPlaceholder`, `okLabel`, `cancelLabel`, `createLabel`, `emptyLabel`, `ariaLabel`, `inputLabel`) are accepted as props, so the parent can supply localized strings for any language. Each prop's default value (`"Filter or add…"`, `"Select…"`, `"OK"`, `"Cancel"`, `` `Add "${text}"` ``, `"No matches"`) is English text baked into the component signature — a caller targeting another locale MUST override every default it uses rather than rely on it.
+All labels, placeholders, and messages (`placeholder`, `triggerPlaceholder`, `okLabel`, `cancelLabel`, `createLabel`, `emptyLabel`, `ariaLabel`, `inputLabel`) are accepted as props, so the parent can supply localized strings for any language. Each prop's default value (`"Filter or add…"`, `"Select…"`, `"OK"`, `"Cancel"`, `` `Add “${text}”` ``, `"No matches"`) is English text baked into the component signature — a caller targeting another locale MUST override every default it uses rather than rely on it.
 
 Filtering and exact-match resolution lowercase both the query and item labels (`.toLowerCase()`) for case-insensitive comparison. Casing is a locale-sensitive transform (e.g. Turkish dotless-ı), so this comparison may not behave as expected for every locale. Callers with locale-specific casing needs should pre-normalize `items` labels rather than relying on JavaScript's default, locale-unaware `toLowerCase()`.
 
@@ -283,13 +283,16 @@ No structured logging. ListChooser is a presentational form control; it emits no
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source (`list-chooser.tsx`): its ARIA roles/attributes and keyboard handlers (`role="combobox"`/`listbox`/`option`, `aria-activedescendant`, `aria-selected`, `aria-hidden` on icons, `onInputKeyDown`) support screen-reader and keyboard checks; its fixed `h-9` trigger and `py-1.5 px-2` rows fall short of the 44×44pt touch-target check; its color-token classes (`apt-gold`, `apt-text`, etc.) can't be verified for contrast or Dynamic-Type scaling from this file alone; all strings are props but the defaults are hardcoded English; and `truncate` on labels clips rather than accommodates expanded translated text, with no explicit `dir`-aware handling for RTL.
+Statuses rest on the source (`list-chooser.tsx`): its ARIA roles/attributes and keyboard handlers (`role="combobox"`/`listbox`/`option`, `aria-activedescendant`, `aria-selected`, `aria-hidden` on icons, `onInputKeyDown`) support screen-reader and keyboard checks; its fixed `h-9` trigger and `py-1.5 px-2` rows fall short of the 44×44pt touch-target check; its color-token classes (`apt-gold`, `apt-text`, etc.) can't be verified for contrast or Dynamic-Type scaling from this file alone; all strings are props but the defaults are hardcoded English; and `truncate` on labels clips rather than accommodates expanded translated text, with no explicit `dir`-aware handling for RTL. `separation-of-concerns` is partial because the filter/highlight/commit/accept/move business logic is defined as named functions but still lives inline inside the `ListChooser` component body rather than in an extracted hook or module; `unit-test-coverage` passes on `listChooser.test.tsx`'s thorough exercise of filtering, keyboard navigation, add-new, OK/Cancel, `keepOpenOnCommit`, and the trigger label.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Fixed empty-items edge case to require non-empty trimmed text before the create row shows; fixed createLabel default/example to curly quotes; fixed T21 to reflect that typing appends to the unselected preview text. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: resolve the keep-open dismissal contradiction (Esc/Cancel/Shift+Enter all close; Shift+Enter equals plain Enter when not in keep-open mode); define create-row visibility as "trimmed text non-empty with no exact case-insensitive label match" and apply it in the callout, States table, and edge cases; spell out exact ArrowUp/ArrowDown transitions at no-highlight, first, and last rows; add external references (APG combobox pattern, WCAG 2.4.7, 2.5.5); correct wrong/nonexistent SwiftUI, Compose, and WinUI 3 APIs and add the missing AppKit/UIKit platform note; convert Compliance to the required linked-check table; reformat Design Decisions into Decision/Rationale/Approved entries; narrow T16's citation to `ok-mirrors-enter`; add an `items` fixture table and rewrite the test vectors for consistency with it, plus new vectors for focus-returns-on-close, the disabled trigger, Esc/Cancel in keep-open mode, boundary clamping, preview-clearing on typing, and clicking an existing row; fix the 44×44pt touch-target unit math and downgrade it to SHOULD to match the actual 36px implementation; correct the Localization section's "no fixed text" claim and note the locale-sensitivity of the `toLowerCase()` casing transform; make focused-state-styling testable against a single WCAG 2.4.7 criterion; resolve the trigger value-resolution contradiction using the source's actual null-only placeholder rule; and move internal names (`handleOpenChange`, `isCommittedNew`, `requestAnimationFrame`) out of the cross-platform Accessibility/Edge Cases text. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Expand platform notes with guidance for Swift, Kotlin, and WinUI 3 implementations; add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); clarify appearance specs with specific measurements and color tokens; add focused-state-styling requirement and T14, T15, T16 test vectors; document Shift+Enter behavior in keep-open mode. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + recipe. |

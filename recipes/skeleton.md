@@ -3,11 +3,11 @@ id: 4a3761c5-5809-43c9-9a45-6f91fe82ae97
 title: Skeleton
 domain: agenticdevelopertoolkit://recipes/skeleton
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,14 +159,17 @@ Not applicable: The Skeleton component produces no logging output.
 |-------|--------|----------|
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | failed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The source applies Tailwind's `animate-pulse` unconditionally with no `prefers-reduced-motion` handling (reduced-motion: failed), and assigns no ARIA role or `aria-hidden` of its own, relying on the consumer for the aria-hidden/aria-busy contract described in **aria-hidden-while-loading** (semantic-markup: partial).
+The source applies Tailwind's `animate-pulse` unconditionally with no `prefers-reduced-motion` handling (reduced-motion: failed), and assigns no ARIA role or `aria-hidden` of its own, relying on the consumer for the aria-hidden/aria-busy contract described in **aria-hidden-while-loading** (semantic-markup: partial). `separation-of-concerns` passes because `skeleton.tsx` is a pure presentational div with no business logic, and `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: made requirements/appearance/vectors platform-neutral, moving Tailwind class names into the React/Web platform note; renamed requirements to subject-only kebab-case; reformatted Design Decisions into Decision/Rationale/Approved form; replaced the "Not applicable" Compliance section with a table; added a consumer-side aria-hidden-while-loading requirement (the component-side ARIA question stays open); added a reduced-motion-support requirement and test vector; fixed nonexistent/mismatched Platform Notes APIs (SwiftUI, Compose); corrected frontmatter `modified` quoting |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Fix Reduce Motion marker; clarify screen-reader gap |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code |
-| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

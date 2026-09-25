@@ -3,11 +3,11 @@ id: ecaba9e2-de10-45ac-80d8-398e9ab02626
 title: CopyButton
 domain: agenticdevelopertoolkit://recipes/copy-button
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -269,6 +269,8 @@ button.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
 Statuses rest on the source: the real `<button type="button">` (via `Button`) and
 `aria-label={label}` ground the passed accessibility checks, and
@@ -277,12 +279,18 @@ pass; the absent `aria-live` announcement of the success state and the token-bas
 (non-literal) colors, whose rendered contrast the source cannot show, ground the two
 partials; the `size-6` (24px) override of `Button`'s icon square grounds the
 touch-target failure; and the hard-coded `"Copied!"` string in `copy-button.tsx`
-grounds both internationalization failures.
+grounds both internationalization failures. `separation-of-concerns` passes:
+`copy-button.tsx` holds only the presentational `Button` wiring, while the
+clipboard-write-and-flash logic lives entirely in the generic `useClipboard`
+hook, which carries no knowledge of this component. `unit-test-coverage`
+fails — no test file in the `ui` package exercises `CopyButton` or
+`useClipboard`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct Platform Notes clipboard-permission/API claims and reorder to SwiftUI/Compose/React-Web/AppKit-UIKit/WinUI-3; rewrite Localization to acknowledge the hard-coded, user-visible "Copied!" title and cite the symbol instead of a line number; reformat Design Decisions into Decision/Rationale/Approved triplets; rebuild Compliance as catalog-linked checks (passed/partial/failed) with a grounding sentence; add the idle-title-from-label requirement and T9/T10 test vectors, and clarify skips-empty-text for whitespace-only text; note why useClipboard has no depends-on entry; rename the 1.0.0 summary to "Initial ingredient". |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); expand Platform Notes with concrete guidance for all platforms; update domain and depends-on URIs to canonical agenticdevelopercookbook namespace; mark status review. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient; documents the clipboard CopyButton on shared Button + useClipboard. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the clipboard CopyButton on shared Button + useClipboard. |

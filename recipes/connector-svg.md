@@ -3,11 +3,11 @@ id: d7a1229c-cf03-436f-8287-d99b52747510
 title: ConnectorSVG
 domain: agenticdevelopertoolkit://recipes/connector-svg
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,12 +159,15 @@ Not applicable: The component has no significant logging needs. Internal RAF sch
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The source renders standard `<svg>`, `<line>`, `<circle>`, and `<g>` elements with `aria-hidden="true"` and no custom or invalid ARIA attributes, so its markup passes semantic-markup.
+The source renders standard `<svg>`, `<line>`, `<circle>`, and `<g>` elements with `aria-hidden="true"` and no custom or invalid ARIA attributes, so its markup passes semantic-markup. separation-of-concerns is partial because the geometry computation, `requestAnimationFrame` batching, and `ResizeObserver`/scroll tracking are all implemented inline inside `ConnectorSVG.tsx` rather than extracted into standalone functions or hooks, while unit-test-coverage is failed because no test file exercises this component at all.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; promoted edge-case MUSTs (empty-pairs, null-container-ref, unresolved registry entries) to named requirements; added recompute-on-input-change and defined the tracked-element set; declared the connector-registry dependency in depends-on and Overview; reformatted Design Decisions into Decision/Rationale/Approved triplets; replaced the Compliance placeholder with a table listing semantic-markup; split source-color into separate stroke/fill wording and promoted stroke-width and opacity to requirements; fixed the connector-006 coordinate math; added test vectors for window resize, scroll, teardown, null container ref, empty pairs, input-change recompute, stroke/opacity, and zero-dimension elements; made container-reference platform-neutral; reconciled Platform Notes with the no-timer/no-polling design decision and corrected the AppKit/UIKit and WinUI 3 API references; clarified States to describe cached derived geometry instead of "stateless"; documented the pc- class prefix as fixed rather than templated |
 

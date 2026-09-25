@@ -3,11 +3,11 @@ id: 81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094
 title: Markdown Spell Check
 domain: agenticdevelopertoolkit://recipes/markdown-spellcheck
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -241,6 +241,39 @@ The default `createHarperLinter` dynamically imports `harper.js` +
 `{ language: 'markdown', dedup: true }`. The exported types never reference
 harper, so consumers do not need harper resolvable to type-check.
 
+## Deep Linking
+
+Not applicable: this is a reusable UI primitive exported for toolbar integration and does not participate in app routing or deep linking.
+
+## Localization
+
+Known gap, not "not applicable": the component hard-codes its user-facing
+copy — the "Checking…" loading text, "No issues found." empty state, and the
+"Spell check is unavailable…" error state, plus the per-suggestion
+`Replace "<flagged>" with "<suggestion>"` accessible names — with no
+locale-sensitive formatting per source. Only the toggle's own text is
+externalized, via the `label` prop (default `"Check spelling"`); a consumer
+cannot localize the rest without editing this component.
+
+## Accessibility Options
+
+This control inherits focus management and keyboard dismissal from the shared
+`Popover` primitive, and every interactive element is a real `<button>` with
+an accessible name and `aria-pressed`/state attributes. See **default-off**,
+**list-problems**, and **offer-suggestions** in Behavioral Requirements.
+
+## Feature Flags
+
+Not applicable: this ingredient is a reusable UI component and is not gated by feature flags.
+
+## Analytics
+
+Not applicable: this ingredient is presentational. Consumers may instrument toggle activation and suggestion application in their own event tracking systems; the only externally visible callback is `onApply`.
+
+## Privacy
+
+Not applicable: harper.js lints entirely client-side (see **use-worker-linter**), so the component makes no network calls and collects or stores no data of its own; it only holds the `value` source string and reports edits back through `onApply`.
+
 ## Logging
 
 Not applicable: This control is presentational and emits no structured log events. Enabling,
@@ -276,18 +309,18 @@ is surfaced to the user via the error state rather than logged.
   the UI thread (a Web Worker) is essential. Loading only when the user opts in
   honors the opt-in principle.
   **Approved**: pending
-- **Decision**: Markdown source mode (`language: 'markdown'`). **Rationale**: The
-  reason to add this over native spellcheck is to skip code blocks and markdown
-  syntax and check only prose.
+- **Decision**: Markdown source mode (`language: 'markdown'`).
+  **Rationale**: The reason to add this over native spellcheck is to skip code
+  blocks and markdown syntax and check only prose.
   **Approved**: pending
 - **Decision**: A `createLinter` DI seam with a harper-free public type surface.
   **Rationale**: Tests inject a fake (no WASM in jsdom) and the lazy contract is
   assertable; keeping harper out of the exported `.d.ts` means consumers need not
   resolve harper to type-check.
   **Approved**: pending
-- **Decision**: harper's own `applySuggestion` performs edits. **Rationale**: It
-  handles `Replace` / `Remove` / `InsertAfter` suggestion kinds correctly, which a
-  naive substring splice would not.
+- **Decision**: harper's own `applySuggestion` performs edits.
+  **Rationale**: It handles `Replace` / `Remove` / `InsertAfter` suggestion
+  kinds correctly, which a naive substring splice would not.
   **Approved**: pending
 
 ## Compliance
@@ -302,6 +335,8 @@ is surfaced to the user via the error state rather than logged.
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 `screen-reader-support` and `keyboard-navigable` pass because the toggle and every
 apply action are real `<button>` elements with an accessible name (`aria-label`,
@@ -318,13 +353,20 @@ literal English strings with no i18n layer; `string-externalization` is partial
 because the toggle's own label is externalized via the `label` prop but those
 other strings are not. Security, Privacy and Data, and User Safety are omitted:
 the component makes no network calls (harper runs offline), stores/collects no
-data of its own, and produces no logs (see Logging above).
+data of its own, and produces no logs (see Logging above). `separation-of-concerns`
+passes because the component isolates harper behind the `MarkdownLinter`/
+`CreateMarkdownLinter` DI seam, so the UI never references harper directly and
+a fake linter can stand in for tests. `unit-test-coverage` passes because
+`markdownSpellcheck.test.tsx` covers the off-by-default toggle, lazy linter
+creation, linting and listing problems, the empty state, and applying a
+suggestion.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored 1.0.0 period; added 6 missing sections, fixed Decision triples, best-practices rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab names (RFC 2119 keyword stays in the sentence); cap offer-suggestions at four in the requirement text; add dispose-on-unmount and apply-latest-lint requirements; add test vectors for show-error-state, reset-on-disable, the relint-on-settle debounce, lint-markdown-source/use-worker-linter, be-client-only, dispose-on-unmount, and the Remove-kind edge case; correct Platform Notes (drop the discontinued Grammarly SDK and the non-existent UITextInputDelegate/EditText spell-check APIs) and map the toggle/lazy-load/popover-panel/empty-error-state contract onto each platform's native popover-presentation control; replace the Compliance table with real accessibility/internationalization checks; add Approved lines to Design Decisions; trim tags to five; drop the duplicate markdown-editor related entry; shorten the summary; name gen-sources.py in the React/Web note |
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes; add concrete guidance for markdown-aware filtering on all platforms (SwiftUI, Compose, AppKit/UIKit, WinUI 3 with TextBox/RichEditBox and document range iteration) |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise recipe: fix frontmatter URIs (agenticdevelopercookbook), restructure Platform Notes to cover all five platforms (all marked Not applicable except React/Web), fix Logging section format, promote to review status |
-| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown spell/grammar-check toolbar control (harper.js WorkerLinter), contract c12 |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown spell/grammar-check toolbar control (harper.js WorkerLinter), contract c12. |

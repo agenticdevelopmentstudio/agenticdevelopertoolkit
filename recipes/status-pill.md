@@ -3,11 +3,11 @@ id: ba2377b1-f831-4ef8-bf2c-d8393e5eb2c1
 title: Status Pill
 domain: agenticdevelopertoolkit://recipes/status-pill
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,12 +159,15 @@ Not applicable: No logging is implemented in the source.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `blocks.css`'s `.lp-status` / `.lp-status--free` rules and `StatusPill.tsx`: foreground/background/border are theme-supplied CSS variables with hardcoded fallbacks, so contrast cannot be fully verified from the source alone; sizing uses fixed `rem` font values with no accommodation noted for native Dynamic Type; and `white-space: nowrap` with no truncation means expanded translations overflow rather than adapt, while all displayed text is caller-supplied rather than hardcoded in the component.
+Statuses rest on `blocks.css`'s `.lp-status` / `.lp-status--free` rules and `StatusPill.tsx`: foreground/background/border are theme-supplied CSS variables with hardcoded fallbacks, so contrast cannot be fully verified from the source alone; sizing uses fixed `rem` font values with no accommodation noted for native Dynamic Type; and `white-space: nowrap` with no truncation means expanded translations overflow rather than adapt, while all displayed text is caller-supplied rather than hardcoded in the component; the component is a single conditional class over caller-supplied children with no business logic (separation-of-concerns passed), and `blocks-close.test.tsx` renders it with `free` and asserts the modifier class (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and restated them behaviorally, added a status-conveyed-by-text requirement and vector for the color-only-signal risk, filled Appearance with concrete values and tokens from blocks.css, replaced low-value edge cases with the real nowrap/nesting behaviors, corrected the `<p>` semantics claim in Accessibility, reformatted Design Decisions into Decision/Rationale/Approved blocks and added two documenting the `free` naming and the badge overlap, rebuilt Compliance as a linked table with grounded statuses, rewrote Localization for the uppercase casing transform and text overflow, fixed the SwiftUI and WinUI platform notes, renamed the platform-notes bullet to React/Web, generalized the Overview while keeping the sourced usage examples, and added badge to related |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

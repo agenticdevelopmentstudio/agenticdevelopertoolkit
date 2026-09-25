@@ -3,11 +3,11 @@ id: 46b0cb5d-bd0c-45d0-ab14-95054e1c59ab
 title: Email Signup Form
 domain: agenticdevelopertoolkit://recipes/email-signup-form
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,7 +50,7 @@ The Email Signup Form is an embeddable React component that collects email addre
 - **show-unavailable-state**: Component MUST display "Signups are unavailable right now." with a clickable "Try again" button when the config fetch fails, allowing the user to retry without a page reload.
 - **show-ready-state**: Component MUST render the signup form when config is loaded and status is "open".
 - **validate-email-locally**: Component MUST validate the email address against the pattern `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` before submission.
-- **reject-invalid-email**: Component MUST display the validation error "Enter a valid email address." and MUST NOT submit when email fails local validation.
+- **reject-invalid-email**: Component MUST display the validation error "Enter a valid email address." and MUST NOT submit when email fails local validation. The email input is also `required` and `type="email"`, and the `<form>` has no `noValidate`, so for a real user click on the submit button, the browser's own native constraint validation runs first: for an empty field or one that fails the browser's `type="email"` check, the browser blocks the `submit` event with its own message, and this handler (and the message above) never runs. The component's own message is reachable by a real click only for input that passes the browser's check but fails the stricter local pattern (e.g. `"a@b"`), or by any submit that bypasses native validation (a synthetic/programmatic `submit` event).
 - **trim-email-before-submit**: Component MUST trim whitespace from the email value before both validation and submission.
 - **trim-name-before-submit**: Component MUST trim whitespace from the name value before submission (if collectName is true).
 - **wait-for-nonce-age**: Component MUST wait until the nonce age (time since config.nonce was received) exceeds config.minAgeMs before submitting, if minAgeMs is specified.
@@ -117,7 +117,7 @@ The Email Signup Form is an embeddable React component that collects email addre
 | Ready | Full form visible with email and optional name fields; submit button enabled |
 | Submitting | Submit button disabled and at 50% opacity; button text changes to "Signing up…"; aria-busy="true" |
 | Done | Form hidden; success message displayed with focus |
-| Closed | Message "{list name} is closed to new signups right now." (falls back to "This list" if config.name is empty or missing); no form |
+| Closed | Message "{list name} is closed to new signups right now." (`config?.name ?? "This list"`: falls back to "This list" only when config.name is `null` or missing/`undefined`; an empty-string `config.name` renders as a blank subject, e.g. " is closed to new signups right now.") ; no form |
 | Unavailable | Error message "Signups are unavailable right now." with a "Try again" button |
 
 ## Accessibility
@@ -141,7 +141,7 @@ The Email Signup Form is an embeddable React component that collects email addre
 | esf-003 | timeout-config-request, show-unavailable-state | Config fetch hangs beyond 10,000ms | Component enters unavailable state and displays "Try again" button |
 | esf-004 | handle-config-not-ok, show-unavailable-state | Config fetch returns 404 or 500 | Component enters unavailable state; console error logged with public key |
 | esf-005 | show-closed-state | Config fetch returns 200 with status "closed" | Component displays "{list name} is closed to new signups right now." with no form |
-| esf-006 | validate-email-locally, reject-invalid-email | User enters "notanemail" and submits | Form displays validation error and does not submit |
+| esf-006 | validate-email-locally, reject-invalid-email | User enters "notanemail" and clicks submit | The browser's native constraint validation (`type="email"`) blocks the `submit` event first and shows its own bubble ("Please include an '@' in the email address…"); the component's handler does not run and its "Enter a valid email address." message does not appear. The component's own check and message are exercised only by a value that passes native `type="email"` but fails the stricter local pattern (e.g. "a@b"), or by a submit that bypasses native validation |
 | esf-007 | validate-email-locally | User enters "user@example.com" | Form passes validation check |
 | esf-008 | trim-email-before-submit | User enters "  user@example.com  " | Email is trimmed before validation and submission |
 | esf-009 | wait-for-nonce-age, add-timing-buffer | Config returned with minAgeMs 3000; user submits after 1000ms | Submission waits `(3000 - 1000) + 250` = 2250ms before sending |
@@ -185,7 +185,7 @@ The Email Signup Form is an embeddable React component that collects email addre
 - **Password manager autofilling honeypot**: The honeypot field has autofill opt-out properties; if a password manager ignores these and fills the field anyway, the server treats any non-empty value as a bot submission and silently rejects it.
 - **Validation error persists until the next submit**: Editing the email field after a validation error does not itself clear the error — `error` is only reset to `null` inside `submit()`, at the point a resubmission passes local validation. The message and the `aria-invalid`/`aria-describedby` state therefore remain on screen while the visitor is still typing, until they submit again.
 - **Success message persists until unmount**: Once the component enters the done state, it displays only the success message. The component does NOT automatically reset or navigate; the parent is responsible for removing or replacing the component.
-- **Empty email field**: If the user submits without entering an email, the local validation fails and displays "Enter a valid email address."
+- **Empty email field**: The email input is `required` and `type="email"`, and the `<form>` has no `noValidate`, so a real user click on submit with the field empty is intercepted by the browser's own native constraint validation before the `submit` event fires: the browser shows its own message ("Please fill out this field."), the component's `submit()` handler never runs, and no `aria-invalid`/`aria-describedby`/`role="alert"` state appears. The component's own "Enter a valid email address." message only appears for a submit that bypasses native validation (a synthetic/programmatic `submit` event — the sole route the test suite exercises) or for input that passes the browser's `type="email"` check but fails the component's own stricter pattern (e.g. "a@b").
 
 ## Configuration
 
@@ -334,8 +334,10 @@ Subsystem: Application console (developer-facing only)
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the component source (`email-signup-form.tsx`) and its `lib/autofill.ts` / `lib/utils.ts` helpers: what the source directly shows — Tailwind class output, ARIA attributes, `console.error` calls, the trim/regex logic, the absence of any callback props — is marked `passed` or `failed`; anything that depends on the host page or the backend (background color and root font size for contrast/dynamic-type, the TLS scheme of `apiBaseUrl`, retention policy owned by the hub) is marked `partial` or, where the component plainly does nothing about it (retention, string externalization), `failed`.
+Statuses rest on the component source (`email-signup-form.tsx`) and its `lib/autofill.ts` / `lib/utils.ts` helpers: what the source directly shows — Tailwind class output, ARIA attributes, `console.error` calls, the trim/regex logic, the absence of any callback props — is marked `passed` or `failed`; anything that depends on the host page or the backend (background color and root font size for contrast/dynamic-type, the TLS scheme of `apiBaseUrl`, retention policy owned by the hub) is marked `partial` or, where the component plainly does nothing about it (retention, string externalization), `failed`. `separation-of-concerns` is `passed` because the nonce/timing/submission state machine is isolated in named helpers and effects rather than tangled into the JSX; `unit-test-coverage` is `passed` because `emailSignupForm.test.tsx` renders `EmailSignupForm` directly and exercises its phases with meaningful assertions.
 
 ## Change History
 
@@ -343,3 +345,4 @@ Statuses rest on the component source (`email-signup-form.tsx`) and its `lib/aut
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and reconsidered should-/may- keywords on merits; corrected Compliance statuses/links and expanded categories beyond Accessibility; reformatted Design Decisions into Decision/Rationale/Approved blocks; fixed Appearance measurements and made them platform-neutral; corrected Platform Notes APIs (SwiftUI heading, Compose button, AppKit/UIKit form, WinUI 3 phase switching) and added sourceUrl/honeypot native guidance; resolved Closed-state, Privacy, and timing-buffer internal contradictions; rewrote garbled edge cases and added missing ones (double submit, retry during refresh, honeypot-tripped success); filled frontmatter references and Accessibility Options; added missing test vectors. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Documented native constraint validation gating real user submits (empty/invalid email never reaches the component check); fixed Closed-state ?? fallback to note it misses empty-string names. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

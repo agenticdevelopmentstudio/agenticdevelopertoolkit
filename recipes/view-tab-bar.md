@@ -3,11 +3,11 @@ id: 826184eb-23f0-4ff7-b5f3-dc583fbc8496
 title: View Tab Bar
 domain: agenticdevelopertoolkit://recipes/view-tab-bar
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -211,11 +211,14 @@ Not implemented in source. No logging or debug output is emitted.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Screen-reader-support, keyboard-navigable, and semantic-markup are `partial` because the source provides `role`, `aria-selected`, `aria-current`, and `title`/`aria-label` for icon tabs, but implements only native Tab-key focus (no arrow-key/Home-End roving tabindex, no `aria-controls` linking a tab to a panel) and does not enforce a `title` when a tab's label is icon-only (see Edge Cases); contrast-ratio, touch-target-size, and dynamic-type-support are `partial` because those depend entirely on the externally-defined `tabItemClass`, which this source does not define; no-hardcoded-strings and string-externalization are `failed` because the `aria-label="views"` string is a literal in `view-tab-bar.tsx` with no prop to override or localize it.
+Screen-reader-support, keyboard-navigable, and semantic-markup are `partial` because the source provides `role`, `aria-selected`, `aria-current`, and `title`/`aria-label` for icon tabs, but implements only native Tab-key focus (no arrow-key/Home-End roving tabindex, no `aria-controls` linking a tab to a panel) and does not enforce a `title` when a tab's label is icon-only (see Edge Cases); contrast-ratio, touch-target-size, and dynamic-type-support are `partial` because those depend entirely on the externally-defined `tabItemClass`, which this source does not define; no-hardcoded-strings and string-externalization are `failed` because the `aria-label="views"` string is a literal in `view-tab-bar.tsx` with no prop to override or localize it. `separation-of-concerns` passes because the component is a controlled, pure presentation layer over `tabs`/`value`/`links` with no business logic; `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; reformatted Design Decisions to Decision/Rationale/Approved; rewrote Compliance as a real, linked check table instead of an ad hoc "Passed" list; corrected the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes to real native APIs; resolved the onChange/value contradiction between Configuration and Edge Cases; rewrote the incoherent duplicate-value, single-item, and impossible-null-href edge cases; fixed the Deep Linking claim that contradicted the plain-`<a>` source; added the Tabs recipe to `related`; dropped "scrollable" from the summary (no overflow handling exists); removed the undefined "Rule 15" reference; reworded the layout/item-styling requirements and vectors to assert observable/computed outcomes instead of literal Tailwind class strings; added test vectors for the both-empty-arrays case and for `className`/`px-4` merging. |

@@ -3,11 +3,11 @@ id: 37b7b456-790f-4b2d-8f3a-a364016ce389
 title: StatList
 domain: agenticdevelopertoolkit://recipes/stat-list
 type: recipe
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -180,6 +180,8 @@ composed `StatusDot`; nothing flows back up.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | partial | Platform Compliance |
 | [rf-compliance](agenticdevelopercookbook://compliance/artifact-formatting/recipe-formatting#rf-compliance) | passed | Artifact Formatting |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 The dot carries no `aria-label` while the label + trailing text convey the row's
 meaning (screen-reader-support); `StatListRow`/`StatList` render a semantic `li`/`ul`
@@ -188,12 +190,16 @@ when `as` requests one (semantic-markup); styling is expressed entirely through
 high-contrast wiring those tokens resolve to lives in the themes package rather
 than in this source, hence `partial` (platform-theming); and this section now
 matches the Check/Status/Category table format with linked, catalog check ids
-(rf-compliance).
+(rf-compliance); `StatListRow`/`StatList` are pure presentation assembled from
+`StatusDot` and caller content with no business logic (separation-of-concerns
+passed), and `statList.test.tsx` directly renders both and asserts on their DOM
+output (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add as-consistency; state truncation/stacking/divider behavior instead of literal Tailwind classes; add test vectors for default `div` roots, `StatListRow` attribute spreading, `trailing={0}`, and the `as` mismatch case; rework WinUI 3 Platform Notes onto a `Grid` layout and drop "Not applicable" from SwiftUI/Compose/AppKit-UIKit, adding trailing-visibility guidance to SwiftUI/Compose; link Compliance checks to the catalog with `passed`/`partial` status and reformat Design Decisions with `Approved` lines; trim the frontmatter summary; note that leaf components are recipes in this toolkit; record the domain scheme's move to `agenticdevelopertoolkit` (commit c1d412c), which this version's frontmatter already carries. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete control guidance; remove "Not applicable" phrasing. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Reorganize Platform Notes per cookbook standards; fix domain URI scheme from agenticdeveloperhub to agenticdevelopercookbook; update status to review. |

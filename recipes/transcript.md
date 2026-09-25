@@ -3,11 +3,11 @@ id: 98e78d31-2c3a-47dc-a156-435a5732a29f
 title: Transcript
 domain: agenticdevelopertoolkit://recipes/transcript
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -232,12 +232,15 @@ Not applicable: Transcript has no logging. It does not emit debug, info, warn, o
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `Transcript.tsx`: `tabIndex={0}` plus `role="region"`/`aria-label={label}` give the container keyboard access and a named landmark (keyboard-navigable, semantic-markup passed); the `label = 'Conversation transcript'` default parameter is an English literal hardcoded in source rather than sourced from a localization resource (no-hardcoded-strings failed), while the `label` prop itself does accept a host-supplied localized string (string-externalization partial).
+Statuses rest on `Transcript.tsx`: `tabIndex={0}` plus `role="region"`/`aria-label={label}` give the container keyboard access and a named landmark (keyboard-navigable, semantic-markup passed); the `label = 'Conversation transcript'` default parameter is an English literal hardcoded in source rather than sourced from a localization resource (no-hardcoded-strings failed), while the `label` prop itself does accept a host-supplied localized string (string-externalization partial). `separation-of-concerns` passes because the component renders over props and delegates scroll behavior to `useScrollToBottom`, and `unit-test-coverage` passes on `Transcript.test.tsx`'s exercise of message rendering, selection, click callbacks, popovers, detail arrows, and the typing indicator.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case (merged the five thinking-* requirements into thinking-props-passthrough; split should-apply-fade-gradient into fade-older/fade-anchor-viewport/fade-restores-on-scroll); documented the near-bottom gating on both scroll-to-bottom requirements; folded the popover condition into the detail-arrows requirement; made requirements and test vectors platform-neutral, moving React-specific details (tabIndex, key, CSS class, onClick) into Platform Notes; fixed SwiftUI's isTyping to a plain let, split AppKit out of the UIKit note, and replaced the nonexistent WinUI 3 OpacityMask/ConditionalVisibility APIs with CompositionMaskBrush and a BoolToVisibility-style converter; corrected the fade design decision's rationale, the Reduce Motion/Increase Contrast wording, and the "focus trap" phrasing; reformatted Design Decisions into Decision/Rationale/Approved rows; linked Compliance to catalog check IDs and added the Internationalization checks the hardcoded default label triggers; added depends-on entries and WAI-ARIA references; dropped the unfounded focus-outline assertion in transcript-006 and added vectors for near-bottom gating, fade anchoring/restoration, and an out-of-range negative selectedIndex. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |

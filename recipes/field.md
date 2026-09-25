@@ -3,11 +3,11 @@ id: 0c199036-81c3-47c3-9e79-e4b8187ca69a
 title: Field
 domain: agenticdevelopertoolkit://recipes/field
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -266,17 +266,26 @@ no-config.
 |---|---|---|
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 `screen-reader-support` rests on the shared `Label` giving the control a
 meaningful, programmatic name from the caption (**associate-label-implicitly**)
 and on `errorId` naming the error line for `aria-describedby`
 (**name-error-line**); `semantic-markup` rests on `Field` composing native
 `<label>` and text elements rather than custom ARIA roles.
+`separation-of-concerns` passes: `field.tsx` has no logic beyond choosing
+which layout classes to apply and composes `Label`/`FieldFootnote` rather
+than reimplementing them. `unit-test-coverage` passes — `field.test.tsx`
+asserts both `layout="inline"` and the default `"stacked"` layout, covering
+the caption's right-alignment and the footnote's grid-column placement in
+each.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add requirements/test vectors for `errorId` and inline layout, correct the disabled-state and row-height claims to what the source does, fix platform notes (label-association mechanism, SwiftUI casing, Compose error color, WinUI width/font, no tappable AppKit/UIKit caption), rebuild Compliance from the catalog, and complete Design Decisions' Approved lines. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add the inline layout option, plus platform notes for all five platforms. |
-| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial ingredient for the shared Field form row. |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe for the shared Field form row. |

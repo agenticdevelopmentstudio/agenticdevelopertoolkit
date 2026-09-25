@@ -3,11 +3,11 @@ id: 0fe9833b-2a5c-47d5-a455-87e00d3797cf
 title: DefaultDocLink
 domain: agenticdevelopertoolkit://recipes/doc-link
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -153,12 +153,15 @@ Not applicable — this component does not emit log messages (source: no logging
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | failed | Security |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The native `<a>` element gives keyboard operability and correct implicit markup for free (source: `doc-link.tsx` renders a plain `<a href>` with no custom ARIA and no key handling of its own); screen-reader-support is only partial because `children` may be null or undefined, leaving the link with no accessible name (see **null-or-undefined-children**); input-sanitization fails because `to` is passed straight into `href` with no path or scheme validation anywhere in the source (see **unsafe-to-scheme**).
+The native `<a>` element gives keyboard operability and correct implicit markup for free (source: `doc-link.tsx` renders a plain `<a href>` with no custom ARIA and no key handling of its own); screen-reader-support is only partial because `children` may be null or undefined, leaving the link with no accessible name (see **null-or-undefined-children**); input-sanitization fails because `to` is passed straight into `href` with no path or scheme validation anywhere in the source (see **unsafe-to-scheme**). `separation-of-concerns` passes because `DefaultDocLink` renders a plain `<a href>` with no business logic; `unit-test-coverage` fails because no test file exercises `doc-link.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; corrected the missing-`to` and browser-underline claims; documented the `javascript:`-scheme risk and spread/href precedence instead of claiming no security surface; corrected Platform Notes APIs (UIKit, Compose, WinUI 3, SwiftUI); rephrased the props-naming decision as web-specific; converted Design Decisions and Compliance to the required formats; added the injection-seam and accessible-label requirements with test vectors; renamed the component to DefaultDocLink throughout; added tags and related recipes |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

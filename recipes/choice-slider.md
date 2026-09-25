@@ -3,11 +3,11 @@ id: 6f7c9bb6-b6fe-479a-9dbc-3ff174f7fed2
 title: Choice Slider
 domain: agenticdevelopertoolkit://recipes/choice-slider
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -106,7 +106,7 @@ A choice slider is a slider control that lets users select one value from a disc
 | `hint` | ReactNode | undefined | Optional hint text or element displayed below the slider. |
 | `value` | string \| number | (required) | The currently selected choice value. SHOULD match one of the choice values; if no match is found, the component falls back to the first choice rather than erroring (see **maintain-value-in-range**). |
 | `onChange` | function | (required) | Callback invoked with the selected choice's value when the slider moves. |
-| `choices` | Choice<T>[] | (required) | Array of selectable options. Each choice has a `value` and `label`. |
+| `choices` | `Choice<T>[]` | (required) | Array of selectable options. Each choice has a `value` and `label`. |
 | `disabled` | boolean | false | When true, slider interaction is disabled. |
 | `className` | string | undefined | Optional additional CSS class(es) to apply to the root container. |
 | `id` | string | (auto-generated) | Optional custom ID for the range input. If omitted, a unique ID is generated via `useId()`. |
@@ -190,15 +190,18 @@ Not applicable: Component does not perform logging. Debugging is handled via the
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `ChoiceSlider.tsx` and `styles.css`: the native `<input type="range">` gives keyboard operability and an implicit `slider` role with a native `<label>` association for free (passed), font sizes in `styles.css` (`aws-field__label`, `aws-field__hint`, `aws-slider__caption`) use `rem` units that scale with the browser's root font size (passed for dynamic type); but the missing `aria-valuetext` and the missing fallback accessible name for the label-less case (see the Accessibility section's "Labeling" and "Screen reader announcement" items) make screen-reader support partial, the unset thumb size against theme-driven `--aws-accent`/`--aws-border`/`--aws-text-muted` colors makes touch-target size and contrast ratio partial (the source cannot guarantee either from its CSS alone), and the component never hardcodes or transforms consumer-supplied text (label/hint/choice labels pass through as opaque `ReactNode`/string content) so hardcoded-strings and Unicode handling pass while text-expansion tolerance is partial, since the flex layout has no explicit overflow handling verified for very long translated labels.
+Statuses rest on `ChoiceSlider.tsx` and `styles.css`: the native `<input type="range">` gives keyboard operability and an implicit `slider` role with a native `<label>` association for free (passed), font sizes in `styles.css` (`aws-field__label`, `aws-field__hint`, `aws-slider__caption`) use `rem` units that scale with the browser's root font size (passed for dynamic type); but the missing `aria-valuetext` and the missing fallback accessible name for the label-less case (see the Accessibility section's "Labeling" and "Screen reader announcement" items) make screen-reader support partial, the unset thumb size against theme-driven `--aws-accent`/`--aws-border`/`--aws-text-muted` colors makes touch-target size and contrast ratio partial (the source cannot guarantee either from its CSS alone), and the component never hardcodes or transforms consumer-supplied text (label/hint/choice labels pass through as opaque `ReactNode`/string content) so hardcoded-strings and Unicode handling pass while text-expansion tolerance is partial, since the flex layout has no explicit overflow handling verified for very long translated labels; the only business logic — mapping the range input's index to a `choices` entry and clamping an out-of-range `value` to the first choice — is a single self-contained block with no presentation or data-layer coupling (separation-of-concerns); and `components.test.tsx`'s `ChoiceSlider` suite asserts that logic end to end, driving the range input and checking both the emitted value and the displayed caption (unit-test-coverage).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.2 | 2026-09-25 | Mike Fullerton | Wrapped Choice<T>[] in code span; added best-practices compliance rows. |
+| 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: behavioral requirements restated platform-neutral and renamed to subject-only kebab-case, with render-label promoted to MUST; value-match contract contradiction between Configuration and requirements resolved to the documented fallback; Design Decisions reformatted to Decision/Rationale/Approved; Compliance table added; Edge Cases narration replaced with observable behavior and new test vectors added for empty/single choice, keyboard input, type mismatch, and prop-only updates; Platform Notes API errors fixed for SwiftUI, Compose, AppKit, UIKit, and WinUI 3; status set to draft pending the two open accessibility gaps |
 | 1.2.0 | 2026-09-22 | Claude Opus 5 | Thumb sizing and empty-choices behavior restated as fact from `styles.css` and the source (tooling: Claude Opus 5); two accessibility gaps retained |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revision pass Phase 1: gap triage across Accessibility and Edge Cases (tooling: Claude Haiku 4.5) |
 | 1.0.0 | 2026-09-22 | (cookbook update) | Initial creation |
-| 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,15 +3,15 @@ id: f679a77e-04f7-4e43-b898-6d78a637a760
 title: DialogActions
 domain: agenticdevelopertoolkit://recipes/dialog-actions
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Two-button dialog footer whose layout is resolved by CSS — equal-width when narrow, natural-width right-justified when wide — settled on the first painted frame, plus initial focus and a busy state."
+summary: "Two-button dialog footer laid out by CSS: equal-width when narrow, right-justified natural-width when wide, plus initial focus and a busy state."
 platforms:
 - typescript
 - web
@@ -198,8 +198,10 @@ Busy:
   deliberate choice, not an oversight — see Design Decisions.
 - **Initial focus fallback**: when the preferred button named by `initialFocus` is
   disabled or absent, focus moves to the other button instead of nowhere (see
-  **focus-fallback-to-other-button**). Both missing and both disabled leaves focus on
-  `<body>` (no trap).
+  **focus-fallback-to-other-button**). When both are missing or disabled, the component
+  leaves focus wherever the host dialog already placed it rather than forcing it anywhere;
+  it relies on the host dialog's own focus management (for example base-ui's Popup) to keep
+  a trap in place.
 
 ## Configuration
 
@@ -359,8 +361,10 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The passed/failed statuses rest on: native `<button>` elements plus the `role="status"`/`aria-label` spinner and `Button`'s theme-token colors (screen-reader-support, keyboard-navigable, semantic-markup, contrast-ratio — passed); the deliberate, source-verified focus placement and fallback logic (focus-management — passed); the `size="sm"` button's actual `h-7` (28px) height with no `--adh-button-min-height` set by this component (touch-target-size — failed); the unconditional `animate-spin`/`transition-all` with no `prefers-reduced-motion` check (reduced-motion — failed); the hardcoded `aria-label="Working…"` (string-externalization, no-hardcoded-strings — failed); the flex-based natural-width growth and unprocessed prop strings, which impose no truncation and no encoding assumptions (text-expansion-tolerance, unicode-support — passed); and, where the source cannot tell you, Tailwind's rem-based type scale (dynamic-type-support) and the browser's native flexbox handling of `justify-end` under `dir="rtl"` (rtl-layout-support), neither of which this component tests directly (both — partial).
+The passed/failed statuses rest on: native `<button>` elements plus the `role="status"`/`aria-label` spinner and `Button`'s theme-token colors (screen-reader-support, keyboard-navigable, semantic-markup, contrast-ratio — passed); the deliberate, source-verified focus placement and fallback logic (focus-management — passed); the `size="sm"` button's actual `h-7` (28px) height with no `--adh-button-min-height` set by this component (touch-target-size — failed); the unconditional `animate-spin`/`transition-all` with no `prefers-reduced-motion` check (reduced-motion — failed); the hardcoded `aria-label="Working…"` (string-externalization, no-hardcoded-strings — failed); the flex-based natural-width growth and unprocessed prop strings, which impose no truncation and no encoding assumptions (text-expansion-tolerance, unicode-support — passed); and, where the source cannot tell you, Tailwind's rem-based type scale (dynamic-type-support) and the browser's native flexbox handling of `justify-end` under `dir="rtl"` (rtl-layout-support), neither of which this component tests directly (both — partial). `separation-of-concerns` is partial because the initial-focus effect and the button-grow layout derivation are both implemented inline inside `DialogActions` rather than extracted; `unit-test-coverage` passes because `dialogActions.test.tsx` imports `DialogActions` directly and exercises its behavior with meaningful assertions.
 
 ## Change History
 
@@ -371,3 +375,4 @@ The passed/failed statuses rest on: native `<button>` elements plus the `role="s
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Complete ingredient recipe: add `confirmDisabled` requirement (see **apply-confirm-disabled**), fill all template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with "not applicable" explanations, expand Platform Notes to cover all platforms, add touch target guidance, and update Change History. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Remove localization review marker; aria-label is implemented in source as hardcoded English, no decision to be made by reviewer. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; merged the duplicate busy/confirmDisabled requirement into **show-busy-indicator**; reworded **equal-width-when-narrow** and rewrote T4/T5/T8 to match the natural-width-capped behavior instead of the retired `2 × Wmax` threshold; added requirements and test vectors for the initial-focus fallback and the destructive-cancel quiet focus ring; reformatted Design Decisions into Decision/Rationale/Approved and added one covering focus not moving when confirm disables late; corrected the touch-target claim and dropped the unverified "39 themes" figure in favor of the three named themes; replaced stale source-line citations with requirement-name citations; fixed the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; documented the spinner/button animations and their lack of Reduce Motion support in Accessibility Options; and rebuilt Compliance as a linked table using passed/failed/partial. |
+| 1.4.1 | 2026-09-25 | Mike Fullerton | Fixed both-disabled focus edge case: leaves focus wherever the host dialog placed it, not forced to <body>/no trap; shortened summary to fit 160 chars. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |

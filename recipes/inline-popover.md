@@ -3,11 +3,11 @@ id: a7e2f9d1-4c8a-4b9e-8f3d-2c5b7e1a9d4f
 title: "Inline Disclosure"
 domain: agenticdevelopertoolkit://recipes/inline-popover
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -88,14 +88,14 @@ All visual styling (colors, spacing, sizing, shadows, hover states, transitions)
 | inline-popover-003 | toggle-visibility-on-click, set-aria-hidden-attribute | User clicks toggle button when open | Component renders with `aria-hidden="true"` and `pc-popover-open` class removed |
 | inline-popover-004 | toggle-visibility-on-click, set-aria-hidden-attribute | User clicks toggle button when closed | Component renders with `aria-hidden="false"` and `pc-popover-open` class added |
 | inline-popover-005 | render-title-when-provided | `data={{ title: "Test Title" }}` | Title text appears in a `span` with class `pc-popover-title` |
-| inline-popover-006 | render-title-when-provided | `data={{ title: "" }}` or `data={{ }}` | No title element is rendered |
-| inline-popover-007 | render-description-when-provided | `data={{ description: "Test Description" }}` | Description text appears in a `div` with class `pc-popover-desc` |
-| inline-popover-008 | render-description-when-provided | `data={{ description: undefined }}` or `data={{ }}` | No description element is rendered |
-| inline-popover-009 | render-links-collection | `data={{ links: [{ url: "https://example.com", label: "Example" }] }}` | Links container div is rendered with class `pc-popover-links` containing one link element |
-| inline-popover-010 | render-links-collection | `data={{ links: [] }}` or `data={{ links: undefined }}` or `data={{ }}` | No links container is rendered |
-| inline-popover-011 | render-each-link-with-label | `data={{ links: [{ url: "https://example.com", label: "Click here" }] }}` | Link element displays text "Click here" |
-| inline-popover-012 | render-each-link-with-label | `data={{ links: [{ url: "https://example.com" }] }}` | Link element displays text "https://example.com" as fallback |
-| inline-popover-013 | open-links-in-new-tab | `data={{ links: [{ url: "https://example.com" }] }}` | Link element has `target="_blank"` and `rel="noopener noreferrer"` attributes |
+| inline-popover-006 | render-title-when-provided | `data={{ title: "" }}` (`title` is a required `string` on `PopoverData`; an empty string is falsy but still type-valid) | No title element is rendered |
+| inline-popover-007 | render-description-when-provided | `data={{ title: "T", description: "Test Description" }}` | Description text appears in a `div` with class `pc-popover-desc` |
+| inline-popover-008 | render-description-when-provided | `data={{ title: "T", description: undefined }}` | No description element is rendered |
+| inline-popover-009 | render-links-collection | `data={{ title: "T", links: [{ url: "https://example.com", label: "Example" }] }}` | Links container div is rendered with class `pc-popover-links` containing one link element |
+| inline-popover-010 | render-links-collection | `data={{ title: "T", links: [] }}` or `data={{ title: "T", links: undefined }}` | No links container is rendered |
+| inline-popover-011 | render-each-link-with-label | `data={{ title: "T", links: [{ url: "https://example.com", label: "Click here" }] }}` | Link element displays text "Click here" |
+| inline-popover-012 | render-each-link-with-label | `data={{ title: "T", links: [{ url: "https://example.com", label: "" }] }}` (`label` is a required `string` per link; an empty string is falsy but still type-valid) | Link element displays text "https://example.com" as fallback |
+| inline-popover-013 | open-links-in-new-tab | `data={{ title: "T", links: [{ url: "https://example.com", label: "" }] }}` | Link element has `target="_blank"` and `rel="noopener noreferrer"` attributes |
 | inline-popover-014 | render-arrow-indicator | Any valid data | Arrow span element with class `pc-popover-arrow` is always present in toggle button |
 | inline-popover-015 | toggle-visibility-on-click | Toggle button has focus; user presses Enter or Space | Native `button` semantics activate the click handler; open state toggles the same as a mouse click |
 | inline-popover-016 | initialize-with-default-open | `defaultOpen` prop omitted | Component initializes open (`pc-popover-open` class present, `aria-hidden="false"`), matching the `defaultOpen = true` default |
@@ -115,9 +115,9 @@ All visual styling (colors, spacing, sizing, shadows, hover states, transitions)
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `data` | `PopoverData` | required | Object containing `title`, `description`, and `links` properties |
-| `data.title` | `string \| undefined` | undefined | Optional title text displayed in the toggle button |
+| `data.title` | `string` (declared required by `PopoverData`; TypeScript rejects an object literal that omits it) | (required) | Title text displayed in the toggle button. The component itself tolerates a falsy value at runtime and skips rendering it — see **render-title-when-provided** — but the declared type does not make it optional. |
 | `data.description` | `string \| undefined` | undefined | Optional description text displayed in the disclosure body |
-| `data.links` | `Array<{ url: string; label?: string }> \| undefined` | undefined | Optional array of link objects with required `url` and optional `label` |
+| `data.links` | `Array<{ label: string; url: string }> \| undefined` | undefined | Optional array of link objects. `PopoverData` declares both `label` and `url` as required per item; the component tolerates a falsy `label` at runtime and falls back to displaying the `url` — see **Link with missing label** — but the declared type does not make `label` optional. |
 | `defaultOpen` | `boolean` | `true` | Initial open/closed state of the disclosure |
 
 ## Deep Linking
@@ -193,12 +193,15 @@ Not applicable: Component does not perform logging.
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
 | [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | failed | Security |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The toggle is a native `button` (keyboard-navigable: passed), but `aria-hidden` on the root hides the button itself when closed and the fixed `aria-label="Toggle details"` never incorporates the visible title (semantic-markup: failed; screen-reader-support: partial); `href={link.url}` is passed to the anchor with no scheme check, so a `javascript:` URL would execute (input-sanitization: failed); and the hardcoded `aria-label="Toggle details"` string is not externalized even though `data.title`/`data.description`/`data.links` are caller-supplied and already externalizable (string-externalization: partial).
+The toggle is a native `button` (keyboard-navigable: passed), but `aria-hidden` on the root hides the button itself when closed and the fixed `aria-label="Toggle details"` never incorporates the visible title (semantic-markup: failed; screen-reader-support: partial); `href={link.url}` is passed to the anchor with no scheme check, so a `javascript:` URL would execute (input-sanitization: failed); and the hardcoded `aria-label="Toggle details"` string is not externalized even though `data.title`/`data.description`/`data.links` are caller-supplied and already externalizable (string-externalization: partial). `separation-of-concerns` passes because the component holds only its own open/closed toggle state and renders `data` as-is, with no data access or business rule of its own; `unit-test-coverage` fails because no test file exercises `InlinePopover`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected Configuration table + Conformance vectors (006-013) so example data matches PopoverData's required title/label instead of implying they're optional. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed to Inline Disclosure and cross-linked the Popover recipe; reworded the defaultOpen decision as uncontrolled-only; reformatted Design Decisions and Compliance to convention; renamed requirements to subject-only kebab-case; deduplicated aria-hidden vectors and added keyboard-activation and default-open-omitted vectors; corrected Platform Notes API names and pointed to native disclosure controls (DisclosureGroup, Expander, AppKit disclosure-bezel NSButton); fixed the Configuration null/undefined mismatch; documented the root aria-hidden/label-in-name accessibility gaps and the always-rendered body; added missing references and set author |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

@@ -3,11 +3,11 @@ id: c57b1aed-ef38-4803-b38a-2d7e0aeced5f
 title: SearchFilterBar
 domain: agenticdevelopertoolkit://recipes/search-filter-bar
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -268,38 +268,47 @@ fetch + telemetry), not by the bar.
 ## Design Decisions
 
 - **Decision**: Both the search field and every filter select are fully
-  controlled, with caller-supplied option sets. **Rationale**: explicit-over-
+  controlled, with caller-supplied option sets.
+  **Rationale**: explicit-over-
   implicit — the bar owns no list/data state; it cannot desync from the consumer,
   and the consumer keeps option universes stable so narrowing never empties a
-  dropdown. **Approved**: pending
+  dropdown.
+  **Approved**: pending
 - **Decision**: An option is a bare string *or* a `{ value, label }` pair, and the
-  two mix on one axis. **Rationale**: the original `string[]` was a yagni bet that
+  two mix on one axis.
+  **Rationale**: the original `string[]` was a yagni bet that
   a consumer proved wrong — an axis over *records* (a status, an iteration, an
   owner) filters by id and reads as a name. Making the caller keep a label↔id
   codec of its own would be a lossy guess about data it already holds correctly:
   two ids can share a display name, and two names can share an id. The bare string
   stays as the shorthand for the case where they coincide, so no existing caller
-  had to change. **Approved**: pending
+  had to change.
+  **Approved**: pending
 - **Decision**: `children` land in the filter row rather than in a config union.
   **Rationale**: yagni / optimize-for-change — `filters` covers the single-select
   axis, which is most of them; an axis that is genuinely a different control (a
   multi-select, a date range, a toggle group) composes at the call site instead of
   growing a union that has to describe every control the platform will ever filter
-  with. The bar supplies the landmark, the field and the row. **Approved**: pending
+  with. The bar supplies the landmark, the field and the row.
+  **Approved**: pending
 - **Decision**: `asForm` lives here, off by default, rather than each host
-  wrapping the bar in its own `<form>`. **Rationale**: dry — "a search field with
+  wrapping the bar in its own `<form>`.
+  **Rationale**: dry — "a search field with
   no form ancestor is autofilled against the whole document" is a property of
   search fields, not of any one page, and it is a measured platform quirk that
   needs a paragraph to be legible at a call site. Default-off because a bar
   rendered inside a host's own form would nest one, which the parser resolves by
-  dropping it. **Approved**: pending
+  dropping it.
+  **Approved**: pending
 - **Decision**: Compose the existing `Input` + `Select` primitives rather than
-  restyle. **Rationale**: dry / consistency — the bar inherits the standard
+  restyle.
+  **Rationale**: dry / consistency — the bar inherits the standard
   focus-ring and token treatment, so it matches every other field on the platform.
   **Approved**: pending
 - **Decision**: The filter row is omitted entirely when `filters` is empty.
   **Rationale**: principle-of-least-astonishment — a search-only bar shows no empty
-  control row. **Approved**: pending
+  control row.
+  **Approved**: pending
 
 ## Compliance
 
@@ -316,6 +325,8 @@ fetch + telemetry), not by the bar.
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 The source shows `role="search"`, `aria-label` on the search field and every
 select, and `aria-hidden` on the decorative icon (screen-reader-support,
@@ -329,7 +340,11 @@ they read as partial; text-expansion tolerance is likewise partial because
 overflow handling for a long translated label lives in `Select`, not here. RTL
 fails because the search icon is positioned with the physical `left-2.5`
 offset rather than a logical `start` offset, so it does not flip sides under a
-right-to-left layout.
+right-to-left layout. `separation-of-concerns` passes because the component composes
+the shared `Input`/`Select` primitives with no owned business logic beyond the small
+pure `asOption` helper, and `unit-test-coverage` passes because `searchFilterBar.test.tsx`
+exercises the search field, every filter axis, orientation, form-root, and autofill
+attributes with meaningful assertions.
 
 ## Change History
 
@@ -341,3 +356,4 @@ right-to-left layout.
 | 1.2.1 | 2026-09-22 | Mike Fullerton | Expanded Platform Notes with concrete translation guidance for SwiftUI, Compose, AppKit / UIKit, and WinUI 3; removed "Not applicable" from all non-source platforms. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected `depends-on` to the Input/Select recipes; added `Approved: pending` to every Design Decision; rebuilt Compliance as linked, catalog-derived checks; fixed wrong native APIs and the orientation mapping in the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes and removed their fabricated `asForm`/debounce claims; corrected the stale-selected-value and duplicate-option-strings edge cases with a new conformance vector; fixed the Filter-active state description; and collapsed the duplicated Analytics/Logging text. |
 | 1.3.1 | 2026-09-24 | Mike Fullerton | Renamed `may-scope-autofill-with-a-form` to the subject-only `autofill-form-scope`. |
+| 1.3.2 | 2026-09-25 | Mike Fullerton | Reshaped Design Decisions into `**Decision**`/`**Rationale**`/`**Approved**` line triples. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

@@ -3,11 +3,11 @@ id: ee901ea5-cf3e-4276-8367-0693911bc02e
 title: Markdown Reading Palette
 domain: agenticdevelopertoolkit://recipes/markdown-reading-palette
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -147,12 +147,15 @@ Not applicable: MarkdownReadingPalette has no operational logging. Error handlin
 | Check | Status | Category |
 |-------|--------|----------|
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-This rests on the four built-in themes' `--mdv-text`/`--mdv-bg` pairs in `themes/palettes.ts`, each of which computes to at least a 13.5:1 WCAG contrast ratio; contrast for any theme added later is the themes registry's responsibility, not this wrapper's runtime behavior.
+This rests on the four built-in themes' `--mdv-text`/`--mdv-bg` pairs in `themes/palettes.ts`, each of which computes to at least a 13.5:1 WCAG contrast ratio; contrast for any theme added later is the themes registry's responsibility, not this wrapper's runtime behavior. `separation-of-concerns` passes because the component is a pure presentation wrapper that delegates theme lookup to `getThemeById` from `../themes/registry`, with no business logic of its own; `unit-test-coverage` fails because no test file references `MarkdownReadingPalette`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; corrected the invalid-theme-id edge case and design decision 5 to match `getThemeById`'s actual no-throw fallback; removed the unsupported dynamic-theme-switching claim from design decision 4; generalized design decision 1's app reference; reformatted Design Decisions to Decision/Rationale/Approved; rewrote Compliance with a real linked check; rewrote Appearance and Accessibility to describe the static class and the theme's contrast requirement; made the server-safe test vector concrete; rephrased the whitespace-className edge case around the component's own output; relabeled Platform Notes to React/Web and fixed the WinUI 3 equivalent of `data-mdv-theme`; added markdown-renderer to related; unquoted the modified date; added test vectors for null children, invalid theme id, and whitespace className |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source |

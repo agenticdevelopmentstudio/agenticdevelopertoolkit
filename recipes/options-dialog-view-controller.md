@@ -3,11 +3,11 @@ id: 56388aa3-bc75-4d0a-830b-222f39750a9d
 title: Options Dialog View Controller
 domain: agenticdevelopertoolkit://recipes/options-dialog-view-controller
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -107,7 +107,7 @@ approved-date: ''
 - **Empty rows array**: If `rows` is an empty array, the dialog renders only the heading (if provided) and the Done button. No row spacing is applied.
 - **Very long heading text**: The heading label may wrap or truncate depending on the dialog width and the length of the text. The caller is responsible for managing heading length.
 - **Row gesture coalescing**: Rows that coalesce writes (e.g., a stepper ticking through a multi-step gesture) may have the last change pending when the dialog closes. The `onDidClose` callback, fired from `viewDidDisappear`, allows the presenter to finalize any pending row state.
-- **Dialog resizing during interaction**: Rows are pinned only by the minimum-width floor, not an exact size, so a row's intrinsic size change (e.g., a text-size slider moving) propagates through Auto Layout to the container's fitting size. The view controller does not resize any window itself — the window that hosts its view (the sheet's or modal's window) is the one that resizes, and the presenter must let that window track the view's fitting size rather than pinning it to a fixed frame.
+- **Dialog resizing during interaction**: Each row carries an exact equality constraint to the stack's width minus the left and right insets (see **respect-row-width-constraint** and Design Decision 7) — rows are not pinned by a minimum-width floor of their own. Only the container itself carries the `>=` floor (see **use-minimum-width-floor**). A row's own content therefore cannot shrink the dialog below the floor, but a row whose content resists compression below the floor-derived width forces the stack — and so the container — wider than the floor to satisfy that equality constraint (Design Decision 4). Separately, a row's intrinsic height change (e.g., a text-size slider growing taller) propagates through Auto Layout to the container's fitting size. The view controller does not resize any window itself — the window that hosts its view (the sheet's or modal's window) is the one that resizes, and the presenter must let that window track the view's fitting size rather than pinning it to a fixed frame.
 - **Multiple dialogs presented simultaneously**: Two or more `OptionsDialogViewController` instances can be presented at the same time (e.g., sheet + modal). Each must use a distinct `accessibilityPrefix` to avoid accessibility ID collisions.
 - **Dialog dismissed while row gesture in progress**: If the dialog is dismissed while a row control (e.g., a slider) is in the middle of a continuous gesture, `onDidClose` fires (from `viewDidDisappear`) to allow the presenter to terminate the gesture and release any resources held by the row.
 
@@ -115,7 +115,7 @@ approved-date: ''
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `heading` | `String?` | `nil` | The optional heading text displayed at the top of the dialog. Settable after initialization; `nil` hides the heading. |
+| `heading` | `String?` | (required) | The optional heading text displayed at the top of the dialog; the initializer declares no default, so callers must pass `nil` explicitly to start with no heading. Settable after initialization; `nil` hides the heading. |
 | `rows` | `[NSView]` | (required) | An array of NSView subclasses to render as dialog rows. Passed at initialization only. |
 | `width` | `CGFloat` | `340` | The minimum (floor) width of the dialog in points. Dialog expands if row content requires more space. |
 | `accessibilityPrefix` | `String` | `"options"` | Prefix for accessibility identifiers applied to the dialog and Done button. Allows multiple dialogs to coexist without ID collisions. |
@@ -201,8 +201,10 @@ Not applicable: This component does not emit log messages. Logging (if needed) m
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The Done button's explicit title, accessibility identifiers, key equivalent, and the source's exclusive use of leading/trailing (never left/right) layout anchors ground the passed statuses; `touch-target-size` and the two hardcoded-string checks fail because the source shows a regular-size `.rounded` bezel button and a literal `"Done"` string with no localization hook; the `partial` statuses reflect behavior — Dynamic Type propagation, exact system-color contrast, initial-focus/focus-trap handling, and translated-text overflow — that this file delegates to `ThemedLabel`/`ThemedBackgroundView` or the caller and so cannot confirm on its own.
+The Done button's explicit title, accessibility identifiers, key equivalent, and the source's exclusive use of leading/trailing (never left/right) layout anchors ground the passed statuses; `touch-target-size` and the two hardcoded-string checks fail because the source shows a regular-size `.rounded` bezel button and a literal `"Done"` string with no localization hook; the `partial` statuses reflect behavior — Dynamic Type propagation, exact system-color contrast, initial-focus/focus-trap handling, and translated-text overflow — that this file delegates to `ThemedLabel`/`ThemedBackgroundView` or the caller and so cannot confirm on its own; the controller only lays out rows and reports through `onDone`/`onDidClose` closures with no state machine or data access of its own (separation-of-concerns: passed), and `WindowOptionsDialogTests.swift` instantiates it directly to assert heading render, row-width layout, and Done-button wiring (unit-test-coverage: passed).
 
 ## Change History
 
@@ -210,3 +212,4 @@ The Done button's explicit title, accessibility identifiers, key equivalent, and
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and dropped the contradictory may-hide-heading-when-nil requirement; reworded no-change-buffering as a MUST NOT; corrected the tap-target-size and Done-button-localization claims; added Apple HIG references; documented Escape/⌘. behavior; separated the accessibility role from the identifier; resolved the bottom-padding ambiguity and renamed the Loaded-off-screen state to Closed; named viewDidDisappear as the onDidClose hook and clarified the window-resize edge case; reformatted Design Decisions to Decision/Rationale/Approved; added a Compliance table; fixed test-vector tagging and validity and added four missing vectors; merged the duplicate AppKit/UIKit platform note and fixed the Compose and WinUI 3 native dialog APIs; corrected the summary to attribute change-application to rows, not the dialog |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed resizing edge case to match the per-row exact-width equality constraint (floor is container-only); heading Configuration default corrected to (required). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

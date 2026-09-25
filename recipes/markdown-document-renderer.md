@@ -3,11 +3,11 @@ id: 840b5a7a-921a-4770-8dea-5ffbf9a2ee6c
 title: Markdown Document Renderer
 domain: agenticdevelopertoolkit://recipes/markdown-document-renderer
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -92,7 +92,7 @@ Not applicable: The component is stateless. Rendering is a pure function of inpu
 | mdr-017 | accept-semantic-palette, accept-text-color | Component rendered with a given `palette` and `textColor` over `"Plain text"` | The rendered "Plain text" run has `.foregroundColor` equal to `textColor`. |
 | mdr-018 | replace-alert-tag-with-label | `"> [!NOTE]\n> Body text"` | Rendered output text contains "NOTE" and does not contain the literal substring `[!NOTE]`. |
 | mdr-019 | collapse-task-list-bullet | `"- [ ] Todo"` | Rendered output text contains "☐" followed by a tab character immediately before "Todo"; it does not contain a bullet character followed by "☐". |
-| mdr-020 | remove-frontmatter | `"---\ntitle: Test\n# Heading"` (no closing `---`) | Rendered output text includes the literal lines "---" and "title: Test" as content — nothing is stripped. |
+| mdr-020 | remove-frontmatter | `"---\ntitle: Test\n# Heading"` (no closing `---`) | The leading `---` is not stripped as frontmatter (there is no matching closing `---`), but it is then parsed as ordinary markdown: the CommonMark parser reads the unclosed `---` line as a thematic break, so it renders as the divider-colored `thematicBreakRule` (not the literal text `"---"`), while `"title: Test"` and `"Heading"` remain as literal/rendered content. |
 | mdr-021 | remove-frontmatter | `"# Heading\nNo frontmatter here"` (no leading `---`) | Rendered output text is unchanged in content from the input, aside from ordinary markdown-to-attributed-string conversion of the heading; nothing is stripped. |
 | mdr-022 | require-alert-tag-on-first-line | `"> [!NOTE] extra text\n> more"` | No `.foregroundColor` alert styling is applied; rendered output text contains the literal `[!NOTE] extra text`. |
 | mdr-023 | exclude-fenced-code-from-processing | `` "~~~\n> [!NOTE]\n~~~" `` | The rendered output contains the literal text `> [!NOTE]`; no `.foregroundColor` alert styling is applied. |
@@ -106,7 +106,7 @@ Not applicable: The component is stateless. Rendering is a pure function of inpu
 
 - **Null or empty input**: An empty string MUST render as an empty `NSAttributedString`. A nil input is not possible in Swift's type system; the API requires a non-nil String. See mdr-028.
 - **No frontmatter**: A document with no leading `---` delimiter MUST render without modification to the content. See mdr-021.
-- **Malformed frontmatter**: A leading `---` without a closing `---` on a subsequent line MUST be treated as the start of content, not frontmatter (renders literally). See mdr-020.
+- **Malformed frontmatter**: A leading `---` without a closing `---` on a subsequent line MUST NOT be stripped as frontmatter — it is left as the start of content — but that unclosed `---` line is then parsed as ordinary markdown, which the CommonMark parser reads as a thematic break: it renders as the divider-colored `thematicBreakRule`, not as a literal `"---"` line. See mdr-020.
 - **Multiple alerts in one document**: Multiple distinct alert blockquotes MUST each be detected and colored independently. See mdr-024.
 - **Nested blockquotes**: Detection strips every level of a line's `>` markers uniformly, so a line using more than one `>` (e.g., `> > nested`) is not distinguished from a single-level quote line for the purpose of finding an alert tag. The colored span for an alert is the block's outermost blockquote identity: a nested line is colored as part of the same continuous span as its enclosing top-level blockquote, never as a separate span. See mdr-025.
 - **Task list outside list context**: A string matching the task list pattern outside a list item MUST NOT be rewritten (pattern matching is restricted to list item lines). See mdr-026.
@@ -197,8 +197,10 @@ Subsystem: Component does not emit logs. Processing happens in the render synchr
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best-practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best-practices |
 
-Contrast and dynamic-type status are partial because the color and font applied to rendered text come from the caller-supplied `SemanticPalette`/`PlatformColor` and `platformFont`, which this component does not itself validate for WCAG AA contrast or type scaling; Unicode handling passes on the evidence of the private-use sentinel pair and non-breaking-space handling in `MarkdownDocumentRenderer.swift`; and the hardcoded English alert labels produced from the alert type's case name fail both string-externalization and no-hardcoded-strings.
+Contrast and dynamic-type status are partial because the color and font applied to rendered text come from the caller-supplied `SemanticPalette`/`PlatformColor` and `platformFont`, which this component does not itself validate for WCAG AA contrast or type scaling; Unicode handling passes on the evidence of the private-use sentinel pair and non-breaking-space handling in `MarkdownDocumentRenderer.swift`; and the hardcoded English alert labels produced from the alert type's case name fail both string-externalization and no-hardcoded-strings. `separation-of-concerns` passes: `MarkdownDocumentRenderer` owns only frontmatter stripping and the alert/task-list markdown rewrites, delegating the actual CommonMark-to-`NSAttributedString` conversion to the composed `MarkdownRenderer`. `unit-test-coverage` passes: `MarkdownDocumentRendererTests.swift` exercises this type directly, beyond the vectors table's minimum.
 
 ## Change History
 
@@ -207,3 +209,4 @@ Contrast and dynamic-type status are partial because the color and font applied 
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source code |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Platform Notes: replaced not-applicable bullets with Compose, web and WinUI 3 translation guidance |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added palette/text-color to Configuration with new acceptance requirements; added requirements for alert-tag-to-label replacement and task-list bullet collapse; fixed the checkbox-as-control contradiction in the Compose and WinUI 3 notes and added an Apple reference-implementation note to AppKit/UIKit; resolved the sentinel-collision and soft/hard-break wording contradictions; restructured Design Decisions into Decision/Rationale/Approved form and added a localization-debt decision; evaluated Compliance; split, tightened, and expanded Conformance Test Vectors for testability and coverage; linked markdown-renderer as a dependency |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed mdr-020/Malformed-frontmatter edge case: unclosed leading --- is left unstripped but then parses as a CommonMark thematic break (renders thematicBreakRule), not as literal "---" text. |

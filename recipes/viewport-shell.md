@@ -3,11 +3,11 @@ id: 960a1577-bf48-4d56-a93f-aa690853f64f
 title: ViewportShell
 domain: agenticdevelopertoolkit://recipes/viewport-shell
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -154,12 +154,15 @@ Not applicable: ViewportShell has no logging requirements.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-These statuses rest on `ViewportShell.tsx` rendering a plain `<div>` with only class-list attributes and no ARIA overrides (`semantic-markup`, `screen-reader-support`), and on `base.css` locking `html`/`body` scroll while declaring no `overflow: auto` anywhere in the `viewport` package's own CSS, leaving reachability of tall content dependent on a scrollable region the consumer supplies (`keyboard-navigable`, partial).
+These statuses rest on `ViewportShell.tsx` rendering a plain `<div>` with only class-list attributes and no ARIA overrides (`semantic-markup`, `screen-reader-support`), and on `base.css` locking `html`/`body` scroll while declaring no `overflow: auto` anywhere in the `viewport` package's own CSS, leaving reachability of tall content dependent on a scrollable region the consumer supplies (`keyboard-navigable`, partial). `separation-of-concerns` passes because the keyboard-inset measurement logic is delegated entirely to the `useKeyboardInset` hook, leaving the component itself pure presentation; `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; grounded keyboard-inset, page-lock, and clip/open-class semantics in source; reformatted Design Decisions; replaced Accessibility and Compliance with real content; corrected className-whitespace behavior and Edge Cases RFC 2119 phrasing; rewrote Platform Notes APIs and relabeled React/Web; expanded Conformance Test Vectors; added related recipes |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

@@ -3,11 +3,11 @@ id: eeb45f5b-e482-4bea-8827-74f80a1fd21b
 title: Explanation
 domain: agenticdevelopertoolkit://recipes/explanation
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,7 +50,7 @@ The Explanation component renders explanatory or descriptive text within a seman
 
 Visual styling is determined entirely by CSS classes applied to the element. The component applies:
 
-- **Default class**: `aws-explanation`, defined in the user-settings stylesheet (`packages/web/packages/controls/src/user-settings/styles.css:180`) and shared with the sibling Panel, Group, Field, Header, Divider, Stack, and Hint components through the `:where(...)` selector at the top of that file.
+- **Default class**: `aws-explanation`, defined by the `.aws-explanation` rule in the user-settings stylesheet (`packages/web/packages/controls/src/user-settings/styles.css`) and shared with the sibling Panel, Group, Field, Header, Divider, Stack, and Hint components through the `:where(...)` selector at the top of that file.
 - **Custom classes**: Additional classes from the `className` prop are applied alongside the default
 
 Appearance properties, from `.aws-explanation` in `styles.css`: margin `0`, color `var(--aws-text-muted)` (resolves through `--color-text-secondary` / `--text-muted` to `#8a8a9a`), font size `0.8rem`, line-height `1.5`. Font family is not set on `.aws-explanation` itself — it inherits `var(--aws-font-sans)` (`system-ui, sans-serif`) from the ancestor `.aws-panel`.
@@ -62,7 +62,7 @@ Not applicable: Explanation is a non-interactive presentational component and do
 ## Accessibility
 
 - **Semantic element**: Component MUST use the `<p>` element to maintain semantic meaning for screen readers and document structure.
-- **Content accessibility**: Text content rendered as children inherits the color and typography defined by the `aws-explanation` class (`styles.css:180-185`), which sets its text color from the `--aws-text-muted` design token. Whether the resolved token value meets WCAG 2.1 AA contrast has not been checked — see **Compliance**.
+- **Content accessibility**: Text content rendered as children inherits the color and typography defined by the `.aws-explanation` rule in `styles.css`, which sets its text color from the `--aws-text-muted` design token. Whether the resolved token value meets WCAG 2.1 AA contrast has not been checked — see **Compliance**.
 - **Label inheritance**: The paragraph element does not require an explicit label; the rendered text content serves as the semantic label.
 
 ## Conformance Test Vectors
@@ -125,7 +125,7 @@ Not applicable: Explanation does not perform logging or error tracking.
 
 ## Platform Notes
 
-- **React/Web**: Source implementation uses JSX with TypeScript. Export the `Explanation` function component with `ExplanationProps` interface defining `children?: ReactNode` and `className?: string`. Combine classes using array filter-and-join pattern to handle falsy values. Reference source file: `packages/web/packages/controls/src/user-settings/components/Explanation.tsx`; class defined at `styles.css:180`.
+- **React/Web**: Source implementation uses JSX with TypeScript. Export the `Explanation` function component with `ExplanationProps` interface defining `children?: ReactNode` and `className?: string`. Combine classes using array filter-and-join pattern to handle falsy values. Reference source file: `packages/web/packages/controls/src/user-settings/components/Explanation.tsx`; class defined by the `.aws-explanation` rule in `styles.css`.
 - **SwiftUI**: Implement using a `Text` view sized around 13pt (0.8rem ≈ 12.8px) with `.foregroundStyle(.secondary)` mapping the `--aws-text-muted` token, and line spacing tuned to approximate the 1.5 line-height. Accept content via a `String`/`Text` parameter or `@ViewBuilder`; do not hardcode a font family so the view inherits the ambient font.
 - **Compose**: Implement using a `Text` composable with a style around `fontSize = 13.sp`, `lineHeight = 19.5.sp` (1.5x), and `color = MaterialTheme.colorScheme.onSurfaceVariant` mapping `--aws-text-muted`. Accept content as a `String` or `@Composable` lambda and an optional `Modifier` for caller-supplied styling.
 - **AppKit / UIKit**: Configure a stock `UILabel` (UIKit) or `NSTextField` (AppKit) through a factory or style-helper function rather than subclassing it: set `numberOfLines = 0`, a ~13pt font, and the platform's secondary/muted label color (mapping `--aws-text-muted`). Pass optional style overrides as parameters to the factory instead of through inheritance.
@@ -142,7 +142,7 @@ Not applicable: Explanation does not perform logging or error tracking.
   **Approved**: pending
 
 - **Decision**: The `aws-explanation` class is fixed and not configurable per instance.
-  **Rationale**: The class is defined once in the user-settings stylesheet (`styles.css:180`) and shared with sibling components (Panel, Group, Field, Header, Divider, Stack, Hint) through the `:where(...)` rule, keeping visual consistency across the settings panel; per-instance overrides would fragment that consistency.
+  **Rationale**: The `.aws-explanation` rule is defined once in the user-settings stylesheet (`styles.css`) and shared with sibling components (Panel, Group, Field, Header, Divider, Stack, Hint) through the `:where(...)` rule, keeping visual consistency across the settings panel; per-instance overrides would fragment that consistency.
   **Approved**: pending
 
 ## Compliance
@@ -152,8 +152,10 @@ Not applicable: Explanation does not perform logging or error tracking.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`semantic-markup` and `no-hardcoded-strings` rest on `Explanation.tsx` rendering a `<p>` element whose only content is the caller-supplied `children` prop, with no literal user-facing strings in the source. `contrast-ratio` is `partial` because the `aws-explanation` text color (`--aws-text-muted`, `styles.css:180`) has not been checked against its resolved value for WCAG 2.1 AA contrast.
+`semantic-markup` and `no-hardcoded-strings` rest on `Explanation.tsx` rendering a `<p>` element whose only content is the caller-supplied `children` prop, with no literal user-facing strings in the source. `contrast-ratio` is `partial` because the `aws-explanation` text color (`--aws-text-muted`, set by the `.aws-explanation` rule in `styles.css`) has not been checked against its resolved value for WCAG 2.1 AA contrast. `separation-of-concerns` is `passed` because the component is pure presentation over `children` with no logic beyond a class-name join; `unit-test-coverage` is `failed` because no test exercises `Explanation.tsx`.
 
 ## Change History
 
@@ -161,3 +163,4 @@ Not applicable: Explanation does not perform logging or error tracking.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: removed unsupported AWS Amplify attribution; downgraded contrast-ratio compliance to partial and added internationalization check; removed false prefers-reduced-motion claim; replaced AppKit/UIKit subclassing guidance with a composition-based factory pattern; renamed must-* requirements to subject-only kebab-case everywhere they are cited; added related sibling recipes; corrected the self-contradictory whitespace-className edge case and retitled multiple-classes edge case; removed the unsupported false/null className edge case; added test vectors for null/undefined/empty children and undefined/whitespace-only className; added concrete appearance values (color token, font size, line-height) to Appearance and mapped each Platform Notes bullet onto them; reformatted Design Decisions into Decision/Rationale/Approved form |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Removed five source line-number citations (styles.css:180 etc.), replaced with the .aws-explanation rule name. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

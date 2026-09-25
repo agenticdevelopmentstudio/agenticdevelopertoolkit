@@ -3,11 +3,11 @@ id: 5e401b96-7157-4c5b-a623-b90dde372231
 title: Section Header
 domain: agenticdevelopertoolkit://recipes/section-header
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ A section header is a layout component that anchors a content area with a promin
 - **support-help**: The component MUST render a help trigger button when the `help` prop is provided and non-empty; when `help` is empty, the help trigger button MUST NOT be rendered.
 - **support-actions**: The component MUST render the `actions` prop content when it is provided and non-empty; when `actions` is empty, the actions slot MUST NOT be rendered.
 - **apply-custom-class**: The component MUST apply the `className` prop to the root container if provided.
-- **display-help-popover**: When the help trigger button is activated — by click, or by keyboard Enter or Space while focused — the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge). See agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and #accessibility/return-focus-on-close for how the popover closes and returns focus, and #accessibility/aria-expanded for its open/closed toggle state.
+- **display-help-popover**: When the help trigger button is activated — by click, or by keyboard Enter or Space while focused — the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge). See agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close for how the popover closes and returns focus, and agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded for its open/closed toggle state.
 - **label-help-trigger**: The help trigger button MUST have an accessible label "About this section" via the `aria-label` attribute.
 - **maintain-layout-order**: Left section (title area) MUST be positioned before right section (actions and help) in visual and DOM order.
 
@@ -73,7 +73,7 @@ A section header is a layout component that anchors a content area with a promin
 
 - **Semantic heading**: Title is rendered as an `<h2>` to establish document outline hierarchy.
 - **Help button label**: `aria-label="About this section"` describes the button purpose for screen readers.
-- **Popover keyboard**: The help trigger is activated by click, Enter, or Space. Opening, closing (Escape or an outside interaction), and returning focus to the trigger are the underlying Popover component's behavior — see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and #accessibility/return-focus-on-close.
+- **Popover keyboard**: The help trigger is activated by click, Enter, or Space. Opening, closing (Escape or an outside interaction), and returning focus to the trigger are the underlying Popover component's behavior — see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close.
 - **Text content**: Eyebrow and title content are read as-is; no additional aria-labels required if text is meaningful.
 - **Icon-only button**: Help button contains only an icon; `aria-label` is REQUIRED to provide accessible name.
 
@@ -94,15 +94,15 @@ A section header is a layout component that anchors a content area with a promin
 | section-header-011 | apply-custom-class | `className="my-custom-class"`, `title="Title"` | Root container has both default flex classes and "my-custom-class" |
 | section-header-012 | maintain-layout-order | All props provided | Left section (title area) precedes right section (actions + help) in visual layout; justified to opposite edges |
 | section-header-013 | display-help-popover | Help button present, user presses Space on focused help trigger | Popover opens (same as click/Enter) |
-| section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per popover#accessibility/escape-closes, #accessibility/return-focus-on-close) |
-| section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per popover#accessibility/aria-expanded) |
+| section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes, agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close) |
+| section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded) |
 
 ## Edge Cases
 
 - **Empty title string**: The component does not validate `title`; passing an empty string still renders an `<h2>`, which is present in the DOM but conveys no accessible name to screen reader users. Callers MUST supply non-empty `title` content — Section Header itself performs no such check.
 - **Very long title**: Title renders without an explicit wrap constraint. Because the left section has no flex-shrink override while the right section is `shrink-0`, the left section shrinks first as available width tightens, so a long title wraps onto multiple lines once space is insufficient.
 - **Very long help content**: The popover has a fixed width (288px) and no max-height constraint in the source, so the panel grows to fit the content rather than scrolling.
-- **Help button focus during popover open**: Escape closes the popover and returns focus to the trigger (agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes, #accessibility/return-focus-on-close).
+- **Help button focus during popover open**: Escape closes the popover and returns focus to the trigger (agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes, agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close).
 - **Multiple rapid help button activations**: The Popover trigger toggles open/closed state on activation, reflected via `aria-expanded` (agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded).
 - **Actions slot too wide**: Actions element shares right section with help button; if actions exceed available space, layout depends on actions' own flex properties. The right section container applies `shrink-0`, so it does not shrink to accommodate overflow.
 - **Custom className conflicts**: If `className` prop contains flex or positioning classes, they merge via `cn()` utility; later classes may override defaults (standard Tailwind precedence).
@@ -210,12 +210,15 @@ Not applicable: Section Header does not emit application logs.
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization).
+The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization). `separation-of-concerns` passes because `section-header.tsx` is pure presentation composed from its `eyebrow`/`title`/`help`/`actions` props with no business logic, and `unit-test-coverage` fails because no test file in the repository renders or exercises `SectionHeader`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Qualified bare #accessibility fragments to popover's full agenticdeveloperkit URI; fixed 6 refs. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; cited the popover ingredient by requirement fragment instead of crediting behavior to "the Popover component" and added it to depends-on/related; reformatted Design Decisions into Decision/Rationale/Approved triplets and added one for the fixed h2 heading level; rewrote Compliance from "Not applicable" into a real table; fixed the flex-shrink/wrap contradiction between Appearance and Edge Cases; expanded help-popover keyboard coverage (Space, Escape, focus return, toggle) with new test vectors; corrected nonexistent APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; rewrote Localization to name the hardcoded aria-label and the locale-sensitive uppercase transform; defined "empty" once for the optional ReactNode props and reused it in Configuration; clarified how an empty title is actually handled. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -3,11 +3,11 @@ id: e268fe4f-8e83-4189-b1d2-105cd177308c
 title: Clip
 domain: agenticdevelopertoolkit://recipes/clip
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -188,8 +188,10 @@ Not applicable: The component does not emit log events.
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These rest on the source: the `aria-label` attribute carries the accessible name (screen-reader-support, semantic-markup), the native `<video>` element's keyboard-operable controls when `controls` is shown (keyboard-navigable), the `usePrefersReducedMotion` hook driving `autoPlay`/`loop`/`controls` (reduced-motion), and the unmodified pass-through of the `label` string to `aria-label` (unicode-support); native control sizing is the browser's own and is not verified by the source (touch-target-size).
+These rest on the source: the `aria-label` attribute carries the accessible name (screen-reader-support, semantic-markup), the native `<video>` element's keyboard-operable controls when `controls` is shown (keyboard-navigable), the `usePrefersReducedMotion` hook driving `autoPlay`/`loop`/`controls` (reduced-motion), and the unmodified pass-through of the `label` string to `aria-label` (unicode-support); native control sizing is the browser's own and is not verified by the source (touch-target-size). separation-of-concerns passes because the reduced-motion subscription (`usePrefersReducedMotion`, `subscribe`, `getSnapshot`) is factored out of `Clip.tsx` into its own hook, leaving the component itself a thin wrapper over a `<video>`, and unit-test-coverage passes because `clip.test.tsx` exercises both the motion-fine and reduced-motion branches and the force-pause effect with meaningful assertions.
 
 ## Change History
 
@@ -197,3 +199,4 @@ These rest on the source: the `aria-label` attribute carries the accessible name
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the video role and tap-target claims, fixed nonexistent/misused platform APIs, resolved the AppKit/UIKit mute contradiction, merged duplicate requirements and renamed all requirements to subject-only kebab-case, reformatted Design Decisions, rebuilt Compliance as a linked table, merged duplicate States rows, corrected the reduced-motion-reversal edge case, added SSR-hydration and reverse-transition test vectors, fixed the webm and preference-change test vectors, stated the caller's localization obligation, and populated tags/references/related |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

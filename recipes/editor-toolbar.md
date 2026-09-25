@@ -3,11 +3,11 @@ id: 3C65C844-6C3C-43E2-B792-8575F5DDA9CF
 title: EditorToolbar
 domain: agenticdevelopertoolkit://recipes/editor-toolbar
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -154,8 +154,10 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`semantic-markup` is `partial` because the source (`editor-toolbar.tsx`) sets `role="toolbar"` and `aria-label` but does not guard an explicitly empty `ariaLabel`, and the `toolbar` role doesn't fully match the keyboard behavior it implies; `keyboard-navigable` is `failed` because the source has no focus or keyboard handling at all; `no-hardcoded-strings` is `failed` because the default `"Editor toolbar"` string is a literal in the source rather than a localization lookup.
+`semantic-markup` is `partial` because the source (`editor-toolbar.tsx`) sets `role="toolbar"` and `aria-label` but does not guard an explicitly empty `ariaLabel`, and the `toolbar` role doesn't fully match the keyboard behavior it implies; `keyboard-navigable` is `failed` because the source has no focus or keyboard handling at all; `no-hardcoded-strings` is `failed` because the default `"Editor toolbar"` string is a literal in the source rather than a localization lookup. `separation-of-concerns` is `passed` because the source is pure layout over props with no business logic; `unit-test-coverage` is `failed` because `markdownSpellcheck.test.tsx` exercises a different control and no test renders `EditorToolbar` itself.
 
 ## Change History
 
@@ -163,3 +165,4 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed must-* requirements to subject-only kebab-case; reformatted Design Decisions into Decision/Rationale/Approved form and added a decision documenting the toolbar-role/keyboard-behavior gap; corrected Compliance check names against the catalog and added keyboard-navigable and no-hardcoded-strings; rewrote Platform Notes to drop the Tailwind/`cn()` coupling outside the React/Web note and to address native toolbar controls per platform; split Conformance Test Vectors into unit class assertions and Playwright pixel/gap vectors, adding a vector for className override precedence; reconciled the Accessibility section with the Empty ariaLabel edge case; populated Localization with the hardcoded default string; added the WAI-ARIA toolbar reference; added tags; fixed modified-date quoting |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

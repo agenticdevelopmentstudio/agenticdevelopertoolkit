@@ -3,11 +3,11 @@ id: 81db83fc-b30c-4ba3-b4d5-572dc8b4e335
 title: Button Bar
 domain: agenticdevelopertoolkit://recipes/button-bar
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,7 +46,7 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 - **disable-cancel-by-flag**: The Cancel button MUST be disabled when `actions.canCancel` is `false` or `actions.saving` is `true`. `canCancel` is a required field of `actions` (see Configuration); there is no omitted-value case for it.
 - **disable-save-by-flag**: The Save button MUST be disabled when `actions.canSave` is `false` or `actions.saving` is `true`. `canSave` is a required field of `actions` (see Configuration); there is no omitted-value case for it.
 - **disable-delete-by-flag**: The Delete button MUST be disabled when `actions.canDelete` is `false` or `actions.saving` is `true`.
-- **disable-create-while-saving**: The Create button MUST be disabled when `actions.saving` is `true`.
+- **create-not-disabled-while-saving**: Unlike Delete, Cancel, and Save, the Create button does not receive a `disabled` attribute when `actions.saving` is `true` — it stays enabled and clickable through a save.
 - **save-disabled-styling**: When the Save button is disabled, the component MUST switch it to the Button component's `ghost` variant and apply the muted text token (`apt-text-muted`).
 - **render-vertical-separator**: When rendering preset actions and a Create button is present, the component MUST render a vertical separator (visual divider, marked `aria-hidden`) between Create and Delete/Cancel buttons.
 - **render-spacer**: When rendering preset actions, the component MUST render a flexible spacer between Delete and Save/Cancel groups that expands to fill available horizontal space.
@@ -72,11 +72,11 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 | State | Appearance change |
 |-------|------------------|
 | Default (all enabled) | Buttons render in their normal variant (ghost for Cancel/Create/Delete, default for Save); text is not muted |
-| Saving | Save button shows "Saving…" instead of "Save"; all buttons (Create, Delete, Cancel, Save) appear disabled with `disabled` attribute; Save text is muted |
+| Saving | Save button shows "Saving…" instead of "Save"; Delete, Cancel, and Save appear disabled with `disabled` attribute; Create does not receive `disabled` and stays clickable; Save text is muted |
 | Cancel disabled | Cancel button appears grayed out / disabled |
 | Save disabled (valid draft but no dirty changes) | Save button appears in ghost variant with muted text, does not accept clicks |
 | Delete disabled | Delete button appears grayed out / disabled |
-| Create disabled (while saving) | Create button appears grayed out / disabled |
+| Create not disabled (while saving) | Create button remains in its normal enabled appearance and stays clickable (see **create-not-disabled-while-saving**) |
 
 ## Accessibility
 
@@ -112,7 +112,7 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 | button-bar-016 | disable-save-by-flag | Render with `actions={{ canSave: true, saving: true }}` | Save button has `disabled` attribute |
 | button-bar-017 | disable-delete-by-flag | Render with `actions={{ canDelete: false, ... }}` | Delete button has `disabled` attribute |
 | button-bar-018 | disable-delete-by-flag | Render with `actions={{ canDelete: true, saving: true }}` | Delete button has `disabled` attribute |
-| button-bar-019 | disable-create-while-saving | Render with `actions={{ onCreate: fn, saving: true }}` and `showCreate={true}` | Create button has `disabled` attribute |
+| button-bar-019 | create-not-disabled-while-saving | Render with `actions={{ onCreate: fn, saving: true }}` and `showCreate={true}` | Create button has no `disabled` attribute and remains clickable |
 | button-bar-020 | save-disabled-styling | Render with `actions={{ canSave: false }}` | Save button renders in the Button component's `ghost` variant with the muted text token (`apt-text-muted`) applied |
 | button-bar-021 | invoke-callbacks | User clicks Create button | `actions.onCreate()` is invoked |
 | button-bar-022 | invoke-callbacks | User clicks Cancel button | `actions.onCancel()` is invoked |
@@ -159,7 +159,7 @@ The Button Bar is a recessed toolbar used for editing actions. It renders either
 | `canCancel` | `boolean` | Yes | — | Enables the Cancel button when `true` (and `saving` is `false`). |
 | `onSave` | `() => void` | Yes | — | Called when the Save button is clicked. |
 | `canSave` | `boolean` | Yes | — | Enables the Save button when `true` (and `saving` is `false`); also drives the `ghost`-variant/muted-text swap when disabled. |
-| `saving` | `boolean` | No | `false` | While `true`, disables Create/Delete/Cancel/Save and changes the Save label to `"Saving…"`. |
+| `saving` | `boolean` | No | `false` | While `true`, disables Delete/Cancel/Save and changes the Save label to `"Saving…"`; Create is not disabled by this flag (see **create-not-disabled-while-saving**). |
 | `onDelete` | `() => void` | No | `undefined` | Called when the Delete button is clicked. Omit together with `showDelete={false}` for panes that don't delete here; the Delete button does not render without it. |
 | `canDelete` | `boolean` | No | `undefined` (falsy) | Enables the Delete button when `true` (and `saving` is `false`); an omitted value renders Delete as disabled whenever it is shown. |
 
@@ -241,8 +241,10 @@ Not applicable: The component does not emit logs. Logging (if needed) is the res
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source as documented above: every preset button always pairs its icon with visible text, and the toolbar carries an `aria-label`, grounding `screen-reader-support` as passed; composing the shared Button's native `<button>` (which the Button recipe's `keyboard-activates` requirement covers) grounds `keyboard-navigable` as passed; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; using the Button component exclusively at its `sm` size, with no ancestor `--adh-button-min-height`/`--adh-button-min-width` override, grounds `touch-target-size` as failed — the same shortfall the Button recipe documents for that size; `role="toolbar"`, the `aria-hidden` separator, and native `disabled` mapping ground `semantic-markup` as passed; and the Localization section's finding that only `createLabel` is an injectable prop — Cancel, Save, Saving…, Delete, and the default aria-label are hardcoded — grounds both internationalization checks as failed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above).
+Statuses rest on the source as documented above: every preset button always pairs its icon with visible text, and the toolbar carries an `aria-label`, grounding `screen-reader-support` as passed; composing the shared Button's native `<button>` (which the Button recipe's `keyboard-activates` requirement covers) grounds `keyboard-navigable` as passed; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; using the Button component exclusively at its `sm` size, with no ancestor `--adh-button-min-height`/`--adh-button-min-width` override, grounds `touch-target-size` as failed — the same shortfall the Button recipe documents for that size; `role="toolbar"`, the `aria-hidden` separator, and native `disabled` mapping ground `semantic-markup` as passed; and the Localization section's finding that only `createLabel` is an injectable prop — Cancel, Save, Saving…, Delete, and the default aria-label are hardcoded — grounds both internationalization checks as failed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above). `separation-of-concerns` is passed because `button-bar.tsx` holds no state or business logic of its own — the consumer owns the draft/dirty/valid state and the bar only renders the resulting flags through the shared `Button`; `unit-test-coverage` is passed on `buttonBar.test.tsx`, which renders `ButtonBar` directly and asserts the Delete-disabled-while-saving, New-button-omission, and Save-button disabled/variant/class behaviors with real DOM queries.
 
 ## Change History
 
@@ -250,3 +252,4 @@ Statuses rest on the source as documented above: every preset button always pair
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web implementation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case with no `must-` prefix; moved Lucide/Tailwind/DOM implementation specifics out of Behavioral Requirements and Conformance Test Vectors into the Web/React Platform Note; added the `ButtonBarActions` field table (required/optional/defaults); added the `save-disabled-styling` variant swap and unified the Delete/Save variant wording between requirements and vectors; fixed the Rapid-clicks edge case's `saving={false}`/`saving={true}` typo; corrected wrong native Platform Note APIs (UIKit/SwiftUI toolbar-role claims, SwiftUI HStack/VStack mismatch, WinUI `ColumnSpacing`, `KeyboardAccelerator`) and removed invented spinner/keyboard-shortcut behavior the source does not implement; reformatted Design Decisions into Decision/Rationale/Approved entries; built the Compliance table against the real catalog; corrected Localization to show only `createLabel` as consumer-injectable; added Button's domain to `depends-on`; fixed test-vector-to-requirement mapping, removed duplicate vectors, and added vectors for the separator, spacer, empty bar, and disabled-click cases; softened the Reduce Motion claim to match the Button recipe's own posture. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Create is never disabled while saving; requirement renamed create-not-disabled-while-saving, States/button-bar-019/saving row corrected. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

@@ -3,11 +3,11 @@ id: d9ad192e-a642-46a2-8b25-b8aac9d9f441
 title: RecipientInput
 domain: agenticdevelopertoolkit://recipes/recipient-input
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-06-26
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -210,7 +210,7 @@ Not applicable: RecipientInput is a presentational component that does not emit 
   **Approved**: pending
 
 - **Decision**: Email de-duplication is case-insensitive; other kinds use exact string comparison.
-  **Rationale**: Email addresses are case-insensitive in practical routing (`Ada@x.io` and `ada@x.io` are the same recipient). Other input kinds (phone, text) use exact string comparison to preserve user intent. The comparison uses the default, non-locale-aware `toLowerCase()`; because case folding is locale-sensitive for some scripts, this MUST NOT be swapped for an invariant-culture lowercase call on other platforms — implementations should use the platform's locale-aware lowercasing for this comparison.
+  **Rationale**: Email addresses are case-insensitive in practical routing (`Ada@x.io` and `ada@x.io` are the same recipient). Other input kinds (phone, text) use exact string comparison to preserve user intent. The comparison uses the default `toLowerCase()`, which applies the locale-insensitive (invariant) Unicode case mapping regardless of the runtime's current locale; a port MUST use the equivalent invariant-culture lowercasing — for example `.lowercased()` in Swift, `lowercase(Locale.ROOT)` in Kotlin, or `ToLowerInvariant()` in .NET — not a locale-aware variant, to match this behavior exactly. Under a locale where casing is context-sensitive (e.g. Turkish, where uppercase `I` lowercases to dotless `ı` only under locale-aware folding), a locale-aware port would fold two logically-identical addresses differently and fail to de-duplicate them; the invariant mapping the source uses avoids that.
   **Approved**: pending
 
 - **Decision**: Two layout modes are offered: fused (default) and separate.
@@ -245,13 +245,16 @@ Not applicable: RecipientInput is a presentational component that does not emit 
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `recipient-input.tsx`: `role="group"`/`aria-label`/`aria-invalid` plus native `<button>` remove controls (screen-reader-support, keyboard-navigable, semantic-markup passed); color-only `apt-*` tokens whose resolved contrast isn't visible from this file, and a remove button with no explicit hit-area sizing (contrast-ratio, touch-target-size partial); regex format validation with no injection-specific handling beyond React's default text escaping (input-sanitization partial); a fully consumer-controlled `value` prop with no internal persistence or logging (data-minimization, no-pii-in-logs passed); five strings (`Remove {value}` and the four placeholder/empty-state strings) hardcoded directly in the component (string-externalization, no-hardcoded-strings failed); an unfiltered native `<input>` accepting any Unicode text (unicode-support passed); and default flexbox wrapping with no explicit RTL handling or testing (rtl-layout-support partial).
+Statuses rest on `recipient-input.tsx`: `role="group"`/`aria-label`/`aria-invalid` plus native `<button>` remove controls (screen-reader-support, keyboard-navigable, semantic-markup passed); color-only `apt-*` tokens whose resolved contrast isn't visible from this file, and a remove button with no explicit hit-area sizing (contrast-ratio, touch-target-size partial); regex format validation with no injection-specific handling beyond React's default text escaping (input-sanitization partial); a fully consumer-controlled `value` prop with no internal persistence or logging (data-minimization, no-pii-in-logs passed); five strings (`Remove {value}` and the four placeholder/empty-state strings) hardcoded directly in the component (string-externalization, no-hardcoded-strings failed); an unfiltered native `<input>` accepting any Unicode text (unicode-support passed); and default flexbox wrapping with no explicit RTL handling or testing (rtl-layout-support partial). The `EMAIL_RE`/`PHONE_RE` validation, comma-tokenizing, and case-insensitive dedup logic all live inline in the component body rather than a separate module (separation-of-concerns partial); `recipientInput.test.tsx` directly exercises tokenizing on Enter and comma, dedup, Backspace removal, per-chip removal, and invalid-email flagging (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Fixed locale note: source uses invariant lowercase; ports must match it, not go locale-aware. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case and fix "MUST not" to "MUST NOT"; lead Platform Notes native bullets with each platform's real token control and cut each bullet to one real layout choice; clarify that separate-mode chips stay removable unless `readOnly` is set and that inline-input rules apply to the separate `Input`; add paste/duplicate-batch, input-mode-text, valid-email, readOnly/disabled onChange, duplicate-chip-removal, and keyboard-removal test vectors; document the phone-validation punctuation-only looseness, the disabled-state keyboard-removal caveat, and that a rejected duplicate still clears the input; rewrite Localization as linked `#localization/<key>` entries and Accessibility Options to state the real Differentiate Without Color gap instead of "not applicable"; reformat Design Decisions into Decision/Rationale/Approved triples, note the locale-sensitivity of the email dedup casing transform, and point both layout modes at the shared `fieldShellClass` token instead of duplicated class strings; rewrite Appearance/States as semantic tokens with the Tailwind classes moved into the React/Web platform note; rewrite Compliance as linked checks under canonical categories. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Remove "Not applicable" phrasing from Platform Notes non-web bullets; sharpen native platform guidance; relabel Windows bullet to `**WinUI 3**`. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Document `separateInput` and `readOnly` modes; expand behavioral requirements; add missing sections (Deep Linking, Localization, etc.); update Platform Notes to cover all five platforms; fix domain URI. |

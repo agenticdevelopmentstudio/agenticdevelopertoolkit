@@ -3,11 +3,11 @@ id: fae23662-e69b-4472-9c7d-049feadf1211
 title: Hero
 domain: agenticdevelopertoolkit://recipes/hero
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -189,8 +189,10 @@ Not applicable: Hero component has no logging.
 | [reduced-motion](agenticdevelopercookbook://compliance/accessibility#reduced-motion) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on `Hero.tsx` and its CSS: the root `<div>` carries no ARIA role even though the `<h1>`/`<p>` it wraps remain correctly semantic (semantic-markup: partial); headline/tagline sizes are `rem`-based and scale with the root font-size dial in `css/base.css` (dynamic-type-support: passed); the default `--lp-ink`/`--lp-ink-dim` tokens against `--lp-ground` compute well above WCAG AA but are host-overridable custom properties (contrast-ratio: partial); the Accessibility Options row above documents the `prefers-reduced-motion` reset (reduced-motion: passed); and `headline`/`tagline` are always host-supplied `ReactNode`s with no strings in source, rendered in flexible `ch`-based containers that tolerate expansion without truncation (no-hardcoded-strings, text-expansion-tolerance: passed).
+Statuses rest on `Hero.tsx` and its CSS: the root `<div>` carries no ARIA role even though the `<h1>`/`<p>` it wraps remain correctly semantic (semantic-markup: partial); headline/tagline sizes are `rem`-based and scale with the root font-size dial in `css/base.css` (dynamic-type-support: passed); the default `--lp-ink`/`--lp-ink-dim` tokens against `--lp-ground` compute well above WCAG AA but are host-overridable custom properties (contrast-ratio: partial); the Accessibility Options row above documents the `prefers-reduced-motion` reset (reduced-motion: passed); and `headline`/`tagline` are always host-supplied `ReactNode`s with no strings in source, rendered in flexible `ch`-based containers that tolerate expansion without truncation (no-hardcoded-strings, text-expansion-tolerance: passed). `separation-of-concerns` passes because the component is pure presentation over its props, delegating all layout to `Screen`; `unit-test-coverage` passes on `blocks-close.test.tsx`'s dedicated `Hero` suite, which asserts the mark/headline/tagline/children slots and the `glow` toggle.
 
 ## Change History
 
@@ -198,3 +200,4 @@ Statuses rest on `Hero.tsx` and its CSS: the root `<div>` carries no ARIA role e
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated every citation; corrected the div/section semantics claim and the tap-target unit/citation; reformatted Design Decisions into Decision/Rationale/Approved and added a single-Hero-per-page decision; added a Compliance table plus `depends-on`/`related`; rewrote Conformance Test Vectors to assert observable outcomes (added `hero-styling-class` and a tagline phrasing-content edge case) with full edge-case coverage; fixed the WinUI 3 and AppKit/UIKit platform notes; corrected the headline foreground description; normalized frontmatter date quoting |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

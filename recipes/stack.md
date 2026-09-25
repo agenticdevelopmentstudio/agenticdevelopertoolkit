@@ -3,11 +3,11 @@ id: fcc6d4c4-d83e-402a-857c-fbd0aff91113
 title: Stack
 domain: agenticdevelopertoolkit://recipes/stack
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -180,12 +180,15 @@ Not applicable: Stack is a layout primitive with no logging requirements in the 
 | Check | Status | Category |
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-This rests on the source rendering a plain `<div>` with no `role` or other ARIA attribute, and never forwarding `role` or other rest props onto it (see **no-rest-prop-forwarding**).
+This rests on the source rendering a plain `<div>` with no `role` or other ARIA attribute, and never forwarding `role` or other rest props onto it (see **no-rest-prop-forwarding**); `VStack`/`HStack` are pure presentation over props with only a trivial `gapValue` helper (separation-of-concerns passed), and no test file exercises `Stack.tsx` — the candidate tests matched by name are unrelated Swift and avatar-engine files (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated all citations; rewrote semantic-div claims as non-semantic-div and fixed the Accessibility section's role-forwarding contradiction; added a `no-rest-prop-forwarding` requirement and a Configuration props table; added edge-case test vectors and fixed stack-004's observability; deleted the redundant "missing direction class" edge case; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes and documented gap/justify precedence; reformatted Design Decisions into the Decision/Rationale/Approved form and documented the hardcoded `aws-stack` prefix; built the Compliance table; and marked Reduce Motion not applicable |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

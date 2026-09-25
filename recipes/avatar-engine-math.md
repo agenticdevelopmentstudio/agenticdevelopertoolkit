@@ -3,11 +3,11 @@ id: 471eb7b8-6821-4fd3-ab89-022c56757421
 title: Avatar Engine Math
 domain: agenticdevelopertoolkit://recipes/avatar-engine-math
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -54,10 +54,18 @@ easing, matrices) identical outputs.
 
 ### Color
 
-- **hex-input-normalization**: `parseHex` MUST trim leading/trailing
-  whitespace from its input and MUST strip one leading `#` before validating
-  (Swift: `trimmingCharacters(in: .whitespaces)` then `removeFirst()` when
-  `hasPrefix("#")`; web: `hex.trim().replace("#", "")`).
+- **hex-input-normalization**: `parseHex`'s whitespace/`#`-stripping is not
+  one shared rule — the two platforms normalize differently and accept
+  different inputs. Swift MUST trim only `.whitespaces` (spaces and tabs;
+  no newlines, no U+FEFF) via `trimmingCharacters(in: .whitespaces)`, then
+  MUST strip a leading `#` only when the trimmed string starts with one
+  (`hasPrefix("#")` guarding `removeFirst()`) — a `#` anywhere else in the
+  string is left in place and MUST fail hex-charset-validation. Web MUST
+  trim all ECMAScript whitespace (including newlines and U+FEFF) via
+  `hex.trim()`, then MUST strip the FIRST `#` character occurring anywhere
+  in the string via `.replace("#", "")` — including a `#` that is not
+  leading. A cross-platform conformance vector cannot assume both platforms
+  accept or reject the same input for this case (see Edge Cases).
 - **hex-length-expansion**: `parseHex` MUST expand a 3-character hex body to
   6 characters by doubling each character (`h.map { "\($0)\($0)" }.joined()`
   in Swift; `h.split("").map((c) => c + c).join("")` on the web) before
@@ -276,7 +284,7 @@ matrix, and PRNG functions), not a visual component.
 | avatar-engine-math-018 | prng-float-bounds | `float()` called 10,000 times on `Prng(seed: 42)` | Every value `>= 0` and `< 1` — `MathTests.testFloatsStayInTheUnitInterval`, `prng.test.ts` "floats stay in [0,1)" |
 | avatar-engine-math-019 | prng-range-formula, prng-signed-formula | `signed(4)` averaged over 20,000 draws from `Prng(seed: 7)`; `range(2,5)` over 1,000 draws | Mean of `signed(4)` within `0.1` of `0`; every `range(2,5)` value in `[2, 5)` — `MathTests.testRangeAndSignedAreCentredCorrectly`, `prng.test.ts` "range and signed are centred correctly" |
 | avatar-engine-math-020 | prng-pick-nonempty | `pick(["a","b","c"])` called 5,000 times on `Prng(seed: 3)` | Every result is one of `"a"`, `"b"`, `"c"` — `MathTests.testPickNeverIndexesOutOfBounds`, `prng.test.ts` "pick never indexes out of bounds" |
-| avatar-engine-math-021 | prng-pick-or-nil-empty | `pickOrNil([Int]())`, `pickOrNil([String]())` on `Prng(seed: 3)`, then `next()` | Both calls return `nil`; the following `next()` equals `Prng(seed: 3).next()` on a fresh instance — `MathTests.testPickOrNilAnswersNilForAnEmptyArrayAndDrawsNothing` |
+| avatar-engine-math-021 | prng-pick-or-nil-empty | `pickOrNil` on an empty `[Int]` array and an empty `[String]` array, both on `Prng(seed: 3)`, then `next()` | Both calls return `nil`; the following `next()` equals `Prng(seed: 3).next()` on a fresh instance — `MathTests.testPickOrNilAnswersNilForAnEmptyArrayAndDrawsNothing` |
 | avatar-engine-math-022 | prng-pick-or-nil-draw, prng-pick-nonempty | 200 parallel calls to `pick(items)` on one `Prng(seed: 7)` and `pickOrNil(items)` on a second `Prng(seed: 7)`, `items = ["a","b","c","d","e"]` | Both sequences agree at every step — `MathTests.testPickOrNilConsumesTheSameStreamAsPick` |
 
 ## Edge Cases
@@ -285,6 +293,16 @@ matrix, and PRNG functions), not a visual component.
   hex-looking digits)**: `parseHex` MUST throw a catchable error rather than
   crash, per `hex-parse-failure`. An empty string has length 0 (not 3 or 6)
   and fails the length check before any charset check runs.
+- **A `#` that is not a single leading character, or whitespace outside
+  Swift's `.whitespaces` set (a newline, a BOM) — divergent acceptance
+  across platforms**: per `hex-input-normalization`, Swift strips only a
+  leading `#` and trims only spaces/tabs, so an embedded `#` (`"abc#def"`)
+  or a trailing/leading newline or U+FEFF is left in the string and MUST
+  fail `hex-charset-validation` (or the length check). Web's `.replace`
+  deletes the first `#` wherever it occurs and `.trim()` removes newlines
+  and U+FEFF too, so the same inputs normalize to a valid 6-character body
+  and MUST parse successfully. A shared conformance vector cannot assert
+  one outcome for both platforms on such an input.
 - **Colour-channel `NaN`** (e.g. from an upstream divide-by-zero in an
   interpolation): `toHex` MUST render the affected channel as `00` rather
   than propagating `NaN` or trapping, per `nan-channel-clamped`.
@@ -554,3 +572,4 @@ open question in Edge Cases.
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.2 | 2026-09-25 | Mike Fullerton | hex-input-normalization split into platform-specific rules (Swift vs web trim/strip differ) with a new Edge Case for divergent acceptance; fixed a malformed code-span split in vector 021. |

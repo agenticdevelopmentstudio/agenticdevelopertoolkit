@@ -3,11 +3,11 @@ id: fce1333d-7f42-49f8-86da-508159701043
 title: SectionLabel
 domain: agenticdevelopertoolkit://recipes/section-label
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -216,13 +216,16 @@ no action.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on the source's plain `<div>`/`<span>` markup (no ARIA role or heading claimed), its `rem`-based sizing that scales with root font size, its color reference to the `apt-text-dim` token without a resolved contrast value, its complete absence of hardcoded string literals (`children` is always caller-supplied), and its reliance on the browser's built-in `text-transform: uppercase` for case-folding of that caller-supplied text.
+These statuses rest on the source's plain `<div>`/`<span>` markup (no ARIA role or heading claimed), its `rem`-based sizing that scales with root font size, its color reference to the `apt-text-dim` token without a resolved contrast value, its complete absence of hardcoded string literals (`children` is always caller-supplied), and its reliance on the browser's built-in `text-transform: uppercase` for case-folding of that caller-supplied text. `separation-of-concerns` passes because `section-label.tsx` is pure presentation with no business logic, and `unit-test-coverage` passes because `stat.test.tsx` renders `SectionLabel` directly and asserts on its class treatment.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: name the dim/tertiary color explicitly in every non-web Platform Notes bullet instead of "muted"; give concrete SwiftUI/Compose/AppKit-UIKit/WinUI 3 translation values and flag the uppercase casing transform as locale-sensitive; rewrite T3's expected outcome as a mechanical DOM assertion and add T7 to test distinct-from-caption-and-title against SectionHeader; reformat Design Decisions into the Decision/Rationale/Approved triple; rebuild Compliance as catalog-linked checks; add section-header to related; note the WCAG contrast risk of the dim 10px text in Accessibility. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Platform Notes: remove "Not applicable" phrasing from non-web bullets; add concrete WinUI 3 translation guidance (TextBlock, CharacterCasing, Foreground, Margin, StackPanel for trailing). |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Revise recipe: fix domain URI, add "Not applicable" sections per cookbook guidelines, restructure Platform Notes as translation guidance, update status to review. |

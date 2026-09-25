@@ -3,11 +3,11 @@ id: 5a028319-034c-4852-a1ee-01247a747183
 title: EditorSection
 domain: agenticdevelopertoolkit://recipes/editor-section
 type: recipe
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-07-03'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -113,9 +113,8 @@ Composed shared primitives without their own recipe domains: `Badge`
   `listHeader` in the rail's leading slot and MUST hide it while the rail is
   collapsed.
 - **default-empty-list-label**: The EditorSection MUST render `emptyList` as the
-  rail's empty-state label when `items` is empty, defaulting to the localized
-  string at `#localization/empty-list` ("Nothing here yet.") when `emptyList` is
-  omitted.
+  rail's empty-state label when `items` is empty, defaulting to the hardcoded
+  English literal `"Nothing here yet."` when `emptyList` is omitted.
 
 ## Layout
 
@@ -183,7 +182,7 @@ Composed shared primitives without their own recipe domains: `Badge`
 | T12 | render-warn-badge-per-row | item `{ warn:true }` (no count) | Row trailing shows a bare `⚠`; a non-warned row shows nothing |
 | T13 | surface-mutation-error | `error="Save failed"` | Red error line renders under the toolbar; absent when `error` unset |
 | T14 | collapse-list-header-when-collapsed | `listHeader` set, rail collapsed | `listHeader` hidden while collapsed, shown while expanded |
-| T15 | default-empty-list-label | `items=[]`, `emptyList` omitted | Rail shows "Nothing here yet." (`#localization/empty-list`) |
+| T15 | default-empty-list-label | `items=[]`, `emptyList` omitted | Rail shows "Nothing here yet." (hardcoded default) |
 | T16 | render-warn-badge-per-row | item `{ warn:true, warnCount:5, warnTitle:"5 project sites not yet connected" }` | The rail row's accessible name (its button content) includes `warnTitle`, contributed by the Badge's `aria-label` after the row label |
 
 ## Edge Cases
@@ -192,9 +191,9 @@ Composed shared primitives without their own recipe domains: `Badge`
   Save are disabled, and Delete defaults to disabled (nothing to delete).
 - New/unsaved draft: the consumer passes `canDelete={false}` so Delete is not
   offered for a row that isn't persisted yet, even though a draft is being edited.
-- Empty record list: the rail shows `emptyList` (falling back to the localized
-  `#localization/empty-list` string, "Nothing here yet.", when omitted — see
-  **default-empty-list-label**).
+- Empty record list: the rail shows `emptyList` (falling back to the hardcoded
+  English literal "Nothing here yet." when omitted — see
+  **default-empty-list-label**; this default is not localized).
 - `busy` (saving) in flight: Save renders "Saving…" and is disabled, Cancel is
   disabled, and Delete is disabled, so a record can't be canceled out of or
   deleted mid-save; New remains enabled so a second record can be started (see
@@ -222,6 +221,62 @@ Composed shared primitives without their own recipe domains: `Badge`
 - **AppKit / UIKit**: Start with `NSSplitViewController` (macOS) or `UISplitViewController` (iOS). Toolbar is `NSToolbar` (macOS) with an `NSToolbarItem` holding an `NSTextField` label for the title plus button items, or `UIToolbar` (iOS) with `UIBarButtonItem`s (New, Delete, Cancel, Save). Records rail is `NSTableView`/`NSOutlineView` (macOS) or a `UITableViewController` (iOS) with selection bindings driving pane visibility. Detail pane is a conditional container: editing state shows the form, nothing-selected state shows `EmptyState`. Warn badges are overlay `NSImageView`/`UIImageView` icons (⚠ glyph) or cell background tints. All state and callbacks flow through the view controller.
 
 - **WinUI 3**: Root `Grid` with `RowDefinitions` for toolbar (~44px), optional error line (~24px), and content area (`Height="*"`). `CommandBar` holds the title (`TextBlock`/`Run` in a `StackPanel`, left-aligned, `Foreground="{ThemeResource AptGoldBrush}"`) and Button commands (New, Delete, Cancel, Save) right-aligned, bound to `Command`/`IsEnabled` reflecting the editing/dirty/busy conditions (Save additionally swaps its `Content` to "Saving…" while busy, via a converter or a bound property). Error `TextBlock` (`Margin="12,0,12,0"`, `Foreground="{ThemeResource AptRedBrush}"`) is shown or hidden via `Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"`, a bound converter driven by whether the error string is set — not a literal with no binding behind it. The content area uses `NavigationView` with `PaneDisplayMode="Left"` (or a two-column `Grid` whose rail column animates between 240 and 48px), so the rail collapses exactly as `TopicDetail`'s own WinUI 3 note describes; a fixed `Width="240"` column with no toggle would not port the collapse behavior. Records list is a `ListView` (`SelectionMode="Single"`, `ItemsSource="{x:Bind Items}"`, `SelectedValue="{x:Bind SelectedId, Mode=TwoWay}"`, `SelectedValuePath="Id"` — `SelectedItem` would bind an item object, not the id string the shell tracks), and the detail pane is a `ContentPresenter` bound through a method (`Content="{x:Bind GetPaneContent(Editing), Mode=OneWay}"`), since `x:Bind` has no inline ternary expression syntax. Warn badges are `FontIcon` overlays (Unicode ⚠, `Foreground="{ThemeResource AptWarningBrush}"`) or `InfoBadge` controls in the `ListView.ItemTemplate`. All brushes come from `{ThemeResource}` (never `{StaticResource}`), so they follow theme changes, mapped to the `apt-*` tokens; skip `Reveal` — it was retired with UWP and has no WinUI 3 equivalent.
+
+## Design Decisions
+
+- **Decision**: `EditorSection` is a pure assembly with no visual grammar of its
+  own.
+  **Rationale**: Every editor topic must look identical; delegating all
+  appearance to `ButtonBar` + `TopicDetail` + `EmptyState` keeps one blessed home
+  for each part and avoids drift (optimize-for-change).
+  **Approved**: pending
+- **Decision**: The consumer owns all state (list, selection, draft, dirty, busy,
+  error) and callbacks.
+  **Rationale**: The shell computes only derived enablement;
+  keeping the source of truth outside makes it reusable across every record type.
+  **Approved**: pending
+- **Decision**: "Editing" is derived from `selectedId !== null`, and Save from
+  `editing && dirty`.
+  **Rationale**: One selection prop drives both the pane
+  choice and the toolbar enablement, so callers can't put the two out of sync.
+  **Approved**: pending
+- **Decision**: `canDelete` defaults to "anything selected" but honors an explicit
+  `false`.
+  **Rationale**: The common case needs no wiring, while a new/unsaved
+  draft can suppress a Delete that would target a non-row.
+  **Approved**: pending
+- **Decision**: Warn rendering is data-driven from `warn`/`warnCount`/`warnTitle`
+  on each item, mapping to a `Badge` or a bare `⚠`.
+  **Rationale**: The rail stays a
+  generic `TopicDetail`; the "needs configuration" affordance is expressed as data,
+  not a new rail feature.
+  **Approved**: pending
+
+## Compliance
+
+| Check | Status | Category |
+|---|---|---|
+| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
+| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+
+The `passed` rows rest on the source's `role="toolbar"` `ButtonBar`, the buttons'
+`disabled` wiring to editing/dirty/busy state, the warn badge/span's
+`aria-label`/`title` composing into its row button's accessible name, and
+color usage limited to `apt-*` tokens (no raw hex, no `!important`); the
+`partial` rows rest on `contrast-ratio` and `no-hardcoded-strings` being token-
+and-source-derived facts the source's TSX cannot itself confirm (token contrast
+ratios and translated strings live outside this file). `separation-of-concerns`
+passes: `editor-section.tsx` owns no state of its own and no visual grammar —
+it derives `editing`/`deletable` and maps items to `TopicDetailItem`s, then
+delegates all rendering to `ButtonBar`, `TopicDetail`, `Badge`, and
+`EmptyState`. `unit-test-coverage` fails — no test file in the `ui` package
+exercises `EditorSection`.
 
 ## API
 
@@ -267,59 +322,11 @@ buttons whose `disabled` reflects the editing/dirty/busy state; each warn badge
 carries `warnTitle` as its title/aria-label; the rail's selection and collapse
 behaviors come from `TopicDetail`.
 
-## Design Decisions
-
-- **Decision**: `EditorSection` is a pure assembly with no visual grammar of its
-  own.
-  **Rationale**: Every editor topic must look identical; delegating all
-  appearance to `ButtonBar` + `TopicDetail` + `EmptyState` keeps one blessed home
-  for each part and avoids drift (optimize-for-change).
-  **Approved**: pending
-- **Decision**: The consumer owns all state (list, selection, draft, dirty, busy,
-  error) and callbacks.
-  **Rationale**: The shell computes only derived enablement;
-  keeping the source of truth outside makes it reusable across every record type.
-  **Approved**: pending
-- **Decision**: "Editing" is derived from `selectedId !== null`, and Save from
-  `editing && dirty`.
-  **Rationale**: One selection prop drives both the pane
-  choice and the toolbar enablement, so callers can't put the two out of sync.
-  **Approved**: pending
-- **Decision**: `canDelete` defaults to "anything selected" but honors an explicit
-  `false`.
-  **Rationale**: The common case needs no wiring, while a new/unsaved
-  draft can suppress a Delete that would target a non-row.
-  **Approved**: pending
-- **Decision**: Warn rendering is data-driven from `warn`/`warnCount`/`warnTitle`
-  on each item, mapping to a `Badge` or a bare `⚠`.
-  **Rationale**: The rail stays a
-  generic `TopicDetail`; the "needs configuration" affordance is expressed as data,
-  not a new rail feature.
-  **Approved**: pending
-
-## Compliance
-
-| Check | Status | Category |
-|---|---|---|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-
-The `passed` rows rest on the source's `role="toolbar"` `ButtonBar`, the buttons'
-`disabled` wiring to editing/dirty/busy state, the warn badge/span's
-`aria-label`/`title` composing into its row button's accessible name, and
-color usage limited to `apt-*` tokens (no raw hex, no `!important`); the
-`partial` rows rest on `contrast-ratio` and `no-hardcoded-strings` being token-
-and-source-derived facts the source's TSX cannot itself confirm (token contrast
-ratios and translated strings live outside this file).
-
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Removed fabricated #localization/empty-list anchor (no Localization section); default-empty-list-label now describes the hardcoded English literal. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case; add disable-save-while-busy, disable-cancel-while-busy, keep-new-enabled-while-busy, and default-empty-list-label requirements with T15/T16 test vectors and updated T9; cite TopicDetail's own collapse-time badge/label-hiding requirements instead of duplicating them; clarify render-warn-badge-per-row's accessible-name composition; fix WinUI 3, SwiftUI, AppKit/UIKit, and Compose platform notes to name real APIs; move literal Tailwind classes out of Layout/Ingredients into the React/Web note; add ButtonBar/EmptyState ingredient domains; extract API and Accessibility into standalone sections; reformat Design Decisions to the three-line convention; rewrite Compliance as linked canonical checks. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Expand Platform Notes with all five platforms; add concrete translation guidance for SwiftUI, Compose, AppKit/UIKit, and WinUI 3. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the EditorSection assembly of ButtonBar + TopicDetail + EmptyState. |

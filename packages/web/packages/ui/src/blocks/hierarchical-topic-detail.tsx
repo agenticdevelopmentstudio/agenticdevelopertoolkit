@@ -91,7 +91,7 @@ export interface TopicLevel {
    *  to the DETAIL (a final choice)? A row's own `leadsTo` overrides it; unset on both means
    *  `"detail"`. Declare `"list"` on levels whose rows disclose deeper lists (a workspaces list, a
    *  features list) so the cascading view can hold the detail pane through intermediate selects
-   *  (must-hold-the-detail-until-the-final-choice). */
+   *  (hold-the-detail-until-the-final-choice). */
   leadsTo?: "list" | "detail"
   /** OPT-IN landing selection: the item to select the moment this level APPEARS with nothing chosen
    *  — i.e. when the parent topic that opens this list is picked (Work Items → List). It fires this
@@ -366,7 +366,7 @@ type SurfaceState = {
   hoverId: string | null
   /** How the open reveal was rooted: a pointer ENTER opens EVERY on-screen list (`true`), the
    *  covering CLICK opens only the clicked list's own branch (`false`) — a click on a visible row
-   *  must never spring the user's collapsed parents open (must-not-expand-parents-on-select). */
+   *  must never spring the user's collapsed parents open (not-expand-parents-on-select). */
   hoverAll: boolean
   /** NARROW mode: the pane index the stack was last PAINTED at. The slide animates from here to
    *  wherever the new selection puts the top pane — and since selecting is a route change that
@@ -1466,7 +1466,7 @@ function useSelectionConnectors(
         const c = anchor(i + 1)
         // A connector joins a selected PARENT row to a selected CHILD row — nothing else. A child
         // rail that is open with NOTHING selected gets NO line into it (spec:
-        // must-connect-selected-rows-only — an unselected list's landing is the topic overview,
+        // connect-selected-rows-only — an unselected list's landing is the topic overview,
         // and a line pointing at whatever row happens to sit at the parent's height reads as a
         // phantom selection).
         if (!p || !c) continue
@@ -1918,7 +1918,7 @@ function CoveredStack({
 
   // The frontier list stays uncovered while it has no selection (its "detail" is only a landing, so
   // the user needs the list to pick from), and is never shifted off-screen for it
-  // (must-not-hide-frontier-choosing-list).
+  // (not-hide-frontier-choosing-list).
   const coverableCount = firstUnselected === -1 ? rendered.length : frontier
   // THE DETAIL'S MINIMUM IS FIXED — the same in every state, so the covering is a pure function of
   // the width. It used to be claimed only once every level was selected (0 while the frontier was
@@ -2177,7 +2177,7 @@ function CoveredStack({
     // full width regardless of pins, so a pin flip alone changes nothing until the pointer
     // happens to leave — the click reads as dead and its effect "turns up later". Dropping the
     // reveal settles the stack to the new pin state immediately; the pointer hasn't moved, so
-    // no enter re-opens it (must-apply-disclosure-toggles-immediately).
+    // no enter re-opens it (apply-disclosure-toggles-immediately).
     setHoverId(null)
     if (e.metaKey || e.ctrlKey) {
       setPins(Object.fromEntries(rendered.map((l) => [l.id, target])))

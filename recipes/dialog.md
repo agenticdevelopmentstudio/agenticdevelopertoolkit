@@ -3,11 +3,11 @@ id: 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 title: Dialog
 domain: agenticdevelopertoolkit://recipes/dialog
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -88,7 +88,7 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 | T6 | focus-trap | Tab through dialog, close it | Focus stays within dialog; on close, focus returns to the trigger element |
 | T7 | dialog-labelling | Render with `<DialogTitle>` and `<DialogDescription>` | Assistive technology announces title and description |
 | T8 | backdrop-dismissal-disabled (opt-in) | Set `disablePointerDismissal={false}` and click backdrop | Dialog closes on backdrop click |
-| T9 | escape-closes (override) | Composing component passes its own `onOpenChange`, calling `event.preventDefault()` when the dismissal reason is Escape, then Escape is pressed while the dialog is open and focused | Dialog remains open — the composing component's override suppresses the default Escape-to-close behavior |
+| T9 | escape-closes (override) | Composing component passes its own `onOpenChange`, calling `eventDetails.cancel()` when the dismissal reason is Escape (or, with a controlled `open`, simply not setting it to `false`), then Escape is pressed while the dialog is open and focused | Dialog remains open — the composing component's override suppresses the default Escape-to-close behavior |
 | T10 | dialog-labelling (missing title) | Render `<DialogContent>` with no `<DialogTitle>` child | Popup renders without an `aria-labelledby` attribute; assistive technology announces the dialog with no accessible name |
 
 ## Edge Cases
@@ -97,7 +97,7 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 - **Content width**: Dialog caps at `max-w-md` (448px); composing dialogs widen it via className override (e.g., `sm:max-w-2xl`).
 - **Close button hide**: `showClose={false}` hides the affordance for dialogs whose footer buttons are the only dismissal path (e.g., a busy/loading state that also overrides **escape-closes** so Escape is blocked while busy).
 - **Responsive behavior**: `w-[calc(100%-2rem)]` preserves 16px side margins on small screens; margins prevent edge-touching on mobile.
-- **Escape override**: A composing component overrides **escape-closes** by passing its own `onOpenChange` (forwarded via `{...props}` on the `Dialog` root) and checking the dismissal reason before calling `event.preventDefault()` — e.g., a search input within the dialog that wants to capture Escape for its own purposes.
+- **Escape override**: A composing component overrides **escape-closes** by passing its own `onOpenChange` (forwarded via `{...props}` on the `Dialog` root) and checking the dismissal reason before calling `eventDetails.cancel()` on the event-details argument — Base UI ignores a plain `event.preventDefault()` here — or, with a controlled `open`, by simply returning without flipping it to `false` — e.g., a search input within the dialog that wants to capture Escape for its own purposes.
 - **Missing title**: A `<DialogContent>` rendered without `<DialogTitle>` has no `aria-labelledby` and is announced to assistive technology with no accessible name; composing components MUST always render `DialogTitle` (see **dialog-labelling**), hiding it visually with CSS if a visible title isn't wanted.
 
 ## Configuration
@@ -154,7 +154,7 @@ None — a presentational primitive that emits no logs of its own.
 ## Design Decisions
 
 **Decision**: Backdrop dismissal is disabled by default for modals and alerts.
-**Rationale**: Prevents accidental data loss and clarifies intent, per `agenticdevelopertoolkit://recipes/alert-and-dialog#requirements/backdrop-dismissal-disabled`; pointer dismissal is opt-in for advanced use cases.
+**Rationale**: Prevents accidental data loss and clarifies intent (see **backdrop-dismissal-disabled** above, which AlertModal and the other composing dialogs inherit unchanged); pointer dismissal is opt-in for advanced use cases.
 **Approved**: pending
 
 **Decision**: Built on Base UI (`@base-ui/react/dialog`) rather than a hand-rolled implementation.
@@ -182,13 +182,16 @@ None — a presentational primitive that emits no logs of its own.
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | failed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on `dialog.tsx`: the explicit `aria-label="Close"` plus Base UI's documented role/focus-trap/portal contract support the passed accessibility rows; the `apt-*` token contrast values and whether the `rem`-based `text-base`/`text-sm` classes track system font scaling aren't verifiable from this file, hence partial; the close button's `size-4` icon has no padding class enlarging its hit area, so it plainly fails the 44×44 target; and the hardcoded, non-overridable `"Close"` string in `DialogContent` fails both internationalization checks.
+Statuses rest on `dialog.tsx`: the explicit `aria-label="Close"` plus Base UI's documented role/focus-trap/portal contract support the passed accessibility rows; the `apt-*` token contrast values and whether the `rem`-based `text-base`/`text-sm` classes track system font scaling aren't verifiable from this file, hence partial; the close button's `size-4` icon has no padding class enlarging its hit area, so it plainly fails the 44×44 target; and the hardcoded, non-overridable `"Close"` string in `DialogContent` fails both internationalization checks. `separation-of-concerns` passes because `dialog.tsx` is a thin composition of `DialogPrimitive.*` with Tailwind classes and no business logic of its own; `unit-test-coverage` is partial because `Dialog`/`DialogContent` are exercised only through parent components (`AlertModal` in `alertModal.test.tsx`, `CategoryPickerDialog` in `categoryPickerDialog.test.tsx`), never by a dedicated test of `dialog.tsx` itself.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed T9/Escape-override to use eventDetails.cancel() (or controlled open) not event.preventDefault(); fixed dangling backdrop-dismissal-disabled cross-ref to point locally instead of alert-and-dialog. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; corrected the WinUI 3 and AppKit/UIKit Platform Notes bullets to real APIs and verified against `packages/apple`; relabeled Platform Notes bullets to the standard names; rebuilt Compliance as canonical linked accessibility/internationalization checks with a supporting sentence; reformatted Design Decisions into Decision/Rationale/Approved blocks and cited the alert-and-dialog requirement by fragment instead of a wiki-link and section number; corrected the Localization and Target size claims against `dialog.tsx`; narrowed Logging to stop repeating Analytics; documented the escape-override mechanism and the no-title edge case with new test vectors; noted the backdrop/popup z-order dependency and the unaddressed Reduce Transparency gap |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Correct backdrop opacity from bg-black/60 to bg-black/30 per source; structure Appearance section; fix domain URI from hub to cookbook; expand Accessibility, Edge Cases, and Platform Notes; upgrade status from draft to review |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial draft |

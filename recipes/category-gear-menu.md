@@ -3,11 +3,11 @@ id: 76eee228-2fd5-4524-a84e-d221c2e4c8ad
 title: Category Gear Menu
 domain: agenticdevelopertoolkit://recipes/category-gear-menu
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -195,12 +195,15 @@ Not applicable: No logging is implemented in the component.
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The screen-reader, keyboard, and semantic-markup statuses rest on the `DropdownMenu`/`DropdownMenuItem`/`GearMenuTrigger` primitives this component composes, each with its own recipe; touch-target-size and contrast-ratio are partial because the concrete size and color-token values live in those child recipes, not in this source; the internationalization statuses rest on `labelFor` and the JSX literals in `category-gear-menu.tsx`, which build every label from hardcoded English fragments with no localization resource lookup.
+The screen-reader, keyboard, and semantic-markup statuses rest on the `DropdownMenu`/`DropdownMenuItem`/`GearMenuTrigger` primitives this component composes, each with its own recipe; touch-target-size and contrast-ratio are partial because the concrete size and color-token values live in those child recipes, not in this source; the internationalization statuses rest on `labelFor` and the JSX literals in `category-gear-menu.tsx`, which build every label from hardcoded English fragments with no localization resource lookup. Best-practices statuses rest on the component being, in the source's own words, "deliberately DUMB" — composing `DropdownMenu` primitives and reporting the chosen action via `onAction`, with no data access or business rule of its own (separation-of-concerns: passed) — and on `categoryGearMenu.test.tsx` directly rendering `CategoryGearMenu` and asserting its behavior (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case throughout (bullets, test vectors, edge cases); fixed the "file" and "delete" item label text to match `labelFor`'s actual output ("Also file in…" / "Delete…") and corrected the resulting States/Configuration/test-vector text; added the `omit-target-when-not-editable` requirement and test vector for the `targetName`-set-but-`canEditTarget`-false case; resolved the States "Default" contradiction with the Configuration default; reworded `style-delete-destructive` and `align-to-end` to name platform-native destructive styling and trailing-edge/RTL alignment instead of a hardcoded color or "(right)", and added an RTL test vector; corrected cgm-012's expectation and requirement mapping; restructured Design Decisions into Decision/Rationale/Approved form and clarified the Move-vs-File rationale; defined `CategoryGearAction` inline in Configuration; marked Localization applicable with whole-string templated keys and a note on locale-sensitive casing; added a Compliance table; dropped source-only implementation detail (Radix/relative-path mention, "no debouncing in source") from Platform Notes and Edge Cases in favor of spec language; corrected Platform Notes (SwiftUI/UIKit native destructive controls instead of ad hoc color, SwiftUI disables rather than conditionally renders, AppKit enable/destructive guidance, WinUI 3 `Placement`/theme-resource names); gave the touch-target minimum per platform; split the "Empty noun" edge case into omitted-prop vs. empty-string behavior; added `gear-menu-trigger` and `dropdown-menu` to `depends-on`. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -3,11 +3,11 @@ id: f5d2eb1c-fb0e-48e3-b124-7e730ac8231c
 title: Markdown Quick Reference
 domain: agenticdevelopertoolkit://recipes/markdown-quick-reference
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -243,6 +243,8 @@ even when a consumer shortens the visible label.
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
 The trigger carries `aria-label="Markdown quick reference"` and the reference
 content is a semantic `<dl>`, both driven by the shared `Popover` primitive's
@@ -250,13 +252,20 @@ content is a semantic `<dl>`, both driven by the shared `Popover` primitive's
 handling — the source shows nothing that would make any of these `partial` or
 `failed`. `no-hardcoded-strings` is `failed` because the title, aria-label,
 default trigger text, and all nine row labels are fixed English strings with
-no override or localization path from this component.
+no override or localization path from this component. `separation-of-concerns`
+passes because `MarkdownQuickReference` only supplies the markdown-specific
+`MARKDOWN_SYNTAX` entries and props to the shared `SyntaxQuickReference` shell,
+with no popover, dismissal, or rendering logic of its own. `unit-test-coverage`
+passes because `markdownQuickReference.test.tsx` exercises the collapsed
+default, opening/listing the syntax entries, Escape dismissal, and a custom
+trigger label.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 row (recipe, period); added best-practices Compliance rows. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct Overview/Appearance/Platform Notes to describe composing the shared SyntaxQuickReference shell instead of re-exporting it; fix title casing; replace the non-existent iOS UIMenu with UIPopoverPresentationController; fix the macOS/Compose/WinUI platform notes; ground Appearance in fieldCaptionClass and the shell's column width; add a dismiss-on-outside-click test vector and cover all nine labels in T2; reformat Design Decisions with Approved lines; rebuild Compliance as linked, source-grounded accessibility/internationalization checks; flag the hard-coded-strings localization gap as a known review item; correct the 1.0.0 row to say "ingredient"; and rename requirements to subject-only names |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Rewrite Platform Notes with concrete translation guidance for SwiftUI, Compose, AppKit/UIKit, and WinUI 3 |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Update domain URI, fill all template sections with "Not applicable" explanations where no source implementation exists, correct status to review |
-| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial ingredient for the shared markdown quick-reference popover (contract c11) |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe for the shared markdown quick-reference popover (contract c11). |

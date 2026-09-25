@@ -3,11 +3,11 @@ id: d9b07d1e-b53c-4efa-86f1-82a31ad9f02f
 title: Progress Modal
 domain: agenticdevelopertoolkit://recipes/progress-modal
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -237,13 +237,16 @@ Not applicable: This component does not perform logging. Debug information about
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | partial | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling.
+Statuses rest on the source: `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling. `ProgressModal` is transport-agnostic — it renders state and emits decisions, and the host owns the batch loop and any network calls (separation-of-concerns passed); `progressModal.test.tsx` exercises the percentage calculation, the halted/finished/healthy button states, Continue/Stop/Close handlers, and the running log directly (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to drop `must-` prefix; correct the Accessibility section's false live-region claim to match Base UI Dialog/self-contained Progress; add a props table; unify the dismiss contract across the requirement, vectors, and edge case (no host-facing `onOpenChange`); add the finished-overrides-halted-error requirement and vector; fix the Finished/Halted rows in States and the results-log condition; reword halt-on-error as an observable outcome; replace literal "red"/"units" with token names and a spacing-scale note; add a `progress.count` localization key and mark which strings are hardcoded vs. overridable; fill in Configuration and Compliance tables; correct Platform Notes for AppKit/UIKit, SwiftUI, and WinUI 3; reframe design decision 1 as an assumption; add `depends-on` for Dialog and Progress; note the Change History author discrepancy is a generator attribution, not a frontmatter conflict. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise accessibility section: document delegation to composed components rather than mark as unimplemented |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code analysis |

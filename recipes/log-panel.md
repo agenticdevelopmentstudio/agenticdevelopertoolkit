@@ -3,11 +3,11 @@ id: 57e33900-ca06-474e-abb1-d904c27a6336
 title: Log Panel
 domain: agenticdevelopertoolkit://recipes/log-panel
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -117,8 +117,8 @@ The Log Panel component displays structured log data as rows and columns in a sc
 | log-panel-005 | follow-tail-by-default | followTail=true (default), lines appended | The scroll container is scrolled to its maximum scrollable position (bottom) after new lines render |
 | log-panel-006 | honor-follow-tail-toggle | followTail=true, user appends line, then followTail=false, user appends second line | First append scrolls to bottom; second append does not scroll |
 | log-panel-007 | detect-user-scroll | followTail=true, user manually scrolls up so the distance from the bottom exceeds 4px, then a new line is appended | The scroll container does not scroll to the bottom for that append |
-| log-panel-008 | handle-cell-click | column={..., onCellClick: <mock function>}, click cell | onCellClick is called with the LogLine object |
-| log-panel-009 | handle-cell-double-click | column={..., onCellDoubleClick: <mock function>}, double-click cell | onCellDoubleClick is called with the LogLine object |
+| log-panel-008 | handle-cell-click | `column={..., onCellClick: <mock function>}`, click cell | onCellClick is called with the LogLine object |
+| log-panel-009 | handle-cell-double-click | `column={..., onCellDoubleClick: <mock function>}`, double-click cell | onCellDoubleClick is called with the LogLine object |
 | log-panel-010 | apply-column-widths | columns=[{id:'a', width:200}, {id:'b', width:'1fr'}] | gridTemplateColumns is '200px 1fr' |
 | log-panel-011 | apply-default-column-width | columns=[{id:'a'} (no width specified)] | gridTemplateColumns includes 'minmax(120px, 1fr)' for that column |
 | log-panel-012 | apply-cell-text-alignment | column={align:'center'}, cell text 'Centered' | CSS textAlign is set to 'center' |
@@ -150,8 +150,8 @@ The Log Panel component displays structured log data as rows and columns in a sc
 - **maxLines is NaN**: Comparisons against a `NaN` limit are always false, so the truncation never triggers; behavior matches `maxLines` being unset.
 - **maxLines is negative**: The truncation check still triggers (any non-negative line count exceeds a negative limit), but the resulting slice start index exceeds the array length, so zero rows are kept and the empty message is shown.
 - **maxLines is fractional**: The slice used to trim rows truncates a fractional start index toward zero rather than rounding it, so the row count kept can differ from the rounded value; pass an integer to get a predictable result.
-- **Undefined cell values**: A column value that is `undefined` is treated as empty text (`""`); no color, mono, strong, or link styling is applied, and no error occurs.
-- **String cell values**: A column value that is a plain string is treated as text content with default appearance only (no color, mono, strong, or link styling).
+- **Undefined cell values**: A column value that is `undefined` is treated as empty text (`""`); the column's `defaultLevel`/`defaultMono` still apply per **apply-cell-level-color**/**apply-cell-mono-font** (though with no text to render, this has no visible effect), and no `strong` or `link` styling is applied since those come only from `cell.strong`/`cell.link`, never a column default. No error occurs.
+- **String cell values**: A column value that is a plain string is treated as text content (`{text: value}`); the column's `defaultLevel`/`defaultMono` apply to it exactly as they would to an object-form cell (per **apply-cell-level-color**/**apply-cell-mono-font**), but no `strong` or `link` styling is applied, since those come only from `cell.strong`/`cell.link`, which a plain string cannot carry.
 - **Column width as string**: A column width given as a string (e.g. `'1fr'`, `'50%'`) is used directly as the grid track size.
 - **Column width as number**: A column width given as a number (e.g. `200`) becomes the pixel value (`'200px'`) for the grid track size.
 - **Column width undefined**: A column with no width specified uses the default track size `minmax(120px, 1fr)`.
@@ -268,14 +268,17 @@ Not applicable: The component does not emit logs or diagnostic output.
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: interactive cells have no ARIA label or role beyond the styling-only `lp-cell--interactive` class and the inconsistently-supported `title` attribute, and no keyboard handling exists at all (screen-reader-support, keyboard-navigable); the root container carries `row`/`columnheader`/`cell`/`rowgroup` roles but no enclosing `table`/`grid` role (semantic-markup); text color and tap-target sizing are delegated to consumer-supplied CSS variables and stylesheets, which the source cannot verify (contrast-ratio, touch-target-size, dynamic-type-support); and the default `emptyMessage` string `'(no events)'` is hardcoded in English, though it is overridable via the `emptyMessage` prop (no-hardcoded-strings, string-externalization).
+Statuses rest on the source: interactive cells have no ARIA label or role beyond the styling-only `lp-cell--interactive` class and the inconsistently-supported `title` attribute, and no keyboard handling exists at all (screen-reader-support, keyboard-navigable); the root container carries `row`/`columnheader`/`cell`/`rowgroup` roles but no enclosing `table`/`grid` role (semantic-markup); text color and tap-target sizing are delegated to consumer-supplied CSS variables and stylesheets, which the source cannot verify (contrast-ratio, touch-target-size, dynamic-type-support); and the default `emptyMessage` string `'(no events)'` is hardcoded in English, though it is overridable via the `emptyMessage` prop (no-hardcoded-strings, string-externalization). `separation-of-concerns` passes because `LogPanel.tsx`'s `cellStyle()` is presentation-only formatting logic (mapping column config to CSS classes) that stays inside the one rendering component, with no data fetching or infrastructure code mixed in. `unit-test-coverage` passes because `__tests__/LogPanel.test.tsx` exercises the component with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | String/undefined cells now correctly show defaultLevel/Mono apply; history reordered; Compliance added. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; clarify cell color/mono precedence and the stop-event-propagation scope; add a Level Colors table; rewrite test vectors and edge cases as observable outcomes and add missing coverage; correct overclaimed Accessibility statements and the WCAG tap-target citation; reformat Design Decisions; add a Compliance table; reorder and correct Platform Notes API references; treat the default emptyMessage as a localizable string. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise accessibility guidance; clarify keyboard navigation gap and tap target responsibility |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

@@ -3,11 +3,11 @@ id: e26e765d-2caa-40f8-a668-661ed2b0632c
 title: AlertModal
 domain: agenticdevelopertoolkit://recipes/alert-modal
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,8 +48,9 @@ primitive. It renders one primary button (**alert mode**) when no
 (**confirm mode**) when `cancelLabel` is supplied. Visibility is fully
 controlled by the parent through the `open` prop. A leading tone icon
 (`info`/`success`/`error`) can be shown in the title, the footer can be
-replaced by a busy spinner, dismissal (backdrop/Escape/✕) can be disabled
-entirely, and the keyboard shortcut policy (`Enter`/`Escape`) is configurable
+replaced by a busy spinner, dismissal (Escape/✕ — backdrop/outside clicks never
+dismiss the modal at all; see Edge Cases) can be disabled entirely, and the
+keyboard shortcut policy (`Enter`/`Escape`) is configurable
 per instance, including a `destructive` mode that forces the error tone and
 disables keyboard shortcuts.
 
@@ -78,12 +79,12 @@ disables keyboard shortcuts.
 - **set-initial-focus-by-destructiveness**: In confirm mode, the component MUST set `DialogActions`' `initialFocus` to `"cancel"` when `destructive` is `true`, and to `"confirm"` otherwise.
 - **hide-close-affordance-when-busy-or-non-dismissible**: The component MUST hide `DialogContent`'s `×` close affordance (`showClose`) whenever `busy` is `true` or `dismissible` is `false`.
 - **default-dismissible-true**: The component MUST treat the dialog as dismissible by default (`dismissible` defaults to `true`).
-- **block-dismissal-when-busy**: The component MUST block every dismissal path (Escape, backdrop, ✕, programmatic close) while `busy` is `true`.
+- **block-dismissal-when-busy**: The component MUST block every dismissal path that can reach `handleOpenChange` (Escape, ✕, programmatic close) while `busy` is `true`; backdrop/outside clicks are already unreachable regardless of `busy` (see Edge Cases).
 - **block-dismissal-when-non-dismissible**: The component MUST block every dismissal path while `dismissible` is `false`.
 - **route-escape-to-cancel-in-confirm-mode**: When keyboard shortcuts are enabled and the dialog is not blocked from closing, an Escape-driven close (Base UI close reason `"escape-key"`) MUST call `onCancel` in confirm mode.
 - **route-escape-to-confirm-in-alert-mode**: When keyboard shortcuts are enabled and the dialog is not blocked from closing, an Escape-driven close MUST call `onConfirm` in alert mode.
 - **block-escape-when-keyboard-disabled**: The component MUST NOT call `onConfirm` or `onCancel` for an Escape-driven close when `keyboard` is `"none"` or `destructive` is `true`.
-- **route-pointer-dismissal-regardless-of-keyboard-policy**: A non-Escape close (backdrop click, ✕, programmatic close) MUST call `onCancel` in confirm mode or `onConfirm` in alert mode whenever the dialog is not busy and is dismissible, regardless of the `keyboard` policy's value.
+- **route-close-button-regardless-of-keyboard-policy**: A non-Escape close reason that reaches `handleOpenChange` (in practice only the ✕ affordance's `close-press`, or a programmatic close — backdrop/outside clicks never reach it at all, since the underlying `Dialog` hard-disables pointer dismissal and `AlertModal` never overrides that; see Edge Cases) MUST call `onCancel` in confirm mode or `onConfirm` in alert mode whenever the dialog is not busy and is dismissible, regardless of the `keyboard` policy's value.
 - **invoke-confirm-on-enter-under-default-keyboard**: Under `keyboard="default"` (and `destructive` `false`), pressing `Enter` MUST call `onConfirm` exactly once and MUST call `preventDefault` on the triggering event.
 - **ignore-all-keys-when-keyboard-none**: When `keyboard` is `"none"`, the window keydown listener MUST NOT invoke `onConfirm` or `onCancel` for any key.
 - **force-keyboard-none-when-destructive**: The component MUST treat keyboard shortcuts as disabled whenever `destructive` is `true`, regardless of the value of the `keyboard` prop.
@@ -115,7 +116,7 @@ disables keyboard shortcuts.
 | Busy, alert mode | Confirm button replaced by a `role="status"` `Loader2` spinner (`aria-label="Working…"`); dismissal blocked |
 | Busy, confirm mode | `busy` forwarded to `DialogActions`, which replaces its own buttons with a status spinner; dismissal blocked |
 | `destructive=true` | Tone icon/color forced to error; confirm button (alert mode) renders `"destructive"` variant; keyboard shortcuts forced off; in confirm mode, initial focus defaults to cancel |
-| `dismissible=false` | `×` close affordance hidden; Escape/backdrop/✕/programmatic close all blocked |
+| `dismissible=false` | `×` close affordance hidden; Escape/✕/programmatic close all blocked (backdrop/outside clicks are already unreachable regardless of `dismissible`) |
 | `showIcon=false` | Leading tone icon omitted from the title |
 | `keyboard="none"` | `Enter` ignored by the keydown listener; Escape-driven close blocked without invoking either callback |
 
@@ -156,11 +157,12 @@ disables keyboard shortcuts.
 | T20b | hide-close-affordance-when-busy-or-non-dismissible | `dismissible={true}`, `busy={true}` | `DialogContent` receives `showClose={false}` |
 | T21 | default-dismissible-true | `dismissible` omitted | `×` close affordance present (not busy) |
 | T22 | block-dismissal-when-busy | `busy={true}`, press Escape | `handleOpenChange` returns without invoking `onConfirm`/`onCancel`; `open` is left unchanged by the component |
-| T23 | block-dismissal-when-non-dismissible | `dismissible={false}`, click backdrop | `handleOpenChange` returns without invoking `onConfirm`/`onCancel`; `open` is left unchanged by the component |
+| T23 | block-dismissal-when-non-dismissible | `dismissible={false}`, press Escape | `handleOpenChange` returns without invoking `onConfirm`/`onCancel`; `open` is left unchanged by the component |
 | T24 | route-escape-to-cancel-in-confirm-mode | confirm mode, `keyboard="default"`, press Escape | `onCancel` called once |
 | T25 | route-escape-to-confirm-in-alert-mode | alert mode, `keyboard="default"`, press Escape | `onConfirm` called once |
 | T26 | block-escape-when-keyboard-disabled | `keyboard="none"`, press Escape | neither callback called; dialog stays open |
-| T27 | route-pointer-dismissal-regardless-of-keyboard-policy | `keyboard="none"`, confirm mode, click backdrop | `onCancel` called once |
+| T27 | route-close-button-regardless-of-keyboard-policy | `keyboard="none"`, confirm mode, click ✕ | `onCancel` called once |
+| T27b | route-close-button-regardless-of-keyboard-policy | `keyboard="none"`, confirm mode, click backdrop | nothing happens: `onOpenChange` never fires, `onCancel` not called, dialog stays open |
 | T28 | invoke-confirm-on-enter-under-default-keyboard | `keyboard="default"`, press Enter | `onConfirm` called once; event `preventDefault` called |
 | T29 | ignore-all-keys-when-keyboard-none | `keyboard="none"`, press Enter | neither callback called |
 | T30 | force-keyboard-none-when-destructive | `destructive={true}`, `keyboard="default"`, press Enter | `onConfirm` not called via the keydown listener |
@@ -182,6 +184,7 @@ disables keyboard shortcuts.
 - **Error states**: the source does not catch or otherwise handle exceptions thrown by `onConfirm` or `onCancel`. Such an exception MUST propagate uncaught out of the event handler to the caller's own error boundary; `AlertModal` performs no retry, logging, or user-facing error display of its own.
 - **Offline/disconnected state**: Not applicable — `AlertModal` makes no network requests itself; any network operation lives in the caller-supplied `onConfirm`/`onCancel` handlers, outside this component's scope.
 - **`busy` and `dismissible={false}` combined**: both flags independently block dismissal (`handleOpenChange` returns early on `busy || !dismissible`); the two conditions are redundant, not additive, and produce identical blocked behavior.
+- **Backdrop/outside clicks never dismiss the modal, under any combination of props**: `AlertModal` renders the shared `Dialog` (`agenticdevelopertoolkit://recipes/dialog`) without overriding its `disablePointerDismissal`, which the `Dialog` recipe hard-sets. Base UI therefore never calls `onOpenChange` for an outside press, so `handleOpenChange` never runs and neither `onConfirm` nor `onCancel` fires. Only the ✕ affordance (`close-press`, when shown) and Escape (`escape-key`) can reach `handleOpenChange` — `dismissible`, `busy`, and `keyboard` only gate what happens once one of those two reasons arrives, they do not enable backdrop dismissal.
 - **`destructive={true}` with an explicit `keyboard` map**: `destructive` forces `keyboardEnabled` to `false` regardless of the map, so `force-keyboard-none-when-destructive` MUST take precedence over `honor-explicit-keyboard-map`.
 
 ## Configuration
@@ -198,7 +201,7 @@ disables keyboard shortcuts.
 | `cancelLabel` | `string` | — | Presence switches the component to confirm mode. |
 | `onCancel` | `() => void` | — | Cancel action; also the effective dismiss action in confirm mode. |
 | `busy` | `boolean` | `false` | Replaces the action buttons with a spinner and blocks dismissal. |
-| `dismissible` | `boolean` | `true` | Whether backdrop/Escape/✕ may close the modal. |
+| `dismissible` | `boolean` | `true` | Whether Escape/✕ may close the modal (backdrop/outside clicks never close it, regardless of this prop — see Edge Cases). |
 | `keyboard` | `"default" \| "none" \| Partial<Record<string, "confirm" \| "cancel">>` | `"default"` | Keyboard shortcut policy. An explicit map is matched against `KeyboardEvent.key` exactly, case-sensitively. |
 | `destructive` | `boolean` | `false` | Forces the error tone visual and forces `keyboard` to behave as `"none"`. |
 | `contentClassName` | `string` | `undefined` | Forwarded to `DialogContent` for width/size overrides. |
@@ -270,12 +273,15 @@ Not applicable — `AlertModal` is a presentational component and issues no log 
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on: `alert-modal.tsx`'s extensive Enter/Escape/pointer requirements and the native `Button`/`DialogActions` markup for keyboard-navigable, screen-reader-support, and semantic-markup; the inherited, unmodified `Dialog` focus trap plus the `initialFocus` prop for focus-management; the `apt-*` design tokens (whose actual contrast values and geometry this file doesn't itself define) for contrast-ratio and touch-target-size; the hardcoded `"animate-spin"` busy spinner with no `prefers-reduced-motion` handling in this file for reduced-motion; the title/description text inherited unmodified from `DialogTitle`/`DialogDescription` for dynamic-type-support; the Localization section's own statement that `"OK"` and `"Working…"` are hardcoded with no i18n key lookup for no-hardcoded-strings and string-externalization; and the conservative defaults (`dismissible=true`, `busy=false`, `destructive=false`) for safe-defaults.
+Statuses rest on: `alert-modal.tsx`'s extensive Enter/Escape/pointer requirements and the native `Button`/`DialogActions` markup for keyboard-navigable, screen-reader-support, and semantic-markup; the inherited, unmodified `Dialog` focus trap plus the `initialFocus` prop for focus-management; the `apt-*` design tokens (whose actual contrast values and geometry this file doesn't itself define) for contrast-ratio and touch-target-size; the hardcoded `"animate-spin"` busy spinner with no `prefers-reduced-motion` handling in this file for reduced-motion; the title/description text inherited unmodified from `DialogTitle`/`DialogDescription` for dynamic-type-support; the Localization section's own statement that `"OK"` and `"Working…"` are hardcoded with no i18n key lookup for no-hardcoded-strings and string-externalization; and the conservative defaults (`dismissible=true`, `busy=false`, `destructive=false`) for safe-defaults. Best-practices statuses reflect that the keyboard-map and `handleOpenChange` dismiss-routing logic is inlined in the component rather than separated apart from rendering (separation-of-concerns: partial), and that `alertModal.test.tsx` directly renders `AlertModal` and asserts alert, confirm, busy, and destructive behavior (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed pointer-dismissal requirement to route-close-button-regardless-of-keyboard-policy; corrected backdrop-never-dismisses behavior and test vectors. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; reformatted Design Decisions to the Decision/Rationale/Approved triple; resolved the Escape double-fire contradiction between Edge Cases and Design Decisions; added `default-busy-label-working` and `tolerate-missing-oncancel` requirements with test vectors; added missing test vectors for the `initialFocus` default branch and the busy-only `showClose` branch; clarified explicit-keyboard-map key-matching semantics; corrected the WinUI 3 dismissal guidance; fixed an unbalanced backtick in Platform Notes; trimmed `tags` to five; added `references`; rewrote Compliance with linked catalog checks and legal statuses. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial recipe extracted from `packages/web/packages/ui/src/components/alert-modal.tsx`. |

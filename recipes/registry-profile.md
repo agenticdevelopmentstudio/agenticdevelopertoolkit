@@ -3,11 +3,11 @@ id: 6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4
 title: Registry Profile
 domain: agenticdevelopertoolkit://recipes/registry-profile
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -270,8 +270,10 @@ Not applicable: RegistryProfile does not emit logging. The host application is r
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on `RegistryProfile.tsx`: it sets `href` on every link from `entry.links[*].url` with `rel="noopener noreferrer nofollow"` and `target="_blank"` but no scheme check (input-sanitization partial, see **Link URL scheme is not restricted** above); it renders semantic `<article>`, `<header>`, `<dl>`/`<dt>`/`<dd>`, and `<nav aria-label="Elsewhere">` elements with a decorative empty `alt` on the photo and text-or-fallback labels on every link (screen-reader-support, keyboard-navigable, semantic-markup all passed); it applies no inline color or font size of its own, leaving contrast and dynamic type up to CSS classes this file does not define (both partial); and it hardcodes "Category", "Location", "Languages", "Elsewhere", and the `AUDIENCE_NOTE` marker strings as English literals rather than reading them from a resource file (string-externalization and no-hardcoded-strings both failed), while every other string the component displays (`displayName`, `summary`, `category`, `locationText`, `languages`, `keywords`) is passed through untouched (unicode-support passed).
+These statuses rest on `RegistryProfile.tsx`: it sets `href` on every link from `entry.links[*].url` with `rel="noopener noreferrer nofollow"` and `target="_blank"` but no scheme check (input-sanitization partial, see **Link URL scheme is not restricted** above); it renders semantic `<article>`, `<header>`, `<dl>`/`<dt>`/`<dd>`, and `<nav aria-label="Elsewhere">` elements with a decorative empty `alt` on the photo and text-or-fallback labels on every link (screen-reader-support, keyboard-navigable, semantic-markup all passed); it applies no inline color or font size of its own, leaving contrast and dynamic type up to CSS classes this file does not define (both partial); and it hardcodes "Category", "Location", "Languages", "Elsewhere", and the `AUDIENCE_NOTE` marker strings as English literals rather than reading them from a resource file (string-externalization and no-hardcoded-strings both failed), while every other string the component displays (`displayName`, `summary`, `category`, `locationText`, `languages`, `keywords`) is passed through untouched (unicode-support passed). Field rendering is delegated to `FieldValue`, and the image-URL resolver is a small overridable default rather than embedded fetch logic (separation-of-concerns passed); `RegistryProfile.test.tsx` directly exercises every field, the audience marker, the contact slot, image resolution (default map, missing id, host override), and services rendering (unit-test-coverage passed).
 
 ## Change History
 
@@ -279,3 +281,4 @@ These statuses rest on `RegistryProfile.tsx`: it sets `href` on every link from 
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case (dropped `must-`/`must-not-` prefixes) and fixed the backwards `omit-marker-for-public-fields` wording; restated the default-resolver requirement to describe the `entry.imageUrls` fallback rather than a resolver return contract; clarified that empty `services` rendering is delegated to `ServiceList`; corrected the false "metadata list omitted when empty" claim (the `<dl>` container always renders) and promoted it, plus the fields-empty and no-truncation edge cases, to named requirements; removed the incorrect claim that a missing photo and an unresolvable photo render distinguishably; documented the unrestricted link URL scheme as an edge case; added a Design Decision for the fixed `<h1>` heading level; added `depends-on`/`related` links to the field-value and service-list recipes and linked them inline; unquoted `modified` to match `created`; replaced the "Not applicable" Compliance section with a real Check/Status/Category table; reformatted Design Decisions into Decision/Rationale/Approved triplets; added missing test vectors (service-list, default-resolver, accept-null-from-resolver, links-empty, location-absent, fields-empty, no-truncation, metadata-list-unconditional) and sharpened profile-020 into a concrete assertion; fixed the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes to reference real APIs and added AppKit-specific guidance; and corrected Localization to state the strings are hardcoded literals, not read from a resource system. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

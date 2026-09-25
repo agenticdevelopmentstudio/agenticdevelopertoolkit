@@ -3,11 +3,11 @@ id: 8f2e4a12-7c3b-4d9f-a1e2-6b5f9c1d3e4a
 title: "Toast"
 domain: agenticdevelopertoolkit://recipes/toast
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -79,7 +79,7 @@ A toast is a transient, non-modal notification displayed in a fixed viewport at 
 
 - **Role**: The toast root renders `role="dialog"` by default (Base UI `ToastPrimitive.Root`); it only escalates to `role="alertdialog"` when a toast is added with `priority: 'high'`, which this source's `useToast().add({ title, description })` calls do not set. The viewport (`ToastPrimitive.Viewport`) renders `role="region"`, `aria-live="polite"`, and `aria-label="Notifications"`.
 - **Close button label**: MUST be localized (see **localize-close-label**); the source hard-codes `aria-label="Close"` in English, which does not yet satisfy this requirement.
-- **Focus management**: Close button MUST be keyboard-focusable and dismissible via the Enter or Space key (it is a native `<button>` element per Base UI's `ToastPrimitive.Close`). Escape does not dismiss the focused toast in the source; only clicking or activating the Close control does. The viewport is reachable via the F6 landmark shortcut or Tab, and focus is redirected to the frontmost dismissible toast when the viewport receives focus.
+- **Focus management**: Close button MUST be keyboard-focusable and dismissible via the Enter or Space key (it is a native `<button>` element per Base UI's `ToastPrimitive.Close`). The source also inherits Base UI's default Escape-to-dismiss behavior: pressing Escape while focus is inside the toast closes it, the same as activating Close (see the Design Decision on dismissal below). The viewport is reachable via the F6 landmark shortcut or Tab, and focus is redirected to the frontmost dismissible toast when the viewport receives focus.
 - **Minimum tap target**: See **enlarge-close-hit-area**. The source renders the Close control as an absolutely-positioned button containing only a 16px icon, with no additional padding shown that would extend the hit area to 44×44pt.
 - **Announcement**: Toast entry and exit is announced through the viewport's `aria-live="polite"` region (see Role above); Base UI's `aria-relevant="additions text"` announces newly added toasts and their text content.
 
@@ -169,8 +169,8 @@ Not applicable: Toast component does not emit logs in source code.
 **Rationale**: Escapes the local DOM hierarchy, preventing stacking-context issues and keeping z-index management consistent.
 **Approved**: pending
 
-**Decision**: Make the close button the primary — and, in the source, only — dismiss control rather than relying on an auto-dismiss timeout.
-**Rationale**: Gives users full control over dismissal; auto-dismiss is not implemented in the source (see toast-009).
+**Decision**: Rely on Base UI's default dismiss behaviors rather than overriding them: the source re-exports `ToastPrimitive.Provider` and `ToastPrimitive.Root` with no `timeout` or `swipeDirection` override, so in addition to clicking Close, a toast auto-closes after Base UI's default 5000ms timeout (paused while hovered or focused), closes on Escape when focus is inside it, and can be swiped away (down or right, past a 40px threshold).
+**Rationale**: Adopting Base UI's defaults gives users several independent ways to dismiss a toast without the component reimplementing any of them; the Close button remains available as an explicit, discoverable control for users who prefer not to wait, swipe, or use the keyboard.
 **Approved**: pending
 
 **Decision**: Reference design tokens (`apt-surface-2`, `apt-text`, `apt-gold/40`, etc.) for background, text, and focus-ring colors rather than hardcoded hex values.
@@ -194,14 +194,17 @@ Not applicable: Toast component does not emit logs in source code.
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | partial | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on the source's hard-coded `aria-label="Close"`, the unpadded 16px close icon as the only hit area, Base UI's default `role`/`aria-live` assignment, the absence of any `prefers-reduced-motion` handling, and the `right-4`/`bottom-4` physical-direction positioning with no RTL adaptation.
+Statuses rest on the source's hard-coded `aria-label="Close"`, the unpadded 16px close icon as the only hit area, Base UI's default `role`/`aria-live` assignment, the absence of any `prefers-reduced-motion` handling, and the `right-4`/`bottom-4` physical-direction positioning with no RTL adaptation. `separation-of-concerns` is passed because `toast.tsx` is pure presentation — layout and styling wrapped around `@base-ui/react/toast`'s primitives, with all toast state (queueing, timing, dismissal) owned by that library, none of it in this file; `unit-test-coverage` is failed because no test in this repo exercises `toast.tsx` — the evidence's candidate test list is empty.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-09-25 | Mike Fullerton | Corrected dismissal claims: Base UI 5000ms auto-dismiss, Escape-dismiss, and swipe-dismiss are real; Decision and Focus management rewritten. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix the viewport offset (4rem → 1rem) and the false 44×44 touch-target claim, remove the unsupported Material Design citation, drop unimplemented auto-dismiss from the exit vector, replace AppKit/UIKit subclassing guidance with composition, correct the SwiftUI and WinUI 3 platform notes, name the toast's actual ARIA roles and live-region politeness, require Space alongside Enter for Close dismissal and state that Escape does not dismiss, require a localized Close label, add a reduced-motion requirement, specify overflow behavior via the Provider's limit prop, rebuild Compliance as a table, reformat Design Decisions, move Tailwind class names into the React/Web platform note, clarify the fixed-vs-capped toast width, add related cross-references, rename all requirements to drop the must-/should- prefix, and add conformance vectors for per-provider queue isolation and the localized Close label |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Revise accessibility sections and edge cases: document hard-coded Close label, add Reduce Motion fact, clarify Differentiate Without Color limitation, state viewport overflow behavior, reword Compliance as Not applicable |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
-| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

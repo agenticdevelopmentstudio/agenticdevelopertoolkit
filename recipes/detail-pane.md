@@ -3,11 +3,11 @@ id: 292f17e2-1df8-4126-a26c-4160e8e88708
 title: Detail Pane
 domain: agenticdevelopertoolkit://recipes/detail-pane
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,7 +48,7 @@ The pane's data model:
 | `description` | string | yes | empty string is treated as absent — see **conditional-content** |
 | `links` | array of TopicLink | yes | may be empty |
 | `images` | array of TopicImage | yes | may be empty |
-| `messageIndex` | number | yes | used to build the connector anchor id — see **connector-anchor** |
+| `messageIndex` | number | yes | used to build the connector anchor's `data-connector-anchor` value — see **connector-anchor** |
 
 **TopicLink**
 
@@ -80,7 +80,7 @@ The `topic` prop itself is either a `Topic` object or `null`.
 - **focus-untouched**: The pane MUST NOT set, move, or restore focus when `visible` changes. Changing `visible` MUST change only the root element's class name and MUST leave the active element exactly as it was.
 - **literal-ui-strings**: The pane MUST render "Details" and "Links" as literal English text; today it does so without any localization key, catalog, or translation hook. This absence is a known gap (see Localization), not a permanent constraint — a future revision that introduces localization for these strings SHOULD do so without being treated as breaking this requirement.
 - **ref-forwarding**: The pane MUST support ref forwarding to expose the root `HTMLDivElement`.
-- **connector-anchor**: When `topic` is present, the pane MUST render a ConnectorAnchor element with an id constructed from the message index in the format `panel-{messageIndex}-in`. When `topic` is null, the pane MUST NOT render a ConnectorAnchor element at all.
+- **connector-anchor**: When `topic` is present, the pane MUST render a ConnectorAnchor element carrying a `data-connector-anchor` attribute constructed from the message index in the format `panel-{messageIndex}-in` (not a DOM `id`), provided a `ConnectorRegistryProvider` is present in the tree — without one, ConnectorAnchor renders nothing. When `topic` is null, the pane MUST NOT render a ConnectorAnchor element at all.
 - **header-semantics**: The pane SHOULD render the header using a heading element (e.g., an `<h2>`) and the root SHOULD carry a landmark role (e.g., `role="complementary"`) when used as a primary content region. The current implementation renders both as plain `div`s with no heading or landmark semantics (see Compliance: `semantic-markup`).
 - **no-analytics**: The pane MUST NOT emit analytics events. A consuming application that needs instrumentation MUST add it at the call site — for example by wrapping the `onImageLoad` callback it passes in, by observing the `visible` prop it controls, or by attaching its own handler to the rendered links.
 - **no-logging**: The pane MUST NOT write log messages. A consuming application that needs diagnostics MUST emit them at the call site, where the `topic` and `visible` props and the `onImageLoad` callback are already available.
@@ -111,7 +111,7 @@ The `topic` prop itself is either a `Topic` object or `null`.
 - **Role**: The pane does not have an explicit ARIA role; it is a plain `div` container. The "Details" header is also a `div`, not a heading element, so it carries no heading semantics and serves as a visual landmark only (see **header-semantics**).
 - **Link accessibility**: Links use native `<a>` elements and are keyboard accessible. Link text MUST be meaningful (either the label or the URL).
 - **Image alt text**: Images MUST have an `alt` attribute; if not provided in the source data, an empty string is used (Note: empty alt strings should only be used for decorative images; if images are content, ensure they are marked with descriptive alt text in the data source).
-- **Focus across visibility transitions**: The pane performs no focus management. Toggling `visible` swaps `pc-pane-visible` for `pc-pane-hidden` on the root element and does nothing else: the subtree is not unmounted, `inert`/`aria-hidden`/`tabIndex` are never applied, and `focus()` is never called. Focus therefore stays wherever it was — including on a link inside the pane after the pane is hidden. Because the component makes no such guarantee itself, the stylesheet that defines `pc-pane-hidden` MUST resolve to `visibility: hidden` — not `display: none`, which would collapse the connector anchor's box to zero and break its measurability while offscreen (see Design Decisions: **Visibility Is Styling Only, Focus Left Untouched**). `visibility: hidden` still removes the pane from both the accessibility tree and the tab order. A hidden style built only from `opacity`, `transform`, or off-screen positioning leaves the pane's links focusable and announced while the pane is not visible, which is a WCAG 2.1 SC 2.4.3 (Focus Order) failure.
+- **Focus across visibility transitions**: NEEDS REVIEW: Not implemented in source. The pane performs no focus management. Toggling `visible` swaps `pc-pane-visible` for `pc-pane-hidden` on the root element and does nothing else: the subtree is not unmounted, `inert`/`aria-hidden`/`tabIndex` are never applied, and `focus()` is never called. Focus therefore stays wherever it was — including on a link inside the pane after the pane is hidden. The only shipped definition of `pc-pane-hidden` (`packages/web/packages/chat/src/css/modes/three-pane.css`) sets `opacity: 0` and `pointer-events: none`, not `visibility: hidden` or `display: none` (see Design Decisions: **Visibility Is Styling Only, Focus Left Untouched**). Opacity and pointer-events changes remove an element from neither the accessibility tree nor the tab order, so a hidden pane's links stay focusable and are still announced by screen readers while the pane is not visible — a WCAG 2.1 SC 2.4.3 (Focus Order) failure. Resolving `pc-pane-hidden` to `visibility: hidden` would settle this without the box-collapse that `display: none` would cause.
 - **Semantic structure**: The pane uses semantic nesting of `div` elements with CSS classes for styling; see **header-semantics** for the concrete recommendation to use a heading element and a landmark role.
 
 ## Conformance Test Vectors
@@ -131,14 +131,14 @@ The `topic` prop itself is either a `Topic` object or `null`.
 | detail-011 | link-properties | topic = {links: [{label: "", url: "http://example.com"}], ...} | Link element displays URL text "http://example.com" |
 | detail-012 | visibility-state | visible = true | Root element has class "pc-pane-visible" |
 | detail-013 | visibility-state | visible = false | Root element has class "pc-pane-hidden" |
-| detail-014 | connector-anchor | topic = {messageIndex: 5, ...} | ConnectorAnchor element renders with id="panel-5-in" |
+| detail-014 | connector-anchor | topic = {messageIndex: 5, ...}, rendered inside a `ConnectorRegistryProvider` | ConnectorAnchor element renders with `data-connector-anchor="panel-5-in"` (no `id` attribute) |
 | detail-015 | content-mounted-when-hidden | topic present, rendered with visible = true, then re-rendered with visible = false | Title, description, image and link elements are all still present in the DOM; the root element has no `inert`, `aria-hidden`, or `tabindex` attribute |
 | detail-016 | focus-untouched | topic with one link, visible = true; focus that link, then re-render with visible = false | `document.activeElement` is still the link element; the component issues no focus() call |
 | detail-017 | no-analytics | topic present; render, load an image, click a link, toggle visible | No analytics event is dispatched by the component; the module references no analytics client |
 | detail-018 | no-logging | topic present; render, load an image, toggle visible, render with topic = null | No console or logger output is produced by the component |
-| detail-019 | topic-prop | topic = {title: "T", description: "", links: [], images: [], messageIndex: 0} (minimal valid Topic) | Component renders without error; per conditional-content, only the title and connector anchor render |
+| detail-019 | topic-prop | topic = {title: "T", description: "", links: [], images: [], messageIndex: 0} (minimal valid Topic), rendered standalone with no `ConnectorRegistryProvider` | Component renders without error; per conditional-content, only the title renders — the connector anchor renders nothing, because ConnectorAnchor requires a `ConnectorRegistryProvider` |
 | detail-020 | ref-forwarding | a ref object is passed to the component | `ref.current` is the root `HTMLDivElement` |
-| detail-021 | connector-anchor | topic = null | No ConnectorAnchor element renders; no element with a `panel-*-in` id exists |
+| detail-021 | connector-anchor | topic = null | No ConnectorAnchor element renders; no element carries a `data-connector-anchor` attribute |
 
 ## Edge Cases
 
@@ -150,7 +150,7 @@ The `topic` prop itself is either a `Topic` object or `null`.
 - **Null ref forwarding**: If the ref prop is not provided or is null, the component still renders and functions normally. Expected: no error; optional ref is handled by React.forwardRef.
 - **Focus held inside a hidden pane**: If a link inside the pane holds focus when `visible` flips to false, the component leaves focus on that link. Expected: focus is unchanged (MUST, per focus-untouched); whether the link remains reachable by keyboard depends entirely on how `pc-pane-hidden` is styled (see Accessibility).
 - **Topic replaced while hidden**: If `topic` changes while `visible` is false, the pane re-renders the new topic immediately, because its content is never unmounted. Expected: on the next show the pane already displays the new topic, with no intermediate empty state (MUST, per content-mounted-when-hidden).
-- **No topic (anchor omitted)**: When `topic` is null, the pane renders no ConnectorAnchor at all — the anchor lives inside the `topic &&` block, so it doesn't exist while there's no topic (see Null topic with visible=true). Expected: no element with a `panel-*-in` id is present; only the header renders.
+- **No topic (anchor omitted)**: When `topic` is null, the pane renders no ConnectorAnchor at all — the anchor lives inside the `topic &&` block, so it doesn't exist while there's no topic (see Null topic with visible=true). Expected: no element carries a `data-connector-anchor` attribute; only the header renders.
 
 ## Configuration
 
@@ -228,7 +228,7 @@ Not applicable: the pane performs no logging. The source declares no subsystem a
 **Approved**: pending
 
 **Connector Anchor Placement**
-**Decision**: The ConnectorAnchor is rendered at the start of the title, using a CSS class (`pc-connector-anchor-in`) to position it visually. The message index is embedded in the anchor ID to support bidirectional linking in the three-pane layout.
+**Decision**: The ConnectorAnchor is rendered at the start of the title, using a CSS class (`pc-connector-anchor-in`) to position it visually. The message index is embedded in the anchor's `data-connector-anchor` attribute (registered with `ConnectorRegistry`, not exposed as a DOM `id`) to support bidirectional linking in the three-pane layout.
 **Rationale**: This design ties the pane's visual structure to the message flow; changes to title structure may require updates to the anchor positioning.
 **Approved**: pending
 
@@ -239,7 +239,7 @@ Not applicable: the pane performs no logging. The source declares no subsystem a
 
 **Visibility Is Styling Only, Focus Left Untouched**
 **Decision**: Hiding the pane is expressed entirely as a class name (`pc-pane-hidden`) on the root element. The component deliberately keeps its content mounted, applies no `inert`/`aria-hidden`/`tabIndex`, and never calls `focus()`.
-**Rationale**: This keeps the component free of effects, lets the layout animate the pane in and out without losing scroll position or image decode state, and keeps the connector anchor measurable while the pane is offscreen. Because that last benefit depends on layout being preserved, `pc-pane-hidden` MUST resolve to `visibility: hidden`, not `display: none` — `display: none` would collapse the anchor's box to zero and defeat the measurability this decision relies on. `visibility: hidden` still removes the pane from the accessibility tree and the tab order, which is the one obligation of the component that cannot be met from inside itself (see **focus-untouched**); a pane hidden with `opacity`, `transform`, or off-screen positioning alone would strand keyboard focus on an invisible link.
+**Rationale**: This keeps the component free of effects and lets the layout animate the pane in and out without losing scroll position or image decode state. The shipped `pc-pane-hidden` style (`opacity: 0; pointer-events: none;`) keeps the connector anchor's box measurable while the pane is offscreen, which `display: none` would defeat by collapsing it to zero — but unlike `visibility: hidden`, it does not remove the pane from the accessibility tree or the tab order, leaving open the question on **Focus across visibility transitions** of whether a hidden pane's links should stay keyboard-reachable.
 **Approved**: pending
 
 ## Compliance
@@ -249,13 +249,16 @@ Not applicable: the pane performs no logging. The source declares no subsystem a
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | failed | Accessibility |
 | [image-optimization](agenticdevelopercookbook://compliance/performance#image-optimization) | failed | Performance |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-`semantic-markup` fails because the pane is built entirely from `div` elements: the "Details" header and the topic title are `div`s rather than heading elements, and the root carries no landmark role (see **header-semantics**). `image-optimization` fails because each `<img>` is rendered with only `src` and `alt` — no `loading`, `decoding`, `width`, or `height` attributes — so images load eagerly and reserve no layout space. `string-externalization` fails because "Details" and "Links" are literal English strings with no localization key, catalog, or translation hook (see Localization, **literal-ui-strings**).
+`semantic-markup` fails because the pane is built entirely from `div` elements: the "Details" header and the topic title are `div`s rather than heading elements, and the root carries no landmark role (see **header-semantics**). `image-optimization` fails because each `<img>` is rendered with only `src` and `alt` — no `loading`, `decoding`, `width`, or `height` attributes — so images load eagerly and reserve no layout space. `string-externalization` fails because "Details" and "Links" are literal English strings with no localization key, catalog, or translation hook (see Localization, **literal-ui-strings**). `separation-of-concerns` passes because `DetailPane.tsx` only renders the `TopicData` it is handed — no data fetching, backend calls, or business rules live in the component. `unit-test-coverage` fails because no test file in the `chat` package exercises `DetailPane`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Filled missing 1.0.0 history date; Compliance best-practices rows added (prior fixer did the VID work). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the Overview's visibility-ownership claim; downgraded the literal-strings and semantic-markup gaps to documented SHOULDs instead of frozen MUSTs; resolved the display:none/visibility:hidden contradiction between Design Decisions and Accessibility; added a Topic/TopicLink/TopicImage type reference; added a no-topic connector-anchor requirement plus edge case; renamed every requirement to subject-only kebab-case and moved no-analytics/no-logging into Behavioral Requirements; reformatted Design Decisions to Decision/Rationale/Approved; added references and depends-on/related links; rewrote Appearance platform-neutrally and relocated the `pc-*` classes to the React/Web note; replaced the deprecated Compose `ClickableText` recommendation; added missing test vectors for topic-prop, ref-forwarding, and connector-anchor; dropped contradictory trailing "Not applicable" lines from Accessibility Options and Privacy; and rebuilt Compliance against real catalog checks |
 | 1.1.0 | 2026-09-22 | — | Replace hedged gap markers in Accessibility, Localization, Analytics and Logging with statements traced to the source; add focus, mounting, literal-string, no-analytics and no-logging requirements plus their test vectors |
-| 1.0.0 | — | — | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

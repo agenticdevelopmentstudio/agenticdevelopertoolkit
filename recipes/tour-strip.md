@@ -3,11 +3,11 @@ id: 1d701cc5-5822-4465-8ad5-413e6b0c31fc
 title: Tour Strip
 domain: agenticdevelopertoolkit://recipes/tour-strip
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -198,12 +198,15 @@ Not applicable: Component does not emit log messages or events.
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Statuses rest on the source: native `<a>` elements carrying visible text labels give screen-reader-support and keyboard-navigable a pass; the arrows are correctly `aria-hidden` but the steps sit in a plain `div` rather than a `<nav>` landmark, so semantic-markup is partial; touch-target-size is partial because spacing is left entirely to CSS the source doesn't show; and the hardcoded `Step {step} of {total} ·` string plus the fixed, non-mirroring `←`/`→` glyphs fail no-hardcoded-strings and rtl-layout-support.
+Statuses rest on the source: native `<a>` elements carrying visible text labels give screen-reader-support and keyboard-navigable a pass; the arrows are correctly `aria-hidden` but the steps sit in a plain `div` rather than a `<nav>` landmark, so semantic-markup is partial; touch-target-size is partial because spacing is left entirely to CSS the source doesn't show; and the hardcoded `Step {step} of {total} ·` string plus the fixed, non-mirroring `←`/`→` glyphs fail no-hardcoded-strings and rtl-layout-support. `separation-of-concerns` passes because `TourStrip.tsx` is pure presentation over its props with no business logic, and `unit-test-coverage` passes on `TourStrip.test.tsx`'s exercise of its position text, sibling links, pillar rendering, and back/next omission.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; split the first-screen requirement into a testable claim plus a host-integration note; added steps-container-always-renders; removed the missing-href edge case now that TourStep requires href/label; added position-value, block-content, and single-instance edge cases; added tour-011 through tour-013 test vectors and fixed the tour-002 invalid-HTML input and the tour-003 quote typo; corrected the Screen-landmark and navigation-region accessibility claims and reworded the touch-target bullet; documented the hardcoded progress string and non-mirroring arrows in Localization; reformatted Compliance with linked, lowercase-status checks; reformatted Design Decisions into decision/rationale/approved entries and defined masterbrand/leaf-site terms; corrected the SwiftUI and AppKit/UIKit platform notes for URL-based navigation and dropped the WinUI 3 motion suggestion; marked Deep Linking not applicable to host-owned routing; added depends-on (Screen, Wrap) and related (Landing Card) links. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -3,11 +3,11 @@ id: 33aaba17-874f-43aa-8d70-4a5dab2081a1
 title: Batch Select
 domain: agenticdevelopertoolkit://recipes/batch-select
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-24'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -180,8 +180,10 @@ Not applicable: Batch Select does not emit debug or informational logs.
 | [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-The accessibility statuses rest on the `aria-pressed` binding and delegation to the shared Button component for role, label, and keyboard support (`batch-select.tsx`); touch target size is not set in this source and is inherited from that Button component, so it is marked partial here. The internationalization statuses are partial because the source's `selectLabel`/`doneLabel` defaults are literal English strings resolved by JavaScript default parameters (`batch-select.tsx`), not by a localization resource lookup.
+The accessibility statuses rest on the `aria-pressed` binding and delegation to the shared Button component for role, label, and keyboard support (`batch-select.tsx`); touch target size is not set in this source and is inherited from that Button component, so it is marked partial here. The internationalization statuses are partial because the source's `selectLabel`/`doneLabel` defaults are literal English strings resolved by JavaScript default parameters (`batch-select.tsx`), not by a localization resource lookup. Best-practices statuses rest on the selection state machine living entirely in the `useBatchSelect` hook, apart from the purely presentational `BatchSelectButton` (separation-of-concerns: passed), and on `batchSelect.test.tsx` exercising the hook's mode toggling, clearing, and `resetKey` behavior through a real harness with meaningful assertions (unit-test-coverage: passed).
 
 ## Change History
 
@@ -190,3 +192,4 @@ The accessibility statuses rest on the `aria-pressed` binding and delegation to 
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and split the conflicting set-reference requirement into set-selected-ids-new-reference and reset-uses-shared-empty-selection; reformatted Design Decisions into the three-line form; documented Configuration options; rewrote Localization to use real string keys; fixed test vectors 006 and 010 and added vectors for provide-set-selected-ids, the rapid-toggle and non-primitive-resetKey edge cases, and shared-empty-Set identity; renamed the resetKey edge case; corrected Platform Notes to use real native toggle APIs (SwiftUI `Toggle`/`.toggleStyle(.button)`, Compose `Modifier.toggleable`, UIKit `changesSelectionAsPrimaryAction` plus the `.selected` trait, WinUI `ToggleButton`/`IsChecked` and `IReadOnlySet<string>`); corrected the Compliance table to reference real catalog checks |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations. |
+| 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

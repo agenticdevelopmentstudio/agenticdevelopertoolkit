@@ -3,11 +3,11 @@ id: c9bdfe9a-6c8f-44c4-957e-757ecfa2e658
 title: Group
 domain: agenticdevelopertoolkit://recipes/group
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -165,8 +165,10 @@ Not applicable: Group does not perform any logging. It is a purely presentationa
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | partial | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` elements with no ARIA attributes and no accessible name wired to the section (see **Accessibility**), and on the component deferring all typography, color, and spacing to CSS classes (`aws-group*`) that it does not itself define, so dynamic type and contrast cannot be confirmed from the source.
+Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` elements with no ARIA attributes and no accessible name wired to the section (see **Accessibility**), and on the component deferring all typography, color, and spacing to CSS classes (`aws-group*`) that it does not itself define, so dynamic type and contrast cannot be confirmed from the source. `separation-of-concerns` is `passed` because the component is pure presentation over `title`/`hint`/`children` props with no business logic; `unit-test-coverage` is `failed` because no test exercises `user-settings/components/Group.tsx` — the candidate tests found by name (`AnimTests.swift`, `ConfigTests.swift`, etc.) test unrelated avatar-engine code, not this component.
 
 ## Change History
 
@@ -174,3 +176,4 @@ Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` element
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: platform-neutral behavioral requirements; corrected section-landmark accessibility claim; corrected hint-of-0 edge case; reformatted Design Decisions into Decision/Rationale/Approved entries; added accessibility Compliance table; fixed self-contradictory Appearance corner-radius wording; merged/scoped/added conformance test vectors; clarified SwiftUI `Section` guidance; added heading/hint accessibility wiring to native Platform Notes |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

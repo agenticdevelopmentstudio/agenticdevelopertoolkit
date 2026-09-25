@@ -3,11 +3,11 @@ id: 6d2dc0d3-e373-448c-81c9-76b2e5c03057
 title: Unsaved Changes Guard
 domain: agenticdevelopertoolkit://recipes/unsaved-changes-guard
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -169,12 +169,15 @@ Not applicable: Internal state changes (confirm pending, approval flag, sentinel
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
 | [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Keyboard navigation and focus trapping for the confirmation dialog are delegated to `UnsavedChangesAlert`, which this source does not show, so those two checks are partial; `safe-defaults` passes because every guarded exit in this source — `beforeunload`, anchor clicks, popstate — blocks by default and only proceeds after an explicit user confirmation or an explicit `approveNavigation()` call.
+Keyboard navigation and focus trapping for the confirmation dialog are delegated to `UnsavedChangesAlert`, which this source does not show, so those two checks are partial; `safe-defaults` passes because every guarded exit in this source — `beforeunload`, anchor clicks, popstate — blocks by default and only proceeds after an explicit user confirmation or an explicit `approveNavigation()` call. `separation-of-concerns` is partial because the registry itself lives apart in `lib/navigation-guard.ts`, but the click-interception, popstate, and sentinel state-machine logic sits inline in `UnsavedChangesGuard` rather than in an extracted hook; `unit-test-coverage` passes on `unsavedChangesGuard.test.tsx`'s exhaustive exercise of link interception, the registry, history/unload, sentinel tracking, and multi-guard arbitration.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case (fixing the `must-register-with-guide` typo); consolidated the anchor-intercept bail predicate into `prompt-anchor-navigation` and added an explicit no-`stopPropagation` constraint to `prevent-default`; fixed wrong test-vector citations, split guard-012, replaced two vectors' internal-state assertions with observable ones, and added five coverage vectors; corrected the WinUI 3 and SwiftUI/Compose platform notes and named AppKit/UIKit's native document- and dismissal-guard APIs; reformatted Design Decisions into Decision/Rationale/Approved, fixed the primary-guard takeover ordering to match `coalesce-multiple-guards`, and rewrote the 1000ms-window rationale; replaced the "Not applicable" Compliance section with a table; corrected the "Disarm mid-navigation" and "beforeunload" edge cases to match the source; added `unsaved-changes-alert` to `depends-on` and specified the registry contract (`GUARDED_NAV_ATTR`, `registerNavigationGuard`, `confirmNavigation`, `approveNavigation`) inline; replaced app-specific template examples with generic ones |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

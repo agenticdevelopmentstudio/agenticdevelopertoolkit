@@ -3,11 +3,11 @@ id: 79093eb5-83e8-46d8-9efe-3cc6ff88d8db
 title: Trust
 domain: agenticdevelopertoolkit://recipes/trust
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -130,8 +130,10 @@ Not applicable: The Trust component does not emit diagnostic or debug log messag
 |-------|--------|----------|
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Both statuses rest on `Trust.tsx`: the component renders `<ul>`/`<li>` elements exclusively and nothing else (semantic-markup), but because item content is arbitrary consumer-supplied `ReactNode`s, the source cannot guarantee accessible labels on any interactive children it wraps (screen-reader-support).
+Both statuses rest on `Trust.tsx`: the component renders `<ul>`/`<li>` elements exclusively and nothing else (semantic-markup), but because item content is arbitrary consumer-supplied `ReactNode`s, the source cannot guarantee accessible labels on any interactive children it wraps (screen-reader-support). `separation-of-concerns` passes because the component is pure presentation over its `items` prop with no business logic, and `unit-test-coverage` passes on `blocks-close.test.tsx`'s assertion that each item renders as its own list item.
 
 ## Change History
 
@@ -139,3 +141,4 @@ Both statuses rest on `Trust.tsx`: the component renders `<ul>`/`<li>` elements 
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | (recipe-author) | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-prefixed requirements to subject-only names and merge the duplicate list-structure requirement; correct the null/undefined-item edge case, requirement, and test vector to match the unfiltered `map()` in the source; fix trust-003's attribute assertion and give trust-002 concrete input; correct Appearance/Layout from a vertical stack to the source's wrapping flex row and cite the stylesheet; rewrite non-web Platform Notes from scrolling/selectable controls to non-scrolling stacks with accessibility-driven list semantics; reformat Design Decisions into Decision/Rationale/Approved entries and add one for the index-key choice; add a Compliance table; correct the screen-reader accessibility wording; rephrase the summary; and drop frontmatter date quoting to match the template. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

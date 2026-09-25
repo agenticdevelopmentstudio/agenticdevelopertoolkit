@@ -3,11 +3,11 @@ id: ff445185-2322-4c94-ad9d-3ad27a50677d
 title: App Tabs
 domain: agenticdevelopertoolkit://recipes/app-tabs
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -175,12 +175,15 @@ Not applicable: No logging is implemented in the component source.
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | failed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | failed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-Statuses rest on: plain `<button>`s with visible text and `role="tab"`/`role="tablist"`/`aria-selected` giving basic screen-reader and keyboard operability (screen-reader-support, keyboard-navigable — passed); those same roles being used without the full ARIA tabs pattern (no `aria-controls`, no `tabpanel`, no roving tabindex) — see the Accessibility section (semantic-markup — partial); the fixed `text-[0.8rem]` sizing and the `apt-*` color tokens whose actual values aren't visible in this source file (dynamic-type-support, contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); user-provided `ReactNode` labels with no hardcoded strings and no text processing that would reject Unicode (no-hardcoded-strings, unicode-support — passed); the lack of any word-wrap/truncation handling in `tabItemClass`/`tabListClass` for arbitrarily long label text (text-expansion-tolerance — failed); and the physical, non-mirroring `ml-auto` utility used to place `endItem` (rtl-layout-support — failed).
+Statuses rest on: plain `<button>`s with visible text and `role="tab"`/`role="tablist"`/`aria-selected` giving basic screen-reader and keyboard operability (screen-reader-support, keyboard-navigable — passed); those same roles being used without the full ARIA tabs pattern (no `aria-controls`, no `tabpanel`, no roving tabindex) — see the Accessibility section (semantic-markup — partial); the fixed `text-[0.8rem]` sizing and the `apt-*` color tokens whose actual values aren't visible in this source file (dynamic-type-support, contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); user-provided `ReactNode` labels with no hardcoded strings and no text processing that would reject Unicode (no-hardcoded-strings, unicode-support — passed); the lack of any word-wrap/truncation handling in `tabItemClass`/`tabListClass` for arbitrarily long label text (text-expansion-tolerance — failed); and the physical, non-mirroring `ml-auto` utility used to place `endItem` (rtl-layout-support — failed). Best-practices statuses rest on `AppTabs` being pure presentation over its `items`/`value`/`onValueChange` props with no embedded state or business logic (separation-of-concerns: passed), and on no test file in the suite exercising this component (unit-test-coverage: failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case names and updated every citation; replaced the React/Base-UI-specific plain-button requirement with a platform-neutral no-content-panels requirement and moved the implementation detail into Platform Notes; documented that endItem shares invoke-callback-on-click's handler and that Disabled is unsupported (no `disabled` property exists) rather than "undefined"; changed "right edge" to "trailing edge" throughout and documented the `ml-auto` endItem placement as LTR-only under Localization; gave concrete Appearance values and a real computed touch-target height instead of "defined by shared tab grammar" and an unsupported native touch-target claim; fixed the `data-active` attribute-value contradiction in States; rewrote the `ml-auto` and `cn()`-merging test vectors to assert observable outcomes and added an endItem-click vector; fixed the missing-onValueChange edge case to describe optional chaining rather than a throwing call; corrected the SwiftUI, Compose, WinUI 3, and AppKit/UIKit platform notes to controls that don't imply owned content panels; reformatted Design Decisions to the three-line Decision/Rationale/Approved form; added the tabs ingredient to depends-on; and built out the Compliance table with applicable Accessibility and Internationalization checks |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source. |

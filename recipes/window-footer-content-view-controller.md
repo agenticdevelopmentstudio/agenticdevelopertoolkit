@@ -1,13 +1,13 @@
 ---
 id: 44544cfb-39e5-419d-81b9-8e1c504c6e64
-title: Window Footer Content Container
+title: WindowFooterContentViewController
 domain: agenticdevelopertoolkit://recipes/window-footer-content-view-controller
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -158,12 +158,15 @@ Not applicable. This component performs no logging.
 |-------|--------|----------|
 | [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
 | [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Both statuses rest on `init` calling `addChild(contentViewController)` and `loadView()` composing the content and footer views via plain Auto Layout, without intercepting the responder chain or focus order—so the content view controller's own screen-reader exposure and keyboard navigability carry through unchanged.
+The first two statuses rest on `init` calling `addChild(contentViewController)` and `loadView()` composing the content and footer views via plain Auto Layout, without intercepting the responder chain or focus order—so the content view controller's own screen-reader exposure and keyboard navigability carry through unchanged. `separation-of-concerns` passes because this controller does one thing — compose a content controller with a fixed footer — and delegates status/accessibility forwarding to the footer bar rather than owning that logic itself. `unit-test-coverage` passes: `PaneDisplayPathTests.swift` instantiates `WindowFooterContentViewController` directly and asserts the host adopts the content controller, forwards the footer's status, and forwards its accessibility namespace to the bar.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Title corrected to match H1 (WindowFooterContentViewController). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; corrected the AppKit `addChild` reparenting and NSCoder-unavailable edge cases; retitled Platform Notes to AppKit / UIKit and fixed factual errors in SwiftUI, Compose, React/Web, and WinUI 3 guidance; reformatted Design Decisions to Decision/Rationale/Approved; added a Compliance table and a public API surface; added the `WindowFooterBar` dependency; fixed frontmatter date quoting |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -3,11 +3,11 @@ id: e86eb195-1ec2-4b12-8a24-79f8c03f65ce
 title: Empty State
 domain: agenticdevelopertoolkit://recipes/empty-state
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-22
+modified: 2026-09-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -183,12 +183,15 @@ Not applicable: Component performs no operations requiring debug or error loggin
 | [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
 | [text-expansion-tolerance](agenticdevelopercookbook://compliance/internationalization#text-expansion-tolerance) | passed | Internationalization |
 | [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-These statuses rest on the source's rem-based Tailwind font utilities (`text-sm`/`text-xs`) and design-token-delegated colors (`apt-border`, `apt-text-muted`, `apt-text-dim`) whose actual contrast the component cannot itself attest to, its plain `div`/`p` markup with no explicit ARIA roles beyond what a consumer supplies, and its title/description/action content being entirely consumer-supplied `ReactNode` rather than strings hardcoded in the component.
+These statuses rest on the source's rem-based Tailwind font utilities (`text-sm`/`text-xs`) and design-token-delegated colors (`apt-border`, `apt-text-muted`, `apt-text-dim`) whose actual contrast the component cannot itself attest to, its plain `div`/`p` markup with no explicit ARIA roles beyond what a consumer supplies, and its title/description/action content being entirely consumer-supplied `ReactNode` rather than strings hardcoded in the component. `separation-of-concerns` is `passed` because the component is pure presentation over props with no business logic; `unit-test-coverage` is `passed` because `emptyState.test.tsx` renders `EmptyState` directly and asserts its title/description/action/icon rendering.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and reworded the optional-icon/description/action requirements as explicit MUST render-when-provided/MUST NOT render-when-absent; added non-optional-title and icon-size requirements with matching test vectors and gave vector 008 a concrete container width; rewrote Appearance in exact pixel/token values, leaving Tailwind class names in the React/Web platform note; marked Analytics not applicable and moved the event names to consumer guidance; reformatted Design Decisions into Decision/Rationale/Approved entries; relinked and re-scored the Compliance table against the compliance catalog; clarified the container's accessibility role as having no landmark; fixed the SwiftUI Divider and WinUI Border dashed-border APIs and named the native color mappings for `apt-border`/`apt-text-muted`/`apt-text-dim` across SwiftUI, Compose, AppKit/UIKit, and WinUI 3; renamed the Swift/iOS and Kotlin/Android platform-note labels to SwiftUI and Compose and removed the React-hooks-optional noise; unquoted the `modified` frontmatter field |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

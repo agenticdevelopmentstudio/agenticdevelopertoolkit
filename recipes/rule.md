@@ -3,11 +3,11 @@ id: 4cd07922-a00d-4029-8cb5-2307463129cc
 title: Rule
 domain: agenticdevelopertoolkit://recipes/rule
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,8 +159,10 @@ Not applicable: Rule performs no logging or debug output.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Semantic markup passes because the source renders `<dl>`/`<dt>`/`<dd>` directly (`Rule.tsx`); dynamic-type support is partial because the web CSS (`blocks.css`) sizes `dt`/`dd` in `rem` units, which scale with root font size, but the source gives no Dynamic Type guidance for native ports; no-hardcoded-strings passes because `term` and `detail` are supplied entirely by the caller, with no string literals in `Rule.tsx`.
+Semantic markup passes because the source renders `<dl>`/`<dt>`/`<dd>` directly (`Rule.tsx`); dynamic-type support is partial because the web CSS (`blocks.css`) sizes `dt`/`dd` in `rem` units, which scale with root font size, but the source gives no Dynamic Type guidance for native ports; no-hardcoded-strings passes because `term` and `detail` are supplied entirely by the caller, with no string literals in `Rule.tsx`. `Rule.tsx` is a trivial pure-presentation mapping of `steps` to `dt`/`dd` pairs with no logic of its own (separation-of-concerns passed); `blocks-argument.test.tsx` directly exercises the one-dt/dd-pair-per-step rendering in order (unit-test-coverage passed).
 
 ## Change History
 
@@ -168,3 +170,4 @@ Semantic markup passes because the source renders `<dl>`/`<dt>`/`<dd>` directly 
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; added keyed-fragment-pairs requirement; corrected the non-ReactNode edge case and added test vectors for it and for the single-step and null/undefined-content edge cases; dropped the unmeasurable large-array MUST; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with a real table; named the stylesheet and described term/detail styling; added SwiftUI/Compose/WinUI 3 accessibility-grouping guidance and swapped list-based native controls for static-layout equivalents; clarified the Overview name/ordering and screenshot guidance |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

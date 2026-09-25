@@ -3,11 +3,11 @@ id: f3c25236-d72f-4a7b-839a-b7f335b3acd0
 title: Button
 domain: agenticdevelopertoolkit://recipes/button
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: '2026-06-26'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,9 +20,11 @@ tags:
   - button
   - forms
   - ui
-depends-on: []
+depends-on:
+  - agenticdevelopertoolkit://recipes/button-pressable
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - agenticdevelopertoolkit://recipes/button-pressable
 references: []
 approved-by: ''
 approved-date: ''
@@ -56,12 +58,15 @@ press correctly clears when the pointer leaves the button while it is still held
 ## Behavioral Requirements
 
 *Provenance: `press-on-pointerdown-inside` through `no-pointer-capture` below describe the
-pointer-tracking contract of the sibling `button-pressable.tsx`, which was not part of the
-source excerpt supplied for this revision pass. These requirements are carried forward from
-the prior recipe version and are corroborated only indirectly, by `button.tsx`'s own comments
-describing `PressableButton`'s pointer-tracking behavior (data-pressed set by pointer tracking;
-clears when the pointer leaves while held). A future revision with direct access to
-`button-pressable.tsx` SHOULD re-verify these requirements against it directly.*
+observable pointer-tracking behavior of `Button` as rendered — behavior that `Button` gets by
+composing the sibling `PressableButton` (`button-pressable.tsx`), which is that contract's
+single owner (`agenticdevelopertoolkit://recipes/button-pressable`, see its own
+`pressed-on-pointerdown` through `no-pointer-capture` requirements and its
+**active press** terminology, called "held" below). This recipe restates them at the `Button`
+level only so `Button`'s own Conformance Test Vectors can exercise them end-to-end; do not edit
+them here without also checking `button-pressable.md`, and re-verify them here whenever that
+recipe's requirements change, since `button.md`'s `depends-on` does not by itself trigger
+re-extraction of this file.*
 
 - **press-on-pointerdown-inside**: The button MUST set `data-pressed` when a pointer is pressed down inside it.
 - **release-clears-pressed**: The button MUST clear `data-pressed` on `pointerup`.
@@ -376,8 +381,10 @@ telemetry belong to the consumer's handler, not the button.
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
 | [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | passed | Internationalization |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-Statuses rest on the source as documented above: `keyboard-activates` and the native Base UI `<button>` (T7) ground `keyboard-navigable`; the Accessibility section's accessible-name gap (label comes from consumer `children`/`aria-label`, absent for an unlabeled icon-only button) grounds `screen-reader-support` as partial; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; the Accessibility section's explicit statement that the fixed size-variant heights fall below the 44×44pt/48×48dp guidance by default grounds `touch-target-size` as failed; `disabled`/`aria-invalid`/`aria-haspopup` mapping to native attributes grounds `semantic-markup` as passed; and the Localization section's "no built-in strings to localize" grounds both internationalization checks as passed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above).
+Statuses rest on the source as documented above: `keyboard-activates` and the native Base UI `<button>` (T7) ground `keyboard-navigable`; the Accessibility section's accessible-name gap (label comes from consumer `children`/`aria-label`, absent for an unlabeled icon-only button) grounds `screen-reader-support` as partial; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; the Accessibility section's explicit statement that the fixed size-variant heights fall below the 44×44pt/48×48dp guidance by default grounds `touch-target-size` as failed; `disabled`/`aria-invalid`/`aria-haspopup` mapping to native attributes grounds `semantic-markup` as passed; and the Localization section's "no built-in strings to localize" grounds both internationalization checks as passed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above). `separation-of-concerns` passes: server-safe styling (`buttonVariants`) is split from the client-only pointer/press behavior, which itself lives in the sibling `PressableButton` rather than `button.tsx` (see the Provenance note above). `unit-test-coverage` is partial — `button.test.tsx` covers pointerdown/pointerup, leave-while-held/re-enter, and handler forwarding, but not `pointercancel`, the window-wide release, `no-pointer-capture`, `haspopup-suppresses-dip`, or keyboard activation.
 
 ## Change History
 
@@ -388,3 +395,4 @@ Statuses rest on the source as documented above: `keyboard-activates` and the na
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Add the `warning` variant (eight total) and the ancestor-settable `--adh-button-min-height`/`--adh-button-min-width` touch-target floor; document icon SVG auto-sizing; restore the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, and Privacy sections required by the template; fix `domain` to the `agenticdevelopercookbook://` scheme; expand Conformance Test Vectors and Edge Cases to cover every MUST/SHOULD requirement and the five completeness categories. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Complete Deep Linking, Localization, Accessibility Options, Feature Flags, and Analytics sections as not applicable per source fidelity; set status to review. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: moved the `references` entry to `related`; rewrote Compliance as a link/status/category table against the real catalog; reformatted Design Decisions into Decision/Rationale/Approved triples and relocated the pointer-tracking provenance caveat inline above Behavioral Requirements; renamed `should-preserve-consumer-classname-precedence` to `consumer-classname-precedence` everywhere it's cited; added a size-to-utility table and a per-variant hover/active token table; made T18's expectation a concrete class-list assertion and added test vectors for a non-icon min-width floor, `:active`-absence, and sm/xs icon scaling; named `button.tsx` as the source of the shipr's-dialogs citation and dropped the uncitable "~40-site" figure; documented the `adh`/`apt` token-prefix mismatch as a Design Decision. |
+| 1.4.1 | 2026-09-25 | Mike Fullerton | Linked to button-pressable.md as pointer-contract owner; provenance note no longer a stale hedge. |

@@ -3,11 +3,11 @@ id: 05930e64-fa82-49ef-b50d-22d87fa7d182
 title: Deck
 domain: agenticdevelopertoolkit://recipes/deck
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-09-25'
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -144,8 +144,10 @@ Not applicable: No logging is implemented in Deck.
 |-------|--------|----------|
 | [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
 | [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
+| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
+| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-Both statuses rest on the source's deliberate `tabIndex={-1}` focus handling and its `<div>` (not `<main>`) root, documented directly in `Deck.tsx`'s comment block and exercised by its test suite.
+Both statuses rest on the source's deliberate `tabIndex={-1}` focus handling and its `<div>` (not `<main>`) root, documented directly in `Deck.tsx`'s comment block and exercised by its test suite. `separation-of-concerns` passes because `Deck.tsx` is pure presentation over its `children` and `className` props, with no business logic; `unit-test-coverage` passes because `deck.test.tsx` renders `<Deck>` directly and asserts on its output.
 
 ## Change History
 
@@ -153,3 +155,4 @@ Both statuses rest on the source's deliberate `tabIndex={-1}` focus handling and
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and split them into platform-neutral behaviors (render-children, no-own-scroll, merges-style-hook, focusable-not-tabbable, not-a-landmark) with web specifics moved to React/Web notes; rewrote the tabIndex rationale as the concrete click-then-scroll sequence and added matching test vectors deck-007 through deck-011 plus edge-case cross-references; reformatted Design Decisions to Decision/Rationale/Approved; linked real accessibility compliance checks; corrected the Compose, WinUI 3, SwiftUI, and AppKit/UIKit platform notes; added tags and related ingredients. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
