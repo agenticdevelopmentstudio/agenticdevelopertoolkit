@@ -99,18 +99,15 @@ export interface TopicLevel {
    *  It arms once per APPEARANCE: a manual deselect INSIDE the same visit sticks (the default must
    *  never fight the user), while leaving the parent topic and coming back re-applies it. Deliberately
    *  narrow — selecting a row still NEVER auto-selects anything at a deeper level unless that level
-   *  asks for it here. Omit for the platform default: nothing is chosen for the user. */
-  defaultSelectedId?: string
-  /** WHERE `defaultSelectedId` applies. `"always"` (the default) is the rule above. `"wide"` applies
-   *  it only while the lists are disclosed beside the detail — never in the NARROW stack, where the
-   *  list is a pane of its own and choosing for the user would push straight past it, so a phone
-   *  would open onto the default and have to go Back to see the list it came for. The planning
-   *  route's "Overview" is the case: beside the list it is the obvious thing to read; on a phone
-   *  the list is.
+   *  asks for it here. Omit for the platform default: nothing is chosen for the user.
    *
-   *  A list shown NARROW is not spent: widen the window while it is showing with nothing chosen and
-   *  the default applies then, as it would have had the list appeared wide. */
-  defaultSelectedWhen?: "always" | "wide"
+   *  WIDE ONLY, always: it applies while the lists are disclosed beside the detail and NEVER in the
+   *  narrow stack (a phone, or a window too narrow to hold a list beside the detail). There the
+   *  list is a screen of its own, and choosing for the user would push straight past it, so a
+   *  phone would open onto the default and have to go Back to see the list it came for. A list
+   *  shown narrow is not spent: widen the window while it shows nothing chosen and the default
+   *  applies then, as it would have had the list appeared wide. */
+  defaultSelectedId?: string
   /** The AUTOMATIC no-selection detail (default on): while this level is the frontier with
    *  nothing selected, the pane stays almost empty — one quiet, centered nudge to select
    *  something (`TopicSelectHint`), named as specifically as this level allows (see
@@ -910,9 +907,10 @@ export function HierarchicalTopicDetail({
   // A default naming an item the list doesn't have (yet) is simply not applied — an async list arms
   // when its rows land, and a stale default never selects a phantom row.
   //
-  // A `"wide"` default waits until the layout is KNOWN, not merely rendered: before the row is
-  // measured the stack draws wide, and firing on that guess would select for a phone. The phone
-  // test is read live, not from `phone` — that state lands in an effect that runs after this one.
+  // Never in the narrow stack (see `defaultSelectedId`), and not until the layout is KNOWN, not
+  // merely rendered: before the row is measured the stack draws wide, and firing on that guess
+  // would select for a phone. The phone test is read live, not from `phone` — that state lands in
+  // an effect that runs after this one.
   useEffect(() => {
     const layoutKnown = layoutMode !== "auto" || containerW > 0
     const wideNow = layoutKnown && !narrow && !(layoutMode === "auto" && phoneUserAgent())
@@ -946,7 +944,7 @@ export function HierarchicalTopicDetail({
       }
       if (!level.items.some((it) => it.id === wanted)) return
       // Not now, and not spent: a list seen narrow gets its default once it is seen wide.
-      if (level.defaultSelectedWhen === "wide" && !wideNow) return
+      if (!wideNow) return
       if (surface.autoSelected[level.id] === key) return // fired for this visit; a manual clear stands
       patchSurface((p) => ({ ...p, autoSelected: { ...p.autoSelected, [level.id]: key } }))
       level.onSelect(wanted, { replace: true })

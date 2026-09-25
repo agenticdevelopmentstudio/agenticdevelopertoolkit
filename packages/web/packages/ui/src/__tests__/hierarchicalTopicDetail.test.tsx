@@ -586,8 +586,10 @@ describe('HierarchicalTopicDetail — a level’s default selection', () => {
         onClear: () => set(null),
       },
     ]
+    // Wide, and said so: a default applies only beside a disclosed list, and jsdom measures no
+    // width for `auto` to decide by (the narrow rule is htdvDefaultSelectedNarrow.test.tsx).
     return (
-      <HierarchicalTopicDetail levels={levels}>
+      <HierarchicalTopicDetail levels={levels} layoutMode="wide">
         <p>detail</p>
       </HierarchicalTopicDetail>
     )
