@@ -8,6 +8,30 @@ interface ChatInputProps {
   inputRef?: RefObject<HTMLInputElement | null>
   /** When true, the box is shown but can't be typed in or sent from. */
   disabled?: boolean
+  /**
+   * Whether the box draws its own send button. Default true. A host that sends
+   * from a control of its own (bitbag's dock sends when you tap his face) turns
+   * it off and submits through `submitChatInput`; Enter and the keyboard's Send
+   * key still submit either way.
+   */
+  sendButton?: boolean
+}
+
+/** The composer's form — what `submitChatInput` submits. */
+const CHAT_FORM_SELECTOR = 'form.pc-input-area'
+
+/**
+ * Sends whatever is in the chat composer under `root`, through the form's own
+ * submit — the one send path Enter and the send button use, so a host control
+ * cannot drift from them (an empty box sends nothing, and the box is cleared).
+ * Returns whether there was text to send.
+ */
+export function submitChatInput(root: ParentNode | null | undefined): boolean {
+  const form = root?.querySelector<HTMLFormElement>(CHAT_FORM_SELECTOR)
+  const input = form?.querySelector<HTMLInputElement>('.pc-input')
+  if (!form || !input || input.disabled || !input.value.trim()) return false
+  form.requestSubmit()
+  return true
 }
 
 export function ChatInput({
@@ -16,6 +40,7 @@ export function ChatInput({
   autoFocus = false,
   inputRef: externalRef,
   disabled = false,
+  sendButton = true,
 }: ChatInputProps) {
   const internalRef = useRef<HTMLInputElement>(null)
   const ref = externalRef || internalRef
@@ -103,9 +128,11 @@ export function ChatInput({
           path, so the button and the keyboard's Send key cannot drift apart.
           The Enter handler above still preventDefaults, so it never also
           submits and nothing is sent twice. */}
-      <button className="pc-send-btn" type="submit" aria-label="Send" disabled={disabled || !hasText}>
-        <SendIcon />
-      </button>
+      {sendButton && (
+        <button className="pc-send-btn" type="submit" aria-label="Send" disabled={disabled || !hasText}>
+          <SendIcon />
+        </button>
+      )}
     </form>
   )
 }

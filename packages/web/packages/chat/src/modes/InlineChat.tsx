@@ -90,6 +90,8 @@ export interface InlineChatViewProps {
   inputDisabled?: boolean
   /** Fade older messages — each line dimmer than the one below it. */
   fadeOlder?: boolean
+  /** Whether the composer draws its send button (default true) — see ChatInput. */
+  sendButton?: boolean
   /**
    * Takes engagement (expanded vs. folded to `sizing.inactive`) over from the
    * chat, like an input's `value`: when set, it is the state, and the chat's own
@@ -122,6 +124,7 @@ export function InlineChatView({
   statusUtterance,
   inputDisabled,
   fadeOlder,
+  sendButton,
   engaged,
   onEngagedChange,
 }: InlineChatViewProps) {
@@ -152,7 +155,12 @@ export function InlineChatView({
         colorful={thinkingColorful}
         tint={thinkingTint}
       />
-      <ChatInput onSend={sendMessage} placeholder={placeholder} disabled={inputDisabled} />
+      <ChatInput
+        onSend={sendMessage}
+        placeholder={placeholder}
+        disabled={inputDisabled}
+        sendButton={sendButton}
+      />
     </div>
   )
 }

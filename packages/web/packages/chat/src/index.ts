@@ -51,6 +51,7 @@ export {
   CHAT_INPUT_SELECTOR,
 } from './hooks/useCaretTracker'
 export type { CaretMetrics } from './hooks/useCaretTracker'
+export { submitChatInput } from './components/ChatInput'
 export { useInputFocusReclaim } from './hooks/useInputFocusReclaim'
 export { useBlockCursor } from './hooks/useBlockCursor'
 export { useCaretGaze } from './hooks/useCaretGaze'
