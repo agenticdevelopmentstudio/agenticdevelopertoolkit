@@ -19,6 +19,8 @@ export { useIdleFidget } from "./idleLife";
 export type { IdleFidgetOptions } from "./idleLife";
 export { useSpeechBubble } from "./speechBubble";
 export { applyPose } from "./pose";
+export { travelFrom } from "./travel";
+export type { TravelOptions } from "./travel";
 
 export { DEFAULT_TUNING } from "./types";
 export type {

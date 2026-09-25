@@ -17,6 +17,7 @@ describe("@agenticdevelopertoolkit/avatar public API", () => {
       "useIdleFidget",
       "useSpeechBubble",
       "applyPose",
+      "travelFrom",
     ]) {
       expect(typeof surface[name]).toBe("function");
     }
