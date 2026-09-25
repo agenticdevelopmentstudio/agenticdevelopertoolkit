@@ -182,15 +182,17 @@ export interface TopicLevel {
    *  (`useResourceItemPrefetch`), the route it leads to (`router.prefetch`), or both;
    *  `TopicDetailItem.leadsTo` already says which kind of row it is. Fire-and-forget. */
   onPrefetch?: (id: string) => void
-  /** Create affordance: when set, a right-justified `+` in this level's list header fires it
-   *  (replaces the old leading "New…" rail row). */
+  /** Create affordance: when set, a `+` fires it — first in the list toolbar under this level's
+   *  titled header, over the rows' icons; in the control strip when the level is collapsed to
+   *  icons (replaces the old leading "New…" rail row). */
   onNew?: () => void
   /** Accessible name + tooltip for the `+` (e.g. "New Persona"). Defaults to "New". */
   newLabel?: string
   /** Tint the `+` gold to signal an in-progress create (nothing selected in the list). */
   newActive?: boolean
-  /** Extra right-justified controls in this level's TITLE row, just ahead of the `+`
-   *  (e.g. the Sites list's Auto Configure). Keep them compact — the row is one line. */
+  /** Operations on this level's list (e.g. the Sites list's Auto Configure), right-justified in
+   *  its list toolbar, after the `+` and the magnifier. Named for the title row they used to
+   *  ride. Keep them compact — the toolbar is one line. */
   titleActions?: ReactNode
   /** Make this level's list searchable: a magnifier in its toolbar pops a query field over the
    *  rows. `{}` lets the rail filter on label + sublabel; pass `query` to own the filtering. */

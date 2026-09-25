@@ -161,15 +161,17 @@ interface TopicLevel {
    *  (`useResourceItemPrefetch`), the route it leads to (`router.prefetch`), or both;
    *  `TopicDetailItem.leadsTo` already says which kind of row it is. Fire-and-forget. */
   onPrefetch?: (id: string) => void
-  /** Create affordance: when set, a right-justified `+` in this level's list header fires it
-   *  (replaces the old leading "New…" rail row). */
+  /** Create affordance: when set, a `+` fires it — first in the list toolbar under this level's
+   *  titled header, over the rows' icons; in the control strip when the level is collapsed to
+   *  icons (replaces the old leading "New…" rail row). */
   onNew?: () => void
   /** Accessible name + tooltip for the `+` (e.g. "New Persona"). Defaults to "New". */
   newLabel?: string
   /** Tint the `+` gold to signal an in-progress create (nothing selected in the list). */
   newActive?: boolean
-  /** Extra right-justified controls in this level's TITLE row, just ahead of the `+`
-   *  (e.g. the Sites list's Auto Configure). Keep them compact — the row is one line. */
+  /** Operations on this level's list (e.g. the Sites list's Auto Configure), right-justified in
+   *  its list toolbar, after the `+` and the magnifier. Named for the title row they used to
+   *  ride. Keep them compact — the toolbar is one line. */
   titleActions?: ReactNode
   /** Make this level's list searchable: a magnifier in its toolbar pops a query field over the
    *  rows. `{}` lets the rail filter on label + sublabel; pass `query` to own the filtering. */
@@ -429,18 +431,19 @@ export function HierarchicalMenuDetail({
    *      stack read as physically layered. No Back button.
    *   - `"cascading"` — a VERTICAL cascade (nested-menu layout): only the ROOT list is full
    *      height. Each deeper list opens to the RIGHT of its parent, its TOP just under the
-   *      parent's HEADER (one header-height step per level), and its height HUGS its own rows
-   *      (capped at the container bottom, scrolling past it). The detail pane is pinned BESIDE the
-   *      root list, and the deeper lists disclose OVER it like menus over content. Covering —
-   *      auto-hide, the `«`/`»` pins, width pressure, the hover branch reveal — follows
-   *      `covered`'s rules, but a covered list is never resized: its child simply draws OVER it
-   *      (back-to-front z-order), indented so the covered rows' text is obscured while their icons
-   *      and full HEADER row stay visible. The detail strip's `«` immerses the detail: every list
-   *      slides off-screen and the detail takes the full width (`»` restores). */
+   *      parent's HEADER and list toolbar (one header-plus-toolbar step per level), and its height
+   *      HUGS its own rows (capped at the container bottom, scrolling past it). The detail pane is
+   *      pinned BESIDE the root list, and the deeper lists disclose OVER it like menus over
+   *      content. Covering — auto-hide, the `«`/`»` pins, width pressure, the hover branch reveal —
+   *      follows `covered`'s rules, but a covered list is never resized: its child simply draws
+   *      OVER it (back-to-front z-order), indented so the covered rows' text is obscured while
+   *      their icons and full HEADER and toolbar rows stay visible. The detail strip's `«`
+   *      immerses the detail: every list slides off-screen and the detail takes the full width
+   *      (`»` restores). */
   disclosureStyle?: "minimized" | "covered" | "cascading"
   /** Start with every list above the FRONTIER (the deepest rendered list) hidden — covered by its
-   *  child to a peek (`covered`), overdrawn by its child down to its header row (`cascading`), or
-   *  an icon strip (`minimized`) — even
+   *  child to a peek (`covered`), overdrawn by its child down to its header and toolbar rows
+   *  (`cascading`), or an icon strip (`minimized`) — even
    *  when there is room to show it. Default `true`; the first list's header carries a toggle so
    *  the user can flip it (off ⇒ every list discloses, subject to the fit rules). Pass `false`
    *  for a surface whose ancestry must stay glanceable (the hub's `/home`). The covering styles
@@ -2485,10 +2488,11 @@ function CoveredStack({
  * The "cascading" disclosure style — a VERTICAL cascade (nested-menu layout).
  *
  * Only the ROOT list is full height, on the left. Every deeper list opens to the RIGHT of its
- * parent, its TOP just under the parent's HEADER bar — one header-height step per level,
- * regardless of which row is selected — and its height HUGS its own rows, capped at the
- * container's bottom (its list scrolls past it). So the stack reads as a chain of menus stepping
- * down-and-right, with every list's HEADER always visible. The DETAIL pane is pinned BESIDE the
+ * parent, its TOP just under the parent's HEADER bar and the list toolbar beneath it — one
+ * header-plus-toolbar step per level, regardless of which row is selected — and its height HUGS
+ * its own rows, capped at the container's bottom (its list scrolls past it). So the stack reads as
+ * a chain of menus stepping down-and-right, with every list's HEADER and toolbar always visible
+ * (the toolbar carries the list's `+`, search and tools). The DETAIL pane is pinned BESIDE the
  * root list at full height, UNDER the deeper lists: the cascade discloses over it like menus over
  * content, and the detail never moves with it.
  *
@@ -2498,8 +2502,8 @@ function CoveredStack({
  * never resized or clipped. Covering only shrinks the list's horizontal ADVANCE to CASCADE_INDENT,
  * so its child — painted above it, back-to-front z-order — literally draws over it, obscuring the
  * covered rows' TEXT while their leading icons stay visible. And because the child's top sits at
- * the parent's header bottom, what stays visible of a covered list is its full HEADER row, the
- * icon strip of its rows, and whatever its child is too short to overdraw:
+ * the bottom of the parent's toolbar, what stays visible of a covered list is its full HEADER and
+ * toolbar rows, the icon strip of its rows, and whatever its child is too short to overdraw:
  *
  *   Workspaces
  *     « Workspace
@@ -2703,21 +2707,23 @@ function CascadingStack({
   // value survives the remount because the mode lives in the surface store.
   const groundRight = engaged ? base!.groundRight : restingStackRight
 
-  // VERTICAL cascade. Each non-root list's TOP is its parent's top plus the parent's HEADER
-  // height — the child discloses immediately under the parent's header bar, measured (not assumed)
-  // so a wrapping title stays correct. One header-height step per level, regardless of which row
-  // is selected; the steps are exactly what keeps every covered ancestor's HEADER visible above
-  // its child. Measuring the offset within the box (not the header's absolute position) makes the
-  // measurement independent of where the box currently sits — so one pre-paint pass converges with
-  // no feedback loop: moving a child never moves its parent's rows. `rowOffset[i]` is that
-  // within-box header bottom for list `i` (first row top, then items-list top, as fallbacks for a
-  // headerless rail).
+  // VERTICAL cascade. Each non-root list's TOP is its parent's top plus the parent's HEADER and
+  // list-toolbar height — the child discloses immediately under the parent's toolbar row (under
+  // the header bar itself when the stack has no toolbar), measured (not assumed) so a wrapping
+  // title stays correct. One header-plus-toolbar step per level, regardless of which row is
+  // selected; the steps are exactly what keeps every covered ancestor's HEADER and toolbar visible
+  // above its child. Measuring the offset within the box (not the header's absolute position)
+  // makes the measurement independent of where the box currently sits — so one pre-paint pass
+  // converges with no feedback loop: moving a child never moves its parent's rows. `rowOffset[i]`
+  // is that within-box toolbar (else header) bottom for list `i` (first row top, then items-list
+  // top, as fallbacks for a headerless rail).
   const [rowOffset, setRowOffset] = useState<number[]>([])
   const rowMeasureRef = useRef<() => void>(() => {})
-  // Re-measure when the set of lists changes, a list gains/loses its first row, or the container
-  // width changes; the ResizeObserver below also catches height changes, and the container handlers
-  // catch scroll.
-  const measureSig = `${rendered.map((l) => `${l.id}#${l.items.length}`).join("|")}::${containerW}`
+  // Re-measure when the set of lists changes, a list gains/loses its first row, the toolbar row
+  // comes or goes (it is part of the step, and a level's tools can arrive without its rows
+  // changing), or the container width changes; the ResizeObserver below also catches height
+  // changes, and the container handlers catch scroll.
+  const measureSig = `${rendered.map((l) => `${l.id}#${l.items.length}`).join("|")}::${rendered.some(hasListTools)}::${containerW}`
   useLayoutEffect(() => {
     const cont = containerRef.current
     if (!cont) return
@@ -2726,13 +2732,20 @@ function CascadingStack({
       for (let i = 0; i < rendered.length; i++) {
         const col = cont.querySelector(`[data-htd-col="${i}"]`)
         const header = col?.querySelector("[data-htd-header]")
-        const anchor = header ?? col?.querySelector("[data-htd-row]") ?? col?.querySelector("ul")
+        // The step ends at the bottom of the list TOOLBAR, which TopicRail renders straight after
+        // the header. Stepping by the header alone was right while the `+` and `titleActions` rode
+        // the header; once they moved down onto the toolbar, every child drew its opaque box over
+        // its parent's toolbar — the hub root's Manage workspace features button, a covered list's
+        // search and its list tools.
+        const below = header?.nextElementSibling
+        const edge = below?.hasAttribute("data-htd-toolbar") ? below : header
+        const anchor = edge ?? col?.querySelector("[data-htd-row]") ?? col?.querySelector("ul")
         if (!col || !anchor) {
           next[i] = 0
           continue
         }
         const r = anchor.getBoundingClientRect()
-        next[i] = (header ? r.bottom : r.top) - col.getBoundingClientRect().top
+        next[i] = (edge ? r.bottom : r.top) - col.getBoundingClientRect().top
       }
       setRowOffset((prev) => {
         if (prev.length === next.length && prev.every((v, k) => v === next[k])) return prev
@@ -2947,7 +2960,8 @@ function CascadingStack({
         if (!r || i < hidden || !isCovered(i)) return
         // The peek strip: the CASCADE_INDENT sliver the child leaves showing.
         zones.push({ left: r.left, top: r.top, right: r.left + CASCADE_INDENT, bottom: r.bottom })
-        // The header band: the child's top starts one header-height below, so the header is visible.
+        // The header band: the child's top starts one header-plus-toolbar step below, so both
+        // rows are visible.
         zones.push({
           left: r.left,
           top: r.top,
@@ -3564,7 +3578,7 @@ function CascadingStack({
           lists (z 0 vs their i+1): the cascade discloses over it like menus over content, and it
           never moves with the cascade. Its top-left carries the immersion toggle (`«` slides every
           list off-screen and the detail to the left edge; `»` restores). The strip sits above the
-          first child's top (one header height), so it stays reachable. */}
+          first child's top (one header-plus-toolbar step), so it stays reachable. */}
       <section
         key={DETAIL_PIN}
         style={{ left: detailLeft, width: detailWidth, zIndex: 0 }}

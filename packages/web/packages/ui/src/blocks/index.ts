@@ -4,6 +4,11 @@ export { MarkdownEditor, type MarkdownEditorProps } from "./markdown-editor";
 export { Field } from "./field";
 export { FieldGroup } from "./field-group";
 export { GearMenuTrigger, type GearMenuTriggerProps } from "./gear-menu-trigger";
+// Its sibling for a tool that ACTS rather than opens a menu: the muted icon button a list toolbar
+// is built from (the rail's own `+` and magnifier). Exported so a host's tool on that toolbar —
+// the Manage features puzzle piece, a bucket's settings gear — draws exactly like the rail's own;
+// the copies that used a class literal or a ghost `Button` instead had already drifted apart.
+export { ListToolButton, type ListToolButtonProps } from "./topic-detail";
 // What a document is called and where it lives — the title/slug pair, with a live
 // "available / unavailable" verdict for the slug. The slug rule is injected, so a host's
 // route alphabet stays the host's.

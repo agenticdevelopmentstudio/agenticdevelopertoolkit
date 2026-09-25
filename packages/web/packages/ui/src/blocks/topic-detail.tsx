@@ -8,9 +8,11 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ComponentProps,
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent,
+  type ReactElement,
   type ReactNode,
 } from "react"
 
@@ -111,8 +113,8 @@ export interface TopicDetailItem {
 /** A leading rail row rendered ABOVE the topics (e.g. a custom list header, or a PopupMenu control in
  *  FocusedTopicDetail). A function form receives the rail's collapsed state so it can shrink/hide when
  *  undisclosed. Rendered only when provided — an absent slot reserves NO space (the first topic sits at
- *  the top padding). This is distinct from the header `+` create affordance (`onNew`), which the
- *  hierarchical stack uses for its "New …" button. */
+ *  the top padding). This is distinct from the `+` create affordance (`onNew`) — first in a titled
+ *  rail's list toolbar — which the hierarchical stack uses for its "New …" button. */
 export type RailSlot = ReactNode | ((collapsed: boolean) => ReactNode)
 
 /**
@@ -146,6 +148,51 @@ export function hasListTools(level: {
   return !!(level.onNew || level.search || level.titleActions)
 }
 
+/** A plain `<button>`'s props, less the accessible name, which `label` gives. */
+export type ListToolButtonProps = Omit<ComponentProps<"button">, "aria-label"> & {
+  /** The accessible name, and the tooltip unless `title` says otherwise. Required: the button is
+   *  an icon and nothing else, so this is all a screen reader or a hovering pointer gets. */
+  label: string
+  /** Gold rather than muted gray: the tool is acting on the list right now (a create in
+   *  progress, a query narrowing the rows). */
+  active?: boolean
+}
+
+/**
+ * One tool on a list's toolbar: the icon it is handed as `children`, muted gray, with no button
+ * chrome. The rail draws its own `+`, magnifier and ✕ with it; a host's `titleActions` should
+ * too, so a tool it adds sits beside the rail's as one of a set. (A gear that opens a MENU is
+ * `GearMenuTrigger`'s job; this is a tool that acts on one click, or opens a dialog.)
+ *
+ * It is a component because the look was a class literal, repeated in every tool here and copied
+ * out by hosts: the Manage features puzzle piece copied it, while the bucket gear beside a `+`
+ * went with a ghost `Button` — drawn larger and brighter than the `+`, the look the puzzle piece
+ * had already been moved off (Mike, 2026-09-24). A literal copied into a host drifts on the next
+ * token change; a component cannot.
+ */
+export function ListToolButton({
+  label,
+  active = false,
+  title,
+  type = "button",
+  className,
+  ...rest
+}: ListToolButtonProps): ReactElement {
+  return (
+    <button
+      {...rest}
+      type={type}
+      aria-label={label}
+      title={title ?? label}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded p-0.5 outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40",
+        active ? "text-apt-gold" : "text-apt-text-muted",
+        className,
+      )}
+    />
+  )
+}
+
 /** The rows a self-filtering rail shows for `query`: label or sublabel contains it, case-folded.
  *  The SELECTED row always survives — filtering it away would leave the detail pane showing an
  *  item the list no longer admits to, with no row to carry the selection bar. */
@@ -162,6 +209,26 @@ export function filterTopicItems(
       it.label.toLowerCase().includes(q) ||
       (it.sublabel?.toLowerCase().includes(q) ?? false),
   )
+}
+
+/** The nearest ancestor of `el` that CLIPS it sideways — computed `overflow-x` anything but
+ *  `visible` — or null when nothing above it does.
+ *
+ *  The search pop-over asks how far it may spill. In the hub's covered stack every rail sits in
+ *  an `overflow-hidden` column wrapper with an inline z-index, no wider than the rail, so on a
+ *  rail narrower than 16rem the wrapper cut off the pop-over's ✕ and the end of the typed query
+ *  (and `z-30` could not lift it: the clip is on an ancestor). The pop-over is capped at this
+ *  box's right edge instead. A portal would escape the clip, but the covered stack closes an
+ *  open hover branch on any `pointerover` outside `[data-htd-col]`, so a pop-over portalled out
+ *  of its column would collapse the rail under the pointer that reached for it. */
+function horizontalClipOf(el: HTMLElement): HTMLElement | null {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const overflowX = getComputedStyle(node).overflowX
+    // EMPTY is a style engine with nothing to say (jsdom resolves only what a sheet or an inline
+    // style declared), not a clip.
+    if (overflowX && overflowX !== "visible") return node
+  }
+  return null
 }
 
 // One shared element reference for icon-less rows — stable across renders so
@@ -874,6 +941,16 @@ export function TopicRail({
     e.currentTarget.releasePointerCapture?.(e.pointerId)
   }
 
+  // The list's SEARCH state; its pop-over lives in the toolbar, below. Declared ahead of the
+  // auto-fit, which has to know when the rows on screen are a subset the rail filtered itself.
+  const [ownQuery, setOwnQuery] = useState("")
+  const [searchOpen, setSearchOpen] = useState(false)
+  const controlledQuery = search?.query !== undefined
+  const query = search ? (controlledQuery ? (search.query ?? "") : ownQuery) : ""
+  // A controlled host filters before it passes `items`, so as far as this rail can tell its rows
+  // are always the whole list; only an uncontrolled query hides rows the rail was given.
+  const selfFiltering = !!search && !controlledQuery && query.trim() !== ""
+
   /**
    * MEASURE THE ROWS, before paint.
    *
@@ -907,7 +984,12 @@ export function TopicRail({
     const report = onFitRef.current
     // A collapsed rail is an icon strip whose width is COLLAPSED_RAIL by definition, and
     // measuring one would report the width of icons — so the last real answer stands.
-    if (!report || collapsed || !el) return
+    // The same while the rail FILTERS ITS OWN ROWS: the box holds only the matches, and a width
+    // taken from them outlived the query. A Personas rail searched while its `+` added a persona
+    // (a new id, so a re-measure) kept the width of the matching rows after the query cleared,
+    // ellipsising the full list, because clearing a query changed nothing this effect keyed on.
+    // `selfFiltering` is a dependency, so the full list is measured again the moment it clears.
+    if (!report || collapsed || !el || selfFiltering) return
     const measure = () => {
       // THE HEADER COUNTS TOO. A rail sized to its rows alone truncated its own title whenever
       // the title plus its riders (`+`, the right-hand controls, the ✕) outgrew the rows — a
@@ -990,24 +1072,16 @@ export function TopicRail({
     return () => {
       live = false
     }
-  }, [collapsed, sig, headerSig])
+  }, [collapsed, sig, headerSig, selfFiltering])
 
-  // The create affordance: a compact `+` right-justified in the header (replaces the old leading
-  // "New…" rail row). Gold while a create is in progress (`newActive`). Icon-only, so its label
-  // rides as the accessible name + native tooltip.
+  // The create affordance: a compact `+` (replaces the old leading "New…" rail row). On a titled
+  // rail it sits first in the list toolbar under the header (see `toolbar`); an untitled or
+  // collapsed rail carries it in its bare control strip instead. Gold while a create is in
+  // progress (`newActive`). Icon-only, so its label rides as the accessible name + native tooltip.
   const newButton = onNew ? (
-    <button
-      type="button"
-      aria-label={newLabel ?? "New"}
-      title={newLabel ?? "New"}
-      onClick={onNew}
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded p-0.5 outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40",
-        newActive ? "text-apt-gold" : "text-apt-text-muted",
-      )}
-    >
+    <ListToolButton label={newLabel ?? "New"} active={newActive} onClick={onNew}>
       <Plus size={16} aria-hidden />
-    </button>
+    </ListToolButton>
   ) : null
 
   const collapseToggle = (
@@ -1018,15 +1092,9 @@ export function TopicRail({
   // dismiss the menu and clear its selection in the parent list. Icon-only, so its label rides as the
   // accessible name + native tooltip.
   const closeButton = onClose ? (
-    <button
-      type="button"
-      aria-label={closeLabel ?? "Close"}
-      title={closeLabel ?? "Close"}
-      onClick={onClose}
-      className="flex shrink-0 items-center justify-center rounded p-0.5 text-apt-text-muted outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40"
-    >
+    <ListToolButton label={closeLabel ?? "Close"} onClick={onClose}>
       <X size={16} aria-hidden />
-    </button>
+    </ListToolButton>
   ) : null
 
   // Right-justified header control: in the minimized style, the desktop collapse toggle (`«`). The
@@ -1044,30 +1112,68 @@ export function TopicRail({
   // the icon column, like the header's control slot), then search, then the list's own tools
   // right-justified. They used to crowd the title row, where a narrow rail truncated its title to
   // make room for them, and the list's filter lived in a page-wide strip above every rail — far
-  // from the list it filtered.
-  const [ownQuery, setOwnQuery] = useState("")
-  const [searchOpen, setSearchOpen] = useState(false)
-  const controlledQuery = search?.query !== undefined
-  const query = search ? (controlledQuery ? (search.query ?? "") : ownQuery) : ""
+  // from the list it filtered. The search state they read is declared above, with the auto-fit.
+  const searchTriggerRef = useRef<HTMLButtonElement>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
   const setQuery = (q: string) => {
     if (!controlledQuery) setOwnQuery(q)
     search?.onQueryChange?.(q)
   }
+  // Escape, Enter and ✕ all close through here, and each hands focus BACK to the magnifier:
+  // closing unmounts the field that has focus, and focus used to fall to <body>, dropping a
+  // keyboard user out of the rail altogether.
   const closeSearch = (clear: boolean) => {
     if (clear) setQuery("")
     setSearchOpen(false)
+    searchTriggerRef.current?.focus()
   }
   const shownItems =
     search && !controlledQuery ? filterTopicItems(items, query, selectedId) : items
   const titled = title !== undefined && !collapsed
-  const hasTools = !!(onNew || search || titleActions)
+  // The same question the stacks ask of every level before they set `reserveToolbar`, asked here
+  // through the same function: two spellings of it could drift, and a rail that answered it
+  // differently would step its rows down out of line with its siblings'.
+  const hasTools = hasListTools({ onNew, search, titleActions })
   const showToolbar = titled && (hasTools || reserveToolbar)
+  // The pop-over is on screen exactly when this holds. The effect below keys on it, not on
+  // `searchOpen`: a collapse takes the toolbar away with the field still open, and the toolbar
+  // that comes back is a new element to measure and observe.
+  const searchShown = showToolbar && !!search && searchOpen
+  // How far the pop-over may reach before an ancestor clips it; null = nothing clips it. See
+  // `horizontalClipOf`. Measured before paint on every open, and again whenever the toolbar or
+  // the clipping box resizes — the covered stack's reveal WIPES a column's box open around a
+  // rail whose own width never moves, so watching the toolbar alone would keep the cap it had
+  // when the field opened mid-wipe.
+  const [searchRoom, setSearchRoom] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    const bar = toolbarRef.current
+    if (!searchShown || !bar) return
+    const clip = horizontalClipOf(bar)
+    if (!clip) {
+      setSearchRoom(null)
+      return
+    }
+    const measure = () => {
+      const room = clip.getBoundingClientRect().right - bar.getBoundingClientRect().left
+      // A box with no layout (a `display:none` ancestor, jsdom) measures nothing, not zero room.
+      const next = room > 0 ? room : null
+      setSearchRoom((prev) => (prev === next ? prev : next))
+    }
+    measure()
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null
+    ro?.observe(bar)
+    ro?.observe(clip)
+    window.addEventListener("resize", measure)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener("resize", measure)
+    }
+  }, [searchShown])
   const queryActive = query.trim() !== ""
   const searchLabel = search?.placeholder ?? "Search"
-  const toolClass =
-    "flex shrink-0 items-center justify-center rounded p-0.5 outline-none hover:text-apt-text focus-visible:ring-2 focus-visible:ring-apt-gold/40"
   const toolbar = showToolbar ? (
     <div
+      ref={toolbarRef}
       data-htd-toolbar
       role="toolbar"
       aria-label={typeof title === "string" ? `${title} tools` : "List tools"}
@@ -1077,27 +1183,37 @@ export function TopicRail({
     >
       <div className="flex w-4 shrink-0 items-center justify-center">{newButton}</div>
       {search && (
-        <button
-          type="button"
-          aria-label={searchLabel}
+        <ListToolButton
+          ref={searchTriggerRef}
+          label={searchLabel}
           title={queryActive ? `${searchLabel}: “${query}”` : searchLabel}
           aria-expanded={searchOpen}
           onClick={() => setSearchOpen((o) => !o)}
           // Gold while a query is narrowing the list with the field closed — otherwise a short
           // list would look like all there is.
-          className={cn(toolClass, queryActive ? "text-apt-gold" : "text-apt-text-muted")}
+          active={queryActive}
         >
           <Search size={15} aria-hidden />
-        </button>
+        </ListToolButton>
       )}
       <div className="min-w-0 flex-1" />
       {titleActions && <span className="flex shrink-0 items-center gap-1">{titleActions}</span>}
       {search && searchOpen && (
         <div
           data-htd-search
-          // Pops OVER the list at a readable width, spilling past a narrow rail rather than being
-          // squeezed by it; `z-30` lifts it above the neighbouring rail it may overlap.
+          // Pops OVER the list at a readable width, spilling past a narrow rail wherever the layout
+          // lets it (`z-30` lifts it above the neighbouring rail it then overlaps), but never past
+          // the nearest box that clips it: `searchRoom` caps it there (see `horizontalClipOf`), so
+          // the ✕ and the end of the query are never cut off.
           className="absolute top-0 left-0 z-30 flex h-full w-[max(100%,16rem)] items-center gap-1.5 border border-apt-border bg-apt-surface pr-1.5 pl-2.5 shadow-lg"
+          style={searchRoom === null ? undefined : { maxWidth: searchRoom }}
+          // Closes when focus LEAVES the pop-over, not when it moves inside it: the field's own
+          // blur used to close it on Tab onto ✕, unmounting ✕ in the instant it took focus, so
+          // Clear was unreachable from the keyboard. Leaving keeps the query (the icon stays gold);
+          // only Escape or ✕ clears it.
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setSearchOpen(false)
+          }}
         >
           <Search size={14} aria-hidden className="shrink-0 text-apt-text-muted" />
           <input
@@ -1113,24 +1229,25 @@ export function TopicRail({
                 e.stopPropagation()
                 closeSearch(true)
               } else if (e.key === "Enter") {
+                // Closing hands focus to the magnifier BEFORE this keystroke's `keypress`, which
+                // goes to whatever holds focus by then — and a button takes Enter's keypress as a
+                // click, reopening the field it just closed. A cancelled keydown sends no keypress.
+                e.preventDefault()
                 closeSearch(false)
               }
             }}
-            // Clicking away keeps the query (the icon stays gold); only Escape or ✕ clears it.
-            onBlur={() => setSearchOpen(false)}
             className="min-w-0 flex-1 bg-transparent font-mono text-[0.8rem] text-apt-text outline-none placeholder:text-apt-text-dim"
           />
-          <button
-            type="button"
-            aria-label="Clear search"
-            title="Clear search"
-            // Keep focus in the field so its blur doesn't close the popup before this click lands.
+          <ListToolButton
+            label="Clear search"
+            // Keep focus in the field through the click. Safari never focuses a clicked button, so
+            // the field's blur would carry a null `relatedTarget` — focus leaving the pop-over, as
+            // far as the check above can tell — and close it before this click lands.
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => closeSearch(true)}
-            className={cn(toolClass, "text-apt-text-muted")}
           >
             <X size={14} aria-hidden />
-          </button>
+          </ListToolButton>
         </div>
       )}
     </div>
@@ -1219,9 +1336,10 @@ export function TopicRail({
       )}
       {/* Top of the list. With a `title` (and not collapsed to an icon strip) this is the titled
           HEADER: a fixed control slot (the covered `«`/`»` or a minimized Back) where item icons
-          start, the left-aligned title where item labels start, the New `+` riding just after it,
-          the right-justified collapse toggle, and a divider beneath — so every titled list reserves the same header height and
-          their rows line up. Without a title (standalone TopicDetail) or when collapsed, fall back to
+          start, the left-aligned title where item labels start, the right-justified collapse
+          toggle, and a divider beneath — so every titled list reserves the same header height and
+          their rows line up. (Its New `+` and list tools ride the list toolbar just below it.)
+          Without a title (standalone TopicDetail) or when collapsed, fall back to
           the bare control strip (priority: leftControl → backSlot → toggle/`+` → busy alone → nothing).
           EVERY shape carries the busy icon: collapsing a rail to make room for the detail pane is a
           first-class gesture, and the read a click starts is exactly as invisible in an icon strip as
@@ -1301,7 +1419,10 @@ export function TopicRail({
           items={shownItems}
           selectedId={selectedId}
           onSelect={onSelect}
-          emptyLabel={queryActive && shownItems.length === 0 ? `Nothing matches “${query.trim()}”.` : emptyLabel}
+          // Only a rail that filters its own rows knows WHY none are left. A controlled host's
+          // empty list may still be LOADING the new query's read — the notebook and research panes
+          // showed "Nothing matches" over their own "Loading…" until it landed — so its label stands.
+          emptyLabel={selfFiltering && shownItems.length === 0 ? `Nothing matches “${query.trim()}”.` : emptyLabel}
           railSlot={railSlot}
           railSlotActive={railSlotActive}
           collapsed={collapsed}
@@ -1360,7 +1481,9 @@ export function TopicDetail({
   railSlot?: RailSlot
   /** Move the gold selection bar onto the rail slot (nothing in the list selected). */
   railSlotActive?: boolean
-  /** Create affordance: when set, a right-justified `+` in the list header fires it. */
+  /** Create affordance: when set, a `+` fires it. This rail is untitled, so there is no list
+   *  toolbar: the `+` sits in the rail's bare control strip, right-justified beside the collapse
+   *  toggle (stacked above it on the icon strip). */
   onNew?: () => void
   /** Accessible name + tooltip for the `+` (e.g. "New Topic"). Defaults to "New". */
   newLabel?: string
